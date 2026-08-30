@@ -31,6 +31,7 @@ type Config struct {
 	Listen          string    `json:"listen"`          // HTTP 监听地址
 	LaunchArgs      string    `json:"launchArgs"`      // T100 作业启动参数模板,{prog} 替换为作业名
 	WatchdogSeconds int       `json:"watchdogSeconds"` // 停站停留超时(秒),超时自动 continue;0=禁用
+	Mode            string    `json:"mode"`            // 调试协议:"pty"(默认,刮屏 fgldb) | "dap"(fglrun --da-debugger,Genero 3.21+)
 	ModuleRoots     []string  `json:"moduleRoots"`     // 源码查找根目录
 	FGLServer       string    `json:"fglserver"`       // 留空使用 T100 按 SSH 来源 IP 自动设置
 	TopDir          string    `json:"topDir"`          // 区域顶级目录如 /u1/t35prd;留空按 zone 推导
@@ -96,6 +97,9 @@ func (c *Config) fillDefaults() {
 	}
 	if c.WatchdogSeconds == 0 {
 		c.WatchdogSeconds = 180
+	}
+	if c.Mode == "" {
+		c.Mode = "pty"
 	}
 	if len(c.ModuleRoots) == 0 && c.TopDir != "" {
 		// com/wss 是 WebService 程序(wssp* / awsp*)的专用模块目录

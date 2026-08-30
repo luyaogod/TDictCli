@@ -13,7 +13,7 @@ type Manager struct {
 	cfg *Config
 
 	mu       sync.Mutex
-	sessions map[string]*Session
+	sessions map[string]session
 
 	subMu sync.Mutex
 	subs  map[chan Event]string
@@ -22,7 +22,7 @@ type Manager struct {
 func NewManager(cfg *Config) *Manager {
 	return &Manager{
 		cfg:      cfg,
-		sessions: map[string]*Session{},
+		sessions: map[string]session{},
 		subs:     map[chan Event]string{},
 	}
 }
@@ -54,7 +54,7 @@ func (m *Manager) emit(ev Event) {
 
 // Launch 创建并启动一个调试会话(同一时间仅允许一个会话,保证生产安全)。
 // 启动前清扫已结束的残留会话(程序退出/后端死亡),重启无需先 DELETE。
-func (m *Manager) Launch(module, prog string) (*Session, error) {
+func (m *Manager) Launch(module, prog string) (session, error) {
 	m.mu.Lock()
 	for id, s := range m.sessions {
 		if s.State() == StateExit {
@@ -77,17 +77,25 @@ func (m *Manager) Launch(module, prog string) (*Session, error) {
 		}
 	}
 
-	sess, err := NewSession(m.cfg, module, prog, runProg, m.emit)
+	sess, err := m.newSession(module, prog, runProg)
 	if err != nil {
 		return nil, err
 	}
 	if runProg != "" && runProg != prog {
-		sess.emitEvent(Event{Type: "log", Text: fmt.Sprintf("作业编号 %s → 实体程序 %s(gzzz_t)", prog, runProg)})
+		sess.Log(fmt.Sprintf("作业编号 %s → 实体程序 %s(gzzz_t)", prog, runProg))
 	}
 	m.mu.Lock()
-	m.sessions[sess.ID] = sess
+	m.sessions[sess.ID()] = sess
 	m.mu.Unlock()
 	return sess, nil
+}
+
+// newSession 按配置的协议模式创建会话:pty=刮屏 fgldb(默认),dap=fglrun --da-debugger
+func (m *Manager) newSession(module, prog, runProg string) (session, error) {
+	if m.cfg.Mode == "dap" {
+		return NewDAPSession(m.cfg, module, prog, runProg, m.emit)
+	}
+	return NewSession(m.cfg, module, prog, runProg, m.emit)
 }
 
 // resolveJob 连库按 gendbg 语义解析作业编号(gzzz_t:gzzz001 → gzzz002 实体程序 + gzzz005 模块)。
@@ -127,7 +135,7 @@ func (m *Manager) resolveJob(module, job string) (mod, prog string) {
 // LaunchReplay 接口日志重放调试:等价 T100 日志内嵌的 `r.dg <作业> '<req>' '<rsp>'`。
 // 作业取 wsfa012(gzja_t 服务→程序的解析结果),再走 gzzz_t 解析实体程序+模块;
 // 报文文件被清理时用 CLOB 内容落到服务器临时文件再重放。
-func (m *Manager) LaunchReplay(item *WSLogItem, content *WSLogContent) (*Session, error) {
+func (m *Manager) LaunchReplay(item *WSLogItem, content *WSLogContent) (session, error) {
 	m.mu.Lock()
 	for id, s := range m.sessions {
 		if s.State() == StateExit {
@@ -166,17 +174,17 @@ func (m *Manager) LaunchReplay(item *WSLogItem, content *WSLogContent) (*Session
 	if rspPath != "" {
 		args += " " + q(rspPath)
 	}
-	sess, err := NewSession(m.cfg, module, job, runProg, m.emit)
+	sess, err := m.newSession(module, job, runProg)
 	if err != nil {
 		return nil, err
 	}
-	sess.ArgsOverride = args
+	sess.SetArgsOverride(args)
 	if runProg != "" && runProg != job {
-		sess.emitEvent(Event{Type: "log", Text: fmt.Sprintf("重放调试:作业 %s → 实体程序 %s(gzzz_t)", job, runProg)})
+		sess.Log(fmt.Sprintf("重放调试:作业 %s → 实体程序 %s(gzzz_t)", job, runProg))
 	}
-	sess.emitEvent(Event{Type: "log", Text: fmt.Sprintf("重放 %s:fglrun -d %s %s", item.Service, runProgOr(job, runProg), args)})
+	sess.Log(fmt.Sprintf("重放 %s:fglrun -d %s %s", item.Service, runProgOr(job, runProg), args))
 	m.mu.Lock()
-	m.sessions[sess.ID] = sess
+	m.sessions[sess.ID()] = sess
 	m.mu.Unlock()
 	return sess, nil
 }
@@ -189,14 +197,14 @@ func runProgOr(job, runProg string) string {
 }
 
 // Get 取会话
-func (m *Manager) Get(id string) *Session {
+func (m *Manager) Get(id string) session {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return m.sessions[id]
 }
 
 // Current 返回当前唯一会话(无则 nil)
-func (m *Manager) Current() *Session {
+func (m *Manager) Current() session {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	for _, s := range m.sessions {
@@ -229,7 +237,7 @@ func (m *Manager) Snapshot() []SessionBrief {
 	for _, s := range m.sessions {
 		cur := s.Cur()
 		out = append(out, SessionBrief{
-			ID: s.ID, Module: s.Module, Prog: s.Prog, RunProg: s.RunProg,
+			ID: s.ID(), Module: s.Module(), Prog: s.Prog(), RunProg: s.RunProg(),
 			State: string(s.State()), Started: s.Started(), File: cur.File, Line: cur.Line,
 			Func: cur.Func, Reason: cur.Reason,
 			Holding:  s.HoldingSeconds(),
@@ -288,11 +296,11 @@ func (m *Manager) SourcePreview(module, prog string) (*SourceFile, error) {
 // CloseAll 结束全部会话(服务退出时调用)
 func (m *Manager) CloseAll() {
 	m.mu.Lock()
-	ss := make([]*Session, 0, len(m.sessions))
+	ss := make([]session, 0, len(m.sessions))
 	for _, s := range m.sessions {
 		ss = append(ss, s)
 	}
-	m.sessions = map[string]*Session{}
+	m.sessions = map[string]session{}
 	m.mu.Unlock()
 	for _, s := range ss {
 		_ = s.Quit()

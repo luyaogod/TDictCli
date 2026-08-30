@@ -30,11 +30,11 @@ func (s *Server) initMCP() {
 		if err != nil {
 			return nil, nil, err
 		}
-		s.aiLog(sess.ID, "AI 启动调试会话 %s/%s", in.Module, in.Prog)
+		s.aiLog(sess.ID(), "AI 启动调试会话 %s/%s", in.Module, in.Prog)
 		if err := sess.Launch(ctx); err != nil {
 			return nil, nil, err
 		}
-		return nil, map[string]any{"ok": true, "sessionId": sess.ID, "state": string(sess.State())}, nil
+		return nil, map[string]any{"ok": true, "sessionId": sess.ID(), "state": string(sess.State())}, nil
 	})
 
 	mcp.AddTool(srv, &mcp.Tool{Name: "debug_snapshot", Description: "获取当前会话快照:状态、停站位置、断点列表、停留时长"}, func(ctx context.Context, req *mcp.CallToolRequest, _ struct{}) (*mcp.CallToolResult, any, error) {
@@ -44,7 +44,7 @@ func (s *Server) initMCP() {
 		}
 		cur := sess.Cur()
 		return nil, map[string]any{
-			"id": sess.ID, "module": sess.Module, "prog": sess.Prog,
+			"id": sess.ID(), "module": sess.Module(), "prog": sess.Prog(),
 			"state": string(sess.State()), "stop": cur,
 			"breakpoints": sess.Breakpoints(), "holdingSeconds": sess.HoldingSeconds(),
 			"autovars": sess.Autovars(),
@@ -56,8 +56,8 @@ func (s *Server) initMCP() {
 		if sess == nil {
 			return nil, nil, errNoSession
 		}
-		s.aiLog(sess.ID, "AI 结束会话")
-		id := sess.ID
+		s.aiLog(sess.ID(), "AI 结束会话")
+		id := sess.ID()
 		if err := sess.Quit(); err != nil {
 			return nil, nil, err
 		}
@@ -75,7 +75,7 @@ func (s *Server) initMCP() {
 		if err != nil {
 			return nil, nil, err
 		}
-		s.aiLog(sess.ID, "AI 下断点 %s → #%d %s:%d", in.Location, bp.Num, bp.File, bp.Line)
+		s.aiLog(sess.ID(), "AI 下断点 %s → #%d %s:%d", in.Location, bp.Num, bp.File, bp.Line)
 		return nil, map[string]any{"breakpoint": bp}, nil
 	})
 
@@ -87,7 +87,7 @@ func (s *Server) initMCP() {
 		if err := sess.DeleteBreakpoint(in.Num); err != nil {
 			return nil, nil, err
 		}
-		s.aiLog(sess.ID, "AI 删除断点 #%d", in.Num)
+		s.aiLog(sess.ID(), "AI 删除断点 #%d", in.Num)
 		return nil, map[string]any{"ok": true}, nil
 	})
 
@@ -120,7 +120,7 @@ func (s *Server) initMCP() {
 		if err != nil {
 			return nil, nil, err
 		}
-		s.aiLog(sess.ID, "AI 执行 %s%s", in.Action, argSuffix(in.Arg))
+		s.aiLog(sess.ID(), "AI 执行 %s%s", in.Action, argSuffix(in.Arg))
 		resp := map[string]any{"ok": true, "state": string(sess.State())}
 		if stop != nil {
 			resp["stop"] = stop
@@ -141,7 +141,7 @@ func (s *Server) initMCP() {
 		if err != nil {
 			return nil, nil, err
 		}
-		s.aiLog(sess.ID, "AI 等到停站: %s:%d (%s)", stop.File, stop.Line, stop.Func)
+		s.aiLog(sess.ID(), "AI 等到停站: %s:%d (%s)", stop.File, stop.Line, stop.Func)
 		return nil, map[string]any{"stop": stop, "state": string(sess.State()), "autovars": sess.Autovars()}, nil
 	})
 
@@ -155,7 +155,7 @@ func (s *Server) initMCP() {
 		if err != nil {
 			return nil, nil, err
 		}
-		s.aiLog(sess.ID, "AI print %s → %s", in.Expr, oneLine(v))
+		s.aiLog(sess.ID(), "AI print %s → %s", in.Expr, oneLine(v))
 		return nil, map[string]any{"expr": in.Expr, "value": v}, nil
 	})
 
@@ -200,7 +200,7 @@ func (s *Server) initMCP() {
 		if err != nil {
 			return nil, nil, err
 		}
-		s.aiLog(sess.ID, "AI raw: %s", cmd)
+		s.aiLog(sess.ID(), "AI raw: %s", cmd)
 		return nil, map[string]any{"lines": lines}, nil
 	})
 
@@ -263,7 +263,7 @@ func (s *Server) initMCP() {
 		if err := sess.Frame(in.Num); err != nil {
 			return nil, nil, err
 		}
-		s.aiLog(sess.ID, "AI 选择栈帧 #%d", in.Num)
+		s.aiLog(sess.ID(), "AI 选择栈帧 #%d", in.Num)
 		return nil, map[string]any{"ok": true, "frame": sess.CurFrame()}, nil
 	})
 
@@ -275,7 +275,7 @@ func (s *Server) initMCP() {
 		if err := sess.SetBPEnabled(in.Num, in.Enabled); err != nil {
 			return nil, nil, err
 		}
-		s.aiLog(sess.ID, "AI %s 断点 #%d", enableWord(in.Enabled), in.Num)
+		s.aiLog(sess.ID(), "AI %s 断点 #%d", enableWord(in.Enabled), in.Num)
 		return nil, map[string]any{"ok": true}, nil
 	})
 
@@ -339,7 +339,7 @@ var errNoSession = fmt.Errorf("没有活跃的调试会话,请先 debug_launch")
 
 // ---------- 小工具 ----------
 
-func (s *Server) current() *Session { return s.mgr.Current() }
+func (s *Server) current() session { return s.mgr.Current() }
 
 func (s *Server) aiLog(sessionID, format string, args ...any) {
 	s.mgr.emit(Event{Type: "ai_action", SessionID: sessionID, Text: fmt.Sprintf(format, args...)})

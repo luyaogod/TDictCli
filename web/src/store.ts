@@ -99,6 +99,7 @@ interface Store {
 }
 
 let snapTimer: number | undefined
+let sourceFetchGen = 0 // 源码拉取代数:并发/过期结果按序丢弃
 let holdTimer: number | undefined
 
 function now() { return new Date().toLocaleTimeString('zh-CN', { hour12: false }) }
@@ -378,6 +379,7 @@ export const useStore = create<Store>((set, get) => ({
   refreshSource: async (file) => {
     const { sessionId, module, prog, runProg, sourceDVM } = get()
     if (!sessionId) return
+    if (get().loadingSource) return // 单飞:并发拉取同一文件会互相踩,失败方还会毒化 sourceDVM
     let f = file || get().stop?.file
     let entryMode = false
     if (!f) {
@@ -388,19 +390,24 @@ export const useStore = create<Store>((set, get) => ({
       f = `${module ? module + '_' : ''}${rp}.4gl`
       entryMode = true
     }
-    if (f === sourceDVM) return // 已加载(或已确认无源码),避免重复拉取
+    if (f === sourceDVM && get().sourceContent) return // 已加载(或已确认无源码),避免重复拉取
+    const gen = ++sourceFetchGen
     set({ loadingSource: true })
     try {
       const { source } = await api.sourceByFile(sessionId, f, module)
+      if (gen !== sourceFetchGen) return // 已有更新的拉取完成,丢弃本次(后完成者生效)
       set({ sourceContent: source.content, sourcePath: source.path, sourceDVM: f })
       const st = get()
       if (entryMode && st.currentLine === 0) {
         jumpToMain(set, get)
         st.pushTimeline({ origin: 'system', kind: 'info', text: '入口停站:已显示源码,点击行号下断点后点「继续 F5」开始' })
       }
-    } catch {
-      // 该模块无源码(如 com 公共库只有 42m):明确置空,避免在旧文件上标错停站行
-      set({ sourceContent: '', sourcePath: '', sourceDVM: f })
+    } catch (e) {
+      if (gen !== sourceFetchGen) return // 过期结果,忽略
+      // 该模块无源码(如 com 公共库只有 42m):置空避免在旧文件上标错停站行;
+      // 瞬时错误(会话中断等)不毒化 sourceDVM,兜底/下次停站可重试
+      const notFound = String((e as Error)?.message || e).includes('源码未找到')
+      set({ sourceContent: '', sourcePath: '', sourceDVM: notFound ? f : get().sourceDVM })
     } finally {
       set({ loadingSource: false })
     }
@@ -647,7 +654,10 @@ function pollUntilStopped(set: (p: Partial<Store>) => void, get: () => Store) {
         // 稍后补一次快照,保证缓存的断点无需步进就能显示
         window.setTimeout(() => {
           const cur = get()
-          if (cur.sessionId && cur.state === 'stopped') void cur.refreshSnapshot()
+          if (cur.sessionId && cur.state === 'stopped') {
+            void cur.refreshSnapshot()
+            if (!cur.sourceContent && !get().loadingSource) void get().refreshSource(snap.stop?.file)
+          }
         }, 2500)
         if (snap.stop?.reason === 'breakpoint') {
           st.pushTimeline({ origin: 'system', kind: 'stop', text: `命中断点 ${snap.stop.file}:${snap.stop.line}` })

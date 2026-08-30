@@ -112,7 +112,7 @@ func readBody[T any](w http.ResponseWriter, r *http.Request, out *T) bool {
 	return true
 }
 
-func (s *Server) sessOf(w http.ResponseWriter, r *http.Request) *Session {
+func (s *Server) sessOf(w http.ResponseWriter, r *http.Request) session {
 	id := r.PathValue("id")
 	sess := s.mgr.Get(id)
 	if sess == nil {
@@ -153,15 +153,15 @@ func (s *Server) hLaunch(w http.ResponseWriter, r *http.Request) {
 	}
 	go func() {
 		if err := sess.Launch(r.Context()); err != nil {
-			s.mgr.emit(Event{Type: "log", SessionID: sess.ID, Text: "启动失败: " + err.Error()})
+			s.mgr.emit(Event{Type: "log", SessionID: sess.ID(), Text: "启动失败: " + err.Error()})
 			// 失败会话终结并移除,避免卡在 loading 且挡住下一次启动
 			sess.ForceExit()
-			s.mgr.Remove(sess.ID)
+			s.mgr.Remove(sess.ID())
 		}
 	}()
 	// runProg: gzzz_t 解析出的实体程序(前端源码命名/预取要用它,而不是作业编号)
-	writeJSON(w, 200, map[string]any{"ok": true, "sessionId": sess.ID,
-		"module": sess.Module, "prog": sess.Prog, "runProg": sess.RunProg})
+	writeJSON(w, 200, map[string]any{"ok": true, "sessionId": sess.ID(),
+		"module": sess.Module(), "prog": sess.Prog(), "runProg": sess.RunProg()})
 }
 
 func (s *Server) hList(w http.ResponseWriter, r *http.Request) {
@@ -176,7 +176,7 @@ func (s *Server) hSnapshot(w http.ResponseWriter, r *http.Request) {
 	cur := sess.Cur()
 	writeJSON(w, 200, map[string]any{
 		"ok": true,
-		"id": sess.ID, "module": sess.Module, "prog": sess.Prog, "runProg": sess.RunProg,
+		"id": sess.ID(), "module": sess.Module(), "prog": sess.Prog(), "runProg": sess.RunProg(),
 		"state": string(sess.State()), "stop": cur,
 		"started":         sess.Started(),
 		"breakpoints":     sess.Breakpoints(),
@@ -190,7 +190,7 @@ func (s *Server) hQuit(w http.ResponseWriter, r *http.Request) {
 	if sess == nil {
 		return
 	}
-	id := sess.ID
+	id := sess.ID()
 	if err := sess.Quit(); err != nil {
 		fail(w, 500, err)
 		return
@@ -220,7 +220,7 @@ func (s *Server) hBPAdd(w http.ResponseWriter, r *http.Request) {
 	if !readBody(w, r, &req) {
 		return
 	}
-	log.Println("[bp-add] session=" + sess.ID + " loc=" + req.Location)
+	log.Println("[bp-add] session=" + sess.ID() + " loc=" + req.Location)
 	bp, err := sess.Break(req.Location)
 	if err != nil {
 		fail(w, 400, err)
@@ -240,7 +240,7 @@ func (s *Server) hBPDel(w http.ResponseWriter, r *http.Request) {
 		fail(w, 400, fmt.Errorf("断点编号无效"))
 		return
 	}
-	log.Println("[bp-del] session=" + sess.ID + " num=" + strconv.Itoa(num))
+	log.Println("[bp-del] session=" + sess.ID() + " num=" + strconv.Itoa(num))
 	if err := sess.DeleteBreakpoint(num); err != nil {
 		fail(w, 400, err)
 		return
@@ -611,13 +611,13 @@ func (s *Server) hWSLogDebug(w http.ResponseWriter, r *http.Request) {
 	}
 	go func() {
 		if err := sess.Launch(r.Context()); err != nil {
-			s.mgr.emit(Event{Type: "log", SessionID: sess.ID, Text: "启动失败: " + err.Error()})
+			s.mgr.emit(Event{Type: "log", SessionID: sess.ID(), Text: "启动失败: " + err.Error()})
 			sess.ForceExit()
-			s.mgr.Remove(sess.ID)
+			s.mgr.Remove(sess.ID())
 		}
 	}()
-	writeJSON(w, 200, map[string]any{"ok": true, "sessionId": sess.ID,
-		"module": sess.Module, "prog": sess.Prog, "runProg": sess.RunProg})
+	writeJSON(w, 200, map[string]any{"ok": true, "sessionId": sess.ID(),
+		"module": sess.Module(), "prog": sess.Prog(), "runProg": sess.RunProg()})
 }
 
 // ---------- WebSocket ----------

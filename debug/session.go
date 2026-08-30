@@ -167,13 +167,13 @@ type stopCollect struct {
 	source []SourceLine
 }
 
-// Session 一条调试会话 = 一条 SSH PTY 里跑的 fglrun -d
+// Session 一条调试会话 = 一条 SSH PTY 里跑的 fglrun -d(PTY 刮屏协议实现)
 type Session struct {
-	ID     string
-	Module string
-	Prog   string
-	RunProg string // gzzz_t 解析出的实体程序编号(gendbg 语义);空 = 与 Prog 相同
-	ArgsOverride string // 启动参数覆盖(接口日志重放调试:报文文件对);空 = 用 LaunchArgs 模板
+	id      string
+	module  string
+	prog    string
+	runProg string // gzzz_t 解析出的实体程序编号(gendbg 语义);空 = 与 prog 相同
+	argsOverride string // 启动参数覆盖(接口日志重放调试:报文文件对);空 = 用 LaunchArgs 模板
 
 	cfg  *Config
 	conn *SSHConn
@@ -212,10 +212,10 @@ func NewSession(cfg *Config, module, prog, runProg string, emit func(Event)) (*S
 		return nil, fmt.Errorf("SSH 连接失败: %w", err)
 	}
 	s := &Session{
-		ID:      fmt.Sprintf("s%d", time.Now().UnixMilli()),
-		Module:  module,
-		Prog:    prog,
-		RunProg: runProg,
+		id:      fmt.Sprintf("s%d", time.Now().UnixMilli()),
+		module:  module,
+		prog:    prog,
+		runProg: runProg,
 		cfg:    cfg,
 		conn:   conn,
 		state:  StateLoading,
@@ -246,16 +246,16 @@ func NewSession(cfg *Config, module, prog, runProg string, emit func(Event)) (*S
 func (s *Session) Launch(ctx context.Context) error {
 	// 42r 用实体程序(RunProg,由 Manager 启动前连库按 gendbg 语义从 gzzz_t 解析);
 	// 模块仍空(未配置 db 或未命中)时按名称做 42r 文件搜索兜底
-	launchProg := s.RunProg
+	launchProg := s.runProg
 	if launchProg == "" {
-		launchProg = s.Prog
+		launchProg = s.prog
 	}
-	if s.Module == "" {
+	if s.module == "" {
 		mod, err := s.resolveModule(launchProg)
 		if err != nil {
 			return fmt.Errorf("自动解析模块失败: %w", err)
 		}
-		s.Module = mod
+		s.module = mod
 		s.emitEvent(Event{Type: "log", Text: fmt.Sprintf("按作业名解析模块:%s → %s", launchProg, mod)})
 	}
 	// 1. 等区域菜单
@@ -269,7 +269,7 @@ func (s *Session) Launch(ctx context.Context) error {
 	}
 	// 3. 进模块目录 + 源码路径
 	setup := fmt.Sprintf("cd %s\r\nexport FGLSOURCEPATH=%s\r\n",
-		s.cfg.ModuleDir(s.Module), s.cfg.FGLSOURCEPath(s.Module))
+		s.cfg.ModuleDir(s.module), s.cfg.FGLSOURCEPath(s.module))
 	if s.cfg.FGLServer != "" {
 		setup += "export FGLSERVER=" + s.cfg.FGLServer + "\r\n"
 	}
@@ -279,9 +279,9 @@ func (s *Session) Launch(ctx context.Context) error {
 	}
 	// 4. 启动调试(launchProg 为 gzzz_t 解析出的实体程序;{prog} 仍传作业编号,与 gendbg 一致;
 	//    接口重放调试时 ArgsOverride = "'<req>' '<rsp>'" 报文文件对)
-	args := strings.ReplaceAll(s.cfg.LaunchArgs, "{prog}", s.Prog)
-	if s.ArgsOverride != "" {
-		args = s.ArgsOverride
+	args := strings.ReplaceAll(s.cfg.LaunchArgs, "{prog}", s.prog)
+	if s.argsOverride != "" {
+		args = s.argsOverride
 	}
 	s.pty.Write(fmt.Sprintf("fglrun -d 42r/%s.42r %s\r", launchProg, args))
 	if err := s.waitBarePrompt(90*time.Second, "(fgldb) 提示符"); err != nil {
@@ -305,7 +305,7 @@ func (s *Session) Launch(ctx context.Context) error {
 	s.restoring = false
 	s.mu.Unlock()
 	s.emitEvent(Event{Type: "state", State: string(StateStopped)})
-	s.emitEvent(Event{Type: "log", Text: "调试会话就绪: " + s.Prog + "@" + s.cfg.Zone})
+	s.emitEvent(Event{Type: "log", Text: "调试会话就绪: " + s.prog + "@" + s.cfg.Zone})
 	return nil
 }
 
@@ -1518,7 +1518,7 @@ func (s *Session) emitEvent(ev Event) {
 	if s.emit == nil {
 		return
 	}
-	ev.SessionID = s.ID
+	ev.SessionID = s.id
 	if ev.Time.IsZero() {
 		ev.Time = time.Now()
 	}
@@ -1701,7 +1701,7 @@ func (s *Session) persistBPs() {
 	for _, b := range bps {
 		lines, ok := srcCache[b.File]
 		if !ok {
-			if sf, err := s.ResolveSource(b.File, s.Module); err == nil {
+			if sf, err := s.ResolveSource(b.File, s.module); err == nil {
 				lines = strings.Split(sf.Content, "\n")
 			}
 			srcCache[b.File] = lines
@@ -1712,7 +1712,7 @@ func (s *Session) persistBPs() {
 		}
 		stored = append(stored, StoredBP{File: b.File, Line: b.Line, Func: b.Func, Enabled: b.Enabled, LineText: lt})
 	}
-	if err := saveBPs(s.cfg.DataDir, s.Module, s.Prog, stored); err != nil {
+	if err := saveBPs(s.cfg.DataDir, s.module, s.prog, stored); err != nil {
 		s.emitEvent(Event{Type: "log", Text: "断点保存失败: " + err.Error()})
 	}
 }
@@ -1723,7 +1723,7 @@ func (s *Session) restoreBreakpoints() {
 	if !s.cfg.BPsPersisted() {
 		return
 	}
-	st, err := loadBPs(s.cfg.DataDir, s.Module, s.Prog)
+	st, err := loadBPs(s.cfg.DataDir, s.module, s.prog)
 	if err != nil || len(st.Breakpoints) == 0 {
 		return
 	}
@@ -1734,7 +1734,7 @@ func (s *Session) restoreBreakpoints() {
 		if sb.LineText != "" {
 			lines, ok := srcCache[sb.File]
 			if !ok {
-				if sf, err := s.ResolveSource(sb.File, s.Module); err == nil {
+				if sf, err := s.ResolveSource(sb.File, s.module); err == nil {
 					lines = strings.Split(sf.Content, "\n")
 				}
 				srcCache[sb.File] = lines
