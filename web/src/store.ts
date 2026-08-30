@@ -9,7 +9,7 @@ export interface TimelineItem {
   kind: 'info' | 'stop' | 'command' | 'warn'
 }
 
-interface Watch { expr: string; value?: string; error?: string }
+interface Watch { expr: string; value?: string; error?: string; ref?: number; type?: string }
 
 interface Store {
   // 连接
@@ -433,8 +433,8 @@ export const useStore = create<Store>((set, get) => ({
     const out: Watch[] = []
     for (const w of watches) {
       try {
-        const { value } = await api.print(sessionId, w.expr)
-        out.push({ expr: w.expr, value })
+        const r = await api.print(sessionId, w.expr)
+        out.push({ expr: w.expr, value: r.value, ref: r.ref, type: r.type })
       } catch (e: any) {
         out.push({ expr: w.expr, error: e.message || String(e) })
       }

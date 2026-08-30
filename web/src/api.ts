@@ -55,7 +55,7 @@ export const api = {
   bpDel: (id: string, num: number) => req<any>(`/api/sessions/${id}/breakpoints/${num}`, { method: 'DELETE' }),
   control: (id: string, action: string, arg?: string) =>
     req<any>(`/api/sessions/${id}/control`, { method: 'POST', body: JSON.stringify({ action, arg }) }),
-  print: (id: string, expr: string) => req<{ value: string }>(`/api/sessions/${id}/print`, { method: 'POST', body: JSON.stringify({ expr }) }),
+  print: (id: string, expr: string) => req<{ value: string; type?: string; ref?: number }>(`/api/sessions/${id}/print`, { method: 'POST', body: JSON.stringify({ expr }) }),
   printFull: (id: string, expr: string) => req<{ value: string }>(`/api/sessions/${id}/printfull`, { method: 'POST', body: JSON.stringify({ expr }) }),
   varRoots: (id: string) => req<{ localsRef: number; globalsRef: number }>(`/api/sessions/${id}/varroots`),
   varChildren: (id: string, ref: number) => req<{ vars: VarNode[] }>(`/api/sessions/${id}/variables?ref=${ref}`),

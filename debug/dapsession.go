@@ -955,6 +955,33 @@ func (s *DAPSession) VarChildren(ref int) ([]VarNode, error) {
 	return out, nil
 }
 
+// EvalRef 求值并附带适配器的类型与变量引用(ref>0 可经 /variables 下钻,供监视树展开)。
+// 引用跨停站失效,前端每次停站后重建。返回值与 Print 同样剥展示引号。
+func (s *DAPSession) EvalRef(expr string) (value string, typeStr string, ref int, err error) {
+	s.mu.Lock()
+	if s.state != StateStopped {
+		s.mu.Unlock()
+		return "", "", 0, fmt.Errorf("仅停站可求值")
+	}
+	s.mu.Unlock()
+	fid := s.currentDapFrame()
+	args := map[string]any{"expression": strings.TrimSpace(expr), "context": "watch"}
+	if fid > 0 {
+		args["frameId"] = fid
+	}
+	resp, err := s.dap.request("evaluate", args, 20*time.Second)
+	if err != nil {
+		return "", "", 0, err
+	}
+	var body struct {
+		Result             string `json:"result"`
+		Type               string `json:"type"`
+		VariablesReference int    `json:"variablesReference"`
+	}
+	_ = json.Unmarshal(resp.Body, &body)
+	return stripQuotedDisplay(body.Result), body.Type, body.VariablesReference, nil
+}
+
 // simpleChainRe 简单变量链(g_xxx / g_qryparam.cond):完整值分段求值只对这类表达式可用
 // (4GL 子串下标只能作用在变量上,任意表达式的结果没有载体)
 var simpleChainRe = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)*$`)

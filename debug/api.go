@@ -310,12 +310,35 @@ func (s *Server) hPrint(w http.ResponseWriter, r *http.Request) {
 	if !readBody(w, r, &req) {
 		return
 	}
-	v, err := sess.Print(req.Expr)
-	if err != nil {
-		fail(w, 400, err)
-		return
+	resp := map[string]any{"ok": true}
+	// DAP 会话走 EvalRef:求值同时带回类型与变量引用(监视树展开用);PTY 退回 Print
+	if er, ok := sess.(evalRefSession); ok {
+		v, t, ref, err := er.EvalRef(req.Expr)
+		if err != nil {
+			fail(w, 400, err)
+			return
+		}
+		resp["value"] = v
+		if t != "" {
+			resp["type"] = t
+		}
+		if ref > 0 {
+			resp["ref"] = ref
+		}
+	} else {
+		v, err := sess.Print(req.Expr)
+		if err != nil {
+			fail(w, 400, err)
+			return
+		}
+		resp["value"] = v
 	}
-	writeJSON(w, 200, map[string]any{"ok": true, "value": v})
+	writeJSON(w, 200, resp)
+}
+
+// evalRefSession 求值附带类型/变量引用的可选能力(仅 DAP 会话实现,监视树展开用)
+type evalRefSession interface {
+	EvalRef(expr string) (value string, typeStr string, ref int, err error)
 }
 
 // fullValueSession 完整值分段求值的可选能力(仅 DAP 会话实现)

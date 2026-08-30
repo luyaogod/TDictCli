@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { api, type VarNode } from './api'
 import { useStore } from './store'
 
-interface TNode extends VarNode {
+export interface TNode extends VarNode {
   path?: string // 相对求值路径(g_qryparam.cond / g_argv[1]),全文求值用
   open: boolean
   loading?: boolean
@@ -14,7 +14,6 @@ interface TNode extends VarNode {
   full?: string
   fullErr?: string
 }
-
 const simpleChainRe = /^[A-Za-z_]\w*(\.\w+)*$/
 
 // 子节点路径:record 字段用点连接,数组元素名形如 "[1]" 直接拼接
@@ -27,15 +26,68 @@ function toNodes(vars: VarNode[], parent: string): TNode[] {
   return vars.map((v) => ({ ...v, open: false, path: childPath(parent, v.name) }))
 }
 
+// useVarTree 变量树下钻/取全文的通用操作(变量树与变量监视共用)。
+// 就地改节点对象后 rerender;陈旧 ref(跨停站)由调用方重建节点。
+export function useVarTree(sessionId: string | null) {
+  const [, bump] = useState(0)
+  const rerender = useCallback(() => bump((v) => v + 1), [])
+
+  const toggle = useCallback(
+    async (node: TNode) => {
+      if (!sessionId || !node.ref) return
+      if (node.open) {
+        node.open = false
+        rerender()
+        return
+      }
+      node.open = true
+      if (!node.children) {
+        node.loading = true
+        rerender()
+        try {
+          node.children = toNodes((await api.varChildren(sessionId, node.ref)).vars, node.path || '')
+        } catch {
+          node.open = false // 陈旧 ref:调用方负责整体重建
+        }
+        node.loading = false
+      }
+      rerender()
+    },
+    [sessionId, rerender],
+  )
+
+  const toggleFull = useCallback(
+    async (node: TNode) => {
+      if (!sessionId) return
+      if (node.openFull) {
+        node.openFull = false
+        rerender()
+        return
+      }
+      node.openFull = true
+      if (node.full || node.fullErr) rerender()
+      try {
+        const { value } = await api.printFull(sessionId, node.path || node.name)
+        node.full = value
+      } catch (e: any) {
+        node.fullErr = e.message
+      }
+      rerender()
+    },
+    [sessionId, rerender],
+  )
+
+  return { toggle, toggleFull, rerender }
+}
+
 export function VarTreePanel() {
   const sessionId = useStore((s) => s.sessionId)
   const state = useStore((s) => s.state)
   const mode = useStore((s) => s.mode)
   const stopSeq = useStore((s) => s.stopSeq)
   const selectedFrame = useStore((s) => s.selectedFrame)
+  const { toggle, toggleFull } = useVarTree(sessionId)
   const [roots, setRoots] = useState<TNode[]>([])
-  const [, bump] = useState(0)
-  const rerender = () => bump((v) => v + 1)
   const stopKeyRef = useRef('')
 
   const stopped = state === 'stopped' && mode === 'dap' && !!sessionId
@@ -74,56 +126,6 @@ export function VarTreePanel() {
     })()
   }, [sessionId, state, mode, stopSeq, selectedFrame])
 
-  const toggle = useCallback(
-    async (node: TNode) => {
-      if (!sessionId || !node.ref) return
-      if (node.open) {
-        node.open = false
-        rerender()
-        return
-      }
-      node.open = true
-      if (!node.children) {
-        node.loading = true
-        rerender()
-        try {
-          node.children = toNodes((await api.varChildren(sessionId, node.ref)).vars, node.path || '')
-        } catch {
-          // 陈旧 ref(已跨停站):整体收起重建
-          node.open = false
-          node.loading = false
-          stopKeyRef.current = ''
-          setRoots([])
-          return
-        }
-        node.loading = false
-      }
-      rerender()
-    },
-    [sessionId],
-  )
-
-  const toggleFull = useCallback(
-    async (node: TNode) => {
-      if (!sessionId) return
-      if (node.openFull) {
-        node.openFull = false
-        rerender()
-        return
-      }
-      node.openFull = true
-      if (node.full || node.fullErr) rerender()
-      try {
-        const { value } = await api.printFull(sessionId, node.path || node.name)
-        node.full = value
-      } catch (e: any) {
-        node.fullErr = e.message
-      }
-      rerender()
-    },
-    [sessionId],
-  )
-
   if (!mode) return null
   if (mode !== 'dap') {
     return <div className="px-3 py-2 text-xs text-zinc-500">变量树仅 DAP 模式可用(config.debug.mode = "dap")</div>
@@ -141,7 +143,7 @@ export function VarTreePanel() {
   )
 }
 
-function TreeNode({ node, depth, toggle, toggleFull }: {
+export function TreeNode({ node, depth, toggle, toggleFull }: {
   node: TNode
   depth: number
   toggle: (n: TNode) => void
