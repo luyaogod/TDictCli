@@ -33,7 +33,8 @@ var debugCmd = &cobra.Command{
 	Use:   "debug",
 	Short: "AI 人机协同调试 T100 作业(fgldb 协议驱动)",
 	Long: `通过 SSH 在 T100 服务器上驱动 fglrun -d 的 (fgldb) 文本调试协议,
-提供本地 Web 调试界面与 MCP 接口,实现"人操作 GDC 界面 + AI 检查分析"的人机协同调试。
+提供本地 Web 调试界面与命令行控制端(tdict debug start/exec/...),实现
+"人操作 GDC 界面 + AI 借助命令行检查分析"的人机协同调试。
 
 需要 config.json 中的 "debug" 配置节(ssh/zone 等)。`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
@@ -148,7 +149,7 @@ var debugProbeCmd = &cobra.Command{
 // debugServeCmd M1+:启动本地服务(REST+WS+MCP+Web 前端)
 var debugServeCmd = &cobra.Command{
 	Use:   "serve",
-	Short: "启动本地调试服务(HTTP :8000,前端 + REST + WS + MCP)",
+	Short: "启动本地调试服务(HTTP :8000,前端 + REST + WS)",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfgPath, err := resolveConfigPath(configPath)
 		if err != nil {
@@ -163,7 +164,7 @@ var debugServeCmd = &cobra.Command{
 		}
 		// 数据目录 = config.json 所在目录(断点持久化等)
 		cfg.DataDir = filepath.Dir(cfgPath)
-		srv := debug.NewServer(cfg, webFS)
+		srv := debug.NewServer(cfg, webFS, cfgPath)
 		return srv.Run(context.Background())
 	},
 }

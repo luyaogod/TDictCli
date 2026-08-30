@@ -1,6 +1,7 @@
 // Monaco 源码视图:4gl 简易语法高亮 + 断点 gutter + 停站行高亮
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Editor, { loader, type OnMount } from '@monaco-editor/react'
+import { Loader2 } from 'lucide-react'
 import * as monaco from 'monaco-editor'
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
 // codicon 图标映射表:ESM 用法要求宿主显式引入,否则 Ctrl+F 查找控件等只有空按钮
@@ -187,7 +188,11 @@ function progKey(f: string, module?: string): string {
         beforeMount={setupMonaco}
         onMount={onMount}
         options={editorOptions}
-        loading={<div className="p-4 text-sm text-zinc-500">加载源码…</div>}
+        loading={
+          <div className="flex h-full items-center justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
+          </div>
+        }
       />
       {!sourceContent && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">

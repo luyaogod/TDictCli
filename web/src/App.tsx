@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { RotateCcw, WifiOff, Bug, Globe, FlaskConical, type LucideIcon } from 'lucide-react'
+import { RotateCcw, WifiOff, Bug, Globe, FlaskConical, Settings, type LucideIcon } from 'lucide-react'
 import { connectWS, useStore } from './store'
 import { Toolbar } from './Toolbar'
 import { SourceView } from './SourceView'
 import { RightPanels, TimelinePanel } from './Panels'
 import { WsLogView } from './WsLogView'
 import { WsTestView } from './WsTestView'
+import { SettingsView } from './SettingsView'
 import { StatusBar } from './StatusBar'
 import { api } from './api'
 
@@ -153,11 +154,14 @@ export function App() {
           <ActivityIcon icon={Bug} label="调试" active={view === 'debug'} onClick={() => setView('debug')} />
           <ActivityIcon icon={Globe} label="接口日志" active={view === 'wslogs'} onClick={() => setView('wslogs')} />
           <ActivityIcon icon={FlaskConical} label="服务测试" active={view === 'wstest'} onClick={() => setView('wstest')} />
+          <ActivityIcon icon={Settings} label="设置" active={view === 'settings'} onClick={() => setView('settings')} />
         </div>
         {view === 'wslogs' ? (
           <WsLogView />
         ) : view === 'wstest' ? (
           <WsTestView />
+        ) : view === 'settings' ? (
+          <SettingsView />
         ) : (
           /* 中间列(编辑区 + 时间线)与整高右面板左右并排
              min-w-0 + overflow-hidden:Monaco 会给编辑器写内联像素宽度,
