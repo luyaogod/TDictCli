@@ -205,16 +205,33 @@ function StackBody() {
   )
 }
 
+// 条目视图构建:RECORD/ARRAY 文本解析成树,标量保持原文本(监视/自动变量共用)
+interface WatchView { expr: string; error?: string; text?: string; root?: TNode }
+
+function buildVarView(expr: string, value?: string, error?: string): WatchView {
+  if (error) return { expr, error }
+  const kids = parseFglTree(value || '')
+  if (kids) {
+    const record = kids.some((k) => !k.name.startsWith('['))
+    return { expr, root: { name: expr, open: false, children: kids, type: record ? 'RECORD' : `ARRAY[${kids.length}]` } }
+  }
+  return { expr, text: value }
+}
+
 // 自动变量:停站后从当前源码窗自动提取变量并求值(只读,可一键转为监视)
 function AutovarsBody() {
   const autovars = useStore((s) => s.autovars)
   const addWatch = useStore((s) => s.addWatch)
+  const [views, setViews] = useState<WatchView[]>([])
+  useEffect(() => {
+    setViews(autovars.map((v) => buildVarView(v.expr, v.value)))
+  }, [autovars])
   if (autovars.length === 0) {
     return null
   }
   return (
     <div>
-      {autovars.map((v) => (
+      {views.map((v) => (
         <div key={v.expr} className="group flex items-start gap-1 border-b border-zinc-800/60 px-2 py-1 text-xs">
           <button
             className="shrink-0 text-zinc-700 opacity-0 transition-opacity hover:text-emerald-400 group-hover:opacity-100"
@@ -224,17 +241,20 @@ function AutovarsBody() {
             +
           </button>
           <div className="min-w-0 flex-1">
-            <div className="text-zinc-400">{v.expr}</div>
-            <div className="whitespace-pre-wrap break-all text-emerald-400">{v.value}</div>
+            {v.root ? (
+              <VarTreeNodes nodes={[v.root]} />
+            ) : (
+              <>
+                <div className="text-zinc-400">{v.expr}</div>
+                <div className="whitespace-pre-wrap break-all text-emerald-400">{v.text}</div>
+              </>
+            )}
           </div>
         </div>
       ))}
     </div>
   )
 }
-
-// 监视条目视图:watches 刷新时重建;RECORD/ARRAY 文本解析成树,标量保持原文本
-interface WatchView { expr: string; error?: string; text?: string; root?: TNode }
 
 function WatchesBody() {
   const watches = useStore((s) => s.watches)
@@ -244,15 +264,7 @@ function WatchesBody() {
   const [expr, setExpr] = useState('')
   const [views, setViews] = useState<WatchView[]>([])
   useEffect(() => {
-    setViews(watches.map((w) => {
-      if (w.error) return { expr: w.expr, error: w.error }
-      const kids = parseFglTree(w.value || '')
-      if (kids) {
-        const record = kids.some((k) => !k.name.startsWith('['))
-        return { expr: w.expr, root: { name: w.expr, open: false, children: kids, type: record ? 'RECORD' : `ARRAY[${kids.length}]` } }
-      }
-      return { expr: w.expr, text: w.value }
-    }))
+    setViews(watches.map((w) => buildVarView(w.expr, w.value, w.error)))
   }, [watches])
   return (
     <div>
