@@ -8,6 +8,7 @@ export interface StopInfo {
 export interface Breakpoint { num: number; file: string; line: number; func?: string; enabled: boolean; note?: string }
 export interface VarItem { expr: string; value?: string }
 export interface VarDecl { name: string; type: string }
+export interface VarNode { name: string; value?: string; type?: string; ref?: number }
 export interface SessionBrief {
   id: string; module: string; prog: string; runProg?: string; state: string
   file?: string; line?: number; func?: string; reason?: string
@@ -55,6 +56,8 @@ export const api = {
   control: (id: string, action: string, arg?: string) =>
     req<any>(`/api/sessions/${id}/control`, { method: 'POST', body: JSON.stringify({ action, arg }) }),
   print: (id: string, expr: string) => req<{ value: string }>(`/api/sessions/${id}/print`, { method: 'POST', body: JSON.stringify({ expr }) }),
+  varRoots: (id: string) => req<{ localsRef: number; globalsRef: number }>(`/api/sessions/${id}/varroots`),
+  varChildren: (id: string, ref: number) => req<{ vars: VarNode[] }>(`/api/sessions/${id}/variables?ref=${ref}`),
   where: (id: string) => req<{ frames: Frame[] }>(`/api/sessions/${id}/where`, { method: 'POST' }),
   raw: (id: string, command: string) => req<{ lines: string[] }>(`/api/sessions/${id}/raw`, { method: 'POST', body: JSON.stringify({ command }) }),
   locals: (id: string) => req<{ vars: VarItem[] }>(`/api/sessions/${id}/locals`),

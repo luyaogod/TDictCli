@@ -889,6 +889,55 @@ func (s *DAPSession) dapVariables(ref, count int) ([]dapVar, error) {
 	return body.Variables, nil
 }
 
+// VarNode 变量树节点(Ref>0 表示可继续下钻)
+type VarNode struct {
+	Name  string `json:"name"`
+	Value string `json:"value,omitempty"`
+	Type  string `json:"type,omitempty"`
+	Ref   int    `json:"ref,omitempty"`
+}
+
+func (s *DAPSession) Mode() string { return "dap" }
+
+// VarRoots 返回局部/全局两个 scope 的变量引用(停站后有效;跨停站失效,需重取)
+func (s *DAPSession) VarRoots() (int, int, error) {
+	s.mu.Lock()
+	if s.state != StateStopped {
+		s.mu.Unlock()
+		return 0, 0, fmt.Errorf("仅停站可查看变量")
+	}
+	lref, gref := s.localsRef, s.globalsRef
+	s.mu.Unlock()
+	if lref < 0 || gref < 0 {
+		if err := s.refreshScopes(); err != nil {
+			return 0, 0, err
+		}
+		s.mu.Lock()
+		lref, gref = s.localsRef, s.globalsRef
+		s.mu.Unlock()
+	}
+	return lref, gref, nil
+}
+
+// VarChildren 下钻一层变量(ref 引用仅在当前停站有效,陈旧引用由适配器报错)
+func (s *DAPSession) VarChildren(ref int) ([]VarNode, error) {
+	s.mu.Lock()
+	if s.state != StateStopped {
+		s.mu.Unlock()
+		return nil, fmt.Errorf("仅停站可查看变量")
+	}
+	s.mu.Unlock()
+	vars, err := s.dapVariables(ref, 500)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]VarNode, 0, len(vars))
+	for _, v := range vars {
+		out = append(out, VarNode{Name: v.Name, Value: v.Value, Type: v.Type, Ref: v.VariablesReference})
+	}
+	return out, nil
+}
+
 func (s *DAPSession) Locals() ([]VarItem, error) {
 	s.mu.Lock()
 	if s.state != StateStopped {

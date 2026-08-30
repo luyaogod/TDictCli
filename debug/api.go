@@ -76,6 +76,8 @@ func (s *Server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/sessions/{id}/raw", s.hRaw)
 	mux.HandleFunc("GET /api/sessions/{id}/locals", s.hLocals)
 	mux.HandleFunc("GET /api/sessions/{id}/globals", s.hGlobals)
+	mux.HandleFunc("GET /api/sessions/{id}/varroots", s.hVarRoots)
+	mux.HandleFunc("GET /api/sessions/{id}/variables", s.hVariables)
 	mux.HandleFunc("GET /api/sessions/{id}/sources", s.hSources)
 	mux.HandleFunc("GET /api/sessions/{id}/functions", s.hFunctions)
 	mux.HandleFunc("GET /api/sessions/{id}/autovars", s.hAutovars)
@@ -177,7 +179,8 @@ func (s *Server) hSnapshot(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, map[string]any{
 		"ok": true,
 		"id": sess.ID(), "module": sess.Module(), "prog": sess.Prog(), "runProg": sess.RunProg(),
-		"state": string(sess.State()), "stop": cur,
+		"mode":            sess.Mode(),
+		"state":           string(sess.State()), "stop": cur,
 		"started":         sess.Started(),
 		"breakpoints":     sess.Breakpoints(),
 		"holdingSeconds":  sess.HoldingSeconds(),
@@ -383,6 +386,53 @@ func (s *Server) hGlobals(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, 200, map[string]any{"ok": true, "vars": vars, "total": total})
+}
+
+// varTreeSession 变量树下钻的可选能力(仅 DAP 会话实现,PTY 不支持)
+type varTreeSession interface {
+	VarRoots() (locals int, globals int, err error)
+	VarChildren(ref int) ([]VarNode, error)
+}
+
+func (s *Server) hVarRoots(w http.ResponseWriter, r *http.Request) {
+	sess := s.sessOf(w, r)
+	if sess == nil {
+		return
+	}
+	vt, ok := sess.(varTreeSession)
+	if !ok {
+		fail(w, 400, fmt.Errorf("当前模式(PTY)不支持变量树,仅 DAP 模式可用"))
+		return
+	}
+	lref, gref, err := vt.VarRoots()
+	if err != nil {
+		fail(w, 400, err)
+		return
+	}
+	writeJSON(w, 200, map[string]any{"ok": true, "localsRef": lref, "globalsRef": gref})
+}
+
+func (s *Server) hVariables(w http.ResponseWriter, r *http.Request) {
+	sess := s.sessOf(w, r)
+	if sess == nil {
+		return
+	}
+	vt, ok := sess.(varTreeSession)
+	if !ok {
+		fail(w, 400, fmt.Errorf("当前模式(PTY)不支持变量树,仅 DAP 模式可用"))
+		return
+	}
+	ref, _ := strconv.Atoi(r.URL.Query().Get("ref"))
+	if ref <= 0 {
+		fail(w, 400, fmt.Errorf("ref 无效"))
+		return
+	}
+	nodes, err := vt.VarChildren(ref)
+	if err != nil {
+		fail(w, 400, err)
+		return
+	}
+	writeJSON(w, 200, map[string]any{"ok": true, "vars": nodes})
 }
 
 func (s *Server) hSources(w http.ResponseWriter, r *http.Request) {

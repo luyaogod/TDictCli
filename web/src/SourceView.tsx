@@ -6,6 +6,7 @@ import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
 // codicon 图标映射表:ESM 用法要求宿主显式引入,否则 Ctrl+F 查找控件等只有空按钮
 import 'monaco-editor/esm/vs/base/browser/ui/codicons/codiconStyles.js'
 import { useStore } from './store'
+import { api } from './api'
 
 export const editorRef = { current: null as monaco.editor.IStandaloneCodeEditor | null }
 
@@ -73,6 +74,41 @@ function setupMonaco() {
       'scrollbarSlider.background': '#3f3f4680',
       'scrollbarSlider.hoverBackground': '#52525bb0',
       'scrollbarSlider.activeBackground': '#71717ac0',
+    },
+  })
+
+  // 悬停求值:仅 DAP 模式停站时触发(PTY 走命令通道,悬停风暴会刷爆提示符队列)
+  monaco.languages.registerHoverProvider('4gl', {
+    async provideHover(model, position) {
+      const st = useStore.getState()
+      if (!st.sessionId || st.state !== 'stopped' || st.mode !== 'dap') return null
+      const word = model.getWordAtPosition(position)
+      if (!word) return null
+      const line = model.getLineContent(position.lineNumber)
+      // 点链扩展:a.b.c 的 record 字段链整体求值,而不是只取光标下的最后一段
+      let s = word.startColumn - 1 // 0-based 起点
+      let e = word.endColumn - 1   // 0-based 终点(不含)
+      while (e < line.length && line[e] === '.') {
+        const m = /^[A-Za-z0-9_]+/.exec(line.slice(e + 1))
+        if (!m) break
+        e += 1 + m[0].length
+      }
+      for (;;) {
+        const m = /([A-Za-z_][A-Za-z0-9_]*)\.$/.exec(line.slice(0, s))
+        if (!m) break
+        s = s - m[1].length - 1
+      }
+      const expr = line.slice(s, e)
+      try {
+        const { value } = await api.print(st.sessionId, expr)
+        const v = value === undefined || value === '' ? '(空)' : value
+        return {
+          range: new monaco.Range(position.lineNumber, s + 1, position.lineNumber, e + 1),
+          contents: [{ value: `**${expr}** =\n\`\`\`\n${v}\n\`\`\`` }],
+        }
+      } catch {
+        return null // 关键字/不可求值文本静默无 hover
+      }
     },
   })
 }

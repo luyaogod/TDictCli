@@ -13,6 +13,7 @@ type session interface {
 	Module() string
 	Prog() string
 	RunProg() string
+	Mode() string // "pty" | "dap"
 	SetArgsOverride(args string)
 	Log(text string)
 
@@ -65,6 +66,7 @@ func (s *Session) ID() string           { return s.id }
 func (s *Session) Module() string       { return s.module }
 func (s *Session) Prog() string         { return s.prog }
 func (s *Session) RunProg() string      { return s.runProg }
+func (s *Session) Mode() string         { return "pty" }
 func (s *Session) SetArgsOverride(a string) { s.argsOverride = a }
 func (s *Session) Restoring() bool {
 	s.mu.Lock()

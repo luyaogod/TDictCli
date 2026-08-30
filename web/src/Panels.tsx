@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Play } from 'lucide-react'
 import { useStore } from './store'
 import { Badge, Button, Input } from './ui'
+import { VarTreePanel } from './VarTree'
 
 // 运行/调试区(VS Code Run and Debug 同款):绿色运行按钮 + 目标输入框。
 // 输入作业编号或程序名(模块自动解析);也支持「模块/作业」显式指定模块。
@@ -128,6 +129,15 @@ export function RightPanels() {
           </AccordionTrigger>
           <AccordionContent>
             <AutovarsBody />
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="vartree">
+          <AccordionTrigger>
+            <span className="text-xs font-medium">变量树</span>
+          </AccordionTrigger>
+          <AccordionContent>
+            <VarTreePanel />
           </AccordionContent>
         </AccordionItem>
 

@@ -18,7 +18,9 @@ interface Store {
   sessionId: string | null
   module: string
   prog: string
+  mode: string // 调试协议:pty|dap(悬停求值/变量树仅 dap 可用)
   state: string // loading|stopped|running|exit|''
+  stopSeq: number // 停站代数:每次 stopped 事件 +1(变量树等跨停站失效缓存的复位依据)
   started: boolean // 程序是否已 run 过(入口停站时步进不可用)
   stop: StopInfo | null
   holdingSeconds: number
@@ -115,7 +117,8 @@ function jumpToMain(set: (p: Partial<Store>) => void, get: () => Store) {
 
 export const useStore = create<Store>((set, get) => ({
   wsConnected: false,
-  sessionId: null, module: '', prog: '', state: '', started: false, stop: null, holdingSeconds: 0,
+  sessionId: null, module: '', prog: '', mode: '', state: '', started: false, stop: null, holdingSeconds: 0,
+  stopSeq: 0, // 停站代数:每次 stopped 事件 +1(变量树等缓存按此重置)
   launching: false, showRight: true, showBottom: true,
   breakpoints: [], adjustedBps: {}, frames: [], watches: [], autovars: [], selectedFrame: -1, backendDead: '',
   timeline: [], rawLog: [],
@@ -197,7 +200,7 @@ export const useStore = create<Store>((set, get) => ({
         set({ autovars: ev.vars || [] })
         return
       case 'stopped':
-        set({ stop: ev.stop || null, state: 'stopped', currentLine: ev.stop?.line || get().currentLine, selectedFrame: -1 })
+        set({ stop: ev.stop || null, state: 'stopped', currentLine: ev.stop?.line || get().currentLine, selectedFrame: -1, stopSeq: get().stopSeq + 1 })
         st.pushTimeline({
           origin: 'system', kind: 'stop',
           text: `停站[${ev.stop?.reason}] ${ev.stop?.file || ''}:${ev.stop?.line ?? ''} ${ev.stop?.func || ''}`,
@@ -364,6 +367,7 @@ export const useStore = create<Store>((set, get) => ({
       set({
         state: snap.state, stop: snap.stop, breakpoints: snap.breakpoints || [],
         started: !!snap.started,
+        mode: snap.mode || get().mode,
         holdingSeconds: snap.holdingSeconds || 0,
         // 免模块启动时后端会按作业名解析模块,回读给前端(源码兜底路径依赖它)
         module: snap.module || get().module,
@@ -615,6 +619,7 @@ export const useStore = create<Store>((set, get) => ({
       set({
         stop: snap.stop, breakpoints: snap.breakpoints || [],
         started: !!snap.started,
+        mode: snap.mode || get().mode,
         currentLine: snap.stop?.line ?? 0, holdingSeconds: snap.holdingSeconds || 0,
       })
       if (snap.state === 'stopped') await get().refreshSource(snap.stop?.file)
@@ -634,6 +639,7 @@ function pollUntilStopped(set: (p: Partial<Store>) => void, get: () => Store) {
       set({
         state: snap.state, stop: snap.stop, breakpoints: snap.breakpoints || [],
         started: !!snap.started,
+        mode: snap.mode || get().mode,
         holdingSeconds: snap.holdingSeconds || 0,
         module: snap.module || get().module,
         runProg: snap.runProg || get().runProg,
