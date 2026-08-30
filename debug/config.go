@@ -15,12 +15,26 @@ type SSHConfig struct {
 	Password string `json:"password"`
 }
 
+// NamedSSH 命名 SSH 连接(设置页维护的多服务器列表;start --ssh 按名引用)
+type NamedSSH struct {
+	Name string `json:"name"`
+	SSHConfig
+}
+
 // DBConfig 数据库连接探查配置(config.json debug.db 节,全部可选)
 type DBConfig struct {
 	Ent        int    `json:"ent"`        // 默认企业编号(TOPENT);0=不指定
 	SQLPlus    string `json:"sqlplus"`    // sqlplus 路径,留空自动探测
 	OracleHome string `json:"oracleHome"` // ORACLE_HOME,留空自动探测
 	TNS        string `json:"tns"`        // TNS 别名(如 t35prd),留空按 zone 推导
+}
+
+// NamedDB 命名数据库连接(设置页维护的多数据库列表)
+type NamedDB struct {
+	Name     string `json:"name"`
+	User     string `json:"user,omitempty"`
+	Password string `json:"password,omitempty"`
+	DBConfig
 }
 
 // Config debug 功能配置,存放在 config.json 顶层 "debug" 键。
@@ -40,6 +54,23 @@ type Config struct {
 	PersistBPs      *bool     `json:"persistBreakpoints"` // 断点持久化开关(nil 视为 true)
 	DataDir         string    `json:"-"`               // 数据目录(断点持久化等);由 serve 注入 config.json 所在目录,空=禁用
 	DB              *DBConfig `json:"db,omitempty"`    // 数据库连接探查配置(debug db 命令用)
+	SSHS            []NamedSSH `json:"sshs,omitempty"` // 多 SSH 连接列表(设置页维护;默认连接仍在上面的 ssh)
+	DBS             []NamedDB  `json:"dbs,omitempty"`  // 多数据库连接列表(设置页维护;默认库仍在上面的 db)
+}
+
+// SSHByName 按名取 SSH 连接(空名/未命中返回默认 ssh);nls 大小写不敏感
+func (c *Config) SSHByName(name string) SSHConfig {
+	if name != "" {
+		for _, s := range c.SSHS {
+			if s.Name == name {
+				if s.Port == 0 {
+					s.Port = 22
+				}
+				return s.SSHConfig
+			}
+		}
+	}
+	return c.SSH
 }
 
 // TNSName 返回数据库 TNS 别名(zone 36→t35prd,35→t35tst,31→t35dev,39→t35pth,t→topprd)
@@ -117,6 +148,21 @@ func (c *Config) fillDefaults() {
 
 // Top 返回区域顶级目录(去尾斜杠)
 func (c *Config) Top() string { return c.TopDir }
+
+// CloneWithZone 复制配置并覆盖区域(启动参数 --zone 用):
+// 连带推导 TopDir 与 ModuleRoots,其余字段原样共享
+func (c *Config) CloneWithZone(zone string) *Config {
+	c2 := *c
+	if zone != "" && zone != c.Zone {
+		c2.Zone = zone
+		if td := zoneTopDir[zone]; td != "" {
+			c2.TopDir = td
+			// com/wss 是 WebService 程序的专用模块目录(与 fillDefaults 同规则)
+			c2.ModuleRoots = []string{td + "/erp", td + "/com", td + "/com/wss"}
+		}
+	}
+	return &c2
+}
 
 // ModuleDir 返回模块主目录,如 /u1/t35prd/erp/asf;wss 模块挂载在 com 下
 func (c *Config) ModuleDir(module string) string {

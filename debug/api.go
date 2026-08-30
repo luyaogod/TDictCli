@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -14,18 +15,18 @@ import (
 	"github.com/coder/websocket"
 )
 
-// Server 本地调试服务:REST + WebSocket + Web 前端(+ M3 的 MCP)
+// Server 本地调试服务:REST + WebSocket + Web 前端
 type Server struct {
 	cfg        *Config
+	cfgPath    string // config.json 路径(设置页写回用)
 	web        fs.FS
 	webSub     fs.FS // web/dist 子文件系统(未构建前端时为 nil)
 	mgr        *Manager
-	mcpHandler http.Handler // M3: MCP streamable HTTP handler
 }
 
-// NewServer 创建服务实例
-func NewServer(cfg *Config, web fs.FS) *Server {
-	s := &Server{cfg: cfg, web: web, mgr: NewManager(cfg)}
+// NewServer 创建服务实例;cfgPath 为 config.json 路径(设置页写回用,可为空=只读)
+func NewServer(cfg *Config, web fs.FS, cfgPath string) *Server {
+	s := &Server{cfg: cfg, cfgPath: cfgPath, web: web, mgr: NewManager(cfg)}
 	if web != nil {
 		if sub, err := fs.Sub(web, "web/dist"); err == nil {
 			if f, err := sub.Open("index.html"); err == nil {
@@ -34,7 +35,6 @@ func NewServer(cfg *Config, web fs.FS) *Server {
 			}
 		}
 	}
-	s.initMCP()
 	return s
 }
 
@@ -51,8 +51,7 @@ func (s *Server) Run(ctx context.Context) error {
 		_ = srv.Shutdown(shutdownCtx)
 	}()
 
-	fmt.Printf("[tdict debug] 服务已启动  前端+API: http://%s   MCP: http://%s/mcp\n",
-		s.cfg.Listen, s.cfg.Listen)
+	fmt.Printf("[tdict debug] 服务已启动  前端+API: http://%s\n", s.cfg.Listen)
 	err := srv.ListenAndServe()
 	if err == http.ErrServerClosed {
 		s.mgr.CloseAll()
@@ -87,8 +86,9 @@ func (s *Server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/wslogs", s.hWSLogs)
 	mux.HandleFunc("GET /api/wslogs/content", s.hWSLogContent)
 	mux.HandleFunc("POST /api/wslogs/debug", s.hWSLogDebug)
+	mux.HandleFunc("GET /api/settings", s.hSettingsGet)
+	mux.HandleFunc("PUT /api/settings", s.hSettingsPut)
 	mux.HandleFunc("GET /api/ws", s.hWS)
-	mux.HandleFunc("/mcp", s.hMCP)
 	mux.HandleFunc("/", s.hStatic)
 }
 
@@ -138,6 +138,8 @@ func (s *Server) hLaunch(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Module string `json:"module"`
 		Prog   string `json:"prog"`
+		SSH    string `json:"ssh"` // 多 SSH 配置名(设置页维护);空 = 默认连接
+		Zone   string `json:"zone"` // 区域覆盖(31/35/36/39/t);空 = 默认区域
 	}
 	if !readBody(w, r, &req) {
 		return
@@ -146,7 +148,17 @@ func (s *Server) hLaunch(w http.ResponseWriter, r *http.Request) {
 		fail(w, 400, fmt.Errorf("prog 必填(module 可留空,自动按作业名解析)"))
 		return
 	}
-	sess, err := s.mgr.Launch(req.Module, req.Prog)
+	// 按名换 SSH / 覆盖区域:克隆配置,默认链路零影响
+	cfg := s.cfg
+	if req.SSH != "" || req.Zone != "" {
+		c2 := *s.cfg
+		if req.SSH != "" {
+			c2.SSH = s.cfg.SSHByName(req.SSH)
+		}
+		c2 = *c2.CloneWithZone(req.Zone)
+		cfg = &c2
+	}
+	sess, err := s.mgr.LaunchWith(cfg, req.Module, req.Prog)
 	if err != nil {
 		fail(w, 409, err)
 		return
@@ -604,6 +616,12 @@ func (s *Server) hWSLogDebug(w http.ResponseWriter, r *http.Request) {
 		fail(w, 500, err)
 		return
 	}
+	// 已有会话先结束(重放调试独占通道,旧会话不再有用)
+	if cur := s.mgr.Current(); cur != nil {
+		s.mgr.emit(Event{Type: "log", SessionID: cur.ID, Text: "重放调试启动,自动结束当前会话"})
+		_ = cur.Quit()
+		s.mgr.Remove(cur.ID)
+	}
 	sess, err := s.mgr.LaunchReplay(item, content)
 	if err != nil {
 		fail(w, 409, err)
@@ -618,6 +636,55 @@ func (s *Server) hWSLogDebug(w http.ResponseWriter, r *http.Request) {
 	}()
 	writeJSON(w, 200, map[string]any{"ok": true, "sessionId": sess.ID,
 		"module": sess.Module, "prog": sess.Prog, "runProg": sess.RunProg})
+}
+
+// ---------- 设置(多 SSH / 多数据库) ----------
+
+// hSettingsGet 返回完整 debug 配置节
+func (s *Server) hSettingsGet(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, 200, s.cfg)
+}
+
+// hSettingsPut 写回设置:仅替换 config.json 顶层 "debug" 键(其它键如 dbconfig 原样保留),
+// 并原位热更新运行中的 s.cfg(Manager 等持有同一指针,立即生效)
+func (s *Server) hSettingsPut(w http.ResponseWriter, r *http.Request) {
+	if s.cfgPath == "" {
+		fail(w, 500, fmt.Errorf("服务未挂接 config.json 路径,无法保存"))
+		return
+	}
+	var nc Config
+	if !readBody(w, r, &nc) {
+		return
+	}
+	nc.DataDir = s.cfg.DataDir // 运行时注入字段,请求体不带
+	nc.fillDefaults()
+
+	raw, err := os.ReadFile(s.cfgPath)
+	if err != nil {
+		fail(w, 500, fmt.Errorf("读取 config.json 失败: %w", err))
+		return
+	}
+	var root map[string]any
+	if err := json.Unmarshal(raw, &root); err != nil || root == nil {
+		root = map[string]any{}
+	}
+	root["debug"] = &nc
+	out, err := json.MarshalIndent(root, "", "  ")
+	if err != nil {
+		fail(w, 500, err)
+		return
+	}
+	tmp := s.cfgPath + ".tmp"
+	if err := os.WriteFile(tmp, out, 0o644); err != nil {
+		fail(w, 500, fmt.Errorf("写入 config.json 失败: %w", err))
+		return
+	}
+	if err := os.Rename(tmp, s.cfgPath); err != nil {
+		fail(w, 500, err)
+		return
+	}
+	*s.cfg = nc // 热生效(Listen 需重启服务才换端口,其余字段即时)
+	writeJSON(w, 200, map[string]any{"ok": true})
 }
 
 // ---------- WebSocket ----------
@@ -648,16 +715,6 @@ func (s *Server) hWS(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-}
-
-// ---------- MCP(M3 挂载点)与静态资源 ----------
-
-func (s *Server) hMCP(w http.ResponseWriter, r *http.Request) {
-	if s.mcpHandler == nil {
-		fail(w, 501, fmt.Errorf("MCP 未启用(M3)"))
-		return
-	}
-	s.mcpHandler.ServeHTTP(w, r)
 }
 
 func (s *Server) hStatic(w http.ResponseWriter, r *http.Request) {

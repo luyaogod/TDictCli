@@ -55,6 +55,15 @@ func (m *Manager) emit(ev Event) {
 // Launch 创建并启动一个调试会话(同一时间仅允许一个会话,保证生产安全)。
 // 启动前清扫已结束的残留会话(程序退出/后端死亡),重启无需先 DELETE。
 func (m *Manager) Launch(module, prog string) (*Session, error) {
+	return m.launchWith(m.cfg, module, prog)
+}
+
+// LaunchWith 按指定配置启动(多 SSH/多区域:调用方克隆好 cfg 再传入)
+func (m *Manager) LaunchWith(cfg *Config, module, prog string) (*Session, error) {
+	return m.launchWith(cfg, module, prog)
+}
+
+func (m *Manager) launchWith(cfg *Config, module, prog string) (*Session, error) {
 	m.mu.Lock()
 	for id, s := range m.sessions {
 		if s.State() == StateExit {
@@ -70,14 +79,14 @@ func (m *Manager) Launch(module, prog string) (*Session, error) {
 	// 对齐 T100 gendbg:启动前连库把作业编号解析成实体程序+模块(gzzz_t),
 	// 源码与 42r 都跟实体程序走;未配置 db/查询失败/未命中 → 会话内按名称文件搜索兜底
 	runProg := ""
-	if mod2, prog2 := m.resolveJob(module, prog); prog2 != "" {
+	if mod2, prog2 := m.resolveJobWith(cfg, module, prog); prog2 != "" {
 		runProg = prog2
 		if module == "" && mod2 != "" {
 			module = mod2
 		}
 	}
 
-	sess, err := NewSession(m.cfg, module, prog, runProg, m.emit)
+	sess, err := NewSession(cfg, module, prog, runProg, m.emit)
 	if err != nil {
 		return nil, err
 	}
@@ -93,19 +102,23 @@ func (m *Manager) Launch(module, prog string) (*Session, error) {
 // resolveJob 连库按 gendbg 语义解析作业编号(gzzz_t:gzzz001 → gzzz002 实体程序 + gzzz005 模块)。
 // 返回 (模块, 实体程序);未配置 db/查询失败/未命中 → ("",""),由调用方回退文件搜索。
 func (m *Manager) resolveJob(module, job string) (mod, prog string) {
-	if m.cfg.DB == nil || !reProgName.MatchString(job) {
+	return m.resolveJobWith(m.cfg, module, job)
+}
+
+func (m *Manager) resolveJobWith(cfg *Config, module, job string) (mod, prog string) {
+	if cfg.DB == nil || !reProgName.MatchString(job) {
 		return "", ""
 	}
-	conn, err := Dial(m.cfg.SSH)
+	conn, err := Dial(cfg.SSH)
 	if err != nil {
 		return "", ""
 	}
 	defer conn.Close()
-	zone := m.cfg.Zone
+	zone := cfg.Zone
 	if zone == "" {
 		zone = "36"
 	}
-	p, mc, err := dbResolveJob(conn, zone, m.cfg.TNSName(), job)
+	p, mc, err := dbResolveJob(conn, zone, cfg.TNSName(), job)
 	if err != nil || p == "" {
 		return "", ""
 	}
@@ -113,9 +126,9 @@ func (m *Manager) resolveJob(module, job string) (mod, prog string) {
 		return module, p // 用户显式指定模块:尊重指定,仅采纳实体程序
 	}
 	mod = strings.ToLower(mc)
-	if mc == "" || mc == "-" || !modHas42r(conn, m.cfg.TopDir, mod, p) {
+	if mc == "" || mc == "-" || !modHas42r(conn, cfg.TopDir, mod, p) {
 		// 模块码缺失或目录对不上:全模块搜索实体程序的 42r;0/多命中留给会话内兜底报错
-		if cands := searchModule42r(conn, m.cfg.ModuleRoots, p); len(cands) == 1 {
+		if cands := searchModule42r(conn, cfg.ModuleRoots, p); len(cands) == 1 {
 			mod = cands[0]
 		} else {
 			mod = ""

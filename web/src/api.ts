@@ -44,9 +44,11 @@ async function req<T>(url: string, opts?: RequestInit): Promise<T> {
 
 export const api = {
   status: () => req<any>('/api/status'),
+  settings: () => req<any>('/api/settings'),
+  saveSettings: (cfg: any) => req<any>('/api/settings', { method: 'PUT', body: JSON.stringify(cfg) }),
   list: () => req<{ sessions: SessionBrief[] }>('/api/sessions'),
-  launch: (module: string, prog: string) =>
-    req<{ sessionId: string; module?: string; prog?: string; runProg?: string }>('/api/sessions', { method: 'POST', body: JSON.stringify({ module, prog }) }),
+  launch: (module: string, prog: string, opts?: { ssh?: string; zone?: string }) =>
+    req<{ sessionId: string; module?: string; prog?: string; runProg?: string }>('/api/sessions', { method: 'POST', body: JSON.stringify({ module, prog, ...opts }) }),
   snapshot: (id: string) => req<any>(`/api/sessions/${id}`),
   quit: (id: string) => req<any>(`/api/sessions/${id}`, { method: 'DELETE' }),
   bpAdd: (id: string, location: string) =>

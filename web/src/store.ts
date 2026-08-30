@@ -38,7 +38,7 @@ interface Store {
   rawLog: string[]
   runProg: string // gzzz_t 解析出的实体程序(源码命名/预取用);空 = 与 prog 相同
   // 视图与接口日志(VS Code 活动栏切换)
-  view: 'debug' | 'wslogs' | 'wstest'
+  view: 'debug' | 'wslogs' | 'wstest' | 'settings'
   // 服务测试(复刻 awsq990 集成服务测试)
   wsTestMode: string // 1/2 awsp900, 3 awsp920, 4 awsp940, 5 awsp930
   wsTestUrl: string
@@ -71,7 +71,7 @@ interface Store {
   sendRaw: (cmd: string) => Promise<void>
   pushTimeline: (item: Omit<TimelineItem, 'time'>) => void
   onEvent: (ev: Event) => void
-  setView: (v: 'debug' | 'wslogs' | 'wstest') => void
+  setView: (v: 'debug' | 'wslogs' | 'wstest' | 'settings') => void
   setWsTest: (p: { mode?: string; url?: string; body?: string; soap?: boolean; result?: WSTestResult | null }) => void
   runWsTest: () => Promise<void>
   loadWsLogs: (service: string, onlyFail: boolean, page?: number, startFrom?: string, startTo?: string) => Promise<void>
@@ -285,13 +285,20 @@ export const useStore = create<Store>((set, get) => ({
   setWsLogTab: (t) => set({ wsLogTab: t }),
 
   replayDebug: async (item) => {
-    set({ wsLogErr: '' })
+    // 立即切到 debug 页并进入 loading 态,再发启动请求(用户点了就看到页面在动)
+    set({ view: 'debug', wsLogErr: '', launching: true, state: 'loading' })
     try {
+      // 已有会话在跑:先结束它(一次只能调一个作业)
+      const old = get().sessionId
+      if (old) {
+        set({ sessionId: null })
+        void api.quit(old).catch(() => {})
+      }
       const r = await api.wsLogDebug(item.rowid)
       const mod = r.module || ''
       const rp = r.runProg || r.prog || item.job
       set({
-        view: 'debug', sessionId: r.sessionId, module: mod, prog: r.prog || item.job,
+        sessionId: r.sessionId, module: mod, prog: r.prog || item.job,
         runProg: rp, state: 'loading', timeline: [], rawLog: [], watches: [], autovars: [],
         backendDead: '', selectedFrame: -1, stop: null, breakpoints: [], frames: [],
         sourceContent: '', sourcePath: '', sourceDVM: '', currentLine: 0,
@@ -310,7 +317,9 @@ export const useStore = create<Store>((set, get) => ({
       }
       pollUntilStopped(set, get)
     } catch (e: any) {
-      set({ wsLogErr: e.message || String(e) })
+      set({ wsLogErr: e.message || String(e), state: '' })
+    } finally {
+      set({ launching: false })
     }
   },
 
