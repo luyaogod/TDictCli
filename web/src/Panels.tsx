@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Play } from 'lucide-react'
 import { useStore } from './store'
 import { Badge, Button, Input } from './ui'
+import { parseFglTree, type TNode } from './fglparse'
+import { VarTreeNodes } from './VarTreeUi'
 
 // 运行/调试区(VS Code Run and Debug 同款):绿色运行按钮 + 目标输入框。
 // 输入作业编号或程序名(模块自动解析);也支持「模块/作业」显式指定模块。
@@ -231,12 +233,27 @@ function AutovarsBody() {
   )
 }
 
+// 监视条目视图:watches 刷新时重建;RECORD/ARRAY 文本解析成树,标量保持原文本
+interface WatchView { expr: string; error?: string; text?: string; root?: TNode }
+
 function WatchesBody() {
   const watches = useStore((s) => s.watches)
   const addWatch = useStore((s) => s.addWatch)
   const removeWatch = useStore((s) => s.removeWatch)
   const doPrint = useStore((s) => s.doPrint)
   const [expr, setExpr] = useState('')
+  const [views, setViews] = useState<WatchView[]>([])
+  useEffect(() => {
+    setViews(watches.map((w) => {
+      if (w.error) return { expr: w.expr, error: w.error }
+      const kids = parseFglTree(w.value || '')
+      if (kids) {
+        const record = kids.some((k) => !k.name.startsWith('['))
+        return { expr: w.expr, root: { name: w.expr, open: false, children: kids, type: record ? 'RECORD' : `ARRAY[${kids.length}]` } }
+      }
+      return { expr: w.expr, text: w.value }
+    }))
+  }, [watches])
   return (
     <div>
       <div className="flex gap-1 p-1.5">
@@ -254,14 +271,20 @@ function WatchesBody() {
           求值
         </Button>
       </div>
-      {watches.map((w) => (
-        <div key={w.expr} className="flex items-start gap-1 border-b border-zinc-800/60 px-2 py-1 text-xs">
-          <button className="shrink-0 text-zinc-600 hover:text-red-400" onClick={() => removeWatch(w.expr)}>×</button>
+      {views.map((v) => (
+        <div key={v.expr} className="flex items-start gap-1 border-b border-zinc-800/60 px-2 py-1 text-xs">
+          <button className="shrink-0 text-zinc-600 hover:text-red-400" onClick={() => removeWatch(v.expr)}>×</button>
           <div className="min-w-0 flex-1">
-            <div className="text-zinc-400">{w.expr}</div>
-            <div className={`whitespace-pre-wrap break-all ${w.error ? 'text-red-400' : 'text-emerald-400'}`}>
-              {w.error || w.value}
-            </div>
+            {v.root ? (
+              <VarTreeNodes nodes={[v.root]} />
+            ) : (
+              <>
+                <div className="text-zinc-400">{v.expr}</div>
+                <div className={`whitespace-pre-wrap break-all ${v.error ? 'text-red-400' : 'text-emerald-400'}`}>
+                  {v.error || v.text}
+                </div>
+              </>
+            )}
           </div>
         </div>
       ))}
