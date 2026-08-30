@@ -1,0 +1,31 @@
+{
+  "connections": [
+    {
+      "name": "示例连接 (金仓)",
+      "type": "kingbase",
+      "host": "10.0.0.1",
+      "port": 54321,
+      "database": "topprd",
+      "user": "dsdemo",
+      "password": "",
+      "isDefault": true,
+      "description": "数据字典查询连接 (tdict db 命令使用)"
+    }
+  ],
+  "debug": {
+    "ssh": {
+      "host": "10.0.0.2",
+      "port": 22,
+      "user": "tiptop",
+      "password": ""
+    },
+    "zone": "35",
+    "listen": "127.0.0.1:8000",
+    "launchArgs": "{prog}",
+    "watchdogSeconds": 180,
+    "mode": "pty",
+    "db": {
+      "ent": 99
+    }
+  }
+}
