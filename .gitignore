@@ -1,0 +1,24 @@
+# 构建与打包产物
+/dist/
+*.exe
+/web/node_modules/
+# go:embed 依赖:clone 后需 cd web && npm install && npm run build
+/web/dist/
+
+# 运行时产物
+debug-bps/
+*.log
+
+# 调试截图等开发文件
+debug_ui_*.png
+bsft001_wf.4gl
+
+# 数据文件(110MB,可用 tdict db sync 重建)
+erp_data.db
+erp_data.db.bak
+
+# 本地配置(含生产 SSH/数据库明文凭据,切勿提交)
+config.json
+
+# 会话数据
+.zcode/
