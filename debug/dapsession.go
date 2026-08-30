@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -795,8 +796,21 @@ func (s *DAPSession) SetBPEnabled(num int, enabled bool) error {
 
 // ---------- 求值 / 上下文 ----------
 
+// stripQuotedDisplay 剥掉适配器对 STRING 型结果的展示引号("..."),
+// 让截断特征("..." 结尾)在 print/悬停/监视/变量树之间全局一致
+func stripQuotedDisplay(v string) string {
+	if len(v) >= 2 && strings.HasPrefix(v, `"`) && strings.HasSuffix(v, `"`) {
+		return v[1 : len(v)-1]
+	}
+	return v
+}
+
 func (s *DAPSession) Print(expr string) (string, error) {
-	return s.evaluate(expr)
+	v, err := s.evaluate(expr)
+	if err != nil {
+		return "", err
+	}
+	return stripQuotedDisplay(v), nil
 }
 
 func (s *DAPSession) evaluate(expr string) (string, error) {
@@ -886,6 +900,9 @@ func (s *DAPSession) dapVariables(ref, count int) ([]dapVar, error) {
 		Variables []dapVar `json:"variables"`
 	}
 	_ = json.Unmarshal(resp.Body, &body)
+	for i := range body.Variables {
+		body.Variables[i].Value = stripQuotedDisplay(body.Variables[i].Value)
+	}
 	return body.Variables, nil
 }
 
@@ -934,6 +951,98 @@ func (s *DAPSession) VarChildren(ref int) ([]VarNode, error) {
 	out := make([]VarNode, 0, len(vars))
 	for _, v := range vars {
 		out = append(out, VarNode{Name: v.Name, Value: v.Value, Type: v.Type, Ref: v.VariablesReference})
+	}
+	return out, nil
+}
+
+// simpleChainRe 简单变量链(g_xxx / g_qryparam.cond):完整值分段求值只对这类表达式可用
+// (4GL 子串下标只能作用在变量上,任意表达式的结果没有载体)
+var simpleChainRe = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z0-9_]+)*$`)
+
+// FullValue 取被适配器截断(250 字符 + "...")的字符串完整值:
+// 适配器写死截断且不提供字符串下钻引用,靠表达式分段绕:
+//   先 getLength() 拿精确长度(STRING 类方法,CHAR/VARCHAR 也可用),
+//   CHAR/VARCHAR 用 4GL 子串下标 expr[起,止] 分段;STRING 下标报 "not an array",改 String 类方法 expr.subString(起,止)。
+// 分段端点按长度夹紧——越界的 subString 返回空而非截断,不能靠探测收尾。每段 200 字符,最多 100 段防失控。
+func (s *DAPSession) FullValue(expr string) (string, error) {
+	expr = strings.TrimSpace(expr)
+	if !simpleChainRe.MatchString(expr) {
+		return "", fmt.Errorf("完整值仅支持简单变量链(如 ls_sql / g_qryparam.cond),任意表达式无子串载体")
+	}
+	s.mu.Lock()
+	if s.state != StateStopped {
+		s.mu.Unlock()
+		return "", fmt.Errorf("仅停站可求值")
+	}
+	s.mu.Unlock()
+	// 注意:currentDapFrame 内部也拿 s.mu,必须在解锁后调用(否则自死锁,整个会话卡死)
+	fid := s.currentDapFrame()
+
+	evalOne := func(e string) (string, error) {
+		args := map[string]any{"expression": e, "context": "watch"}
+		if fid > 0 {
+			args["frameId"] = fid
+		}
+		resp, err := s.dap.request("evaluate", args, 15*time.Second)
+		if err != nil {
+			return "", err
+		}
+		var body struct {
+			Result string `json:"result"`
+		}
+		_ = json.Unmarshal(resp.Body, &body)
+		return body.Result, nil
+	}
+	// STRING 求值结果带引号展示,剥掉;CHAR 型不带
+	stripQuote := func(r string) string {
+		if len(r) >= 2 && strings.HasPrefix(r, `"`) && strings.HasSuffix(r, `"`) {
+			return r[1 : len(r)-1]
+		}
+		return r
+	}
+
+	// 精确长度(getLength 是 String 类方法,CHAR/VARCHAR 也响应)
+	lenStr, err := evalOne(fmt.Sprintf("%s.getLength()", expr))
+	if err != nil {
+		return "", fmt.Errorf("getLength 失败: %w", err)
+	}
+	total := 0
+	if n, convErr := fmt.Sscanf(strings.TrimSpace(lenStr), "%d", &total); convErr != nil || n != 1 || total < 0 {
+		return "", fmt.Errorf("getLength 返回异常: %s", lenStr)
+	}
+	if total == 0 {
+		return "", fmt.Errorf("变量为空")
+	}
+
+	// 分段模式:第一段先试子串下标,STRING 型会报 not an array,自动切 subString
+	mode := "idx"
+	const chunk = 200
+	var sb strings.Builder
+	for start := 1; start <= total && start <= 100*chunk; start += chunk {
+		end := start + chunk - 1
+		if end > total {
+			end = total
+		}
+		var e string
+		if mode == "sub" {
+			e = fmt.Sprintf("%s.subString(%d,%d)", expr, start, end)
+		} else {
+			e = fmt.Sprintf("%s[%d,%d]", expr, start, end)
+		}
+		r, err := evalOne(e)
+		if err != nil {
+			if mode == "idx" && strings.Contains(err.Error(), "not an array") {
+				mode = "sub"
+				start -= chunk // 本轮 for 会 +chunk,重取第一段
+				continue
+			}
+			return "", fmt.Errorf("分段 %d-%d 失败: %w", start, end, err)
+		}
+		sb.WriteString(stripQuote(r))
+	}
+	out := sb.String()
+	if len([]rune(out)) < total {
+		return out, fmt.Errorf("分段不完整:取到 %d / %d 字符", len([]rune(out)), total)
 	}
 	return out, nil
 }

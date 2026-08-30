@@ -1,17 +1,30 @@
 // 变量树:DAP 模式专属,局部/全局两棵树,节点懒下钻。
 // variablesReference 跨停站失效:每次停站(stopSeq 变化)整体重建,陈旧 ref 求值失败时也整体收起。
+// 被 250 字符截断("..."结尾)的字符串节点可点"全文",按 4GL 子串下标分段求值拼接。
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api, type VarNode } from './api'
 import { useStore } from './store'
 
 interface TNode extends VarNode {
+  path?: string // 相对求值路径(g_qryparam.cond / g_argv[1]),全文求值用
   open: boolean
   loading?: boolean
   children?: TNode[]
+  openFull?: boolean
+  full?: string
+  fullErr?: string
 }
 
-function toNodes(vars: VarNode[]): TNode[] {
-  return vars.map((v) => ({ ...v, open: false }))
+const simpleChainRe = /^[A-Za-z_]\w*(\.\w+)*$/
+
+// 子节点路径:record 字段用点连接,数组元素名形如 "[1]" 直接拼接
+function childPath(parent: string, name: string): string {
+  if (!parent) return name
+  return name.startsWith('[') ? parent + name : parent + '.' + name
+}
+
+function toNodes(vars: VarNode[], parent: string): TNode[] {
+  return vars.map((v) => ({ ...v, open: false, path: childPath(parent, v.name) }))
 }
 
 export function VarTreePanel() {
@@ -50,7 +63,7 @@ export function VarTreePanel() {
         const globals: TNode = { name: '全局变量', ref: globalsRef, open: false }
         if (localsRef > 0) {
           try {
-            locals.children = toNodes((await api.varChildren(sessionId, localsRef)).vars)
+            locals.children = toNodes((await api.varChildren(sessionId, localsRef)).vars, '')
           } catch { locals.children = [] }
           locals.loading = false
         }
@@ -74,7 +87,7 @@ export function VarTreePanel() {
         node.loading = true
         rerender()
         try {
-          node.children = toNodes((await api.varChildren(sessionId, node.ref)).vars)
+          node.children = toNodes((await api.varChildren(sessionId, node.ref)).vars, node.path || '')
         } catch {
           // 陈旧 ref(已跨停站):整体收起重建
           node.open = false
@@ -84,6 +97,27 @@ export function VarTreePanel() {
           return
         }
         node.loading = false
+      }
+      rerender()
+    },
+    [sessionId],
+  )
+
+  const toggleFull = useCallback(
+    async (node: TNode) => {
+      if (!sessionId) return
+      if (node.openFull) {
+        node.openFull = false
+        rerender()
+        return
+      }
+      node.openFull = true
+      if (node.full || node.fullErr) rerender()
+      try {
+        const { value } = await api.printFull(sessionId, node.path || node.name)
+        node.full = value
+      } catch (e: any) {
+        node.fullErr = e.message
       }
       rerender()
     },
@@ -101,14 +135,21 @@ export function VarTreePanel() {
   return (
     <div className="px-1 py-1 text-xs overflow-auto max-h-[45vh]">
       {roots.map((r, i) => (
-        <TreeNode key={i} node={r} depth={0} toggle={toggle} />
+        <TreeNode key={i} node={r} depth={0} toggle={toggle} toggleFull={toggleFull} />
       ))}
     </div>
   )
 }
 
-function TreeNode({ node, depth, toggle }: { node: TNode; depth: number; toggle: (n: TNode) => void }) {
+function TreeNode({ node, depth, toggle, toggleFull }: {
+  node: TNode
+  depth: number
+  toggle: (n: TNode) => void
+  toggleFull: (n: TNode) => void
+}) {
   const expandable = !!node.ref
+  // 值被适配器截断(250 字符 + "...")且是可子串求值的变量链:提供全文展开
+  const truncatable = !!node.value?.endsWith('...') && !!node.path && simpleChainRe.test(node.path)
   return (
     <>
       <div
@@ -126,10 +167,28 @@ function TreeNode({ node, depth, toggle }: { node: TNode; depth: number; toggle:
             <span className="text-zinc-200 break-all">{node.value || '(空)'}</span>
           </>
         )}
+        {truncatable && (
+          <button
+            className="shrink-0 rounded bg-sky-500/15 px-1 text-[10px] text-sky-300 hover:bg-sky-500/25"
+            title="适配器截断了长字符串,点击分段取完整值"
+            onClick={(e) => { e.stopPropagation(); toggleFull(node) }}
+          >
+            {node.openFull ? '收起' : '全文'}
+          </button>
+        )}
         {node.type && <span className="ml-1 shrink-0 text-zinc-600">{node.type}</span>}
       </div>
+      {node.openFull && (node.full || node.fullErr) && (
+        <div
+          className={`mx-1 my-0.5 max-h-56 overflow-auto whitespace-pre-wrap break-all rounded bg-black/40 p-1.5 ${node.fullErr ? 'text-red-400' : 'text-emerald-300'}`}
+          style={{ marginLeft: depth * 14 + 8 }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {node.fullErr || node.full}
+        </div>
+      )}
       {node.open && node.children?.map((c, j) => (
-        <TreeNode key={j} node={c} depth={depth + 1} toggle={toggle} />
+        <TreeNode key={j} node={c} depth={depth + 1} toggle={toggle} toggleFull={toggleFull} />
       ))}
     </>
   )

@@ -100,7 +100,13 @@ function setupMonaco() {
       }
       const expr = line.slice(s, e)
       try {
-        const { value } = await api.print(st.sessionId, expr)
+        let { value } = await api.print(st.sessionId, expr)
+        // 适配器把求值结果截断在 250 字符("..."结尾):简单变量链自动分段取全
+        if (value.endsWith('...') && /^[A-Za-z_]\w*(\.\w+)*$/.test(expr)) {
+          try {
+            value = (await api.printFull(st.sessionId, expr)).value
+          } catch { /* 分段失败就展示截断值 */ }
+        }
         const v = value === undefined || value === '' ? '(空)' : value
         return {
           range: new monaco.Range(position.lineNumber, s + 1, position.lineNumber, e + 1),

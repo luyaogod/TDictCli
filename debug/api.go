@@ -72,6 +72,7 @@ func (s *Server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("DELETE /api/sessions/{id}/breakpoints/{num}", s.hBPDel)
 	mux.HandleFunc("POST /api/sessions/{id}/control", s.hControl)
 	mux.HandleFunc("POST /api/sessions/{id}/print", s.hPrint)
+	mux.HandleFunc("POST /api/sessions/{id}/printfull", s.hPrintFull)
 	mux.HandleFunc("POST /api/sessions/{id}/where", s.hWhere)
 	mux.HandleFunc("POST /api/sessions/{id}/raw", s.hRaw)
 	mux.HandleFunc("GET /api/sessions/{id}/locals", s.hLocals)
@@ -310,6 +311,36 @@ func (s *Server) hPrint(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	v, err := sess.Print(req.Expr)
+	if err != nil {
+		fail(w, 400, err)
+		return
+	}
+	writeJSON(w, 200, map[string]any{"ok": true, "value": v})
+}
+
+// fullValueSession 完整值分段求值的可选能力(仅 DAP 会话实现)
+type fullValueSession interface {
+	FullValue(expr string) (string, error)
+}
+
+// hPrintFull 被适配器截断(250 字符+"...")的字符串完整值:子串下标分段求值拼接
+func (s *Server) hPrintFull(w http.ResponseWriter, r *http.Request) {
+	sess := s.sessOf(w, r)
+	if sess == nil {
+		return
+	}
+	fv, ok := sess.(fullValueSession)
+	if !ok {
+		fail(w, 400, fmt.Errorf("当前模式(PTY)不支持完整值查看,仅 DAP 模式可用"))
+		return
+	}
+	var req struct {
+		Expr string `json:"expr"`
+	}
+	if !readBody(w, r, &req) {
+		return
+	}
+	v, err := fv.FullValue(req.Expr)
 	if err != nil {
 		fail(w, 400, err)
 		return

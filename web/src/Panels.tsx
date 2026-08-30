@@ -4,6 +4,7 @@ import * as AccordionPrimitive from '@radix-ui/react-accordion'
 import { useEffect, useRef, useState } from 'react'
 import { Play } from 'lucide-react'
 import { useStore } from './store'
+import { api } from './api'
 import { Badge, Button, Input } from './ui'
 import { VarTreePanel } from './VarTree'
 
@@ -246,7 +247,23 @@ function WatchesBody() {
   const addWatch = useStore((s) => s.addWatch)
   const removeWatch = useStore((s) => s.removeWatch)
   const doPrint = useStore((s) => s.doPrint)
+  const sessionId = useStore((s) => s.sessionId)
+  const mode = useStore((s) => s.mode)
   const [expr, setExpr] = useState('')
+  // 被适配器截断("..."结尾)的监视值:点击"全文"分段拉完整值展开
+  const [fulls, setFulls] = useState<Record<string, { open: boolean; full?: string; err?: string }>>({})
+  const toggleFull = async (e: string) => {
+    const cur = fulls[e] || { open: false }
+    if (cur.open) { setFulls((m) => ({ ...m, [e]: { ...cur, open: false } })); return }
+    if (cur.full || cur.err) { setFulls((m) => ({ ...m, [e]: { ...cur, open: true } })); return }
+    setFulls((m) => ({ ...m, [e]: { open: true } }))
+    try {
+      const { value } = await api.printFull(sessionId!, e)
+      setFulls((m) => ({ ...m, [e]: { open: true, full: value } }))
+    } catch (err: any) {
+      setFulls((m) => ({ ...m, [e]: { open: true, err: err.message } }))
+    }
+  }
   return (
     <div>
       <div className="flex gap-1 p-1.5">
@@ -264,17 +281,37 @@ function WatchesBody() {
           求值
         </Button>
       </div>
-      {watches.map((w) => (
-        <div key={w.expr} className="flex items-start gap-1 border-b border-zinc-800/60 px-2 py-1 text-xs">
-          <button className="shrink-0 text-zinc-600 hover:text-red-400" onClick={() => removeWatch(w.expr)}>×</button>
-          <div className="min-w-0 flex-1">
-            <div className="text-zinc-400">{w.expr}</div>
-            <div className={`whitespace-pre-wrap break-all ${w.error ? 'text-red-400' : 'text-emerald-400'}`}>
-              {w.error || w.value}
+      {watches.map((w) => {
+        const truncated = !!w.value?.endsWith('...') && !w.error
+        const ft = fulls[w.expr]
+        return (
+          <div key={w.expr} className="flex items-start gap-1 border-b border-zinc-800/60 px-2 py-1 text-xs">
+            <button className="shrink-0 text-zinc-600 hover:text-red-400" onClick={() => removeWatch(w.expr)}>×</button>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <span className="text-zinc-400">{w.expr}</span>
+                {truncated && mode === 'dap' && sessionId && (
+                  <button
+                    className="shrink-0 rounded bg-sky-500/15 px-1 text-[10px] text-sky-300 hover:bg-sky-500/25"
+                    title="适配器截断了长字符串,点击分段取完整值"
+                    onClick={() => void toggleFull(w.expr)}
+                  >
+                    {ft?.open ? '收起全文' : '全文'}
+                  </button>
+                )}
+              </div>
+              <div className={`whitespace-pre-wrap break-all ${w.error ? 'text-red-400' : 'text-emerald-400'}`}>
+                {w.error || w.value}
+              </div>
+              {ft?.open && (ft.full || ft.err) && (
+                <div className={`mt-0.5 max-h-56 overflow-auto whitespace-pre-wrap break-all rounded bg-black/40 p-1 ${ft.err ? 'text-red-400' : 'text-emerald-300'}`}>
+                  {ft.err || ft.full}
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
