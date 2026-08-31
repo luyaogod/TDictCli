@@ -95,19 +95,6 @@ function setupMonaco() {
       'scrollbarSlider.activeBackground': '#71717ac0',
     },
   })
-  // Ctrl+左键跳函数:停站时 fgldb info line 解析函数定义位置,浏览页签打开(不扰动调试页)
-  monaco.languages.registerDefinitionProvider('4gl', {
-    provideDefinition: async (model, position) => {
-      const w = model.getWordAtPosition(position)
-      const st = useStore.getState()
-      if (!w || !st.sessionId || st.state !== 'stopped') return null
-      try {
-        const { file, line } = await st.locate(w.word)
-        if (file) void useStore.getState().openSourceTab(file, line)
-      } catch { /* 无法定位(运行中/无符号):不给跳转 */ }
-      return null
-    },
-  })
 }
 
 // 模块加载时立即配置(必须先于 Editor 挂载,否则 loader 可能走 CDN 导致主题/渲染不稳)
@@ -176,12 +163,15 @@ export function SourceView() {
       if (line) setTimeout(() => editorRef.current?.revealLineInCenter(line), 60)
     })
 
-    // Ctrl+悬停链接反馈(类 VS Code):按住 Ctrl 时光标下的词变蓝+下划线+手形光标,
-    // 点击走 definitionProvider 跳转。Monaco 只对能解析出定义的词画链接样式,
-    // 而我们的定位在点击时才发生(fgldb info line),所以悬停样式自绘
+    // Ctrl+悬停/点击跳函数(类 VS Code,全自管理):
+    // 悬停 = 光标下的词变蓝+下划线+手形光标,同时异步预定位(fgldb info line)缓存结果;
+    // 点击 = 命中缓存的词才跳转。不用 Monaco definitionProvider——它在按下 Ctrl 的
+    // 检测阶段就会被调用,会造成「还没点左键就跳走」
     const fnDecos = editor.createDecorationsCollection([])
     let ctrlDown = false
     let lastWord = ''
+    let pendingDef: { word: string; file: string; line: number } | null = null
+    const locateCache = new Map<string, { file: string; line: number } | null>()
     const clearHover = () => { lastWord = ''; fnDecos.set([]) }
     const trackKey = (e: KeyboardEvent) => {
       const down = e.ctrlKey
@@ -193,19 +183,41 @@ export function SourceView() {
     window.addEventListener('keydown', trackKey)
     window.addEventListener('keyup', trackKey)
     window.addEventListener('blur', () => { ctrlDown = false; clearHover() })
+    const hoverLocate = (word: string) => {
+      const st = useStore.getState()
+      if (!st.sessionId || st.state !== 'stopped') return
+      if (locateCache.has(word)) { pendingDef = locateCache.get(word) ? { word, ...locateCache.get(word)! } : null; return }
+      void st.locate(word).then((r) => {
+        locateCache.set(word, r.file ? { file: r.file, line: r.line } : null)
+        if (lastWord === word) pendingDef = r.file ? { word, file: r.file, line: r.line } : null
+      }).catch(() => locateCache.set(word, null))
+    }
     editor.onMouseMove((e) => {
       if (!ctrlDown || e.target.position == null) { if (lastWord) clearHover(); return }
       const w = editor.getModel()?.getWordAtPosition(e.target.position)
       if (!w) { if (lastWord) clearHover(); return }
-      if (w.word === lastWord) return // 同词不重画(高频事件)
-      lastWord = w.word
-      const ln = e.target.position.lineNumber
-      fnDecos.set([{
-        range: new monaco.Range(ln, w.startColumn, ln, w.endColumn),
-        options: { inlineClassName: 'fn-link' },
-      }])
+      if (w.word !== lastWord) {
+        lastWord = w.word
+        pendingDef = null
+        const ln = e.target.position.lineNumber
+        fnDecos.set([{
+          range: new monaco.Range(ln, w.startColumn, ln, w.endColumn),
+          options: { inlineClassName: 'fn-link' },
+        }])
+        hoverLocate(w.word)
+      }
     })
     editor.onMouseLeave(() => clearHover())
+    editor.onMouseDown((e) => {
+      // 内容区 Ctrl+左键:命中悬停预定位的词才跳转(行号/边栏点击不触发)
+      if (!ctrlDown || e.target.type !== monaco.editor.MouseTargetType.CONTENT_TEXT || !pendingDef) return
+      const w = editor.getModel()?.getWordAtPosition(e.target.position)
+      if (w && w.word === pendingDef.word) {
+        const d = pendingDef
+        pendingDef = null
+        void useStore.getState().openSourceTab(d.file, d.line)
+      }
+    })
   }
 
   // 装饰:断点圆点按文件归属过滤;停站/定位光标只画在归属文件上
