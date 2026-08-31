@@ -82,7 +82,7 @@ interface Store {
   replayDebug: (item: WSLogItem) => Promise<void>
   launch: (module: string, prog: string) => Promise<void>
   refreshSnapshot: () => Promise<void>
-  refreshSource: (file?: string) => Promise<void>
+  refreshSource: (file?: string, line?: number) => Promise<void>
   refreshFrames: () => Promise<Frame[]>
   refreshWatches: () => Promise<void>
   addWatch: (expr: string) => Promise<void>
@@ -198,8 +198,11 @@ export const useStore = create<Store>((set, get) => ({
       case 'autovars':
         set({ autovars: ev.vars || [] })
         return
-      case 'stopped':
-        set({ stop: ev.stop || null, state: 'stopped', currentLine: ev.stop?.line || get().currentLine, selectedFrame: -1 })
+      case 'stopped': {
+        // 跨文件停站:先收光标(源码未就位时不画停站行,防它在旧文件上错位),
+        // refreshSource 拉到新源码后再一次性落位
+        const nl = !!ev.stop?.file && ev.stop.file !== get().sourceDVM
+        set({ stop: ev.stop || null, state: 'stopped', currentLine: nl ? 0 : (ev.stop?.line || get().currentLine), selectedFrame: -1, loadingSource: nl })
         st.pushTimeline({
           origin: 'system', kind: 'stop',
           text: `停站[${ev.stop?.reason}] ${ev.stop?.file || ''}:${ev.stop?.line ?? ''} ${ev.stop?.func || ''}`,
@@ -207,17 +210,19 @@ export const useStore = create<Store>((set, get) => ({
         // 停站文件缺失(如 SIGINT 中断块无文件头)时,用栈顶帧的真实文件跟随
         void (async () => {
           let file = ev.stop?.file
+          let frameLine = 0
           if (!file) {
             const frames = await get().refreshFrames()
             file = frames[0]?.file
-            if (file) set({ currentLine: frames[0]?.line ?? 0 })
+            frameLine = frames[0]?.line ?? 0
           }
-          await get().refreshSource(file)
+          await get().refreshSource(file, frameLine || ev.stop?.line || 0)
           await get().refreshWatches()
           await get().refreshSnapshot()
         })()
         startHoldTimer(set, get)
         return
+      }
       case 'watchdog':
         st.pushTimeline({ origin: 'system', kind: 'warn', text: ev.text || '看门狗触发' })
         return
@@ -392,7 +397,7 @@ export const useStore = create<Store>((set, get) => ({
     } catch { /* 会话可能已结束 */ }
   },
 
-  refreshSource: async (file) => {
+  refreshSource: async (file, line) => {
     const { sessionId, module, prog, runProg, sourceDVM } = get()
     if (!sessionId) return
     let f = file || get().stop?.file
@@ -405,19 +410,26 @@ export const useStore = create<Store>((set, get) => ({
       f = `${module ? module + '_' : ''}${rp}.4gl`
       entryMode = true
     }
-    if (f === sourceDVM) return // 已加载(或已确认无源码),避免重复拉取
-    set({ loadingSource: true })
+    if (f === sourceDVM) {
+      // 同文件:行号直接落位
+      if (line) set({ currentLine: line })
+      return
+    }
+    // 跨文件停站:先收光标(currentLine=0)防它在旧文件上错位,源码到位后一次性落位
+    set({ loadingSource: true, currentLine: 0 })
     try {
       const { source } = await api.sourceByFile(sessionId, f, module)
       set({ sourceContent: source.content, sourcePath: source.path, sourceDVM: f })
       const st = get()
-      if (entryMode && st.currentLine === 0) {
+      if (line) set({ currentLine: line })
+      else if (entryMode && st.currentLine === 0) {
         jumpToMain(set, get)
         st.pushTimeline({ origin: 'system', kind: 'info', text: '入口停站:已显示源码,点击行号下断点后点「继续 F5」开始' })
       }
     } catch {
       // 该模块无源码(如 com 公共库只有 42m):明确置空,避免在旧文件上标错停站行
       set({ sourceContent: '', sourcePath: '', sourceDVM: f })
+      if (line) set({ currentLine: line })
     } finally {
       set({ loadingSource: false })
     }
@@ -467,8 +479,8 @@ export const useStore = create<Store>((set, get) => ({
       if (action !== 'interrupt') {
         await get().refreshSnapshot()
         const st = get()
-        // 步进可能跨模块:停站文件与当前显示源码不同时,跟随切换
-        if (st.stop?.file && st.stop.file !== st.sourceDVM) void st.refreshSource(st.stop.file)
+        // 步进可能跨模块:停站文件与当前显示源码不同时,跟随切换(源码到位才落光标)
+        if (st.stop?.file && st.stop.file !== st.sourceDVM) void st.refreshSource(st.stop.file, resp?.stop?.line)
         // 停站后同步调用栈与监视取值
         if (st.state === 'stopped') {
           void st.refreshFrames()
@@ -477,7 +489,8 @@ export const useStore = create<Store>((set, get) => ({
       }
       if (action === 'run' || action === 'continue') pollUntilStopped(set, get)
       if (resp?.stop && (action === 'next' || action === 'step' || action === 'finish' || action === 'until')) {
-        set({ currentLine: resp.stop.line ?? 0, selectedFrame: -1 })
+        const nl = !!resp.stop.file && resp.stop.file !== get().sourceDVM
+        set({ currentLine: nl ? 0 : (resp.stop.line ?? 0), selectedFrame: -1, loadingSource: nl })
       }
     } catch (e: any) {
       get().pushTimeline({ origin: 'system', kind: 'warn', text: `${action} 失败: ${e.message}` })
@@ -641,14 +654,18 @@ function pollUntilStopped(set: (p: Partial<Store>) => void, get: () => Store) {
     if (!st.sessionId) { if (snapTimer) clearInterval(snapTimer); return }
     try {
       const snap = await api.snapshot(st.sessionId)
+      // 跨文件停站:光标等 refreshSource 落位,不先画到旧文件上
+      const nl = !!snap.stop?.file && snap.stop.file !== st.sourceDVM
       set({
         state: snap.state, stop: snap.stop, breakpoints: snap.breakpoints || [],
         started: !!snap.started,
         holdingSeconds: snap.holdingSeconds || 0,
         module: snap.module || get().module,
         runProg: snap.runProg || get().runProg,
-        currentLine: snap.stop?.line || get().currentLine,
+        currentLine: nl ? 0 : (snap.stop?.line || get().currentLine),
+        loadingSource: nl ? true : get().loadingSource,
       })
+      if (nl && snap.stop?.file) void get().refreshSource(snap.stop.file, snap.stop.line)
       // 源码尽早显示:不等停站,会话就绪(模块已解析)就按 entryMode 拉取,断点也随之可见
       if (!get().sourceContent && snap.module && snap.state !== 'exit') {
         void get().refreshSource()

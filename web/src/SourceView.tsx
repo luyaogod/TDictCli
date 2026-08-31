@@ -107,6 +107,8 @@ export function SourceView() {
   const stop = useStore((s) => s.stop)
   const module = useStore((s) => s.module)
   const theme = useStore((s) => s.theme)
+  const loadingSource = useStore((s) => s.loadingSource)
+  const hasContent = useStore((s) => !!s.sourceContent)
   const [editorReady, setEditorReady] = useState(false)
   const decosRef = useRef<monaco.editor.IEditorDecorationsCollection | null>(null)
 
@@ -212,6 +214,12 @@ function progKey(f: string, module?: string): string {
           </div>
         }
       />
+      {/* 跨文件切换时源码加载中:旧文件保持显示但加遮罩,停站光标等源码到位再落位 */}
+      {loadingSource && hasContent && (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background/40">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      )}
       {!sourceContent && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div className="rounded-sm border border-border bg-card/90 px-4 py-3 text-sm text-muted-foreground">
