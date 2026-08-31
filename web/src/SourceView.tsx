@@ -1,12 +1,14 @@
-// Monaco 源码视图:4gl 简易语法高亮 + 断点 gutter + 停站行高亮
+// 源码视图:VS Code 式多页签 = 调试页(锁定第一个,跟随停站)+ 浏览页(Ctrl+点击函数等静态打开)
+// 单 Editor 实例,path 切换复用/重建 monaco model(@monaco-editor/react 自动保存恢复视口)
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Editor, { loader, type OnMount } from '@monaco-editor/react'
-import { Loader2 } from 'lucide-react'
+import { Bug, Loader2, X } from 'lucide-react'
 import * as monaco from 'monaco-editor'
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
 // codicon 图标映射表:ESM 用法要求宿主显式引入,否则 Ctrl+F 查找控件等只有空按钮
 import 'monaco-editor/esm/vs/base/browser/ui/codicons/codiconStyles.js'
 import { useStore } from './store'
+import { cn } from './lib/utils'
 
 export const editorRef = { current: null as monaco.editor.IStandaloneCodeEditor | null }
 
@@ -93,12 +95,36 @@ function setupMonaco() {
       'scrollbarSlider.activeBackground': '#71717ac0',
     },
   })
+  // Ctrl+左键跳函数:停站时 fgldb info line 解析函数定义位置,浏览页签打开(不扰动调试页)
+  monaco.languages.registerDefinitionProvider('4gl', {
+    provideDefinition: async (model, position) => {
+      const w = model.getWordAtPosition(position)
+      const st = useStore.getState()
+      if (!w || !st.sessionId || st.state !== 'stopped') return null
+      try {
+        const { file, line } = await st.locate(w.word)
+        if (file) void useStore.getState().openSourceTab(file, line)
+      } catch { /* 无法定位(运行中/无符号):不给跳转 */ }
+      return null
+    },
+  })
 }
 
 // 模块加载时立即配置(必须先于 Editor 挂载,否则 loader 可能走 CDN 导致主题/渲染不稳)
 setupMonaco()
 
+// 归一化出可比的程序主名:去路径、去 .4gl、去模块前缀。
+// fgldb 报的断点文件是 `bsft001_wf.4gl`(或全路径),而 sourceDVM 可能是
+// `${模块}_${程序}.4gl`(启动预取)——严格比较会漏画,红点要停站一次才出现
+function progKey(f: string, module?: string): string {
+  let b = f.split(/[\\/]/).pop() || f
+  b = b.replace(/\.4gl$/i, '')
+  if (module && b.toLowerCase().startsWith(module.toLowerCase() + '_')) b = b.slice(module.length + 1)
+  return b.toLowerCase()
+}
+
 export function SourceView() {
+  // 调试页数据
   const sourceContent = useStore((s) => s.sourceContent)
   const sourceDVM = useStore((s) => s.sourceDVM)
   const currentLine = useStore((s) => s.currentLine)
@@ -109,7 +135,23 @@ export function SourceView() {
   const theme = useStore((s) => s.theme)
   const loadingSource = useStore((s) => s.loadingSource)
   const hasContent = useStore((s) => !!s.sourceContent)
+  const prog = useStore((s) => s.prog)
+  // 页签
+  const tabs = useStore((s) => s.tabs)
+  const activeTab = useStore((s) => s.activeTab)
+  const setActiveTab = useStore((s) => s.setActiveTab)
+  const closeTab = useStore((s) => s.closeTab)
+
+  const active = tabs.find((t) => t.key === activeTab)
+  const isDebug = !active
+
+  // 当前编辑器展示内容(调试页 vs 浏览页)
+  const content = isDebug ? sourceContent : (active!.content || (active!.missing ? '' : ''))
+  const modelPath = isDebug ? 'debug:' + (sourceDVM || prog) : 'tab:' + active!.file
+  const cursorLine = isDebug ? currentLine : (active!.line ?? 0)
+
   const [editorReady, setEditorReady] = useState(false)
+  const [modelTick, setModelTick] = useState(0) // 页签切换 = model 切换完成后重画装饰/滚动
   const decosRef = useRef<monaco.editor.IEditorDecorationsCollection | null>(null)
 
   const onMount: OnMount = (editor) => {
@@ -123,27 +165,28 @@ export function SourceView() {
       const line = e.target.position?.lineNumber
       if (line) useStore.getState().toggleBreakpoint(line)
     })
+    // 切换页签(@monaco-editor/react 换 model)后装饰集合要重新应用到新 model,
+    // 并把目标行滚动居中(内容异步到达晚于首次 reveal,这里补偿)
+    editor.onDidChangeModel(() => {
+      setModelTick((t) => t + 1)
+      const st = useStore.getState()
+      const line = st.activeTab === 'debug'
+        ? st.currentLine
+        : st.tabs.find((t) => t.key === st.activeTab)?.line
+      if (line) setTimeout(() => editorRef.current?.revealLineInCenter(line), 60)
+    })
   }
 
-  // 归一化出可比的程序主名:去路径、去 .4gl、去模块前缀。
-// fgldb 报的断点文件是 `bsft001_wf.4gl`(或全路径),而 sourceDVM 可能是
-// `${模块}_${程序}.4gl`(启动预取)——严格比较会漏画,红点要停站一次才出现
-function progKey(f: string, module?: string): string {
-  let b = f.split(/[\\/]/).pop() || f
-  b = b.replace(/\.4gl$/i, '')
-  if (module && b.toLowerCase().startsWith(module.toLowerCase() + '_')) b = b.slice(module.length + 1)
-  return b.toLowerCase()
-}
-
-// 断点圆点 + 停站行高亮(editorReady 入依赖:编辑器晚于数据就绪时补跑一次)
+  // 装饰:断点圆点按文件归属过滤;停站/定位光标只画在归属文件上
   useEffect(() => {
     const ed = editorRef.current
     const decos = decosRef.current
     if (!ed || !decos) return
+    const viewFile = isDebug ? sourceDVM : active!.file
     const list: monaco.editor.IModelDeltaDecoration[] = []
     for (const b of breakpoints) {
       // 断点归属过滤:跨文件跳转后,其它文件的断点行号不能画在当前文件上
-      if (sourceDVM && b.file && progKey(b.file, module) !== progKey(sourceDVM, module)) continue
+      if (viewFile && b.file && progKey(b.file, module) !== progKey(viewFile, module)) continue
       list.push({
         range: new monaco.Range(b.line, 1, b.line, 1),
         options: {
@@ -153,32 +196,31 @@ function progKey(f: string, module?: string): string {
         },
       })
     }
-    if (currentLine > 0 && state === 'stopped') {
+    if (cursorLine > 0 && (isDebug ? state === 'stopped' : true)) {
       list.push({
-        range: new monaco.Range(currentLine, 1, currentLine, 1),
+        range: new monaco.Range(cursorLine, 1, cursorLine, 1),
         options: {
           isWholeLine: true,
-          className: 'cur-line-hl',
-          glyphMarginClassName: 'cur-arrow',
+          className: isDebug ? 'cur-line-hl' : 'cur-line-hl',
+          glyphMarginClassName: isDebug ? 'cur-arrow' : 'cur-arrow',
           overviewRuler: { color: '#eab308', position: monaco.editor.OverviewRulerLane.Center },
         },
       })
     }
     decos.set(list)
-  }, [breakpoints, currentLine, state, sourceContent, sourceDVM, editorReady, module])
+  }, [breakpoints, cursorLine, state, content, isDebug, sourceDVM, active?.file, active?.line, editorReady, modelTick, module])
 
-  // 视口跟随:仅在停站行号"值变化"时滚动到当前行。
-  // 绝不能放进上面的装饰 effect——它依赖 breakpoints,加断点重跑会把视口拽回运行行
-  const prevLineRef = useRef(0)
+  // 视口跟随:仅停站行号"值变化"时滚动到当前行(调试页)。
+  // 绝不能放进装饰 effect——它依赖 breakpoints,加断点重跑会把视口拽回运行行
+  // 视口落位:cursorLine / model / 内容任一就绪变化时滚动到目标行。
+  // 延迟 80ms:@monaco-editor/react 换 model 与大文件 setValue 后会恢复 viewState
+  // (新页签在顶部),立即滚动会被覆盖;等 model+内容就绪再居中。
+  // 加断点等操作不触发本 effect,不会拽回视口
   useEffect(() => {
-    const ed = editorRef.current
-    if (!ed) return
-    const changed = prevLineRef.current !== currentLine
-    prevLineRef.current = currentLine
-    if (changed && currentLine > 0 && state === 'stopped') {
-      ed.revealLineInCenter(currentLine)
-    }
-  }, [currentLine, state, sourceDVM, sourceContent, editorReady])
+    if (!(cursorLine > 0 && (isDebug ? state === 'stopped' : true))) return
+    const t = setTimeout(() => editorRef.current?.revealLineInCenter(cursorLine), 80)
+    return () => clearTimeout(t)
+  }, [cursorLine, state, isDebug, modelTick, content])
 
   // 编辑器 options 必须稳定:字面量每次渲染都是新对象,会触发 @monaco-editor/react
   // 反复 updateOptions(minimap 重建),加断点等重渲染时会把滚动位置复位
@@ -199,36 +241,76 @@ function progKey(f: string, module?: string): string {
     [],
   )
 
+  const busy = isDebug
+    ? loadingSource && hasContent
+    : !!active!.loading
+
   return (
-    <div className="relative h-full min-h-0">
-      <Editor
-        language="4gl"
-        theme={theme === 'light' ? 'tdict-light' : 'tdict-dark'}
-        value={sourceContent}
-        beforeMount={setupMonaco}
-        onMount={onMount}
-        options={editorOptions}
-        loading={
-          <div className="flex h-full items-center justify-center">
+    <div className="flex h-full min-h-0 flex-col">
+      {/* 页签栏:调试页锁定第一个,浏览页可关 */}
+      <div className="flex h-8 shrink-0 items-stretch overflow-x-auto border-b border-border bg-background">
+        <button onClick={() => setActiveTab('debug')}
+          className={cn('flex shrink-0 items-center gap-1.5 border-r border-border px-3 text-xs transition-colors',
+            isDebug ? 'bg-accent font-medium text-accent-foreground' : 'text-muted-foreground hover:bg-accent/60')}>
+          <Bug className="h-3 w-3" />
+          {prog || '调试'}
+        </button>
+        {tabs.map((t) => (
+          <div key={t.key}
+            className={cn('group flex shrink-0 items-center border-r border-border transition-colors',
+              activeTab === t.key ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-accent/60')}>
+            <button className="max-w-45 truncate px-3 text-xs" title={t.path || t.file}
+              onClick={() => setActiveTab(t.key)}>
+              {t.loading ? <Loader2 className="mr-1 inline h-3 w-3 animate-spin" /> : null}
+              {t.file}
+              {t.missing ? ' (无源码)' : ''}
+            </button>
+            <button className="mr-1 rounded p-0.5 opacity-40 transition-opacity hover:bg-accent hover:opacity-100"
+              onClick={() => closeTab(t.key)}>
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        ))}
+      </div>
+      {/* 编辑器 */}
+      <div className="relative min-h-0 flex-1">
+        <Editor
+          language="4gl"
+          theme={theme === 'light' ? 'tdict-light' : 'tdict-dark'}
+          path={modelPath}
+          value={content}
+          beforeMount={setupMonaco}
+          onMount={onMount}
+          options={editorOptions}
+          loading={
+            <div className="flex h-full items-center justify-center">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          }
+        />
+        {/* 调试页跨文件切换:旧文件保持显示但加遮罩,停站光标等源码到位再落位 */}
+        {busy && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background/40">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
-        }
-      />
-      {/* 跨文件切换时源码加载中:旧文件保持显示但加遮罩,停站光标等源码到位再落位 */}
-      {loadingSource && hasContent && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-background/40">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      )}
-      {!sourceContent && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="rounded-sm border border-border bg-card/90 px-4 py-3 text-sm text-muted-foreground">
-            {state === 'stopped' && stop?.file
-              ? <>该模块无源码(仅 42m),当前停站:<span className="text-foreground">{stop.file}:{stop.line}</span><br /><span className="text-xs">可继续用变量监视/调用栈分析,或继续运行回到有源码的模块</span></>
-              : '等待停站后加载源码…'}
+        )}
+        {isDebug && !sourceContent && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div className="rounded-sm border border-border bg-card/90 px-4 py-3 text-sm text-muted-foreground">
+              {state === 'stopped' && stop?.file
+                ? <>该模块无源码(仅 42m),当前停站:<span className="text-foreground">{stop.file}:{stop.line}</span><br /><span className="text-xs">可继续用变量监视/调用栈分析,或继续运行回到有源码的模块</span></>
+                : '等待停站后加载源码…'}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+        {!isDebug && active!.missing && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div className="rounded-sm border border-border bg-card/90 px-4 py-3 text-sm text-muted-foreground">
+              该文件无源码(仅 42m 编译产物),无法静态浏览
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

@@ -72,6 +72,9 @@ export const api = {
     req<any>(`/api/sessions/${id}/breakpoints/${num}/enabled`, { method: 'POST', body: JSON.stringify({ enabled }) }),
   sourceByFile: (id: string, file: string, module: string) =>
     req<{ source: { path: string; content: string; dvmFile?: string } }>(`/api/sessions/${id}/source?file=${encodeURIComponent(file)}&module=${encodeURIComponent(module)}`),
+  // 定位函数到源文件与行号(fgldb info line;仅停站可用)
+  locate: (id: string, word: string) =>
+    req<{ file: string; line: number }>(`/api/sessions/${id}/locate`, { method: 'POST', body: JSON.stringify({ word }) }),
   wsTest: (mode: string, url: string, body: string, soap: boolean) =>
     req<{ result: WSTestResult }>('/api/wstest', { method: 'POST', body: JSON.stringify({ mode, url, body, soap }) }),
   wsLogs: (service: string, onlyFail: boolean, page: number, startFrom: string, startTo: string) =>

@@ -79,6 +79,7 @@ func (s *Server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/sessions/{id}/functions", s.hFunctions)
 	mux.HandleFunc("GET /api/sessions/{id}/autovars", s.hAutovars)
 	mux.HandleFunc("POST /api/sessions/{id}/frame", s.hFrame)
+	mux.HandleFunc("POST /api/sessions/{id}/locate", s.hLocate)
 	mux.HandleFunc("POST /api/sessions/{id}/breakpoints/{num}/enabled", s.hBPEnabled)
 	mux.HandleFunc("GET /api/sessions/{id}/source", s.hSource)
 	mux.HandleFunc("GET /api/source-preview", s.hSourcePreview)
@@ -397,6 +398,32 @@ func (s *Server) hGlobals(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, 200, map[string]any{"ok": true, "vars": vars, "total": total})
+}
+
+// hLocate POST /api/sessions/{id}/locate {word}:定位函数到源文件与行号。
+// 用 fgldb info line [module.]function(BDL 文档语法),仅停站状态可用;Ctrl+点击跳函数用
+func (s *Server) hLocate(w http.ResponseWriter, r *http.Request) {
+	sess := s.sessOf(w, r)
+	if sess == nil {
+		return
+	}
+	var req struct {
+		Word string `json:"word"`
+	}
+	if !readBody(w, r, &req) {
+		return
+	}
+	word := strings.TrimSpace(req.Word)
+	if !reIdent.MatchString(word) {
+		fail(w, 400, fmt.Errorf("函数名非法: %q", word))
+		return
+	}
+	file, line, err := sess.InfoLine(word)
+	if err != nil {
+		fail(w, 400, err)
+		return
+	}
+	writeJSON(w, 200, map[string]any{"ok": true, "file": file, "line": line})
 }
 
 func (s *Server) hSources(w http.ResponseWriter, r *http.Request) {
