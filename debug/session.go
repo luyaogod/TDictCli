@@ -259,7 +259,8 @@ func (s *Session) Launch(ctx context.Context) error {
 		s.emitEvent(Event{Type: "log", Text: fmt.Sprintf("按作业名解析模块:%s → %s", launchProg, mod)})
 	}
 	// 1. 等区域菜单
-	if err := s.waitRegexp(regexp.MustCompile(`\(\*\)\s*Exit`), 25*time.Second, "区域菜单"); err != nil {
+	// 菜单格式两种:109 那台 `(*)Exit`,金仓这台 `*)Exit`(无左括号)
+	if err := s.waitRegexp(regexp.MustCompile(`\(\*\)?\s*Exit|\*\)\s*Exit`), 25*time.Second, "区域菜单"); err != nil {
 		return err
 	}
 	s.pty.Write(s.cfg.Zone + "\r")

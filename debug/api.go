@@ -166,6 +166,7 @@ func (s *Server) hLaunch(w http.ResponseWriter, r *http.Request) {
 	}
 	go func() {
 		if err := sess.Launch(r.Context()); err != nil {
+			log.Printf("[debug] 会话 %s(%s) 启动失败: %v", sess.ID, sess.Prog, err)
 			s.mgr.emit(Event{Type: "log", SessionID: sess.ID, Text: "启动失败: " + err.Error()})
 			// 失败会话终结并移除,避免卡在 loading 且挡住下一次启动
 			sess.ForceExit()
