@@ -53,6 +53,9 @@ export function SettingsView() {
         zone: e.zone || '', topDir: e.topDir || '', launchArgs: e.launchArgs || '', watchdogSeconds: e.watchdogSeconds || 0,
         dbTns: e.db?.tns || '', dbEnt: e.db?.ent || 0,
       })))
+      // activeEnv 指向的环境不存在(历史脏数据/已删除)时视为未设置
+      const names = (c.envs || []).map((e: any) => e.name)
+      if (c.activeEnv && !names.includes(c.activeEnv)) setActiveEnv('')
     }).catch((e) => setErr(e.message))
   }, [])
 
@@ -85,8 +88,11 @@ export function SettingsView() {
     }
   }
 
-  const patchEnv = (i: number, patch: Partial<EnvItem>) =>
+  const patchEnv = (i: number, patch: Partial<EnvItem>) => {
+    // 生效环境改名时同步 activeEnv,否则合并失联
+    if (patch.name !== undefined && envs[i]?.name === activeEnv) setActiveEnv(patch.name)
     setEnvs(envs.map((x, j) => j === i ? { ...x, ...patch } : x))
+  }
   const addEnv = () => {
     setEnvs([...envs, { name: '', host: '', port: 22, user: '', password: '', zone: '35', topDir: '', launchArgs: '', watchdogSeconds: 0, dbTns: '', dbEnt: 0 }])
     setSelEnv(envs.length)
@@ -169,6 +175,7 @@ export function SettingsView() {
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
+                    <Field label="环境名称(留空自动为主机-区域)" className="col-span-2"><Input className={cell} placeholder={`${cur.host || 'IP'}-${cur.zone || '区域'}`} value={cur.name} onChange={(e) => patchEnv(selEnv, { name: e.target.value.trim() })} /></Field>
                     <Field label="IP 主机"><Input className={cell} value={cur.host} onChange={(e) => patchEnv(selEnv, { host: e.target.value.trim() })} /></Field>
                     <Field label="端口"><Input className={cell} value={cur.port} onChange={(e) => patchEnv(selEnv, { port: Number(e.target.value) || 22 })} /></Field>
                     <Field label="登录区域(31开发/35测试/36正式)"><Input className={cell} value={cur.zone} onChange={(e) => patchEnv(selEnv, { zone: e.target.value.trim() })} /></Field>
@@ -177,7 +184,7 @@ export function SettingsView() {
                     <Field label="密码"><Input className={cell} type="password" value={cur.password} onChange={(e) => patchEnv(selEnv, { password: e.target.value })} /></Field>
                   </div>
                   <p className="mt-2 text-muted-foreground">
-                    环境名自动为「主机-区域」(如 {cur.host || 'IP'}-{cur.zone || '区域'}),start --ssh 按它引用;顶级目录/TNS 由区域自动推导;启动参数模板在「高级」里配置。
+                    start --ssh 按环境名引用;清空名称则恢复自动「主机-区域」。顶级目录/TNS 由区域自动推导;启动参数模板在「高级」里配置。
                   </p>
                 </section>
               )}
