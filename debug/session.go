@@ -956,10 +956,16 @@ func (s *Session) Step(cmd string) (*StopInfo, error) {
 		return nil, nil
 	}
 	// 解析步进结果:优先带源码上下文的块(-> 行);
-	// 源码不可用时 fgldb 只输出紧凑形式「89\t in lib_cl_ap.4gl」
+	// 源码不可用时 fgldb 只输出紧凑形式「89	 in lib_cl_ap.4gl」
+	// 跨文件步入:fgldb 会输出停站头「func() at <file>:<line>」,
+	// 文件名必须取自停站头,否则永远沿用上一次的文件(只跳行号不切文件)
 	var src []SourceLine
 	curLine := 0
+	curFile := ""
 	for _, ln := range r.Lines {
+		if m := reStopHeader.FindStringSubmatch(ln); m != nil {
+			curFile = m[2] // 步入公共函数时给出新文件
+		}
 		if m := reSource.FindStringSubmatch(ln); m != nil {
 			num, _ := strconv.Atoi(m[2])
 			src = append(src, SourceLine{Num: num, Text: m[3], IsCur: m[1] != ""})
@@ -970,8 +976,11 @@ func (s *Session) Step(cmd string) (*StopInfo, error) {
 	}
 	var stop *StopInfo
 	if curLine > 0 {
-		prev := s.Cur()
-		stop = &StopInfo{Reason: "step", File: prev.File, Line: curLine, Source: src}
+		file := curFile
+		if file == "" {
+			file = s.Cur().File // 无停站头(同文件步进)沿用当前文件
+		}
+		stop = &StopInfo{Reason: "step", File: file, Line: curLine, Source: src}
 	} else {
 		for _, ln := range r.Lines {
 			if m := reCompactStep.FindStringSubmatch(ln); m != nil {
