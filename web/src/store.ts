@@ -77,6 +77,7 @@ interface Store {
   // 源码多页签:调试页固定第一个(跟随停站),浏览页为静态打开的其它源码文件
   tabs: SrcTab[]
   activeTab: string // 'debug' | tabs[].key
+  revealReq: { key: string; line: number; seq: number } | null // 定位信号:哪个页签滚到哪行(唯一驱动视口滚动)
 
   // actions
   setWsConnected: (b: boolean) => void
@@ -89,6 +90,7 @@ interface Store {
   setView: (v: 'debug' | 'wslogs' | 'wstest' | 'settings') => void
   setTheme: (t: 'dark' | 'light') => void
   setActiveTab: (key: string) => void
+  reveal: (key: string, line: number) => void
   closeTab: (key: string) => void
   openSourceTab: (file: string, line?: number) => Promise<void>
   locate: (word: string) => Promise<{ file: string; line: number }>
@@ -146,7 +148,7 @@ export const useStore = create<Store>((set, get) => ({
   wsTestMode: '3', wsTestUrl: '', wsTestBody: '', wsTestSoap: false,
   wsTestResult: null, wsTestRunning: false, wsTestErr: '', wsTestHistory: [],
   sourceContent: '', sourcePath: '', sourceDVM: '', currentLine: 0, loadingSource: false,
-  tabs: [], activeTab: 'debug',
+  tabs: [], activeTab: 'debug', revealReq: null,
 
   setWsConnected: (b) => set({ wsConnected: b }),
   toggleRight: () => set((st) => ({ showRight: !st.showRight })),
@@ -263,6 +265,11 @@ export const useStore = create<Store>((set, get) => ({
 
   setActiveTab: (key) => set({ activeTab: key }),
 
+  reveal: (key, line) => {
+    if (!(line > 0)) return
+    set((st) => ({ revealReq: { key, line, seq: (st.revealReq?.seq ?? 0) + 1 }, currentLine: key === 'debug' ? line : st.currentLine }))
+  },
+
   locate: async (word) => {
     const { sessionId } = get()
     if (!sessionId) throw new Error('无调试会话')
@@ -282,8 +289,9 @@ export const useStore = create<Store>((set, get) => ({
     const st = get()
     const existing = st.tabs.find((t) => t.key === key)
     if (existing) {
-      // 已开:激活即可(monaco model 缓存内容与滚动位置)
-      set({ activeTab: key, tabs: st.tabs.map((t) => t.key === key ? { ...t, line } : t) })
+      // 已开:激活;带行号才重新定位(纯激活保持离开时视口)
+      set({ activeTab: key, tabs: line ? st.tabs.map((t) => t.key === key ? { ...t, line } : t) : st.tabs })
+      if (line) get().reveal(key, line)
       return
     }
     if (!st.sessionId) return
@@ -292,6 +300,7 @@ export const useStore = create<Store>((set, get) => ({
     try {
       const { source } = await api.sourceByFile(st.sessionId, file, st.module)
       set((s2) => ({ tabs: s2.tabs.map((t) => t.key === key ? { ...t, content: source.content, path: source.path, loading: false } : t) }))
+      if (line) get().reveal(key, line)
     } catch {
       // 无源码(只有 42m 等):页签保留并标记,内容区给提示
       set((s2) => ({ tabs: s2.tabs.map((t) => t.key === key ? { ...t, loading: false, missing: true } : t) }))
@@ -558,7 +567,9 @@ export const useStore = create<Store>((set, get) => ({
       if (action === 'run' || action === 'continue') pollUntilStopped(set, get)
       if (resp?.stop && (action === 'next' || action === 'step' || action === 'finish' || action === 'until')) {
         const nl = !!resp.stop.file && resp.stop.file !== get().sourceDVM
-        set({ currentLine: nl ? 0 : (resp.stop.line ?? 0), selectedFrame: -1, loadingSource: nl, activeTab: 'debug' })
+        set({ selectedFrame: -1, loadingSource: nl, activeTab: 'debug' })
+        if (nl) void get().refreshSource(resp.stop.file, resp.stop.line) // 完成→reveal
+        else get().reveal('debug', resp.stop.line ?? 0)
       }
     } catch (e: any) {
       get().pushTimeline({ origin: 'system', kind: 'warn', text: `${action} 失败: ${e.message}` })
@@ -624,8 +635,8 @@ export const useStore = create<Store>((set, get) => ({
       set({ selectedFrame: idx })
       if (frame) {
         st.pushTimeline({ origin: 'human', kind: 'command', text: `选帧 #${idx} ${frame.func} ${frame.file}:${frame.line}` })
-        if (frame.file && frame.file !== st.sourceDVM) await st.refreshSource(frame.file)
-        if (frame.line) set({ currentLine: frame.line })
+        if (frame.file && frame.file !== st.sourceDVM) await st.refreshSource(frame.file, frame.line)
+        else if (frame.line) get().reveal('debug', frame.line)
       }
       void st.refreshWatches()
     } catch (e: any) {
@@ -649,7 +660,7 @@ export const useStore = create<Store>((set, get) => ({
   jumpToBp: async (b) => {
     const st = get()
     if (b.file && b.file !== st.sourceDVM) await st.refreshSource(b.file)
-    set({ currentLine: b.line })
+    get().reveal('debug', b.line)
   },
 
   // 运行到光标:当前文件即停站文件时用行号,否则带文件名(fgldb until [file:]line)
@@ -738,6 +749,7 @@ function pollUntilStopped(set: (p: Partial<Store>) => void, get: () => Store) {
         loadingSource: nl ? true : get().loadingSource,
       })
       if (nl && snap.stop?.file) void get().refreshSource(snap.stop.file, snap.stop.line)
+      else if (snap.state === 'stopped' && snap.stop?.line && !nl) get().reveal('debug', snap.stop.line)
       // 源码尽早显示:不等停站,会话就绪(模块已解析)就按 entryMode 拉取,断点也随之可见
       if (!get().sourceContent && snap.module && snap.state !== 'exit') {
         void get().refreshSource()
