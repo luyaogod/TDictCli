@@ -61,17 +61,20 @@ export function SettingsView() {
     setSaving(true); setMsg(''); setErr('')
     try {
       const active = nextActive ?? activeEnv
-      // 环境名 → db 覆盖重组回嵌套结构
+      // 环境名自动 = 主机-区域(用户只填 IP/端口/区域/账号/密码/ENT)
+      const envName = (e: EnvItem) => e.name || `${e.host}-${e.zone}`.replace(/-$/, '')
       const next = {
         ...cfg,
         activeEnv: active,
-        envs: envs.filter((e) => e.name && e.host).map((e) => ({
-          name: e.name, host: e.host, port: e.port || 22, user: e.user, password: e.password,
-          zone: e.zone, topDir: e.topDir, launchArgs: e.launchArgs, watchdogSeconds: e.watchdogSeconds || undefined,
-          db: e.dbTns ? { tns: e.dbTns, ent: e.dbEnt || 0 } : undefined,
+        envs: envs.filter((e) => e.host).map((e) => ({
+          name: envName(e), host: e.host, port: e.port || 22, user: e.user, password: e.password,
+          zone: e.zone,
+          db: e.dbEnt > 0 ? { ent: e.dbEnt } : undefined,
         })),
       }
       setActiveEnv(active)
+      // 自动生成的环境名(host-zone)写回列表,保持显示一致
+      setEnvs(envs.filter((e) => e.host).map((e) => ({ ...e, name: envName(e) })))
       await api.saveSettings(next)
       setCfg(next)
       setMsg(nextActive !== undefined ? `已切换生效环境:${nextActive}` : '已保存并热生效(监听地址改端口需重启 serve)')
@@ -132,8 +135,8 @@ export function SettingsView() {
                         ? <CircleCheck className="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
                         : <Circle className="h-3.5 w-3.5 shrink-0 text-muted-foreground/40" />}
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate font-medium">{e.name || '(未命名)'}</span>
-                        <span className="block truncate text-muted-foreground">{e.host}{e.zone ? ` · ${e.zone}` : ''}</span>
+                        <span className="block truncate font-medium">{e.name || e.host || '(新环境)'}</span>
+                        <span className="block truncate text-muted-foreground">{e.zone ? `${e.zone} · ` : ''}{e.port || 22}</span>
                       </span>
                     </button>
                   ))}
@@ -147,18 +150,18 @@ export function SettingsView() {
                 <section className="min-w-0 flex-1 rounded-sm border border-border bg-card/60 p-3">
                   <div className="mb-2 flex items-center justify-between">
                     <h3 className="font-medium text-foreground">
-                      环境参数{activeEnv === cur.name && cur.name && <span className="ml-2 text-emerald-600 dark:text-emerald-400">(生效中)</span>}
+                      环境参数{cur.host && activeEnv === (cur.name || `${cur.host}-${cur.zone}`.replace(/-$/, '')) && <span className="ml-2 text-emerald-600 dark:text-emerald-400">(生效中)</span>}
                     </h3>
                     <div className="flex gap-1.5">
-                      <Button size="sm" variant="secondary" disabled={!cur.name || activeEnv === cur.name}
-                        title={activeEnv === cur.name ? '已是生效环境' : '把该环境设为当前默认(保存后热生效)'}
-                        onClick={() => void save(cur.name)}>
+                      <Button size="sm" variant="secondary" disabled={!cur.host || (!cur.name && `${cur.host}-${cur.zone}` === activeEnv)}
+                        title={activeEnv === (cur.name || `${cur.host}-${cur.zone}`) ? '已是生效环境' : '把该环境设为当前默认(保存后热生效)'}
+                        onClick={() => void save(cur.name || `${cur.host}-${cur.zone}`.replace(/-$/, ''))}>
                         设为生效
                       </Button>
                       <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-red-600 dark:hover:text-red-400"
                         onClick={() => {
                           setEnvs(envs.filter((_, j) => j !== selEnv))
-                          if (activeEnv === cur.name) setActiveEnv('')
+                          if (activeEnv === (cur.name || `${cur.host}-${cur.zone}`)) setActiveEnv('')
                           setSelEnv(Math.max(0, selEnv - 1))
                         }}>
                         <Trash2 className="h-3.5 w-3.5" />
@@ -166,18 +169,16 @@ export function SettingsView() {
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    <Field label="环境名称(start --ssh 按名引用)"><Input className={cell} placeholder="如 35测试" value={cur.name} onChange={(e) => patchEnv(selEnv, { name: e.target.value.trim() })} /></Field>
-                    <Field label="区域(31开发/35测试/36正式)"><Input className={cell} value={cur.zone} onChange={(e) => patchEnv(selEnv, { zone: e.target.value.trim() })} /></Field>
-                    <Field label="主机"><Input className={cell} value={cur.host} onChange={(e) => patchEnv(selEnv, { host: e.target.value.trim() })} /></Field>
+                    <Field label="IP 主机"><Input className={cell} value={cur.host} onChange={(e) => patchEnv(selEnv, { host: e.target.value.trim() })} /></Field>
                     <Field label="端口"><Input className={cell} value={cur.port} onChange={(e) => patchEnv(selEnv, { port: Number(e.target.value) || 22 })} /></Field>
-                    <Field label="用户"><Input className={cell} value={cur.user} onChange={(e) => patchEnv(selEnv, { user: e.target.value.trim() })} /></Field>
+                    <Field label="登录区域(31开发/35测试/36正式)"><Input className={cell} value={cur.zone} onChange={(e) => patchEnv(selEnv, { zone: e.target.value.trim() })} /></Field>
+                    <Field label="企业(ENT)"><Input className={cell} value={cur.dbEnt || ''} onChange={(e) => patchEnv(selEnv, { dbEnt: Number(e.target.value) || 0 })} /></Field>
+                    <Field label="账号"><Input className={cell} value={cur.user} onChange={(e) => patchEnv(selEnv, { user: e.target.value.trim() })} /></Field>
                     <Field label="密码"><Input className={cell} type="password" value={cur.password} onChange={(e) => patchEnv(selEnv, { password: e.target.value })} /></Field>
-                    <Field label="启动参数模板({prog} 替换)" className="col-span-2"><Input className={cell} value={cur.launchArgs} onChange={(e) => patchEnv(selEnv, { launchArgs: e.target.value })} /></Field>
-                    <Field label="顶级目录(留空按区域推导)"><Input className={cell} placeholder="/u1/t35tst" value={cur.topDir} onChange={(e) => patchEnv(selEnv, { topDir: e.target.value.trim() })} /></Field>
-                    <Field label="停站看门狗(秒,0=默认)"><Input className={cell} value={cur.watchdogSeconds || ''} onChange={(e) => patchEnv(selEnv, { watchdogSeconds: Number(e.target.value) || 0 })} /></Field>
-                    <Field label="TNS 别名(留空按区域推导)"><Input className={cell} placeholder="t35tst" value={cur.dbTns} onChange={(e) => patchEnv(selEnv, { dbTns: e.target.value.trim() })} /></Field>
-                    <Field label="企业(TOPENT)"><Input className={cell} value={cur.dbEnt || ''} onChange={(e) => patchEnv(selEnv, { dbEnt: Number(e.target.value) || 0 })} /></Field>
                   </div>
+                  <p className="mt-2 text-muted-foreground">
+                    环境名自动为「主机-区域」(如 {cur.host || 'IP'}-{cur.zone || '区域'}),start --ssh 按它引用;顶级目录/TNS 由区域自动推导;启动参数模板在「高级」里配置。
+                  </p>
                 </section>
               )}
             </div>
@@ -203,6 +204,7 @@ export function SettingsView() {
             <section className="rounded-sm border border-border bg-card/60 p-3">
               <h3 className="mb-2 font-medium text-foreground">本机参数</h3>
               <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+                <Field label="启动参数模板({prog} 替换)" className="col-span-2 md:col-span-3"><Input className={input} value={cfg.launchArgs || ''} onChange={(e) => setCfg({ ...cfg, launchArgs: e.target.value })} /></Field>
                 <Field label="监听地址"><Input className={input} value={cfg.listen || ''} onChange={(e) => setCfg({ ...cfg, listen: e.target.value })} /></Field>
                 <Field label="停站看门狗默认(秒)"><Input className={input} value={cfg.watchdogSeconds || 0} onChange={(e) => setCfg({ ...cfg, watchdogSeconds: Number(e.target.value) || 0 })} /></Field>
                 <Field label="print 数组元素上限"><Input className={input} value={cfg.printElements || 0} onChange={(e) => setCfg({ ...cfg, printElements: Number(e.target.value) || 0 })} /></Field>
