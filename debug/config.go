@@ -28,6 +28,7 @@ type DBConfig struct {
 	SQLPlus    string `json:"sqlplus"`    // oracle: sqlplus 路径,留空自动探测
 	OracleHome string `json:"oracleHome"` // oracle: ORACLE_HOME,留空自动探测
 	TNS        string `json:"tns"`        // oracle: TNS 别名(如 t35prd)/ kingbase: 库名,留空自动发现实例
+	Port       int    `json:"port,omitempty"` // kingbase: 实例端口,0=自动发现(默认 54321)
 }
 
 // NamedDB 命名数据库连接(设置页维护的多数据库列表)
