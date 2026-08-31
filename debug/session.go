@@ -123,8 +123,8 @@ type pendingCmd struct {
 }
 
 const (
-	maxPendingLines = 20000       // 单命令响应行数上限(容纳 info variables/functions)
-	maxValueBytes   = 256 << 10   // 单个 print 值字节上限
+	maxPendingLines = 20000     // 单命令响应行数上限(容纳 info variables/functions)
+	maxValueBytes   = 256 << 10 // 单个 print 值字节上限
 )
 
 // writeValue 追加 print 值(带截断保护)
@@ -169,10 +169,14 @@ type stopCollect struct {
 
 // Session 一条调试会话 = 一条 SSH PTY 里跑的 fglrun -d
 type Session struct {
-	ID     string
-	Module string
-	Prog   string
+	ID      string
+	Module  string
+	Prog    string
 	RunProg string // gzzz_t 解析出的实体程序编号(gendbg 语义);空 = 与 Prog 相同
+	// gendbg 原版启动引用:gzza004 去 "$FGLRUN" 前缀(如 "$CINi/ainq120_wf"),
+	// 启动命令原样交给选区后的 shell,$变量 展开为权威 42r 路径(标准/客制由环境决定);空 = 回退本地探测
+	LaunchRef    string
+	ExtraArgs    string // gzzz004 额外参数(gendbg 拼在程序名之后)
 	ArgsOverride string // 启动参数覆盖(接口日志重放调试:报文文件对);空 = 用 LaunchArgs 模板
 
 	cfg  *Config
@@ -206,24 +210,26 @@ type Session struct {
 }
 
 // NewSession 建立 SSH 连接并打开 PTY(登录与启动由 Launch 驱动)
-func NewSession(cfg *Config, module, prog, runProg string, emit func(Event)) (*Session, error) {
+func NewSession(cfg *Config, module, prog, runProg, launchRef, extraArgs string, emit func(Event)) (*Session, error) {
 	conn, err := Dial(cfg.SSH)
 	if err != nil {
 		return nil, fmt.Errorf("SSH 连接失败: %w", err)
 	}
 	s := &Session{
-		ID:      fmt.Sprintf("s%d", time.Now().UnixMilli()),
-		Module:  module,
-		Prog:    prog,
-		RunProg: runProg,
-		cfg:    cfg,
-		conn:   conn,
-		state:  StateLoading,
-		bps:    map[int]*Breakpoint{},
-		srcCache: map[string]srcCacheEntry{},
-		emit:   emit,
-		lines:  make(chan string, 1024),
-		done:   make(chan struct{}),
+		ID:        fmt.Sprintf("s%d", time.Now().UnixMilli()),
+		Module:    module,
+		Prog:      prog,
+		RunProg:   runProg,
+		LaunchRef: launchRef,
+		ExtraArgs: extraArgs,
+		cfg:       cfg,
+		conn:      conn,
+		state:     StateLoading,
+		bps:       map[int]*Breakpoint{},
+		srcCache:  map[string]srcCacheEntry{},
+		emit:      emit,
+		lines:     make(chan string, 1024),
+		done:      make(chan struct{}),
 	}
 	s.kaStop = conn.StartKeepalive(func(err error) {
 		s.emitEvent(Event{Type: "dead", Text: "SSH 连接断开: " + err.Error()})
@@ -288,7 +294,19 @@ func (s *Session) Launch(ctx context.Context) error {
 	if s.ArgsOverride != "" {
 		args = s.ArgsOverride
 	}
-	s.pty.Write(fmt.Sprintf("fglrun -d 42r/%s.42r %s\r", launchProg, args))
+	if s.ExtraArgs != "" {
+		args += " " + s.ExtraArgs // gzzz004 额外参数(gendbg 语义:拼在程序名后)
+	}
+	// 启动引用:gzza004 原版优先(如 "$CINi/ainq120_wf"),$变量由选区后 shell 展开为
+	// 权威路径——标准/客制由 T100 环境决定,与 r.d/gendbg 完全同源;无引用才回退本地探测
+	var runCmd string
+	if s.LaunchRef != "" {
+		runCmd = fmt.Sprintf("fglrun -d %s.42r %s", s.LaunchRef, args)
+	} else {
+		runCmd = fmt.Sprintf("fglrun -d 42r/%s.42r %s", launchProg, args)
+	}
+	log.Printf("[debug] 会话 %s 启动: %s", s.ID, runCmd)
+	s.pty.Write(runCmd + "\r")
 	if err := s.waitBarePrompt(90*time.Second, "(fgldb) 提示符"); err != nil {
 		return err
 	}
@@ -474,7 +492,8 @@ func (s *Session) Interrupt() error {
 func (s *Session) ForceExit() { s.forceExit() }
 
 // forceExit 强制进入退出态并释放资源
-func (s *Session) forceExit() {	s.mu.Lock()
+func (s *Session) forceExit() {
+	s.mu.Lock()
 	already := s.state == StateExit
 	s.state = StateExit
 	p := s.pending
@@ -1413,9 +1432,9 @@ func (s *Session) ReadFile(path string) ([]byte, time.Time, error) {
 
 // SourceFile 解析后的源码文件
 type SourceFile struct {
-	DVMFile string `json:"dvmFile"` // DVM 报告的模块源名,如 asf_bsft001_wf.4gl
-	Path    string `json:"path"`    // 实际读取的服务器路径
-	Content string `json:"content"`
+	DVMFile string    `json:"dvmFile"` // DVM 报告的模块源名,如 asf_bsft001_wf.4gl
+	Path    string    `json:"path"`    // 实际读取的服务器路径
+	Content string    `json:"content"`
 	ModTime time.Time `json:"modTime"`
 }
 
@@ -1525,7 +1544,6 @@ func (s *Session) ReadPath(path string) (*SourceFile, error) {
 }
 
 // ---------- 快照 ----------
-
 
 // State 当前状态
 func (s *Session) State() State {
