@@ -23,10 +23,11 @@ type NamedSSH struct {
 
 // DBConfig 数据库连接探查配置(config.json debug.db 节,全部可选)
 type DBConfig struct {
+	Type       string `json:"type"`       // 数据库类型:"oracle"(默认)| "kingbase"(人大金仓,PG 引擎)
 	Ent        int    `json:"ent"`        // 默认企业编号(TOPENT);0=不指定
-	SQLPlus    string `json:"sqlplus"`    // sqlplus 路径,留空自动探测
-	OracleHome string `json:"oracleHome"` // ORACLE_HOME,留空自动探测
-	TNS        string `json:"tns"`        // TNS 别名(如 t35prd),留空按 zone 推导
+	SQLPlus    string `json:"sqlplus"`    // oracle: sqlplus 路径,留空自动探测
+	OracleHome string `json:"oracleHome"` // oracle: ORACLE_HOME,留空自动探测
+	TNS        string `json:"tns"`        // oracle: TNS 别名(如 t35prd)/ kingbase: 库名,留空自动发现实例
 }
 
 // NamedDB 命名数据库连接(设置页维护的多数据库列表)
