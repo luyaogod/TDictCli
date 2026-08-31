@@ -57,7 +57,7 @@ var debugProbeCmd = &cobra.Command{
 		}
 		fmt.Printf("[probe] 服务器 %s:%d 区域 %s\n", cfg.SSH.Host, cfg.SSH.Port, cfg.Zone)
 
-		sess, err := debug.NewSession(cfg, dbgModule, dbgProg, "", func(ev debug.Event) {
+		sess, err := debug.NewSession(cfg, dbgModule, dbgProg, "", "", "", func(ev debug.Event) {
 			switch ev.Type {
 			case "state":
 				fmt.Printf("[state] %s\n", ev.State)

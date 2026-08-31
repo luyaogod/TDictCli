@@ -22,22 +22,22 @@ type EntMapping struct {
 
 // DBProbeResult 单账号连接探查结果
 type DBProbeResult struct {
-	Ent      int    `json:"ent"`
-	Account  string `json:"account"`
-	Host     string `json:"host"`
-	Port     string `json:"port"`
-	Service  string `json:"service"`
-	Connect  bool   `json:"connect"` // 用 账号/账号@tns 能否连通(密码规则:账号=密码)
-	Error    string `json:"error,omitempty"`
+	Ent     int    `json:"ent"`
+	Account string `json:"account"`
+	Host    string `json:"host"`
+	Port    string `json:"port"`
+	Service string `json:"service"`
+	Connect bool   `json:"connect"` // 用 账号/账号@tns 能否连通(密码规则:账号=密码)
+	Error   string `json:"error,omitempty"`
 }
 
 // DBReport 完整探查报告
 type DBReport struct {
-	Zone     string          `json:"zone"`
-	TNS      string          `json:"tns"`
-	Mappings []EntMapping    `json:"mappings"`           // 全部企业映射
-	Probe    *DBProbeResult  `json:"probe,omitempty"`    // 指定企业的连接验证
-	Env      map[string]string `json:"env,omitempty"`    // 探测到的环境(sqlplus/oracleHome)
+	Zone     string            `json:"zone"`
+	TNS      string            `json:"tns"`
+	Mappings []EntMapping      `json:"mappings"`        // 全部企业映射
+	Probe    *DBProbeResult    `json:"probe,omitempty"` // 指定企业的连接验证
+	Env      map[string]string `json:"env,omitempty"`   // 探测到的环境(sqlplus/oracleHome)
 }
 
 var (
@@ -163,31 +163,46 @@ func dbAllMappings(conn *SSHConn, zone, tns string, kb *kbCtx) ([]EntMapping, er
 	return maps, nil
 }
 
-// dbResolveJob 按作业编号查 gzzz_t,返回实体程序编号(gzzz002)与模块码(gzzz005)。
-// 对齐 gendbg.4gl 的解析:SELECT ... FROM gzzz_t INNER JOIN gzza_t ON gzza001=gzzz002
-// WHERE gzzz001=作业编号;一个程序(gzzz002)可被多个作业编号共用。
-// 无记录返回 ("","",nil)——调用方回退到 42r 文件搜索。
-func dbResolveJob(conn *SSHConn, zone, tns, job string, kb *kbCtx) (prog, module string, err error) {
+// JobResolve 作业解析结果(gendbg 原版语义)
+type JobResolve struct {
+	Prog      string // 实体程序编号(gzza001/gzzz002)
+	Module    string // 模块代码(gzzz005)
+	LaunchRef string // gzza004 去 "$FGLRUN" 前缀的启动引用(如 $CINi/ainq120_wf),由选区 shell 展开权威路径
+	Extra     string // gzzz004 额外参数(gendbg 拼在程序名后)
+}
+
+// dbResolveJob 按作业编号查实体程序与启动引用(对齐 gendbg.4gl:
+// SELECT gzza001,gzzz004,gzza004,gzzz005 FROM gzzz_t INNER JOIN gzza_t ON gzza001=gzzz002)。
+// 一个程序(gzzz002)可被多个作业编号共用。无记录返回零值。
+func dbResolveJob(conn *SSHConn, zone, tns, job string, kb *kbCtx) (JobResolve, error) {
 	var out string
+	var err error
 	if kb != nil {
 		out, err = conn.Output(kbCmd(kb.ksql, kb.port, kb.db, "ds/ds",
-			fmt.Sprintf(`select gzzz002,coalesce(gzzz005,'-') from gzzz_t where gzzz001='%s'`, job)), 25*time.Second)
+			fmt.Sprintf(`select gzza001,coalesce(gzzz004,' '),coalesce(gzza004,' '),coalesce(gzzz005,'-') from gzzz_t inner join gzza_t on gzza001=gzzz002 where gzzz001='%s'`, job)), 25*time.Second)
 	} else {
-		sql := "set heading off\nset feedback off\nselect gzzz002||'|'||nvl(gzzz005,'-') from gzzz_t where gzzz001='" + job + "';"
+		sql := "set heading off\nset feedback off\nselect gzza001||'|'||nvl(gzzz004,' ')||'|'||nvl(gzza004,' ')||'|'||nvl(gzzz005,'-') from gzzz_t inner join gzza_t on gzza001=gzzz002 where gzzz001='" + job + "';"
 		out, err = conn.Output(sqlplusCmd(zone, fmt.Sprintf("ds/ds@%s", tns), sql), 25*time.Second)
 	}
 	if err != nil {
-		return "", "", fmt.Errorf("查询 gzzz_t 失败: %w (%s)", err, firstLines(out, 3))
+		return JobResolve{}, fmt.Errorf("查询 gzzz_t 失败: %w (%s)", err, firstLines(out, 3))
 	}
+	var jr JobResolve
 	for _, ln := range strings.Split(out, "\n") {
 		if strings.Contains(ln, "ORA-") || strings.Contains(ln, "ERROR") {
-			return "", "", fmt.Errorf("gzzz_t 查询出错: %s", firstLines(out, 3))
+			return JobResolve{}, fmt.Errorf("gzzz_t 查询出错: %s", firstLines(out, 3))
 		}
-		if m := reGzzzRow.FindStringSubmatch(ln); m != nil {
-			return m[1], m[2], nil
+		ln = strings.TrimSpace(ln)
+		parts := strings.Split(ln, "|")
+		if len(parts) < 4 || parts[0] == "" {
+			continue
 		}
+		// gendbg 拼装时 gzza004 = "$FGLRUN $<模块变量>/<程序>";去掉前缀留启动引用($变量 交 shell 展开)
+		jr = JobResolve{Prog: parts[0], Extra: strings.TrimSpace(parts[1]), Module: parts[3]}
+		jr.LaunchRef = strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(parts[2]), "$FGLRUN"))
+		break
 	}
-	return "", "", nil
+	return jr, nil
 }
 
 // dbConnectTest 用 账号/账号 尝试连接(密码规则:账号=密码,fglprofile 明文)
@@ -316,19 +331,19 @@ func parseTNS(conn *SSHConn, oracleHome, tns string) (host, port, service string
 
 // DBProbeReq 设置页「自动获取数据库配置」请求:SSH 连接 + 数据库类型
 type DBProbeReq struct {
-	Host string `json:"host"`
-	Port int    `json:"port"`
-	User string `json:"user"`
+	Host     string `json:"host"`
+	Port     int    `json:"port"`
+	User     string `json:"user"`
 	Password string `json:"password"`
-	Zone string `json:"zone"`
-	Type string `json:"type"` // oracle | kingbase
+	Zone     string `json:"zone"`
+	Type     string `json:"type"` // oracle | kingbase
 }
 
 // DBProbeOut 探测结果:拿到的字段回填表单,拿不到的留空由用户手填
 type DBProbeOut struct {
 	Type       string `json:"type"`
-	TNS        string `json:"tns,omitempty"`    // oracle: TNS 别名(按区域推导)
-	Port       int    `json:"port,omitempty"`   // kingbase: 实例端口
+	TNS        string `json:"tns,omitempty"`      // oracle: TNS 别名(按区域推导)
+	Port       int    `json:"port,omitempty"`     // kingbase: 实例端口
 	Database   string `json:"database,omitempty"` // kingbase: 库名
 	OracleHome string `json:"oracleHome,omitempty"`
 	TwoTask    string `json:"twoTask,omitempty"`

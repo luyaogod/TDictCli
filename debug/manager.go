@@ -77,17 +77,18 @@ func (m *Manager) launchWith(cfg *Config, module, prog string) (*Session, error)
 	}
 	m.mu.Unlock()
 
-	// 对齐 T100 gendbg:启动前连库把作业编号解析成实体程序+模块(gzzz_t),
+	// 对齐 T100 gendbg:启动前连库把作业编号解析成实体程序+模块+启动引用(gzzz_t JOIN gzza_t),
 	// 源码与 42r 都跟实体程序走;未配置 db/查询失败/未命中 → 会话内按名称文件搜索兜底
-	runProg := ""
-	if mod2, prog2 := m.resolveJobWith(cfg, module, prog); prog2 != "" {
+	runProg, launchRef, extra := "", "", ""
+	if mod2, prog2, ref2, extra2 := m.resolveJobWith(cfg, module, prog); prog2 != "" {
 		runProg = prog2
+		launchRef, extra = ref2, extra2
 		if module == "" && mod2 != "" {
 			module = mod2
 		}
 	}
 
-	sess, err := NewSession(cfg, module, prog, runProg, m.emit)
+	sess, err := NewSession(cfg, module, prog, runProg, launchRef, extra, m.emit)
 	if err != nil {
 		return nil, err
 	}
@@ -102,17 +103,17 @@ func (m *Manager) launchWith(cfg *Config, module, prog string) (*Session, error)
 
 // resolveJob 连库按 gendbg 语义解析作业编号(gzzz_t:gzzz001 → gzzz002 实体程序 + gzzz005 模块)。
 // 返回 (模块, 实体程序);未配置 db/查询失败/未命中 → ("",""),由调用方回退文件搜索。
-func (m *Manager) resolveJob(module, job string) (mod, prog string) {
+func (m *Manager) resolveJob(module, job string) (mod, prog, launchRef, extra string) {
 	return m.resolveJobWith(m.cfg, module, job)
 }
 
-func (m *Manager) resolveJobWith(cfg *Config, module, job string) (mod, prog string) {
+func (m *Manager) resolveJobWith(cfg *Config, module, job string) (mod, prog, launchRef, extra string) {
 	if cfg.DB == nil || !reProgName.MatchString(job) {
-		return "", ""
+		return "", "", "", ""
 	}
 	conn, err := Dial(cfg.SSH)
 	if err != nil {
-		return "", ""
+		return "", "", "", ""
 	}
 	defer conn.Close()
 	zone := cfg.Zone
@@ -125,7 +126,7 @@ func (m *Manager) resolveJobWith(cfg *Config, module, job string) (mod, prog str
 	if cfg.DBType() == "kingbase" {
 		env, err := probeKBEnv(conn)
 		if err != nil {
-			return "", ""
+			return "", "", "", ""
 		}
 		kb = &kbCtx{ksql: env["KSQL"], port: env["KPORT"], db: env["KDB"]}
 		if cfg.DB != nil && cfg.DB.TNS != "" {
@@ -136,15 +137,21 @@ func (m *Manager) resolveJobWith(cfg *Config, module, job string) (mod, prog str
 		}
 		tns = kb.db
 	}
-	p, mc, err := dbResolveJob(conn, zone, tns, job, kb)
-	if err != nil || p == "" {
-		return "", ""
+	jr, err := dbResolveJob(conn, zone, tns, job, kb)
+	if err != nil || jr.Prog == "" {
+		return "", "", "", ""
 	}
+	p := jr.Prog
+	// gendbg 原版语义:gzza004 的 $变量 由选区后 shell 展开为权威 42r 路径(标准/客制都覆盖)
+	if !strings.HasPrefix(jr.LaunchRef, "$") {
+		jr.LaunchRef, jr.Extra = "", ""
+	}
+	launchRef, extra = jr.LaunchRef, jr.Extra
 	if module != "" {
-		return module, p // 用户显式指定模块:尊重指定,仅采纳实体程序
+		return module, p, launchRef, extra // 用户显式指定模块:尊重指定,仅采纳实体程序
 	}
-	mod = strings.ToLower(mc)
-	if mc == "" || mc == "-" || !modHas42r(conn, cfg.TopDir, mod, p) {
+	mod = strings.ToLower(jr.Module)
+	if jr.Module == "" || jr.Module == "-" || !modHas42r(conn, cfg.TopDir, mod, p) {
 		// 模块码缺失或目录对不上:全模块搜索实体程序的 42r;0/多命中留给会话内兜底报错
 		if cands := searchModule42r(conn, cfg.ModuleRoots, p); len(cands) == 1 {
 			mod = cands[0]
@@ -152,7 +159,7 @@ func (m *Manager) resolveJobWith(cfg *Config, module, job string) (mod, prog str
 			mod = ""
 		}
 	}
-	return mod, p
+	return mod, p, launchRef, extra
 }
 
 // LaunchReplay 接口日志重放调试:等价 T100 日志内嵌的 `r.dg <作业> '<req>' '<rsp>'`。
@@ -175,9 +182,9 @@ func (m *Manager) LaunchReplay(item *WSLogItem, content *WSLogContent) (*Session
 	if job == "" {
 		return nil, fmt.Errorf("该日志没有关联作业编号(wsfa012 为空),无法重放")
 	}
-	module, runProg := "", ""
-	if mod2, prog2 := m.resolveJob("", job); prog2 != "" {
-		module, runProg = mod2, prog2
+	module, runProg, launchRef, extra := "", "", "", ""
+	if mod2, prog2, ref2, extra2 := m.resolveJob("", job); prog2 != "" {
+		module, runProg, launchRef, extra = mod2, prog2, ref2, extra2
 	}
 	conn, err := Dial(m.cfg.SSH)
 	if err != nil {
@@ -197,7 +204,7 @@ func (m *Manager) LaunchReplay(item *WSLogItem, content *WSLogContent) (*Session
 	if rspPath != "" {
 		args += " " + q(rspPath)
 	}
-	sess, err := NewSession(m.cfg, module, job, runProg, m.emit)
+	sess, err := NewSession(m.cfg, module, job, runProg, launchRef, extra, m.emit)
 	if err != nil {
 		return nil, err
 	}
