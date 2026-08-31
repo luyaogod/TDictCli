@@ -255,15 +255,14 @@ export function SourceView() {
 
   // 视口跟随:仅停站行号"值变化"时滚动到当前行(调试页)。
   // 绝不能放进装饰 effect——它依赖 breakpoints,加断点重跑会把视口拽回运行行
-  // 视口落位:cursorLine / model / 内容任一就绪变化时滚动到目标行。
-  // 延迟 80ms:@monaco-editor/react 换 model 与大文件 setValue 后会恢复 viewState
-  // (新页签在顶部),立即滚动会被覆盖;等 model+内容就绪再居中。
-  // 加断点等操作不触发本 effect,不会拽回视口
+  // 视口落位:仅在「定位事件」发生时滚动(停站/步进/跳函数→cursorLine 变化,或内容就绪)。
+  // modelTick(纯页签切换)不触发——切回页签时恢复上次离开的视口,不打断阅读连续性。
+  // 延迟 80ms:等 @monaco-editor/react 换 model/大文件 setValue 完成再居中,避免被 viewState 覆盖
   useEffect(() => {
     if (!(cursorLine > 0 && (isDebug ? state === 'stopped' : true))) return
     const t = setTimeout(() => editorRef.current?.revealLineInCenter(cursorLine), 80)
     return () => clearTimeout(t)
-  }, [cursorLine, state, isDebug, modelTick, content])
+  }, [cursorLine, state, isDebug, content])
 
   // 编辑器 options 必须稳定:字面量每次渲染都是新对象,会触发 @monaco-editor/react
   // 反复 updateOptions(minimap 重建),加断点等重渲染时会把滚动位置复位
