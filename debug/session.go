@@ -284,6 +284,11 @@ func (s *Session) Launch(ctx context.Context) error {
 	if s.cfg.FGLServer != "" {
 		setup += "export FGLSERVER=" + s.cfg.FGLServer + "\r\n"
 	}
+	// 配置了企业(ENT)时覆盖选区菜单给的 TOPENT(选区输出的是机器默认值,
+	// 如「TOPENT = 99」;作业运行/数据库连接都以 TOPENT 为准)
+	if s.cfg.DB != nil && s.cfg.DB.Ent > 0 {
+		setup += fmt.Sprintf("export TOPENT=%d\r\n", s.cfg.DB.Ent)
+	}
 	s.pty.Write(setup)
 	if err := s.waitRegexp(reShellPrompt, 15*time.Second, "shell 提示符(cd)"); err != nil {
 		return err
