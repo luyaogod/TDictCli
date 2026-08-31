@@ -116,6 +116,10 @@ func (c *Config) ApplyActiveEnv() {
 				c.SSH.Port = 22
 			}
 		}
+		if e.Zone != "" || e.TopDir != "" {
+			// 换环境 = 换服务器,模块根目录跟随新 TopDir 重推(fillDefaults 只在空时推导)
+			c.ModuleRoots = nil
+		}
 		if e.Zone != "" {
 			c.Zone = e.Zone
 		}
