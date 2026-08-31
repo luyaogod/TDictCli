@@ -11,6 +11,17 @@ export interface TimelineItem {
 
 interface Watch { expr: string; value?: string; error?: string }
 
+// 浏览页签:静态打开的源码文件(如 Ctrl+点击跳函数),与调试页互不干扰
+export interface SrcTab {
+  key: string
+  file: string // DVM 文件名(如 s_apmt520_conf_chk.4gl)
+  content: string
+  path: string
+  line?: number // 打开时定位行
+  loading: boolean
+  missing?: boolean // 无源码(只有 42m)
+}
+
 interface Store {
   // 连接
   wsConnected: boolean
@@ -63,6 +74,9 @@ interface Store {
   sourceDVM: string // 当前已加载源码对应的 DVM 模块文件名(无源码模块也记录,避免错文件高亮)
   currentLine: number
   loadingSource: boolean
+  // 源码多页签:调试页固定第一个(跟随停站),浏览页为静态打开的其它源码文件
+  tabs: SrcTab[]
+  activeTab: string // 'debug' | tabs[].key
 
   // actions
   setWsConnected: (b: boolean) => void
@@ -74,6 +88,10 @@ interface Store {
   onEvent: (ev: Event) => void
   setView: (v: 'debug' | 'wslogs' | 'wstest' | 'settings') => void
   setTheme: (t: 'dark' | 'light') => void
+  setActiveTab: (key: string) => void
+  closeTab: (key: string) => void
+  openSourceTab: (file: string, line?: number) => Promise<void>
+  locate: (word: string) => Promise<{ file: string; line: number }>
   setWsTest: (p: { mode?: string; url?: string; body?: string; soap?: boolean; result?: WSTestResult | null }) => void
   runWsTest: () => Promise<void>
   loadWsLogs: (service: string, onlyFail: boolean, page?: number, startFrom?: string, startTo?: string) => Promise<void>
@@ -128,6 +146,7 @@ export const useStore = create<Store>((set, get) => ({
   wsTestMode: '3', wsTestUrl: '', wsTestBody: '', wsTestSoap: false,
   wsTestResult: null, wsTestRunning: false, wsTestErr: '', wsTestHistory: [],
   sourceContent: '', sourcePath: '', sourceDVM: '', currentLine: 0, loadingSource: false,
+  tabs: [], activeTab: 'debug',
 
   setWsConnected: (b) => set({ wsConnected: b }),
   toggleRight: () => set((st) => ({ showRight: !st.showRight })),
@@ -202,7 +221,7 @@ export const useStore = create<Store>((set, get) => ({
         // 跨文件停站:先收光标(源码未就位时不画停站行,防它在旧文件上错位),
         // refreshSource 拉到新源码后再一次性落位
         const nl = !!ev.stop?.file && ev.stop.file !== get().sourceDVM
-        set({ stop: ev.stop || null, state: 'stopped', currentLine: nl ? 0 : (ev.stop?.line || get().currentLine), selectedFrame: -1, loadingSource: nl })
+        set({ stop: ev.stop || null, state: 'stopped', currentLine: nl ? 0 : (ev.stop?.line || get().currentLine), selectedFrame: -1, loadingSource: nl, activeTab: 'debug' })
         st.pushTimeline({
           origin: 'system', kind: 'stop',
           text: `停站[${ev.stop?.reason}] ${ev.stop?.file || ''}:${ev.stop?.line ?? ''} ${ev.stop?.func || ''}`,
@@ -240,6 +259,43 @@ export const useStore = create<Store>((set, get) => ({
     localStorage.setItem('tdict.theme', t)
     document.documentElement.classList.toggle('dark', t === 'dark')
     set({ theme: t })
+  },
+
+  setActiveTab: (key) => set({ activeTab: key }),
+
+  locate: async (word) => {
+    const { sessionId } = get()
+    if (!sessionId) throw new Error('无调试会话')
+    return api.locate(sessionId, word)
+  },
+
+  closeTab: (key) => set((st) => {
+    const idx = st.tabs.findIndex((t) => t.key === key)
+    if (idx < 0) return {}
+    const tabs = st.tabs.filter((t) => t.key !== key)
+    if (st.activeTab !== key) return { tabs }
+    return { tabs, activeTab: tabs[idx] ? tabs[idx].key : tabs[idx - 1] ? tabs[idx - 1].key : 'debug' }
+  }),
+
+  openSourceTab: async (file, line) => {
+    const key = 'src:' + file
+    const st = get()
+    const existing = st.tabs.find((t) => t.key === key)
+    if (existing) {
+      // 已开:激活即可(monaco model 缓存内容与滚动位置)
+      set({ activeTab: key, tabs: st.tabs.map((t) => t.key === key ? { ...t, line } : t) })
+      return
+    }
+    if (!st.sessionId) return
+    const tab: SrcTab = { key, file, content: '', path: '', line, loading: true }
+    set({ tabs: [...st.tabs, tab], activeTab: key })
+    try {
+      const { source } = await api.sourceByFile(st.sessionId, file, st.module)
+      set((s2) => ({ tabs: s2.tabs.map((t) => t.key === key ? { ...t, content: source.content, path: source.path, loading: false } : t) }))
+    } catch {
+      // 无源码(只有 42m 等):页签保留并标记,内容区给提示
+      set((s2) => ({ tabs: s2.tabs.map((t) => t.key === key ? { ...t, loading: false, missing: true } : t) }))
+    }
   },
 
   setWsTest: (p) => {
@@ -427,7 +483,19 @@ export const useStore = create<Store>((set, get) => ({
         st.pushTimeline({ origin: 'system', kind: 'info', text: '入口停站:已显示源码,点击行号下断点后点「继续 F5」开始' })
       }
     } catch {
-      // 该模块无源码(如 com 公共库只有 42m):明确置空,避免在旧文件上标错停站行
+      // 无源码(如 com 公共库只有 42m):明确置空,避免在旧文件上标错停站行
+      if (entryMode) {
+        // 客制母版回退:cpm_apmt580_wf.4gl(首字母 a→c 的客制目录命名)
+        try {
+          const { source } = await api.sourceByFile(sessionId, `c${module}_${runProg || prog}.4gl`, module)
+          set({ sourceContent: source.content, sourcePath: source.path, sourceDVM: f })
+          if (get().currentLine === 0) {
+            jumpToMain(set, get)
+            get().pushTimeline({ origin: 'system', kind: 'info', text: '入口停站:已显示客制源码,点击行号下断点后点「继续 F5」开始' })
+          }
+          return
+        } catch { /* 客制也没有 */ }
+      }
       set({ sourceContent: '', sourcePath: '', sourceDVM: f })
       if (line) set({ currentLine: line })
     } finally {
@@ -490,7 +558,7 @@ export const useStore = create<Store>((set, get) => ({
       if (action === 'run' || action === 'continue') pollUntilStopped(set, get)
       if (resp?.stop && (action === 'next' || action === 'step' || action === 'finish' || action === 'until')) {
         const nl = !!resp.stop.file && resp.stop.file !== get().sourceDVM
-        set({ currentLine: nl ? 0 : (resp.stop.line ?? 0), selectedFrame: -1, loadingSource: nl })
+        set({ currentLine: nl ? 0 : (resp.stop.line ?? 0), selectedFrame: -1, loadingSource: nl, activeTab: 'debug' })
       }
     } catch (e: any) {
       get().pushTimeline({ origin: 'system', kind: 'warn', text: `${action} 失败: ${e.message}` })
@@ -502,18 +570,22 @@ export const useStore = create<Store>((set, get) => ({
     if (!st.sessionId) return
     // 当前视图仅显示一个文件的源码:按行号匹配;另查"点击行→注册断点"映射
     // (fgldb 会把空行/注释行上的断点自动调整到下一条可执行语句,点原行也要能取消)
-    const existing =
-      st.breakpoints.find((b) => b.line === line) ||
-      (st.adjustedBps[line] !== undefined
-        ? st.breakpoints.find((b) => b.num === st.adjustedBps[line])
-        : undefined)
+    // 浏览页:断点归属页签文件(location 用 文件:行);调试页沿用现有归属逻辑
+    const tabFile = st.activeTab !== 'debug' ? st.tabs.find((t) => t.key === st.activeTab)?.file : ''
+    const inTab = (f?: string) => !!f && !!tabFile && f.replace(/^.*[\/]/, '').toLowerCase() === tabFile.toLowerCase()
+    const existing = tabFile
+      ? st.breakpoints.find((b) => inTab(b.file) && b.line === line)
+      : st.breakpoints.find((b) => b.line === line) ||
+        (st.adjustedBps[line] !== undefined
+          ? st.breakpoints.find((b) => b.num === st.adjustedBps[line])
+          : undefined)
     try {
       let newBp: Breakpoint | undefined
       if (existing) {
         await api.bpDel(st.sessionId, existing.num)
         st.pushTimeline({ origin: 'human', kind: 'command', text: `删除断点 ${existing.file}:${existing.line}` })
       } else {
-        const loc = st.stop?.file ? `${st.stop.file}:${line}` : String(line)
+        const loc = tabFile ? `${tabFile}:${line}` : st.stop?.file ? `${st.stop.file}:${line}` : String(line)
         const { breakpoint } = await api.bpAdd(st.sessionId, loc)
         newBp = breakpoint
         st.pushTimeline({ origin: 'human', kind: 'command', text: `断点 ${breakpoint.file}:${breakpoint.line}` })
@@ -600,7 +672,7 @@ export const useStore = create<Store>((set, get) => ({
     if (snapTimer) { clearInterval(snapTimer); snapTimer = undefined }
     stopHoldTimer()
     // 保留源码:会话结束后用户可能仍想翻看代码(重启/换作业时才重载)
-    set({ sessionId: null, state: '', started: false, stop: null, breakpoints: [], frames: [], adjustedBps: {}, currentLine: 0, autovars: [], selectedFrame: -1, backendDead: '' })
+    set({ sessionId: null, state: '', started: false, stop: null, breakpoints: [], frames: [], adjustedBps: {}, currentLine: 0, autovars: [], selectedFrame: -1, backendDead: '', tabs: [], activeTab: 'debug', sourceContent: '', sourcePath: '', sourceDVM: '' })
   },
 
   restart: async () => {
@@ -673,6 +745,7 @@ function pollUntilStopped(set: (p: Partial<Store>) => void, get: () => Store) {
       if (snap.state === 'stopped') {
         clearInterval(snapTimer!)
         snapTimer = undefined
+        set({ activeTab: 'debug' })
         startHoldTimer(set, get)
         void get().refreshFrames()
         void get().refreshWatches()
@@ -736,3 +809,6 @@ export function connectWS() {
 if (typeof window !== 'undefined') {
   ;(window as unknown as Record<string, unknown>).__store = useStore
 }
+
+// 浏览器控制台调试入口(生产无副作用)
+;(window as any).__store = useStore
