@@ -10,7 +10,7 @@ import { editorRef } from './SourceView'
 import { Badge } from './ui'
 
 // 工具条内图标按钮(无独立边框,悬停浮起,禁用半透明)
-function ToolIcon({ icon: Icon, label, onClick, disabled, color = 'text-sky-400' }: {
+function ToolIcon({ icon: Icon, label, onClick, disabled, color = 'text-sky-600 dark:text-sky-400' }: {
   icon: ComponentType<{ className?: string }>
   label: string
   onClick: () => void
@@ -22,7 +22,7 @@ function ToolIcon({ icon: Icon, label, onClick, disabled, color = 'text-sky-400'
       title={label}
       disabled={disabled}
       onClick={onClick}
-      className={`rounded p-1 transition-colors hover:bg-zinc-700/60 disabled:pointer-events-none disabled:opacity-30 ${color}`}
+      className={`rounded p-1 transition-colors hover:bg-accent/60 disabled:pointer-events-none disabled:opacity-30 ${color}`}
     >
       <Icon className="h-4 w-4" />
     </button>
@@ -71,13 +71,13 @@ function FloatingToolbar({ children }: { children: ReactNode }) {
 
   return (
     <div
-      className="fixed z-50 inline-flex items-center gap-0.5 rounded-sm border border-zinc-700/70 bg-zinc-900/95 px-1 py-0.5 shadow-xl"
+      className="fixed z-50 inline-flex items-center gap-0.5 rounded-sm border border-border/70 bg-card/95 px-1 py-0.5 shadow-xl"
       style={style}
     >
       <span
         title="拖拽移动工具条"
         onMouseDown={onDragStart}
-        className="cursor-grab rounded p-0.5 text-zinc-600 hover:bg-zinc-700/60 hover:text-zinc-400 active:cursor-grabbing"
+        className="cursor-grab rounded p-0.5 text-muted-foreground hover:bg-accent/60 hover:text-muted-foreground active:cursor-grabbing"
       >
         <GripVertical className="h-3.5 w-3.5" />
       </span>
@@ -110,16 +110,16 @@ export function Toolbar() {
     <>
       {/* 顶栏(融入背景,无边框,低高度;启动控件已移至右侧面板顶部)
           左内边距 48px = 活动栏 40 + 内容区 p-2 8,与代码编辑器左缘对齐 */}
-      <div className="flex h-8 shrink-0 items-center gap-2 bg-zinc-950 pl-12 pr-3">
+      <div className="flex h-8 shrink-0 items-center gap-2 bg-background pl-12 pr-3">
         {sessionId && <Badge tone="blue">{prog}</Badge>}
 
         {/* 右上角:收展右方/下方面板 */}
         <div className="ml-auto inline-flex items-center gap-0.5">
           <ToolIcon icon={showRight ? SquareChevronRight : SquareChevronLeft}
-            label={showRight ? '收起右方面板' : '展开右方面板'} color="text-zinc-400"
+            label={showRight ? '收起右方面板' : '展开右方面板'} color="text-muted-foreground"
             onClick={() => void toggleRight()} />
           <ToolIcon icon={showBottom ? SquareChevronDown : SquareChevronUp}
-            label={showBottom ? '收起下方面板' : '展开下方面板'} color="text-zinc-400"
+            label={showBottom ? '收起下方面板' : '展开下方面板'} color="text-muted-foreground"
             onClick={() => void toggleBottom()} />
         </div>
       </div>
@@ -142,9 +142,9 @@ export function Toolbar() {
               const ln = cursorLine()
               if (ln > 0) void runToCursor(ln)
             }} />
-          <ToolIcon icon={RotateCcw} label="重新开始 — 结束并重启同一作业" color="text-green-400" disabled={launching}
+          <ToolIcon icon={RotateCcw} label="重新开始 — 结束并重启同一作业" color="text-green-600 dark:text-green-400" disabled={launching}
             onClick={() => void restart()} />
-          <ToolIcon icon={Square} label="结束会话 — quit(作业窗口随之关闭)" color="text-red-400"
+          <ToolIcon icon={Square} label="结束会话 — quit(作业窗口随之关闭)" color="text-red-600 dark:text-red-400"
             onClick={() => void quit()} />
         </FloatingToolbar>
       )}

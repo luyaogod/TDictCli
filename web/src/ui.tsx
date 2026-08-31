@@ -1,56 +1,68 @@
-// shadcn 风格基础组件(深色 zinc 主题,免依赖手写)
-import React from 'react'
+// shadcn/ui 规范基础组件:语义 token + cn/cva,颜色一律不写死(亮暗由 index.css token 决定)
+import * as React from 'react'
+import { Slot } from '@radix-ui/react-slot'
+import { cva, type VariantProps } from 'class-variance-authority'
+import { cn } from './lib/utils'
 
-export function Button({ className = '', variant = 'default', size = 'default', ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: 'default' | 'outline' | 'ghost' | 'destructive' | 'secondary'
-  size?: 'default' | 'sm' | 'icon'
-}) {
-  const variants: Record<string, string> = {
-    default: 'bg-zinc-100 text-zinc-900 hover:bg-zinc-300',
-    outline: 'border border-zinc-700 bg-transparent hover:bg-zinc-800 text-zinc-200',
-    ghost: 'hover:bg-zinc-800 text-zinc-300',
-    destructive: 'bg-red-600 text-white hover:bg-red-500',
-    secondary: 'bg-zinc-800 text-zinc-200 hover:bg-zinc-700',
-  }
-  const sizes: Record<string, string> = {
-    default: 'h-8 px-3 text-sm',
-    sm: 'h-7 px-2 text-xs',
-    icon: 'h-8 w-8',
-  }
-  return (
-    <button
-      className={`inline-flex items-center justify-center gap-1 rounded-md font-medium transition-colors disabled:pointer-events-none disabled:opacity-40 ${variants[variant]} ${sizes[size]} ${className}`}
-      {...props}
-    />
-  )
+const buttonVariants = cva(
+  "inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-md text-sm font-medium transition-colors outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4",
+  {
+    variants: {
+      variant: {
+        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        destructive: 'bg-destructive text-white hover:bg-destructive/90',
+        outline: 'border border-input bg-transparent hover:bg-accent hover:text-accent-foreground',
+        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+        ghost: 'hover:bg-accent hover:text-accent-foreground',
+        link: 'text-primary underline-offset-4 hover:underline',
+      },
+      size: {
+        default: 'h-8 px-3',
+        sm: 'h-7 gap-1 px-2 text-xs',
+        lg: 'h-10 px-6',
+        icon: 'h-8 w-8',
+      },
+    },
+    defaultVariants: { variant: 'default', size: 'default' },
+  },
+)
+
+export function Button({ className, variant, size, asChild = false, ...props }:
+  React.ButtonHTMLAttributes<HTMLButtonElement> &
+  VariantProps<typeof buttonVariants> & { asChild?: boolean }) {
+  const Comp = asChild ? Slot : 'button'
+  return <Comp className={cn(buttonVariants({ variant, size }), className)} {...props} />
 }
 
-export function Badge({ className = '', tone = 'default', ...props }: React.HTMLAttributes<HTMLSpanElement> & {
-  tone?: 'default' | 'green' | 'yellow' | 'red' | 'blue' | 'gray'
-}) {
-  const tones: Record<string, string> = {
-    default: 'bg-zinc-800 text-zinc-300 border-zinc-700',
-    green: 'bg-emerald-950 text-emerald-400 border-emerald-800',
-    yellow: 'bg-yellow-950 text-yellow-400 border-yellow-800',
-    red: 'bg-red-950 text-red-400 border-red-800',
-    blue: 'bg-sky-950 text-sky-400 border-sky-800',
-    gray: 'bg-zinc-900 text-zinc-500 border-zinc-800',
-  }
-  return (
-    <span
-      className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[11px] font-medium ${tones[tone]} ${className}`}
-      {...props}
-    />
-  )
+const badgeVariants = cva(
+  'inline-flex items-center rounded-md border px-1.5 py-0.5 text-[11px] font-medium',
+  {
+    variants: {
+      tone: {
+        default: 'border-transparent bg-secondary text-secondary-foreground',
+        green: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+        yellow: 'border-yellow-500/20 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400',
+        red: 'border-red-500/20 bg-red-500/10 text-red-600 dark:text-red-400',
+        blue: 'border-sky-500/20 bg-sky-500/10 text-sky-600 dark:text-sky-400',
+        gray: 'border-transparent bg-muted text-muted-foreground',
+      },
+    },
+    defaultVariants: { tone: 'default' },
+  },
+)
+
+export function Badge({ className, tone, ...props }:
+  React.HTMLAttributes<HTMLSpanElement> & VariantProps<typeof badgeVariants>) {
+  return <span className={cn(badgeVariants({ tone }), className)} {...props} />
 }
 
-export function Panel({ title, right, children, className = '' }: {
+export function Panel({ title, right, children, className }: {
   title: React.ReactNode; right?: React.ReactNode; children: React.ReactNode; className?: string
 }) {
   return (
-    <div className={`flex min-h-0 flex-col rounded-sm border border-zinc-800 bg-zinc-900/60 ${className}`}>
-      <div className="flex h-8 shrink-0 items-center justify-between border-b border-zinc-800 px-2.5">
-        <span className="text-xs font-medium text-zinc-400">{title}</span>
+    <div className={cn('flex min-h-0 flex-col rounded-sm border border-border bg-card', className)}>
+      <div className="flex h-8 shrink-0 items-center justify-between border-b border-border px-2.5">
+        <span className="text-xs font-medium text-muted-foreground">{title}</span>
         {right}
       </div>
       <div className="min-h-0 flex-1 overflow-auto">{children}</div>
@@ -58,11 +70,30 @@ export function Panel({ title, right, children, className = '' }: {
   )
 }
 
-export function Input({ className = '', ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
+export function Input({ className, type, ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
-      className={`h-8 rounded-md border border-zinc-700 bg-zinc-950 px-2 text-sm text-zinc-200 placeholder:text-zinc-600 focus:border-zinc-500 focus:outline-none ${className}`}
+      type={type}
+      className={cn(
+        'flex h-8 w-full min-w-0 rounded-md border border-input bg-transparent px-2 py-1 text-sm transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30',
+        className,
+      )}
       {...props}
+    />
+  )
+}
+
+export function Separator({ className, orientation = 'horizontal' }: {
+  className?: string; orientation?: 'horizontal' | 'vertical'
+}) {
+  return (
+    <div
+      role="separator"
+      className={cn(
+        'shrink-0 bg-border',
+        orientation === 'horizontal' ? 'h-px w-full' : 'h-full w-px',
+        className,
+      )}
     />
   )
 }

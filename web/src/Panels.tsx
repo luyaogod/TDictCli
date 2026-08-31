@@ -25,16 +25,16 @@ function LaunchSection() {
     else void launch('', t)
   }
   return (
-    <div className="shrink-0 border-b border-zinc-800">
-      <div className="flex h-8 items-center px-2.5 text-xs font-medium text-zinc-400">运行</div>
+    <div className="shrink-0 border-b border-border">
+      <div className="flex h-8 items-center px-2.5 text-xs font-medium text-muted-foreground">运行</div>
       <div className="flex items-center gap-1 px-1.5 pb-1.5">
         <button
           title="启动调试会话(Enter 同效)"
           disabled={launching || !v.trim()}
           onClick={doLaunch}
-          className="rounded p-1 transition-colors hover:bg-zinc-700/60 disabled:pointer-events-none disabled:opacity-30"
+          className="rounded p-1 transition-colors hover:bg-accent/60 disabled:pointer-events-none disabled:opacity-30"
         >
-          <Play className="h-4 w-4 text-green-500" fill="currentColor" />
+          <Play className="h-4 w-4 text-green-600 dark:text-green-500" fill="currentColor" />
         </button>
         <Input
           value={v}
@@ -57,7 +57,7 @@ const AccordionItem = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <AccordionPrimitive.Item
     ref={ref}
-    className={`flex min-h-0 flex-col overflow-hidden border-b border-zinc-800 data-[state=closed]:flex-none last:border-b-0 ${className || ''}`}
+    className={`flex min-h-0 flex-col overflow-hidden border-b border-border data-[state=closed]:flex-none last:border-b-0 ${className || ''}`}
     {...props}
   />
 ))
@@ -69,7 +69,7 @@ const AccordionTrigger = React.forwardRef<
 >(({ className, children, ...props }, ref) => (
   <AccordionPrimitive.Trigger
     ref={ref}
-    className={`flex h-8 shrink-0 items-center justify-between px-2.5 text-xs font-medium text-zinc-400 transition-colors hover:bg-zinc-800/50 hover:text-zinc-300 [&[data-state=open]>svg]:rotate-180 ${className || ''}`}
+    className={`flex h-8 shrink-0 items-center justify-between px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground [&[data-state=open]>svg]:rotate-180 ${className || ''}`}
     {...props}
   >
     {children}
@@ -83,7 +83,7 @@ const AccordionTrigger = React.forwardRef<
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="shrink-0 text-zinc-600 transition-transform duration-200"
+      className="shrink-0 text-muted-foreground transition-transform duration-200"
     >
       <path d="m6 9 6 6 6-6" />
     </svg>
@@ -108,7 +108,7 @@ AccordionContent.displayName = 'AccordionContent'
 export function RightPanels() {
   return (
     // 一体化面板:单个圆角容器,各区块间用分割线区分(VS Code 风格)
-    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-sm border border-zinc-800 bg-zinc-900/60">
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-sm border border-border bg-card/60">
       <LaunchSection />
       <Accordion
         type="multiple"
@@ -190,15 +190,15 @@ function StackBody() {
       {frames.map((f) => (
         <div
           key={f.idx}
-          className={`cursor-pointer border-b border-zinc-800/60 px-2 py-1 text-xs hover:bg-zinc-800/40 ${
-            selected === f.idx ? 'bg-sky-950/60' : ''
+          className={`cursor-pointer border-b border-border/60 px-2 py-1 text-xs hover:bg-accent/40 ${
+            selected === f.idx ? 'bg-sky-500/10' : ''
           } ${!stopped ? 'opacity-60' : ''}`}
           title={stopped ? `点击切到该帧上下文(print/locals 随之切换)` : '停站后可切换栈帧'}
           onClick={() => stopped && void selectFrame(f.idx)}
         >
-          <span className="mr-1.5 text-zinc-600">#{f.idx}</span>
-          <span className="text-sky-400">{f.func}</span>
-          <span className="ml-1.5 text-zinc-500">{f.file}:{f.line}</span>
+          <span className="mr-1.5 text-muted-foreground">#{f.idx}</span>
+          <span className="text-sky-600 dark:text-sky-400">{f.func}</span>
+          <span className="ml-1.5 text-muted-foreground">{f.file}:{f.line}</span>
         </div>
       ))}
     </div>
@@ -232,9 +232,9 @@ function AutovarsBody() {
   return (
     <div>
       {views.map((v) => (
-        <div key={v.expr} className="group flex items-start gap-1 border-b border-zinc-800/60 px-2 py-1 text-xs">
+        <div key={v.expr} className="group flex items-start gap-1 border-b border-border/60 px-2 py-1 text-xs">
           <button
-            className="shrink-0 text-zinc-700 opacity-0 transition-opacity hover:text-emerald-400 group-hover:opacity-100"
+            className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-emerald-600 dark:hover:text-emerald-400 group-hover:opacity-100"
             title="加入变量监视"
             onClick={() => void addWatch(v.expr)}
           >
@@ -245,8 +245,8 @@ function AutovarsBody() {
               <VarTreeNodes nodes={[v.root]} />
             ) : (
               <>
-                <div className="text-zinc-400">{v.expr}</div>
-                <div className="whitespace-pre-wrap break-all text-emerald-400">{v.text}</div>
+                <div className="text-muted-foreground">{v.expr}</div>
+                <div className="whitespace-pre-wrap break-all text-emerald-600 dark:text-emerald-400">{v.text}</div>
               </>
             )}
           </div>
@@ -284,15 +284,15 @@ function WatchesBody() {
         </Button>
       </div>
       {views.map((v) => (
-        <div key={v.expr} className="flex items-start gap-1 border-b border-zinc-800/60 px-2 py-1 text-xs">
-          <button className="shrink-0 text-zinc-600 hover:text-red-400" onClick={() => removeWatch(v.expr)}>×</button>
+        <div key={v.expr} className="flex items-start gap-1 border-b border-border/60 px-2 py-1 text-xs">
+          <button className="shrink-0 text-muted-foreground hover:text-red-600 dark:hover:text-red-400" onClick={() => removeWatch(v.expr)}>×</button>
           <div className="min-w-0 flex-1">
             {v.root ? (
               <VarTreeNodes nodes={[v.root]} />
             ) : (
               <>
-                <div className="text-zinc-400">{v.expr}</div>
-                <div className={`whitespace-pre-wrap break-all ${v.error ? 'text-red-400' : 'text-emerald-400'}`}>
+                <div className="text-muted-foreground">{v.expr}</div>
+                <div className={`whitespace-pre-wrap break-all ${v.error ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                   {v.error || v.text}
                 </div>
               </>
@@ -313,7 +313,7 @@ function BpsBody() {
   return (
     <div>
       {breakpoints.map((b) => (
-        <div key={b.num} className={`flex items-center gap-2 border-b border-zinc-800/60 px-2 py-1 text-xs ${b.enabled ? '' : 'opacity-50'}`}>
+        <div key={b.num} className={`flex items-center gap-2 border-b border-border/60 px-2 py-1 text-xs ${b.enabled ? '' : 'opacity-50'}`}>
           <input
             type="checkbox"
             checked={b.enabled}
@@ -322,15 +322,15 @@ function BpsBody() {
             title={b.enabled ? '取消勾选禁用断点' : '勾选启用断点'}
           />
           <span
-            className="min-w-0 flex-1 cursor-pointer truncate text-zinc-300 hover:text-sky-300 hover:underline"
+            className="min-w-0 flex-1 cursor-pointer truncate text-foreground hover:text-sky-700 dark:hover:text-sky-300 hover:underline"
             title={`跳转到 ${b.file}:${b.line}`}
             onClick={() => void jumpToBp(b)}
           >
-            {b.func ? <span className="text-sky-400">{b.func} </span> : null}
+            {b.func ? <span className="text-sky-600 dark:text-sky-400">{b.func} </span> : null}
             {b.file}:{b.line}
-            {!b.enabled && <span className="ml-1 text-[10px] text-zinc-500">(已禁用)</span>}
+            {!b.enabled && <span className="ml-1 text-[10px] text-muted-foreground">(已禁用)</span>}
           </span>
-          <button className="text-zinc-600 hover:text-red-400" onClick={() => void removeBreakpoint(b.num)}>×</button>
+          <button className="text-muted-foreground hover:text-red-600 dark:hover:text-red-400" onClick={() => void removeBreakpoint(b.num)}>×</button>
         </div>
       ))}
     </div>
@@ -354,7 +354,7 @@ export function TimelinePanel() {
     if (el) el.scrollTop = el.scrollHeight
   }, [tab, timeline.length, rawLog.length])
   const kindTone: Record<string, string> = {
-    stop: 'text-yellow-400', warn: 'text-red-400', command: 'text-sky-400', info: 'text-zinc-400',
+    stop: 'text-yellow-600 dark:text-yellow-400', warn: 'text-red-600 dark:text-red-400', command: 'text-sky-600 dark:text-sky-400', info: 'text-muted-foreground',
   }
   // fgldb 命令直通输入(复刻原版 fgldeb Ctrl+D 子画面);仅停站时可发
   const canSend = !!sessionId && state === 'stopped'
@@ -380,16 +380,16 @@ export function TimelinePanel() {
     }
   }
   return (
-    <div className="flex h-full min-h-0 flex-col rounded-sm border border-zinc-800 bg-zinc-900/60">
-      <div className="flex h-8 shrink-0 items-center gap-2 border-b border-zinc-800 px-2">
+    <div className="flex h-full min-h-0 flex-col rounded-sm border border-border bg-card/60">
+      <div className="flex h-8 shrink-0 items-center gap-2 border-b border-border px-2">
         <button
-          className={`rounded px-2 py-0.5 text-xs ${tab === 'timeline' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+          className={`rounded px-2 py-0.5 text-xs ${tab === 'timeline' ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
           onClick={() => setTab('timeline')}
         >
           操作时间线
         </button>
         <button
-          className={`rounded px-2 py-0.5 text-xs ${tab === 'raw' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}
+          className={`rounded px-2 py-0.5 text-xs ${tab === 'raw' ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
           onClick={() => setTab('raw')}
         >
           原始协议流 ({rawLog.length})
@@ -398,14 +398,14 @@ export function TimelinePanel() {
       <div ref={bodyRef} className="min-h-0 flex-1 overflow-auto p-1 font-mono text-[11px] leading-5">
         {tab === 'timeline' && (
           <>
-            {timeline.length === 0 && <div className="p-2 text-zinc-600">暂无记录</div>}
+            {timeline.length === 0 && <div className="p-2 text-muted-foreground">暂无记录</div>}
             {timeline.map((t, i) => (
               <div key={i} className="flex gap-2">
-                <span className="shrink-0 text-zinc-600">{t.time}</span>
+                <span className="shrink-0 text-muted-foreground">{t.time}</span>
                 <Badge tone={t.origin === 'ai' ? 'blue' : t.origin === 'human' ? 'green' : 'gray'} className="mt-0.5 h-4 shrink-0">
                   {t.origin === 'ai' ? 'AI' : t.origin === 'human' ? '人' : '系统'}
                 </Badge>
-                <span className={`min-w-0 ${kindTone[t.kind] || 'text-zinc-400'}`}>{t.text}</span>
+                <span className={`min-w-0 ${kindTone[t.kind] || 'text-muted-foreground'}`}>{t.text}</span>
               </div>
             ))}
           </>
@@ -413,24 +413,24 @@ export function TimelinePanel() {
         {tab === 'raw' && (
           <>
             {rawLog.map((l, i) => (
-              <div key={i} className="whitespace-pre-wrap break-all text-zinc-500">{l || ' '}</div>
+              <div key={i} className="whitespace-pre-wrap break-all text-muted-foreground">{l || ' '}</div>
             ))}
           </>
         )}
       </div>
       {tab === 'raw' && (
-        <div className="flex h-8 shrink-0 items-center gap-1 border-t border-zinc-800 px-2">
-          <span className="shrink-0 font-mono text-xs text-sky-400">{canSend ? '(fgldb)' : '—'}</span>
+        <div className="flex h-8 shrink-0 items-center gap-1 border-t border-border px-2">
+          <span className="shrink-0 font-mono text-xs text-sky-600 dark:text-sky-400">{canSend ? '(fgldb)' : '—'}</span>
           <input
             value={cmd}
             onChange={(e) => setCmd(e.target.value)}
             onKeyDown={onCmdKey}
             disabled={!canSend}
             placeholder={canSend ? 'fgldb 命令,如 print lp_str / info breakpoints(↑↓ 历史)' : '需停站后才能发送命令'}
-            className="h-6 min-w-0 flex-1 rounded-sm border border-zinc-800 bg-zinc-950 px-2 font-mono text-xs text-zinc-200 placeholder:text-zinc-600 focus:border-zinc-600 focus:outline-none disabled:opacity-50"
+            className="h-6 min-w-0 flex-1 rounded-sm border border-border bg-background px-2 font-mono text-xs text-foreground placeholder:text-muted-foreground focus:border-border focus:outline-none disabled:opacity-50"
           />
           <button
-            className="shrink-0 rounded-sm border border-zinc-700 px-2 py-0.5 text-xs text-zinc-300 transition-colors hover:bg-zinc-800 disabled:pointer-events-none disabled:opacity-40"
+            className="shrink-0 rounded-sm border border-border px-2 py-0.5 text-xs text-foreground transition-colors hover:bg-accent disabled:pointer-events-none disabled:opacity-40"
             disabled={!canSend || !cmd.trim()}
             onClick={submit}
           >

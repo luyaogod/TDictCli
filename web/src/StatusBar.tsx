@@ -8,7 +8,7 @@ export function StatusBar() {
   const stop = useStore((s) => s.stop)
   const hold = useStore((s) => s.holdingSeconds)
 
-  let bar = 'bg-zinc-950 text-zinc-500'
+  let bar = 'bg-background text-muted-foreground'
   let msg: string | null = null
   let title = ''
   if (state === 'stopped') {
@@ -21,7 +21,7 @@ export function StatusBar() {
     msg = '运行中 · 请到 GDC 操作'
     title = '程序运行中,请在 GDC 操作作业界面'
   } else if (state === 'loading') {
-    bar = 'bg-zinc-800 text-zinc-200'
+    bar = 'bg-accent text-foreground'
     msg = '启动中…'
   }
 

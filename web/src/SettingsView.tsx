@@ -3,6 +3,8 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { Plus, Save, Trash2 } from 'lucide-react'
 import { api } from './api'
 import { Button, Input } from './ui'
+import { useStore } from './store'
+import { Moon, Sun } from 'lucide-react'
 
 interface SSHItem { name: string; host: string; port: number; user: string; password: string }
 interface DBItem { name: string; tns: string; ent: number; user: string; password: string }
@@ -11,6 +13,8 @@ const input = 'h-7 flex-1 text-xs'
 const cell = 'h-7 w-full min-w-0 text-xs'
 
 export function SettingsView() {
+  const theme = useStore((s) => s.theme)
+  const setTheme = useStore((s) => s.setTheme)
   const [cfg, setCfg] = useState<any>(null)
   const [sshs, setSshs] = useState<SSHItem[]>([])
   const [dbs, setDbs] = useState<DBItem[]>([])
@@ -45,22 +49,35 @@ export function SettingsView() {
     }
   }
 
-  if (!cfg) return <div className="p-6 text-sm text-zinc-500">{err || '加载配置中…'}</div>
+  if (!cfg) return <div className="p-6 text-sm text-muted-foreground">{err || '加载配置中…'}</div>
   return (
     <div className="h-full min-h-0 overflow-auto p-4 text-xs">
       <div className="mx-auto max-w-3xl space-y-5">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-zinc-200">设置</h2>
+          <h2 className="text-sm font-medium text-foreground">设置</h2>
           <Button size="sm" disabled={saving} onClick={() => void save()}>
             <Save className="mr-1 h-3.5 w-3.5" />{saving ? '保存中…' : '保存'}
           </Button>
         </div>
-        {msg && <div className="rounded bg-emerald-500/10 px-3 py-2 text-emerald-300">{msg}</div>}
-        {err && <div className="rounded bg-red-500/10 px-3 py-2 text-red-300">{err}</div>}
+        {msg && <div className="rounded bg-emerald-500/10 px-3 py-2 text-emerald-700 dark:text-emerald-300">{msg}</div>}
+        {err && <div className="rounded bg-red-500/10 px-3 py-2 text-red-600 dark:text-red-400">{err}</div>}
+
+        {/* 外观 */}
+        <section className="rounded-sm border border-border bg-card/60 p-3">
+          <h3 className="mb-2 font-medium text-foreground">外观</h3>
+          <div className="flex gap-2">
+            <Button size="sm" variant={theme === 'dark' ? 'secondary' : 'outline'} onClick={() => setTheme('dark')}>
+              <Moon className="mr-1 h-3.5 w-3.5" />暗色
+            </Button>
+            <Button size="sm" variant={theme === 'light' ? 'secondary' : 'outline'} onClick={() => setTheme('light')}>
+              <Sun className="mr-1 h-3.5 w-3.5" />亮色
+            </Button>
+          </div>
+        </section>
 
         {/* 默认连接 */}
-        <section className="rounded-sm border border-zinc-800 bg-zinc-900/60 p-3">
-          <h3 className="mb-2 font-medium text-zinc-300">默认 SSH 连接</h3>
+        <section className="rounded-sm border border-border bg-card/60 p-3">
+          <h3 className="mb-2 font-medium text-foreground">默认 SSH 连接</h3>
           <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
             <Field label="主机"><Input className={input} value={cfg.ssh?.host || ''} onChange={(e) => setCfg({ ...cfg, ssh: { ...cfg.ssh, host: e.target.value } })} /></Field>
             <Field label="端口"><Input className={input} value={cfg.ssh?.port || 22} onChange={(e) => setCfg({ ...cfg, ssh: { ...cfg.ssh, port: Number(e.target.value) || 22 } })} /></Field>
@@ -70,14 +87,14 @@ export function SettingsView() {
         </section>
 
         {/* 多 SSH 列表 */}
-        <section className="rounded-sm border border-zinc-800 bg-zinc-900/60 p-3">
+        <section className="rounded-sm border border-border bg-card/60 p-3">
           <div className="mb-2 flex items-center justify-between">
-            <h3 className="font-medium text-zinc-300">SSH 连接列表(start --ssh 按名引用)</h3>
+            <h3 className="font-medium text-foreground">SSH 连接列表(start --ssh 按名引用)</h3>
             <Button size="sm" variant="outline" onClick={() => setSshs([...sshs, { name: '', host: '', port: 22, user: '', password: '' }])}>
               <Plus className="mr-1 h-3 w-3" />新增
             </Button>
           </div>
-          {sshs.length === 0 && <div className="text-zinc-600">(空)</div>}
+          {sshs.length === 0 && <div className="text-muted-foreground">(空)</div>}
           {sshs.map((s, i) => (
             <div key={i} className="mb-1.5 grid grid-cols-[110px_1fr_70px_110px_110px_28px] items-center gap-1.5">
               <Input className={cell} placeholder="名称" value={s.name} onChange={(e) => setSshs(sshs.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} />
@@ -85,14 +102,14 @@ export function SettingsView() {
               <Input className={cell} placeholder="端口" value={s.port} onChange={(e) => setSshs(sshs.map((x, j) => j === i ? { ...x, port: Number(e.target.value) || 22 } : x))} />
               <Input className={cell} placeholder="用户" value={s.user} onChange={(e) => setSshs(sshs.map((x, j) => j === i ? { ...x, user: e.target.value } : x))} />
               <Input className={cell} placeholder="密码" type="password" value={s.password} onChange={(e) => setSshs(sshs.map((x, j) => j === i ? { ...x, password: e.target.value } : x))} />
-              <button className="text-zinc-600 hover:text-red-400" onClick={() => setSshs(sshs.filter((_, j) => j !== i))}><Trash2 className="h-3.5 w-3.5" /></button>
+              <button className="text-muted-foreground hover:text-red-600 dark:hover:text-red-400" onClick={() => setSshs(sshs.filter((_, j) => j !== i))}><Trash2 className="h-3.5 w-3.5" /></button>
             </div>
           ))}
         </section>
 
         {/* 默认数据库 */}
-        <section className="rounded-sm border border-zinc-800 bg-zinc-900/60 p-3">
-          <h3 className="mb-2 font-medium text-zinc-300">默认数据库</h3>
+        <section className="rounded-sm border border-border bg-card/60 p-3">
+          <h3 className="mb-2 font-medium text-foreground">默认数据库</h3>
           <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
             <Field label="TNS 别名"><Input className={input} value={cfg.db?.tns || ''} onChange={(e) => setCfg({ ...cfg, db: { ...(cfg.db || {}), tns: e.target.value } })} /></Field>
             <Field label="企业(TOPENT)"><Input className={input} value={cfg.db?.ent || ''} onChange={(e) => setCfg({ ...cfg, db: { ...(cfg.db || {}), ent: Number(e.target.value) || 0 } })} /></Field>
@@ -100,14 +117,14 @@ export function SettingsView() {
         </section>
 
         {/* 多数据库列表 */}
-        <section className="rounded-sm border border-zinc-800 bg-zinc-900/60 p-3">
+        <section className="rounded-sm border border-border bg-card/60 p-3">
           <div className="mb-2 flex items-center justify-between">
-            <h3 className="font-medium text-zinc-300">数据库连接列表</h3>
+            <h3 className="font-medium text-foreground">数据库连接列表</h3>
             <Button size="sm" variant="outline" onClick={() => setDbs([...dbs, { name: '', tns: '', ent: 0, user: '', password: '' }])}>
               <Plus className="mr-1 h-3 w-3" />新增
             </Button>
           </div>
-          {dbs.length === 0 && <div className="text-zinc-600">(空)</div>}
+          {dbs.length === 0 && <div className="text-muted-foreground">(空)</div>}
           {dbs.map((d, i) => (
             <div key={i} className="mb-1.5 grid grid-cols-[110px_1fr_90px_110px_110px_28px] items-center gap-1.5">
               <Input className={cell} placeholder="名称" value={d.name} onChange={(e) => setDbs(dbs.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} />
@@ -115,14 +132,14 @@ export function SettingsView() {
               <Input className={cell} placeholder="企业" value={d.ent || ''} onChange={(e) => setDbs(dbs.map((x, j) => j === i ? { ...x, ent: Number(e.target.value) || 0 } : x))} />
               <Input className={cell} placeholder="用户" value={d.user} onChange={(e) => setDbs(dbs.map((x, j) => j === i ? { ...x, user: e.target.value } : x))} />
               <Input className={cell} placeholder="密码" type="password" value={d.password} onChange={(e) => setDbs(dbs.map((x, j) => j === i ? { ...x, password: e.target.value } : x))} />
-              <button className="text-zinc-600 hover:text-red-400" onClick={() => setDbs(dbs.filter((_, j) => j !== i))}><Trash2 className="h-3.5 w-3.5" /></button>
+              <button className="text-muted-foreground hover:text-red-600 dark:hover:text-red-400" onClick={() => setDbs(dbs.filter((_, j) => j !== i))}><Trash2 className="h-3.5 w-3.5" /></button>
             </div>
           ))}
         </section>
 
         {/* 全局参数 */}
-        <section className="rounded-sm border border-zinc-800 bg-zinc-900/60 p-3">
-          <h3 className="mb-2 font-medium text-zinc-300">全局参数</h3>
+        <section className="rounded-sm border border-border bg-card/60 p-3">
+          <h3 className="mb-2 font-medium text-foreground">全局参数</h3>
           <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
             <Field label="区域(31开发/35测试/36正式)">
               <Input className={input} value={cfg.zone || ''} onChange={(e) => setCfg({ ...cfg, zone: e.target.value.trim() })} />
@@ -146,7 +163,7 @@ export function SettingsView() {
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block">
-      <div className="mb-1 text-zinc-500">{label}</div>
+      <div className="mb-1 text-muted-foreground">{label}</div>
       {children}
     </label>
   )
