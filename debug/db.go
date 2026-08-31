@@ -234,7 +234,10 @@ func ProbeDB(cfg *Config, ent int) (*DBReport, error) {
 		}
 		kb = &kbCtx{ksql: env["KSQL"], port: env["KPORT"], db: env["KDB"]}
 		if cfg.DB != nil && cfg.DB.TNS != "" {
-			kb.db = cfg.DB.TNS // 配置显式指定库名
+			kb.db = cfg.DB.TNS
+		}
+		if cfg.DB != nil && cfg.DB.Port > 0 {
+			kb.port = strconv.Itoa(cfg.DB.Port) // 配置显式指定端口
 		}
 		tns = kb.db
 		report.TNS = kb.db
@@ -309,6 +312,77 @@ func parseTNS(conn *SSHConn, oracleHome, tns string) (host, port, service string
 		err = fmt.Errorf("tnsnames.ora 未解析到 %s", tns)
 	}
 	return
+}
+
+// DBProbeReq 设置页「自动获取数据库配置」请求:SSH 连接 + 数据库类型
+type DBProbeReq struct {
+	Host string `json:"host"`
+	Port int    `json:"port"`
+	User string `json:"user"`
+	Password string `json:"password"`
+	Zone string `json:"zone"`
+	Type string `json:"type"` // oracle | kingbase
+}
+
+// DBProbeOut 探测结果:拿到的字段回填表单,拿不到的留空由用户手填
+type DBProbeOut struct {
+	Type       string `json:"type"`
+	TNS        string `json:"tns,omitempty"`    // oracle: TNS 别名(按区域推导)
+	Port       int    `json:"port,omitempty"`   // kingbase: 实例端口
+	Database   string `json:"database,omitempty"` // kingbase: 库名
+	OracleHome string `json:"oracleHome,omitempty"`
+	TwoTask    string `json:"twoTask,omitempty"`
+	Host       string `json:"host,omitempty"` // oracle tnsnames 解析出的实际库地址
+	Service    string `json:"service,omitempty"`
+	Note       string `json:"note,omitempty"` // 未获取到时的说明
+}
+
+// ProbeDBConfig 登录服务器自动获取数据库连接要素(只读命令,不改服务器状态)。
+// oracle → chenv 环境 + tnsnames 解析;kingbase → 实例发现(ksql/端口/库名)。
+func ProbeDBConfig(req DBProbeReq) (*DBProbeOut, error) {
+	ssh := SSHConfig{Host: req.Host, User: req.User, Password: req.Password}
+	if req.Port > 0 {
+		ssh.Port = req.Port
+	} else {
+		ssh.Port = 22
+	}
+	conn, err := Dial(ssh)
+	if err != nil {
+		return nil, fmt.Errorf("SSH 连接失败: %w", err)
+	}
+	defer conn.Close()
+
+	out := &DBProbeOut{Type: req.Type}
+	if req.Type == "kingbase" {
+		env, err := probeKBEnv(conn)
+		if err != nil {
+			out.Note = err.Error()
+			return out, nil // 拿不到也让用户手填,不报错
+		}
+		out.Port, _ = strconv.Atoi(env["KPORT"])
+		out.Database = env["KDB"]
+		return out, nil
+	}
+	// oracle
+	zone := req.Zone
+	if zone == "" {
+		zone = "36"
+	}
+	cfg := &Config{Zone: zone}
+	env, err := probeDBEnv(conn, zone)
+	if err != nil {
+		out.TNS = cfg.TNSName() // chenv 拿不到也给出按区域推导的 TNS
+		out.Note = err.Error()
+		return out, nil
+	}
+	out.TNS = cfg.TNSName()
+	out.OracleHome = env["ORA"]
+	out.TwoTask = env["TWOTASK"]
+	if h, p, s, e := parseTNS(conn, env["ORA"], out.TNS); e == nil {
+		out.Host, out.Service = h, s
+		out.Port, _ = strconv.Atoi(p)
+	}
+	return out, nil
 }
 
 // firstLines 取输出前 n 行(清理空行)

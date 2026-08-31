@@ -3,6 +3,7 @@ package debug
 import (
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -129,6 +130,9 @@ func (m *Manager) resolveJobWith(cfg *Config, module, job string) (mod, prog str
 		kb = &kbCtx{ksql: env["KSQL"], port: env["KPORT"], db: env["KDB"]}
 		if cfg.DB != nil && cfg.DB.TNS != "" {
 			kb.db = cfg.DB.TNS
+		}
+		if cfg.DB != nil && cfg.DB.Port > 0 {
+			kb.port = strconv.Itoa(cfg.DB.Port)
 		}
 		tns = kb.db
 	}

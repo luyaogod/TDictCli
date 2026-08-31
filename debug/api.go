@@ -88,6 +88,7 @@ func (s *Server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/wslogs/debug", s.hWSLogDebug)
 	mux.HandleFunc("GET /api/settings", s.hSettingsGet)
 	mux.HandleFunc("PUT /api/settings", s.hSettingsPut)
+	mux.HandleFunc("POST /api/dbprobe", s.hDBProbe)
 	mux.HandleFunc("GET /api/ws", s.hWS)
 	mux.HandleFunc("/", s.hStatic)
 }
@@ -643,6 +644,27 @@ func (s *Server) hWSLogDebug(w http.ResponseWriter, r *http.Request) {
 // hSettingsGet 返回完整 debug 配置节
 func (s *Server) hSettingsGet(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, s.cfg)
+}
+
+// hDBProbe 设置页「自动获取数据库配置」:SSH 上服务器探测连接要素(只读)
+func (s *Server) hDBProbe(w http.ResponseWriter, r *http.Request) {
+	var req DBProbeReq
+	if !readBody(w, r, &req) {
+		return
+	}
+	if req.Host == "" || req.User == "" {
+		fail(w, 400, fmt.Errorf("请先填写 SSH 主机与账号"))
+		return
+	}
+	if req.Type == "" {
+		req.Type = "oracle"
+	}
+	out, err := ProbeDBConfig(req)
+	if err != nil {
+		fail(w, 502, err)
+		return
+	}
+	writeJSON(w, 200, out)
 }
 
 // hSettingsPut 写回设置:仅替换 config.json 顶层 "debug" 键(其它键如 dbconfig 原样保留),

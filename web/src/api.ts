@@ -46,6 +46,9 @@ export const api = {
   status: () => req<any>('/api/status'),
   settings: () => req<any>('/api/settings'),
   saveSettings: (cfg: any) => req<any>('/api/settings', { method: 'PUT', body: JSON.stringify(cfg) }),
+  // 自动获取数据库连接要素(SSH 上服务器探测;拿不到字段留空待手填,note 说明原因)
+  probeDB: (body: { host: string; port: number; user: string; password: string; zone: string; type: string }) =>
+    req<{ type: string; tns?: string; port?: number; database?: string; oracleHome?: string; twoTask?: string; host?: string; service?: string; note?: string }>('/api/dbprobe', { method: 'POST', body: JSON.stringify(body) }),
   list: () => req<{ sessions: SessionBrief[] }>('/api/sessions'),
   launch: (module: string, prog: string, opts?: { ssh?: string; zone?: string }) =>
     req<{ sessionId: string; module?: string; prog?: string; runProg?: string }>('/api/sessions', { method: 'POST', body: JSON.stringify({ module, prog, ...opts }) }),
