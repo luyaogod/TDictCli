@@ -204,7 +204,7 @@ export function SettingsView() {
                     <Field label="环境名称(留空自动为主机-区域)" className="col-span-2"><Input className={cell} placeholder={`${cur.host || 'IP'}-${cur.zone || '区域'}`} value={cur.name} onChange={(e) => patchEnv(selEnv, { name: e.target.value.trim() })} /></Field>
                     <Field label="IP 主机"><Input className={cell} value={cur.host} onChange={(e) => patchEnv(selEnv, { host: e.target.value.trim() })} /></Field>
                     <Field label="端口"><Input className={cell} value={cur.port} onChange={(e) => patchEnv(selEnv, { port: Number(e.target.value) || 22 })} /></Field>
-                    <Field label="登录区域(31开发/35测试/36正式)"><Input className={cell} value={cur.zone} onChange={(e) => patchEnv(selEnv, { zone: e.target.value.trim() })} /></Field>
+                    <Field label="登录区域"><Input className={cell} value={cur.zone} onChange={(e) => patchEnv(selEnv, { zone: e.target.value.trim() })} /></Field>
                     <Field label="账号"><Input className={cell} value={cur.user} onChange={(e) => patchEnv(selEnv, { user: e.target.value.trim() })} /></Field>
                     <Field label="密码"><Input className={cell} type="password" value={cur.password} onChange={(e) => patchEnv(selEnv, { password: e.target.value })} /></Field>
                     <Field label="数据库类型" className="col-span-2">
