@@ -17,6 +17,7 @@ interface EnvItem {
   topDir: string
   launchArgs: string
   watchdogSeconds: number
+  dbType: string // oracle | kingbase
   dbTns: string
   dbEnt: number
 }
@@ -51,7 +52,7 @@ export function SettingsView() {
       setEnvs((c.envs || []).map((e: any) => ({
         name: e.name || '', host: e.host || '', port: e.port || 22, user: e.user || '', password: e.password || '',
         zone: e.zone || '', topDir: e.topDir || '', launchArgs: e.launchArgs || '', watchdogSeconds: e.watchdogSeconds || 0,
-        dbTns: e.db?.tns || '', dbEnt: e.db?.ent || 0,
+        dbType: e.db?.type || 'oracle', dbTns: e.db?.tns || '', dbEnt: e.db?.ent || 0,
       })))
       // activeEnv 指向的环境不存在(历史脏数据/已删除)时视为未设置
       const names = (c.envs || []).map((e: any) => e.name)
@@ -72,7 +73,7 @@ export function SettingsView() {
         envs: envs.filter((e) => e.host).map((e) => ({
           name: envName(e), host: e.host, port: e.port || 22, user: e.user, password: e.password,
           zone: e.zone,
-          db: e.dbEnt > 0 ? { ent: e.dbEnt } : undefined,
+          db: (e.dbEnt > 0 || e.dbType === 'kingbase' || e.dbTns) ? { type: e.dbType || 'oracle', ent: e.dbEnt || 0, tns: e.dbTns || undefined } : undefined,
         })),
       }
       setActiveEnv(active)
@@ -94,7 +95,7 @@ export function SettingsView() {
     setEnvs(envs.map((x, j) => j === i ? { ...x, ...patch } : x))
   }
   const addEnv = () => {
-    setEnvs([...envs, { name: '', host: '', port: 22, user: '', password: '', zone: '35', topDir: '', launchArgs: '', watchdogSeconds: 0, dbTns: '', dbEnt: 0 }])
+    setEnvs([...envs, { name: '', host: '', port: 22, user: '', password: '', zone: '35', topDir: '', launchArgs: '', watchdogSeconds: 0, dbType: 'oracle', dbTns: '', dbEnt: 0 }])
     setSelEnv(envs.length)
   }
 
@@ -182,9 +183,17 @@ export function SettingsView() {
                     <Field label="企业(ENT)"><Input className={cell} value={cur.dbEnt || ''} onChange={(e) => patchEnv(selEnv, { dbEnt: Number(e.target.value) || 0 })} /></Field>
                     <Field label="账号"><Input className={cell} value={cur.user} onChange={(e) => patchEnv(selEnv, { user: e.target.value.trim() })} /></Field>
                     <Field label="密码"><Input className={cell} type="password" value={cur.password} onChange={(e) => patchEnv(selEnv, { password: e.target.value })} /></Field>
+                    <Field label="数据库类型">
+                      <select className={cell} value={cur.dbType || 'oracle'}
+                        onChange={(e) => patchEnv(selEnv, { dbType: e.target.value })}>
+                        <option value="oracle">Oracle</option>
+                        <option value="kingbase">人大金仓(PG 引擎)</option>
+                      </select>
+                    </Field>
+                    <Field label="库名(金仓,留空自动发现实例)"><Input className={cell} value={cur.dbTns} onChange={(e) => patchEnv(selEnv, { dbTns: e.target.value.trim() })} /></Field>
                   </div>
                   <p className="mt-2 text-muted-foreground">
-                    start --ssh 按环境名引用;清空名称则恢复自动「主机-区域」。顶级目录/TNS 由区域自动推导;启动参数模板在「高级」里配置。
+                    start --ssh 按环境名引用;清空名称则恢复自动「主机-区域」。连接要素(Oracle 的 TNS/ORACLE_HOME、金仓的实例端口/库名/ksql)保存后从服务器自动探测;启动参数模板在「高级」里配置。
                   </p>
                 </section>
               )}

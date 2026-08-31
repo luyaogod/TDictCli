@@ -43,9 +43,19 @@ type DBReport struct {
 var (
 	reGzouMap  = regexp.MustCompile(`^\s*(\d+)\|(\S+)\s*$`)
 	reEnvKV    = regexp.MustCompile(`^(ORA|SQLP|TNSADM|TWOTASK)=(\S*)\s*$`)
+	reKBEnvKV  = regexp.MustCompile(`^(KSQL|KPORT|KDB)=(.*)\s*$`)
 	reTNSField = regexp.MustCompile(`(HOST|PORT|SERVICE_NAME)\s*=\s*([^)\s]+)`)
 	reGzzzRow  = regexp.MustCompile(`^\s*(\S+)\|(\S+)\s*$`)
+	reKBData   = regexp.MustCompile(`kingbase\s+-D\s+(\S+)`)
 )
+
+// DBType 判断数据库类型("oracle" 默认 | "kingbase")
+func (c *Config) DBType() string {
+	if c.DB != nil && c.DB.Type == "kingbase" {
+		return "kingbase"
+	}
+	return "oracle"
+}
 
 // chenvCmd 拼出"加载 zone 环境"的 bash 前缀(带参数不弹菜单,静默)
 func chenvCmd(zone string) string {
@@ -71,16 +81,71 @@ func probeDBEnv(conn *SSHConn, zone string) (map[string]string, error) {
 	return env, nil
 }
 
+// probeKBEnv 金仓自动探测(不依赖环境脚本,走实例发现):
+//   - ksql 客户端:command -v,退化到 find 常见安装根(/u2 /home /opt)
+//   - 实例与库名:ps 里 kingbase -D <数据目录> → 库名取目录名(如 /u2/kingbase/topprd/data → topprd)
+//   - 端口:实例 kingbase.conf 的 port=,读不到用 54321(金仓默认)
+//
+// 返回 env: KSQL=ksql 绝对路径 KPORT=端口 KDB=库名
+func probeKBEnv(conn *SSHConn) (map[string]string, error) {
+	out, err := conn.Output(`
+KSQL=$(command -v ksql || true)
+[ -z "$KSQL" ] && KSQL=$(find /u2 /home /opt /u1 -maxdepth 8 -name ksql -type f 2>/dev/null | head -1)
+echo KSQL=$KSQL
+DATA=$(ps -ef | grep 'kingbase' | grep -v grep | grep -o 'kingbase -D [^ ]*' | head -1 | awk '{print $3}')
+echo KDB=$(basename "$(dirname "$DATA")")
+PORT=$(grep -E '^[[:space:]]*port[[:space:]]*=' "$DATA/kingbase.conf" 2>/dev/null | head -1 | grep -o '[0-9]\+')
+echo KPORT=${PORT:-54321}
+`, 40*time.Second)
+	if err != nil && out == "" {
+		return nil, fmt.Errorf("探测金仓环境失败: %w", err)
+	}
+	env := map[string]string{}
+	for _, ln := range strings.Split(out, "\n") {
+		if m := reKBEnvKV.FindStringSubmatch(strings.TrimSpace(ln)); m != nil {
+			env[m[1]] = m[2]
+		}
+	}
+	if env["KSQL"] == "" {
+		return nil, fmt.Errorf("未找到 ksql 客户端(金仓未安装或路径非标准)")
+	}
+	if env["KDB"] == "" || env["KDB"] == "data" {
+		return nil, fmt.Errorf("未发现运行中的金仓实例(kingbase -D 数据目录)")
+	}
+	return env, nil
+}
+
+// kbCmd 拼出在服务器上执行 ksql 的命令(金仓:KINGBASE_PASSWORD 传密,-w 禁交互,-t -A 裸输出)
+func kbCmd(ksqlPath, port, db, connStr, sql string) string {
+	q := strings.ReplaceAll(sql, `"`, `\"`)
+	user, pass := connStr, connStr // 连接串复用为 账号/密码(账号=密码规则)
+	if i := strings.Index(connStr, "/"); i >= 0 {
+		user, pass = connStr[:i], connStr[i+1:]
+	}
+	return fmt.Sprintf(`KINGBASE_PASSWORD=%s %s -w -h 127.0.0.1 -p %s -U %s -d %s -t -A -F '|' -c "%s"`,
+		pass, ksqlPath, port, user, db, q)
+}
+
 // sqlplusCmd 拼出在服务器上执行 sqlplus 的命令(T100 环境 + 静默)
 func sqlplusCmd(zone, connStr, sql string) string {
 	q := strings.ReplaceAll(sql, "'", "'\\''")
 	return fmt.Sprintf(`bash -lc '%s; echo "%s" | sqlplus -S %s'`, chenvCmd(zone), q, connStr)
 }
 
+// kbCtx 金仓连接上下文(探测结果;nil 表示走 Oracle)
+type kbCtx struct{ ksql, port, db string }
+
 // dbAllMappings 查询 gzou_t 全部企业→账号映射(用 ds 系统账号)
-func dbAllMappings(conn *SSHConn, zone, tns string) ([]EntMapping, error) {
-	sql := "set heading off\nset feedback off\nselect gzou001||'|'||nvl(gzou003,'-') from gzou_t where gzoustus='Y' order by gzou001;"
-	out, err := conn.Output(sqlplusCmd(zone, fmt.Sprintf("ds/ds@%s", tns), sql), 30*time.Second)
+func dbAllMappings(conn *SSHConn, zone, tns string, kb *kbCtx) ([]EntMapping, error) {
+	var out string
+	var err error
+	if kb != nil {
+		out, err = conn.Output(kbCmd(kb.ksql, kb.port, kb.db,
+			"ds/ds", `select gzou001,coalesce(gzou003,'-') from gzou_t where gzoustus='Y' order by gzou001`), 30*time.Second)
+	} else {
+		sql := "set heading off\nset feedback off\nselect gzou001||'|'||nvl(gzou003,'-') from gzou_t where gzoustus='Y' order by gzou001;"
+		out, err = conn.Output(sqlplusCmd(zone, fmt.Sprintf("ds/ds@%s", tns), sql), 30*time.Second)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("查询 gzou_t 失败: %w (%s)", err, firstLines(out, 3))
 	}
@@ -102,14 +167,20 @@ func dbAllMappings(conn *SSHConn, zone, tns string) ([]EntMapping, error) {
 // 对齐 gendbg.4gl 的解析:SELECT ... FROM gzzz_t INNER JOIN gzza_t ON gzza001=gzzz002
 // WHERE gzzz001=作业编号;一个程序(gzzz002)可被多个作业编号共用。
 // 无记录返回 ("","",nil)——调用方回退到 42r 文件搜索。
-func dbResolveJob(conn *SSHConn, zone, tns, job string) (prog, module string, err error) {
-	sql := "set heading off\nset feedback off\nselect gzzz002||'|'||nvl(gzzz005,'-') from gzzz_t where gzzz001='" + job + "';"
-	out, err := conn.Output(sqlplusCmd(zone, fmt.Sprintf("ds/ds@%s", tns), sql), 25*time.Second)
+func dbResolveJob(conn *SSHConn, zone, tns, job string, kb *kbCtx) (prog, module string, err error) {
+	var out string
+	if kb != nil {
+		out, err = conn.Output(kbCmd(kb.ksql, kb.port, kb.db, "ds/ds",
+			fmt.Sprintf(`select gzzz002,coalesce(gzzz005,'-') from gzzz_t where gzzz001='%s'`, job)), 25*time.Second)
+	} else {
+		sql := "set heading off\nset feedback off\nselect gzzz002||'|'||nvl(gzzz005,'-') from gzzz_t where gzzz001='" + job + "';"
+		out, err = conn.Output(sqlplusCmd(zone, fmt.Sprintf("ds/ds@%s", tns), sql), 25*time.Second)
+	}
 	if err != nil {
 		return "", "", fmt.Errorf("查询 gzzz_t 失败: %w (%s)", err, firstLines(out, 3))
 	}
 	for _, ln := range strings.Split(out, "\n") {
-		if strings.Contains(ln, "ORA-") {
+		if strings.Contains(ln, "ORA-") || strings.Contains(ln, "ERROR") {
 			return "", "", fmt.Errorf("gzzz_t 查询出错: %s", firstLines(out, 3))
 		}
 		if m := reGzzzRow.FindStringSubmatch(ln); m != nil {
@@ -119,16 +190,21 @@ func dbResolveJob(conn *SSHConn, zone, tns, job string) (prog, module string, er
 	return "", "", nil
 }
 
-// dbConnectTest 用 账号/账号@tns 尝试连接(密码规则:账号=密码,fglprofile 明文)
-func dbConnectTest(conn *SSHConn, zone, tns, account string) error {
-	sql := "set heading off\nset feedback off\nselect 'OK' from dual;"
-	out, err := conn.Output(sqlplusCmd(zone, fmt.Sprintf("%s/%s@%s", account, account, tns), sql), 30*time.Second)
+// dbConnectTest 用 账号/账号 尝试连接(密码规则:账号=密码,fglprofile 明文)
+func dbConnectTest(conn *SSHConn, zone, tns, account string, kb *kbCtx) error {
+	var out string
+	var err error
+	if kb != nil {
+		out, err = conn.Output(kbCmd(kb.ksql, kb.port, kb.db, account+"/", `select 'OK'`), 30*time.Second)
+	} else {
+		sql := "set heading off\nset feedback off\nselect 'OK' from dual;"
+		out, err = conn.Output(sqlplusCmd(zone, fmt.Sprintf("%s/%s@%s", account, account, tns), sql), 30*time.Second)
+	}
 	if err != nil {
-		// sqlplus 连接失败也返回退出码;取输出中的 ORA- 错误
 		msg := firstLines(out, 4)
 		return fmt.Errorf("连接失败: %s", msg)
 	}
-	if strings.Contains(out, "ORA-") || strings.Contains(out, "ERROR") {
+	if strings.Contains(out, "ORA-") || strings.Contains(out, "ERROR") || strings.Contains(out, "error") {
 		return fmt.Errorf("连接失败: %s", firstLines(out, 4))
 	}
 	return nil
@@ -136,7 +212,7 @@ func dbConnectTest(conn *SSHConn, zone, tns, account string) error {
 
 // ProbeDB 登录服务器并探查数据库连接:
 // ent>0 时验证该企业账号连通性;ent<=0 时仅列出全部企业映射。
-// password 可覆盖默认"账号=密码"规则。
+// 按配置的数据库类型(oracle/kingbase)自动探测服务器上的连接要素。
 func ProbeDB(cfg *Config, ent int) (*DBReport, error) {
 	conn, err := Dial(cfg.SSH)
 	if err != nil {
@@ -148,25 +224,39 @@ func ProbeDB(cfg *Config, ent int) (*DBReport, error) {
 	if zone == "" {
 		zone = "36"
 	}
-	tns := cfg.TNSName()
-	env, err := probeDBEnv(conn, zone)
-	if err != nil {
-		return nil, err
-	}
-	maps, err := dbAllMappings(conn, zone, tns)
-	if err != nil {
-		return nil, err
-	}
-	report := &DBReport{
-		Zone:     zone,
-		TNS:      tns,
-		Mappings: maps,
-		Env: map[string]string{
+	report := &DBReport{Zone: zone}
+	var kb *kbCtx
+	tns := ""
+	if cfg.DBType() == "kingbase" {
+		env, err := probeKBEnv(conn)
+		if err != nil {
+			return nil, err
+		}
+		kb = &kbCtx{ksql: env["KSQL"], port: env["KPORT"], db: env["KDB"]}
+		if cfg.DB != nil && cfg.DB.TNS != "" {
+			kb.db = cfg.DB.TNS // 配置显式指定库名
+		}
+		tns = kb.db
+		report.TNS = kb.db
+		report.Env = map[string]string{"ksql": kb.ksql, "port": kb.port, "database": kb.db}
+	} else {
+		tns = cfg.TNSName()
+		env, err := probeDBEnv(conn, zone)
+		if err != nil {
+			return nil, err
+		}
+		report.TNS = tns
+		report.Env = map[string]string{
 			"oracleHome": env["ORA"],
 			"sqlplus":    env["SQLP"],
 			"twoTask":    env["TWOTASK"],
-		},
+		}
 	}
+	maps, err := dbAllMappings(conn, zone, tns, kb)
+	if err != nil {
+		return nil, err
+	}
+	report.Mappings = maps
 	if ent <= 0 {
 		return report, nil // 仅列映射
 	}
@@ -182,10 +272,12 @@ func ProbeDB(cfg *Config, ent int) (*DBReport, error) {
 		return nil, fmt.Errorf("企业 %d 不存在于 gzou_t(可用 tdict debug db 查看全部)", ent)
 	}
 	res := &DBProbeResult{Ent: ent, Account: account}
-	if h, p, s, e := parseTNS(conn, env["ORA"], tns); e == nil {
+	if kb != nil {
+		res.Host, res.Port, res.Service = "127.0.0.1", kb.port, kb.db
+	} else if h, p, s, e := parseTNS(conn, report.Env["oracleHome"], tns); e == nil {
 		res.Host, res.Port, res.Service = h, p, s
 	}
-	if err := dbConnectTest(conn, zone, tns, account); err != nil {
+	if err := dbConnectTest(conn, zone, tns, account, kb); err != nil {
 		res.Error = err.Error()
 	} else {
 		res.Connect = true

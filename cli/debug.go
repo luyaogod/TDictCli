@@ -189,6 +189,7 @@ var debugDBCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		cfg.ApplyActiveEnv() // 生效环境的连接/参数合并到顶层
 		ent := dbEnt
 		if ent <= 0 {
 			ent = cfg.DBEnt()
@@ -201,10 +202,17 @@ var debugDBCmd = &cobra.Command{
 			return printJSON(rep)
 		}
 		// 人类可读输出
-		fmt.Printf("区域: %s   TNS: %s   Oracle: %s\n",
-			rep.Zone, rep.TNS, rep.Env["oracleHome"])
-		if sp := rep.Env["sqlplus"]; sp != "" {
-			fmt.Printf("sqlplus: %s\n", sp)
+		if kdb := rep.Env["database"]; kdb != "" {
+			fmt.Printf("区域: %s   数据库: 人大金仓 %s@127.0.0.1:%s\n", rep.Zone, kdb, rep.Env["port"])
+			if ks := rep.Env["ksql"]; ks != "" {
+				fmt.Printf("ksql: %s\n", ks)
+			}
+		} else {
+			fmt.Printf("区域: %s   TNS: %s   Oracle: %s\n",
+				rep.Zone, rep.TNS, rep.Env["oracleHome"])
+			if sp := rep.Env["sqlplus"]; sp != "" {
+				fmt.Printf("sqlplus: %s\n", sp)
+			}
 		}
 		fmt.Printf("\n企业(TOPENT) → 账号(schema),共 %d 个:\n", len(rep.Mappings))
 		for _, m := range rep.Mappings {

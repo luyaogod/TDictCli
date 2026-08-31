@@ -118,7 +118,21 @@ func (m *Manager) resolveJobWith(cfg *Config, module, job string) (mod, prog str
 	if zone == "" {
 		zone = "36"
 	}
-	p, mc, err := dbResolveJob(conn, zone, cfg.TNSName(), job)
+	// 金仓:探测实例要素后连库解析;Oracle:直接用 TNS
+	var kb *kbCtx
+	tns := cfg.TNSName()
+	if cfg.DBType() == "kingbase" {
+		env, err := probeKBEnv(conn)
+		if err != nil {
+			return "", ""
+		}
+		kb = &kbCtx{ksql: env["KSQL"], port: env["KPORT"], db: env["KDB"]}
+		if cfg.DB != nil && cfg.DB.TNS != "" {
+			kb.db = cfg.DB.TNS
+		}
+		tns = kb.db
+	}
+	p, mc, err := dbResolveJob(conn, zone, tns, job, kb)
 	if err != nil || p == "" {
 		return "", ""
 	}
