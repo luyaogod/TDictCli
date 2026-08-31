@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TDict Debug — T100 人机协同调试</title>
+    <script>
+      // 首屏防闪色:渲染前按持久化设置挂 dark class(默认 dark)
+      if (localStorage.getItem('tdict.theme') === 'light') document.documentElement.classList.remove('dark')
+    </script>
   </head>
   <body>
     <div id="root"></div>

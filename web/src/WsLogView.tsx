@@ -43,50 +43,50 @@ export function WsLogView() {
           onChange={(e) => setService(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') doLoad(1) }}
           placeholder="按服务名过滤,如 icd.erp.wo*(回车生效)"
-          className="h-7 w-56 rounded-md border border-zinc-700 bg-zinc-950 px-2 text-xs text-zinc-200 placeholder:text-zinc-600 focus:border-zinc-500 focus:outline-none"
+          className="h-7 w-56 rounded-md border border-border bg-background px-2 text-xs text-foreground placeholder:text-muted-foreground focus:border-border focus:outline-none"
         />
-        <label className="flex items-center gap-1 text-xs text-zinc-500">
+        <label className="flex items-center gap-1 text-xs text-muted-foreground">
           开始时间
           <input type="date" value={from} onChange={(e) => setFrom(e.target.value)}
-            className="h-7 rounded-md border border-zinc-700 bg-zinc-950 px-1.5 text-xs text-zinc-300 focus:border-zinc-500 focus:outline-none" />
+            className="h-7 rounded-md border border-border bg-background px-1.5 text-xs text-foreground focus:border-border focus:outline-none" />
           ~
           <input type="date" value={to} onChange={(e) => setTo(e.target.value)}
-            className="h-7 rounded-md border border-zinc-700 bg-zinc-950 px-1.5 text-xs text-zinc-300 focus:border-zinc-500 focus:outline-none" />
+            className="h-7 rounded-md border border-border bg-background px-1.5 text-xs text-foreground focus:border-border focus:outline-none" />
         </label>
-        <label className="flex cursor-pointer items-center gap-1.5 text-xs text-zinc-400">
+        <label className="flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
           <input type="checkbox" checked={onlyFail} onChange={(e) => { setOnlyFail(e.target.checked); setTimeout(() => doLoad(1), 0) }}
             className="h-3.5 w-3.5 accent-red-500" />
           仅失败
         </label>
         <button onClick={() => doLoad(1)} disabled={loading} title="重新加载"
-          className="rounded p-1.5 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-40">
+          className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40">
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
         {/* 分页 */}
-        <div className="ml-auto flex items-center gap-1 text-xs text-zinc-500">
+        <div className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
           <span>{wsLogs.length} 条</span>
           <button onClick={() => doLoad(page - 1)} disabled={loading || page <= 1} title="上一页"
-            className="rounded p-1 hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-30">
+            className="rounded p-1 hover:bg-accent hover:text-foreground disabled:opacity-30">
             <ChevronLeft className="h-4 w-4" />
           </button>
           <span className="w-10 text-center font-mono">第 {page} 页</span>
           <button onClick={() => doLoad(page + 1)} disabled={loading || !hasMore} title="下一页"
-            className="rounded p-1 hover:bg-zinc-800 hover:text-zinc-200 disabled:opacity-30">
+            className="rounded p-1 hover:bg-accent hover:text-foreground disabled:opacity-30">
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
-        {sessionId && <span className="text-xs text-amber-500/80">调试会话进行中(重放前需先结束)</span>}
+        {sessionId && <span className="text-xs text-amber-600/80 dark:text-amber-500/80">调试会话进行中(重放前需先结束)</span>}
       </div>
 
       {err && (
-        <div className="mb-2 shrink-0 rounded border border-red-900/60 bg-red-950/40 px-3 py-1.5 text-xs text-red-300">{err}</div>
+        <div className="mb-2 shrink-0 rounded border border-red-500/20 bg-red-500/10 px-3 py-1.5 text-xs text-red-600 dark:text-red-600 dark:text-red-400">{err}</div>
       )}
 
       {/* 左右布局:左列列表,右列详情 */}
       <div className="flex min-h-0 flex-1 gap-2">
         {/* 列表 */}
-        <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-sm border border-zinc-800 bg-zinc-900/60">
-          <div className="sticky top-0 flex h-7 shrink-0 items-center gap-2 border-b border-zinc-800 bg-zinc-900 px-2 text-[11px] font-medium text-zinc-500">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-sm border border-border bg-card/60">
+          <div className="sticky top-0 flex h-7 shrink-0 items-center gap-2 border-b border-border bg-card px-2 text-[11px] font-medium text-muted-foreground">
             <span className="w-12 shrink-0">状态</span>
             <span className="w-44 shrink-0">服务</span>
             <span className="w-28 shrink-0">作业</span>
@@ -96,35 +96,35 @@ export function WsLogView() {
           </div>
           <div className="min-h-0 flex-1 overflow-auto">
             {wsLogs.length === 0 && !loading && (
-              <div className="p-4 text-center text-xs text-zinc-600">暂无日志记录</div>
+              <div className="p-4 text-center text-xs text-muted-foreground">暂无日志记录</div>
             )}
             {wsLogs.map((it, i) => (
               <div key={it.rowid} onClick={() => void selectWsLog(it)}
                 title="点击在右侧查看请求/响应报文"
                 className={`flex h-7 cursor-pointer items-center gap-2 px-2 text-xs ${
-                  sel?.rowid === it.rowid ? 'bg-sky-950/70' : i % 2 ? 'bg-zinc-900/40 hover:bg-zinc-800/40' : 'hover:bg-zinc-800/40'
+                  sel?.rowid === it.rowid ? 'bg-sky-500/10' : i % 2 ? 'bg-card/40 hover:bg-accent/40' : 'hover:bg-accent/40'
                 }`}>
-                <span className={`w-12 shrink-0 font-mono text-[11px] ${it.code === '000' ? 'text-emerald-500' : it.code ? 'text-red-500' : 'text-zinc-600'}`}>
+                <span className={`w-12 shrink-0 font-mono text-[11px] ${it.code === '000' ? 'text-emerald-600 dark:text-emerald-500' : it.code ? 'text-red-500' : 'text-muted-foreground'}`}>
                   {it.code || '-'}
                 </span>
-                <span className="w-44 shrink-0 truncate text-zinc-300" title={it.service}>{it.service}</span>
-                <span className="w-28 shrink-0 truncate text-sky-400" title={it.job}>{it.job}</span>
-                <span className="w-32 shrink-0 font-mono text-[11px] text-zinc-500">{it.start}</span>
-                <span className="w-16 shrink-0 font-mono text-[11px] text-zinc-500">{it.duration}</span>
-                <span className="min-w-0 flex-1 truncate text-red-400/90" title={it.errMsg}>{it.errMsg}</span>
+                <span className="w-44 shrink-0 truncate text-foreground" title={it.service}>{it.service}</span>
+                <span className="w-28 shrink-0 truncate text-sky-600 dark:text-sky-400" title={it.job}>{it.job}</span>
+                <span className="w-32 shrink-0 font-mono text-[11px] text-muted-foreground">{it.start}</span>
+                <span className="w-16 shrink-0 font-mono text-[11px] text-muted-foreground">{it.duration}</span>
+                <span className="min-w-0 flex-1 truncate text-red-600 dark:text-red-400/90" title={it.errMsg}>{it.errMsg}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* 详情(右列) */}
-        <div className="flex w-[460px] shrink-0 flex-col overflow-hidden rounded-sm border border-zinc-800 bg-zinc-900/60">
+        <div className="flex w-[460px] shrink-0 flex-col overflow-hidden rounded-sm border border-border bg-card/60">
           {sel ? (
             <>
-              <div className="flex h-8 shrink-0 items-center gap-1 border-b border-zinc-800 px-2">
+              <div className="flex h-8 shrink-0 items-center gap-1 border-b border-border px-2">
                 {([['info', '基本信息'], ['request', 'Request'], ['response', 'Response']] as const).map(([k, label]) => (
                   <button key={k} onClick={() => setWsLogTab(k)}
-                    className={`rounded px-2 py-0.5 text-xs ${tab === k ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'}`}>
+                    className={`rounded px-2 py-0.5 text-xs ${tab === k ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
                     {label}
                   </button>
                 ))}
@@ -132,7 +132,7 @@ export function WsLogView() {
                   onClick={() => void replayDebug(sel)}
                   disabled={!!sessionId}
                   title="用该日志的报文重放此接口调用并进入调试(T100 r.dg 同款)"
-                  className="ml-auto inline-flex items-center gap-1 rounded border border-emerald-800/70 px-2 py-0.5 text-xs text-emerald-400 hover:bg-emerald-950/40 disabled:opacity-40"
+                  className="ml-auto inline-flex items-center gap-1 rounded border border-emerald-500/20 px-2 py-0.5 text-xs text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-40"
                 >
                   <Bug className="h-3.5 w-3.5" />
                   调试此调用
@@ -145,7 +145,7 @@ export function WsLogView() {
               </div>
             </>
           ) : (
-            <div className="flex flex-1 items-center justify-center p-4 text-center text-xs text-zinc-600">
+            <div className="flex flex-1 items-center justify-center p-4 text-center text-xs text-muted-foreground">
               点击左侧日志行
               <br />
               在此处查看基本信息 / 请求 / 响应报文
@@ -175,9 +175,9 @@ function InfoBody({ item }: { item: WSLogItem }) {
   return (
     <div className="p-2 text-xs">
       {rows.map(([k, v]) => (
-        <div key={k} className="flex gap-2 border-b border-zinc-800/60 py-1">
-          <span className="w-28 shrink-0 text-zinc-500">{k}</span>
-          <span className="min-w-0 flex-1 break-all text-zinc-300">{v || '-'}</span>
+        <div key={k} className="flex gap-2 border-b border-border/60 py-1">
+          <span className="w-28 shrink-0 text-muted-foreground">{k}</span>
+          <span className="min-w-0 flex-1 break-all text-foreground">{v || '-'}</span>
         </div>
       ))}
     </div>
@@ -186,9 +186,9 @@ function InfoBody({ item }: { item: WSLogItem }) {
 
 // 报文内容(monospace pre)
 function PayloadBody({ text, loading }: { text?: string; loading: boolean }) {
-  if (loading) return <div className="p-3 text-xs text-zinc-600">加载报文中…</div>
-  if (!text) return <div className="p-3 text-xs text-zinc-600">无报文(超过入库大小上限且源文件已清理)</div>
+  if (loading) return <div className="p-3 text-xs text-muted-foreground">加载报文中…</div>
+  if (!text) return <div className="p-3 text-xs text-muted-foreground">无报文(超过入库大小上限且源文件已清理)</div>
   return (
-    <pre className="whitespace-pre-wrap break-all p-2 font-mono text-[11px] leading-5 text-zinc-300">{text}</pre>
+    <pre className="whitespace-pre-wrap break-all p-2 font-mono text-[11px] leading-5 text-foreground">{text}</pre>
   )
 }

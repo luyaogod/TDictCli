@@ -8,21 +8,21 @@ function NodeRow({ node, depth, toggle }: { node: TNode; depth: number; toggle: 
   return (
     <>
       <div
-        className={`flex items-baseline gap-1 rounded px-1 hover:bg-white/5 ${expandable ? 'cursor-pointer' : 'cursor-default'}`}
+        className={`flex items-baseline gap-1 rounded px-1 hover:bg-foreground/5 ${expandable ? 'cursor-pointer' : 'cursor-default'}`}
         style={{ paddingLeft: depth * 14 + 4 }}
         onClick={() => expandable && toggle(node)}
       >
-        <span className={`w-3 shrink-0 text-zinc-500 ${expandable ? '' : 'opacity-0'}`}>
+        <span className={`w-3 shrink-0 text-muted-foreground ${expandable ? '' : 'opacity-0'}`}>
           {node.loading ? '…' : node.open ? '▾' : '▸'}
         </span>
-        <span className="text-sky-300 whitespace-pre">{node.name}</span>
+        <span className="text-sky-700 dark:text-sky-300 whitespace-pre">{node.name}</span>
         {node.value !== undefined && (
           <>
-            <span className="text-zinc-500 whitespace-pre"> = </span>
-            <span className="text-zinc-200 break-all">{node.value || '(空)'}</span>
+            <span className="text-muted-foreground whitespace-pre"> = </span>
+            <span className="text-foreground break-all">{node.value || '(空)'}</span>
           </>
         )}
-        {node.type && <span className="ml-1 shrink-0 text-zinc-600">{node.type}</span>}
+        {node.type && <span className="ml-1 shrink-0 text-muted-foreground">{node.type}</span>}
       </div>
       {node.open && node.children?.map((c, j) => (
         <NodeRow key={j} node={c} depth={depth + 1} toggle={toggle} />

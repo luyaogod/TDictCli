@@ -76,6 +76,23 @@ function setupMonaco() {
       'scrollbarSlider.activeBackground': '#71717ac0',
     },
   })
+  monaco.editor.defineTheme('tdict-light', {
+    base: 'vs',
+    inherit: true,
+    rules: [
+      { token: 'keyword', foreground: '1d4ed8' },
+      { token: 'type', foreground: '15803d' },
+      { token: 'comment', foreground: '9ca3af' },
+      { token: 'string', foreground: 'b45309' },
+      { token: 'number', foreground: 'c2410c' },
+    ],
+    colors: {
+      'editor.background': '#ffffff',
+      'scrollbarSlider.background': '#d4d4d880',
+      'scrollbarSlider.hoverBackground': '#a1a1aab0',
+      'scrollbarSlider.activeBackground': '#71717ac0',
+    },
+  })
 }
 
 // 模块加载时立即配置(必须先于 Editor 挂载,否则 loader 可能走 CDN 导致主题/渲染不稳)
@@ -89,6 +106,7 @@ export function SourceView() {
   const state = useStore((s) => s.state)
   const stop = useStore((s) => s.stop)
   const module = useStore((s) => s.module)
+  const theme = useStore((s) => s.theme)
   const [editorReady, setEditorReady] = useState(false)
   const decosRef = useRef<monaco.editor.IEditorDecorationsCollection | null>(null)
 
@@ -183,22 +201,22 @@ function progKey(f: string, module?: string): string {
     <div className="relative h-full min-h-0">
       <Editor
         language="4gl"
-        theme="tdict-dark"
+        theme={theme === 'light' ? 'tdict-light' : 'tdict-dark'}
         value={sourceContent}
         beforeMount={setupMonaco}
         onMount={onMount}
         options={editorOptions}
         loading={
           <div className="flex h-full items-center justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-zinc-500" />
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         }
       />
       {!sourceContent && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="rounded-sm border border-zinc-800 bg-zinc-900/90 px-4 py-3 text-sm text-zinc-500">
+          <div className="rounded-sm border border-border bg-card/90 px-4 py-3 text-sm text-muted-foreground">
             {state === 'stopped' && stop?.file
-              ? <>该模块无源码(仅 42m),当前停站:<span className="text-zinc-300">{stop.file}:{stop.line}</span><br /><span className="text-xs">可继续用变量监视/调用栈分析,或继续运行回到有源码的模块</span></>
+              ? <>该模块无源码(仅 42m),当前停站:<span className="text-foreground">{stop.file}:{stop.line}</span><br /><span className="text-xs">可继续用变量监视/调用栈分析,或继续运行回到有源码的模块</span></>
               : '等待停站后加载源码…'}
           </div>
         </div>

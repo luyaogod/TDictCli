@@ -17,7 +17,7 @@ function ActivityIcon({ icon: Icon, label, active, onClick }: {
   return (
     <button title={label} onClick={onClick}
       className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors ${
-        active ? 'bg-white/15 text-white' : 'text-zinc-500 hover:text-zinc-300'
+        active ? 'bg-foreground/10 text-foreground' : 'text-muted-foreground hover:text-foreground'
       }`}>
       <Icon className="h-5 w-5" />
     </button>
@@ -130,15 +130,15 @@ export function App() {
 
   // 布局:上 Toolbar / 下 StatusBar 整条;中部 = 活动栏 + [中间列(编辑区/时间线上下) + 整高右面板]
   return (
-    <div className="flex h-screen flex-col bg-zinc-950 text-zinc-200">
+    <div className="flex h-screen flex-col bg-background text-foreground">
       <Toolbar />
       {banner && (
-        <div className="flex shrink-0 items-center gap-2 border-b border-red-900/60 bg-red-950/40 px-3 py-1.5 text-xs text-red-300">
+        <div className="flex shrink-0 items-center gap-2 border-b border-red-500/20 bg-red-500/10 px-3 py-1.5 text-xs text-red-600 dark:text-red-600 dark:text-red-400">
           <WifiOff className="h-3.5 w-3.5" />
           <span>{banner}</span>
           {backendDead && (
             <button
-              className="ml-auto inline-flex items-center gap-1 rounded border border-red-800/80 px-2 py-0.5 hover:bg-red-900/40 disabled:opacity-40"
+              className="ml-auto inline-flex items-center gap-1 rounded border border-red-500/30 px-2 py-0.5 hover:bg-red-500/10 disabled:opacity-40"
               disabled={launching}
               onClick={() => void restart()}
             >
@@ -150,7 +150,7 @@ export function App() {
       )}
       <div className="flex min-h-0 flex-1">
         {/* VS Code 风格活动栏:背景与编辑区同色,仅图标高亮区分 */}
-        <div className="flex w-10 shrink-0 flex-col items-center gap-1 bg-zinc-950 py-2">
+        <div className="flex w-10 shrink-0 flex-col items-center gap-1 bg-background py-2">
           <ActivityIcon icon={Bug} label="调试" active={view === 'debug'} onClick={() => setView('debug')} />
           <ActivityIcon icon={Globe} label="接口日志" active={view === 'wslogs'} onClick={() => setView('wslogs')} />
           <ActivityIcon icon={FlaskConical} label="服务测试" active={view === 'wstest'} onClick={() => setView('wstest')} />
@@ -168,7 +168,7 @@ export function App() {
              否则 flex 最小宽度被钉死,收起再展开时编辑区不回缩、右面板被挤出屏幕 */
           <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden p-2 pt-1">
             <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-              <div className="min-h-0 flex-1 overflow-hidden rounded-sm border border-zinc-800">
+              <div className="min-h-0 flex-1 overflow-hidden rounded-sm border border-border">
                 <SourceView />
               </div>
               {showBottom && (

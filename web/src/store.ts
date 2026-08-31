@@ -39,6 +39,7 @@ interface Store {
   runProg: string // gzzz_t 解析出的实体程序(源码命名/预取用);空 = 与 prog 相同
   // 视图与接口日志(VS Code 活动栏切换)
   view: 'debug' | 'wslogs' | 'wstest' | 'settings'
+  theme: 'dark' | 'light' // 外观主题(html.dark 挂点,localStorage tdict.theme 持久化)
   // 服务测试(复刻 awsq990 集成服务测试)
   wsTestMode: string // 1/2 awsp900, 3 awsp920, 4 awsp940, 5 awsp930
   wsTestUrl: string
@@ -72,6 +73,7 @@ interface Store {
   pushTimeline: (item: Omit<TimelineItem, 'time'>) => void
   onEvent: (ev: Event) => void
   setView: (v: 'debug' | 'wslogs' | 'wstest' | 'settings') => void
+  setTheme: (t: 'dark' | 'light') => void
   setWsTest: (p: { mode?: string; url?: string; body?: string; soap?: boolean; result?: WSTestResult | null }) => void
   runWsTest: () => Promise<void>
   loadWsLogs: (service: string, onlyFail: boolean, page?: number, startFrom?: string, startTo?: string) => Promise<void>
@@ -120,6 +122,7 @@ export const useStore = create<Store>((set, get) => ({
   timeline: [], rawLog: [],
   runProg: '',
   view: 'debug',
+  theme: (localStorage.getItem('tdict.theme') === 'light' ? 'light' : 'dark') as 'dark' | 'light',
   wsLogs: [], wsLogsLoading: false, wsLogsPage: 1, wsLogsHasMore: false,
   wsLogSel: null, wsLogContent: null, wsLogTab: 'info', wsLogErr: '',
   wsTestMode: '3', wsTestUrl: '', wsTestBody: '', wsTestSoap: false,
@@ -228,6 +231,11 @@ export const useStore = create<Store>((set, get) => ({
   },
 
   setView: (v) => set({ view: v }),
+  setTheme: (t) => {
+    localStorage.setItem('tdict.theme', t)
+    document.documentElement.classList.toggle('dark', t === 'dark')
+    set({ theme: t })
+  },
 
   setWsTest: (p) => {
     const patch: Partial<Store> = {}
