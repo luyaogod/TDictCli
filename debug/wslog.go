@@ -38,8 +38,8 @@ type WSLogContent struct {
 	Response string `json:"response"`
 }
 
-// reRowid Oracle rowid 白名单(拼 SQL 防注入)
-var reRowid = regexp.MustCompile(`^[A-Za-z0-9./]{1,20}$`)
+// reRowid 行标识白名单(拼 SQL 防注入):Oracle rowid / 金仓 ctid「(页,元组)」
+var reRowid = regexp.MustCompile(`^(\([0-9]+,[0-9]+\)|[A-Za-z0-9./]{1,20})$`)
 
 // reWSLogRow 列表行解析:字段间以 | 分隔(rowid 固定 18 位放行首)
 var reWSLogRow = regexp.MustCompile(`^(\S+)\|(\S*)\|(\S*)\|(.*)\|(.*)\|(\S*)\|(\S*)\|(\S*)\|(.*)\|(\S*)\|(\S*)\|(.*)$`)
@@ -60,12 +60,12 @@ var reQBEValue = regexp.MustCompile(`^[0-9: -]{0,19}$`)
 
 // ListWSLogs 兼容旧签名
 func ListWSLogs(conn *SSHConn, zone, tns, service string, onlyFail bool, limit int) ([]WSLogItem, error) {
-	items, _, err := listWSLogs(conn, zone, tns, WSLogFilter{Service: service, OnlyFail: onlyFail, PageSize: limit})
+	items, _, err := listWSLogs(conn, &dbRun{zone: zone, tns: tns}, WSLogFilter{Service: service, OnlyFail: onlyFail, PageSize: limit})
 	return items, err
 }
 
-// listWSLogs 查询接口日志列表(OFFSET/FETCH 翻页;hasMore 由多取一条判定)
-func listWSLogs(conn *SSHConn, zone, tns string, f WSLogFilter) (items []WSLogItem, hasMore bool, err error) {
+// listWSLogs 查询接口日志列表(Oracle: rowid + OFFSET/FETCH;金仓: ctid + OFFSET/LIMIT)
+func listWSLogs(conn *SSHConn, dbc *dbRun, f WSLogFilter) (items []WSLogItem, hasMore bool, err error) {
 	size := f.PageSize
 	if size <= 0 || size > 500 {
 		size = 200
@@ -102,13 +102,20 @@ func listWSLogs(conn *SSHConn, zone, tns string, f WSLogFilter) (items []WSLogIt
 		}
 		wc += fmt.Sprintf(" AND wsfa003 %s '%s'", chk[1], v)
 	}
-	sql := fmt.Sprintf(`set heading off
+	var out string
+	if dbc.kb != nil {
+		// 金仓:ctid 作行标识;|| 遇 null 归 null,逐列 coalesce
+		sql := fmt.Sprintf(`select wsfa.ctid||'|'||wsfa001||'|'||wsfa002||'|'||coalesce(substr(wsfa003,1,19),'')||'|'||coalesce(wsfa005::text,'')||'|'||coalesce(wsfa006,'')||'|'||coalesce(wsfa012,'')||'|'||coalesce(wsfa007,'')||'|'||coalesce(wsfa008,'')||'|'||coalesce(wsfa014,'')||'|'||coalesce(wsfa016::text,'')||'|'||coalesce(wsfa017::text,'') from wsfa_t wsfa where %s order by wsfa003 desc offset %d limit %d`, wc, (page-1)*size, size+1)
+		out, err = dbc.exec(conn, "ds/ds", "", sql, 40*time.Second)
+	} else {
+		sql := fmt.Sprintf(`set heading off
 set feedback off
 set trimspool on
 set linesize 32767
 select wsfa.rowid||'|'||wsfa001||'|'||wsfa002||'|'||substr(nvl(wsfa003,''),1,19)||'|'||nvl(wsfa005,'')||'|'||nvl(wsfa006,'')||'|'||nvl(wsfa012,'')||'|'||nvl(wsfa007,'')||'|'||nvl(wsfa008,'')||'|'||nvl(wsfa014,'')||'|'||nvl(wsfa016,'')||'|'||nvl(wsfa017,'')
 from wsfa_t wsfa where %s order by wsfa003 desc offset %d rows fetch first %d rows only;`, wc, (page-1)*size, size+1)
-	out, err := conn.Output(sqlplusCmd(zone, fmt.Sprintf("ds/ds@%s", tns), sql), 40*time.Second)
+		out, err = dbc.exec(conn, fmt.Sprintf("ds/ds@%s", dbc.tns), sql, "", 40*time.Second)
+	}
 	if err != nil {
 		return nil, false, fmt.Errorf("查询 wsfa_t 失败: %w (%s)", err, firstLines(out, 3))
 	}
@@ -135,11 +142,17 @@ from wsfa_t wsfa where %s order by wsfa003 desc offset %d rows fetch first %d ro
 }
 
 // WSLogDetail 取单条日志:列表字段 + 报文内容(CLOB 优先,文件回退)
-func WSLogDetail(conn *SSHConn, zone, tns, rowid string) (*WSLogItem, *WSLogContent, error) {
+func WSLogDetail(conn *SSHConn, dbc *dbRun, rowid string) (*WSLogItem, *WSLogContent, error) {
 	if !reRowid.MatchString(rowid) {
 		return nil, nil, fmt.Errorf("rowid 格式非法")
 	}
-	sql := fmt.Sprintf(`set heading off
+	var out string
+	var err error
+	if dbc.kb != nil {
+		sql := fmt.Sprintf(`select wsfa.ctid||'|'||wsfa001||'|'||wsfa002||'|'||coalesce(substr(wsfa003,1,19),'')||'|'||coalesce(wsfa005::text,'')||'|'||coalesce(wsfa006,'')||'|'||coalesce(wsfa012,'')||'|'||coalesce(wsfa007,'')||'|'||coalesce(wsfa008,'')||'|'||coalesce(wsfa014,'')||'|'||coalesce(wsfa016::text,'')||'|'||coalesce(wsfa017::text,'') from wsfa_t wsfa where ctid='%s'`, rowid)
+		out, err = dbc.exec(conn, "ds/ds", "", sql, 30*time.Second)
+	} else {
+		sql := fmt.Sprintf(`set heading off
 set feedback off
 set trimspool on
 set linesize 32767
@@ -147,7 +160,8 @@ set long 300000
 set longchunksize 100000
 select wsfa.rowid||'|'||wsfa001||'|'||wsfa002||'|'||substr(nvl(wsfa003,''),1,19)||'|'||nvl(wsfa005,'')||'|'||nvl(wsfa006,'')||'|'||nvl(wsfa012,'')||'|'||nvl(wsfa007,'')||'|'||nvl(wsfa008,'')||'|'||nvl(wsfa014,'')||'|'||nvl(wsfa016,'')||'|'||nvl(wsfa017,'')
 from wsfa_t wsfa where rowid='%s';`, rowid)
-	out, err := conn.Output(sqlplusCmd(zone, fmt.Sprintf("ds/ds@%s", tns), sql), 30*time.Second)
+		out, err = dbc.exec(conn, fmt.Sprintf("ds/ds@%s", dbc.tns), sql, "", 30*time.Second)
+	}
 	if err != nil {
 		return nil, nil, fmt.Errorf("查询 wsfa_t 失败: %w (%s)", err, firstLines(out, 3))
 	}
@@ -191,10 +205,15 @@ from wsfa_t wsfa where rowid='%s';`, rowid)
 	content.Request = readFile(item.ReqPath)
 	content.Response = readFile(item.RspPath)
 
-	// 2) 文件已被清理 → 回退 CLOB(dbms_lob.substr 单次转 VARCHAR2 上限有限,
-	//    实测多字节场景 4000 字符即 ORA-06502,取保守值 2000 字符)
+	// 2) 文件已被清理 → 回退 CLOB(Oracle 用 dbms_lob.substr 分段规避 ORA-06502;
+	//    金仓 text 列直接 substr,ksql 原样输出)
 	if content.Request == "" || content.Response == "" {
-		clobSQL := fmt.Sprintf(`set heading off
+		var clobOut string
+		if dbc.kb != nil {
+			sql := fmt.Sprintf(`select '<<<REQ>>>' from wsfa_t where ctid='%s' union all select coalesce(substr(wsfa010,1,2000),' ') from wsfa_t where ctid='%1$s' union all select '<<<RSP>>>' from wsfa_t where ctid='%1$s' union all select coalesce(substr(wsfa011,1,2000),' ') from wsfa_t where ctid='%1$s'`, rowid)
+			clobOut, _ = dbc.exec(conn, "ds/ds", "", sql, 60*time.Second)
+		} else {
+			clobSQL := fmt.Sprintf(`set heading off
 set feedback off
 set trimspool on
 set linesize 32767
@@ -204,8 +223,9 @@ select '<<<REQ>>>' from wsfa_t where rowid='%s';
 select dbms_lob.substr(wsfa010,2000,1) from wsfa_t where rowid='%s' and wsfa010 is not null;
 select '<<<RSP>>>' from wsfa_t where rowid='%s';
 select dbms_lob.substr(wsfa011,2000,1) from wsfa_t where rowid='%s' and wsfa011 is not null;`,
-			rowid, rowid, rowid, rowid)
-		clobOut, _ := conn.Output(sqlplusCmd(zone, fmt.Sprintf("ds/ds@%s", tns), clobSQL), 60*time.Second)
+				rowid, rowid, rowid, rowid)
+			clobOut, _ = dbc.exec(conn, fmt.Sprintf("ds/ds@%s", dbc.tns), clobSQL, "", 60*time.Second)
+		}
 		sec := ""
 		var reqLines, rspLines []string
 		for _, ln := range strings.Split(clobOut, "\n") {

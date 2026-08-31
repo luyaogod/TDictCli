@@ -567,7 +567,12 @@ func (s *Server) hWSLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer conn.Close()
-	items, hasMore, err := listWSLogs(conn, s.wsZone(), s.cfg.TNSName(), WSLogFilter{
+	dbc, err := resolveDBRun(conn, s.cfg)
+	if err != nil {
+		fail(w, 500, err)
+		return
+	}
+	items, hasMore, err := listWSLogs(conn, dbc, WSLogFilter{
 		Service:   q.Get("service"),
 		OnlyFail:  q.Get("onlyFail") == "1",
 		StartFrom: q.Get("startFrom"),
@@ -591,7 +596,12 @@ func (s *Server) hWSLogContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer conn.Close()
-	item, content, err := WSLogDetail(conn, s.wsZone(), s.cfg.TNSName(), rowid)
+	dbc, err := resolveDBRun(conn, s.cfg)
+	if err != nil {
+		fail(w, 500, err)
+		return
+	}
+	item, content, err := WSLogDetail(conn, dbc, rowid)
 	if err != nil {
 		fail(w, 500, err)
 		return
@@ -612,7 +622,13 @@ func (s *Server) hWSLogDebug(w http.ResponseWriter, r *http.Request) {
 		fail(w, 500, fmt.Errorf("SSH 连接失败: %w", err))
 		return
 	}
-	item, content, err := WSLogDetail(conn, s.wsZone(), s.cfg.TNSName(), req.RowID)
+	dbc, err := resolveDBRun(conn, s.cfg)
+	if err != nil {
+		conn.Close()
+		fail(w, 500, err)
+		return
+	}
+	item, content, err := WSLogDetail(conn, dbc, req.RowID)
 	conn.Close()
 	if err != nil {
 		fail(w, 500, err)

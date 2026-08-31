@@ -135,6 +135,40 @@ func sqlplusCmd(zone, connStr, sql string) string {
 // kbCtx 金仓连接上下文(探测结果;nil 表示走 Oracle)
 type kbCtx struct{ ksql, port, db string }
 
+// dbRun 数据库执行上下文:金仓(kb 非 nil,ksql 直连)或 Oracle(tns + sqlplus)
+type dbRun struct {
+	kb   *kbCtx
+	zone string
+	tns  string
+}
+
+// resolveDBRun 按配置探测并构造执行上下文(金仓实例发现失败返回 nil 让调用方报错)
+func resolveDBRun(conn *SSHConn, cfg *Config) (*dbRun, error) {
+	if cfg.DBType() != "kingbase" {
+		return &dbRun{zone: cfg.Zone, tns: cfg.TNSName()}, nil
+	}
+	env, err := probeKBEnv(conn)
+	if err != nil {
+		return nil, err
+	}
+	kb := &kbCtx{ksql: env["KSQL"], port: env["KPORT"], db: env["KDB"]}
+	if cfg.DB != nil && cfg.DB.TNS != "" {
+		kb.db = cfg.DB.TNS
+	}
+	if cfg.DB != nil && cfg.DB.Port > 0 {
+		kb.port = strconv.Itoa(cfg.DB.Port)
+	}
+	return &dbRun{kb: kb, zone: cfg.Zone, tns: kb.db}, nil
+}
+
+// exec 执行查询:金仓走 ksql(kbSQL),Oracle 走 sqlplus(oracleSQL)
+func (d *dbRun) exec(conn *SSHConn, connStr, oracleSQL, kbSQL string, timeout time.Duration) (string, error) {
+	if d.kb != nil {
+		return conn.Output(kbCmd(d.kb.ksql, d.kb.port, d.kb.db, connStr, kbSQL), timeout)
+	}
+	return conn.Output(sqlplusCmd(d.zone, connStr, oracleSQL), timeout)
+}
+
 // dbAllMappings 查询 gzou_t 全部企业→账号映射(用 ds 系统账号)
 func dbAllMappings(conn *SSHConn, zone, tns string, kb *kbCtx) ([]EntMapping, error) {
 	var out string
