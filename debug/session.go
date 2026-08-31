@@ -269,8 +269,12 @@ func (s *Session) Launch(ctx context.Context) error {
 		return err
 	}
 	// 3. 进模块目录 + 源码路径
+	// 转客制的作业 42r/源码部署在 c<module> 目录(原版 T100 从 c** 启动,FGLLDPATH 也 c 优先),
+	// 这里探测:客制目录有同名 42r 就用客制,否则用标准模块目录
+	modDir := s.pickLaunchDir(launchProg)
+	log.Printf("[debug] 会话 %s 启动目录: %s (prog=%s module=%s)", s.ID, modDir, launchProg, s.Module)
 	setup := fmt.Sprintf("cd %s\r\nexport FGLSOURCEPATH=%s\r\n",
-		s.cfg.ModuleDir(s.Module), s.cfg.FGLSOURCEPath(s.Module))
+		modDir, s.fglsourcePathOf(modDir))
 	if s.cfg.FGLServer != "" {
 		setup += "export FGLSERVER=" + s.cfg.FGLServer + "\r\n"
 	}
@@ -313,8 +317,44 @@ func (s *Session) Launch(ctx context.Context) error {
 // reProgName 作业名白名单(用于拼 shell 命令,防注入)
 var reProgName = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9_-]{0,63}$`)
 
+// pickLaunchDir 决定启动目录:客制目录 42r 有同名 42r 用客制,否则标准模块目录。
+// 与原版 T100 一致:转客制作业从 c** 启动,客制目录 = 模块首字母 a→c(ain→cin、apm→cpm)
+func (s *Session) pickLaunchDir(prog string) string {
+	modDir := s.cfg.ModuleDir(s.Module)
+	if s.Module == "" || !reProgName.MatchString(s.Module) || !strings.HasPrefix(s.Module, "a") || !strings.HasSuffix(modDir, "/"+s.Module) {
+		return modDir
+	}
+	cust := strings.TrimSuffix(modDir, "/"+s.Module) + "/c" + s.Module[1:]
+	out, _ := s.conn.Output(fmt.Sprintf("ls %s/42r/%s.42r 2>/dev/null", cust, prog), 10*time.Second)
+	if strings.Contains(out, prog+".42r") {
+		s.emitEvent(Event{Type: "log", Text: fmt.Sprintf("转客制作业:使用客制目录 %s", cust)})
+		return cust
+	}
+	return modDir
+}
+
+// fglsourcePathOf 按实际启动目录拼源码搜索路径(公共库仍在 TopDir/com 下)
+func (s *Session) fglsourcePathOf(dir string) string {
+	dirs := []string{
+		dir + "/4gl",
+		dir + "/42m",
+		s.cfg.TopDir + "/com/lib/42m",
+		s.cfg.TopDir + "/com/sub/42m",
+		s.cfg.TopDir + "/com/qry/42m",
+	}
+	out := ""
+	for i, d := range dirs {
+		if i > 0 {
+			out += ":"
+		}
+		out += d
+	}
+	return out
+}
+
 // resolveModule 按程序名在 moduleRoots 各模块的 42r 目录中搜索 <prog>.42r:
-// 唯一命中 → 返回模块;多命中 → 报出候选;无命中 → 报错
+// 唯一命中 → 返回模块;标准/客制(ain/cin)并存 → 选客制(转客制后原版从 c** 目录启动);
+// 其余多命中 → 报出候选;无命中 → 报错
 func (s *Session) resolveModule(prog string) (string, error) {
 	if !reProgName.MatchString(prog) {
 		return "", fmt.Errorf("作业名含非法字符: %q", prog)
@@ -324,6 +364,16 @@ func (s *Session) resolveModule(prog string) (string, error) {
 	case len(found) == 0:
 		return "", fmt.Errorf("在各模块 42r 目录中未找到作业 %s(请检查作业名)", prog)
 	case len(found) > 1:
+		// 标准模块与它的客制目录(首字母 a→c,如 ain/cin)并存视为同一作业,取客制
+		for _, m := range found {
+			if strings.HasPrefix(m, "c") {
+				for _, std := range found {
+					if "c"+std[1:] == m {
+						return m, nil
+					}
+				}
+			}
+		}
 		return "", fmt.Errorf("作业 %s 存在于多个模块(%s),请指定模块", prog, strings.Join(found, ", "))
 	}
 	return found[0], nil
@@ -1385,6 +1435,10 @@ func sourceCandidatePaths(roots []string, module, dvmFile string) []string {
 	var dirs []string
 	for _, root := range roots {
 		if module != "" {
+			// 客制目录(首字母 a→c,ain→cin)优先:转客制源码在 cin/4gl 等
+			if strings.HasPrefix(module, "a") && reProgName.MatchString(module) {
+				dirs = append(dirs, root+"/c"+module[1:]+"/4gl", root+"/c"+module[1:]+"/42m")
+			}
 			dirs = append(dirs, root+"/"+module+"/4gl", root+"/"+module+"/42m")
 		}
 		dirs = append(dirs,
