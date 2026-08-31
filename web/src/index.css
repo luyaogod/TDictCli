@@ -149,3 +149,13 @@ body { margin: 0; background: var(--background); }
 .col-resizer.dragging {
   background: #3b82f680;
 }
+
+/* Ctrl+悬停函数链接样式(类 VS Code):蓝字+下划线+手形光标 */
+.fn-link {
+  color: #0563cf !important;
+  text-decoration: underline !important;
+  cursor: pointer !important;
+}
+.dark .fn-link {
+  color: #4daafc !important;
+}

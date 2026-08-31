@@ -175,6 +175,37 @@ export function SourceView() {
         : st.tabs.find((t) => t.key === st.activeTab)?.line
       if (line) setTimeout(() => editorRef.current?.revealLineInCenter(line), 60)
     })
+
+    // Ctrl+悬停链接反馈(类 VS Code):按住 Ctrl 时光标下的词变蓝+下划线+手形光标,
+    // 点击走 definitionProvider 跳转。Monaco 只对能解析出定义的词画链接样式,
+    // 而我们的定位在点击时才发生(fgldb info line),所以悬停样式自绘
+    const fnDecos = editor.createDecorationsCollection([])
+    let ctrlDown = false
+    let lastWord = ''
+    const clearHover = () => { lastWord = ''; fnDecos.set([]) }
+    const trackKey = (e: KeyboardEvent) => {
+      const down = e.ctrlKey
+      if (down !== ctrlDown) {
+        ctrlDown = down
+        if (!down) clearHover()
+      }
+    }
+    window.addEventListener('keydown', trackKey)
+    window.addEventListener('keyup', trackKey)
+    window.addEventListener('blur', () => { ctrlDown = false; clearHover() })
+    editor.onMouseMove((e) => {
+      if (!ctrlDown || e.target.position == null) { if (lastWord) clearHover(); return }
+      const w = editor.getModel()?.getWordAtPosition(e.target.position)
+      if (!w) { if (lastWord) clearHover(); return }
+      if (w.word === lastWord) return // 同词不重画(高频事件)
+      lastWord = w.word
+      const ln = e.target.position.lineNumber
+      fnDecos.set([{
+        range: new monaco.Range(ln, w.startColumn, ln, w.endColumn),
+        options: { inlineClassName: 'fn-link' },
+      }])
+    })
+    editor.onMouseLeave(() => clearHover())
   }
 
   // 装饰:断点圆点按文件归属过滤;停站/定位光标只画在归属文件上
