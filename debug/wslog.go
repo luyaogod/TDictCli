@@ -41,8 +41,10 @@ type WSLogContent struct {
 // reRowid 行标识白名单(拼 SQL 防注入):Oracle rowid / 金仓 ctid「(页,元组)」
 var reRowid = regexp.MustCompile(`^(\([0-9]+,[0-9]+\)|[A-Za-z0-9./]{1,20})$`)
 
-// reWSLogRow 列表行解析:字段间以 | 分隔(rowid 固定 18 位放行首)
-var reWSLogRow = regexp.MustCompile(`^(\S+)\|(\S*)\|(\S*)\|(.*)\|(.*)\|(\S*)\|(\S*)\|(\S*)\|(.*)\|(\S*)\|(\S*)\|(.*)$`)
+// reWSLogRow 列表行解析:字段间以 | 分隔;ErrMsg(第 10 列)允许空格——
+// 失败记录的错误描述如「[T100_message] 处理笔数 1, 成功 0, 失败 1」含空格,
+// 用 \S+ 会整行匹配失败导致记录被静默丢弃
+var reWSLogRow = regexp.MustCompile(`^(\S+)\|(\S*)\|(\S*)\|(.*)\|(.*)\|(\S*)\|(\S*)\|(\S*)\|(.*)\|(.*)\|(\S*)\|(.*)$`)
 
 // WSLogFilter 列表过滤条件(对齐 awsq990 主查询 QBE:wsfa001 服务名 / wsfa003 开始时间范围;
 // onlyFail 为本工具扩展)
