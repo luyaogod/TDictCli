@@ -159,6 +159,7 @@ var debugServeCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		cfg.ApplyActiveEnv() // 生效环境的连接/参数合并到顶层
 		if dbgListen != "" {
 			cfg.Listen = dbgListen
 		}

@@ -657,6 +657,7 @@ func (s *Server) hSettingsPut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	nc.DataDir = s.cfg.DataDir // 运行时注入字段,请求体不带
+	nc.ApplyActiveEnv()        // 生效环境的连接/参数合并到顶层(顶层即生效配置)
 	nc.fillDefaults()
 
 	raw, err := os.ReadFile(s.cfgPath)
