@@ -7,7 +7,6 @@ import {
 } from 'lucide-react'
 import { useStore } from './store'
 import { editorRef } from './SourceView'
-import { Badge } from './ui'
 
 // 工具条内图标按钮(无独立边框,悬停浮起,禁用半透明)
 function ToolIcon({ icon: Icon, label, onClick, disabled, color = 'text-sky-600 dark:text-sky-400' }: {
@@ -87,8 +86,6 @@ function FloatingToolbar({ children }: { children: ReactNode }) {
 }
 
 export function Toolbar() {
-  const sessionId = useStore((s) => s.sessionId)
-  const prog = useStore((s) => s.prog)
   const launching = useStore((s) => s.launching)
   const quit = useStore((s) => s.quit)
   const restart = useStore((s) => s.restart)
@@ -111,7 +108,7 @@ export function Toolbar() {
       {/* 顶栏(融入背景,无边框,低高度;启动控件已移至右侧面板顶部)
           左内边距 48px = 活动栏 40 + 内容区 p-2 8,与代码编辑器左缘对齐 */}
       <div className="flex h-8 shrink-0 items-center gap-2 bg-background pl-12 pr-3">
-        {sessionId && <Badge tone="blue">{prog}</Badge>}
+        {/* 作业编号已由源码区调试页签展示,不再重复 */}
 
         {/* 右上角:收展右方/下方面板 */}
         <div className="ml-auto inline-flex items-center gap-0.5">
@@ -125,7 +122,7 @@ export function Toolbar() {
       </div>
 
       {/* 浮动调试工具条(有会话且在调试视图时显示) */}
-      {sessionId && view === 'debug' && (
+      {view === 'debug' && (
         <FloatingToolbar>
           <ToolIcon icon={Play} label="继续 (F5) — 运行到下一个断点" disabled={!stopped}
             onClick={() => void control('continue')} />
