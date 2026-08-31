@@ -152,16 +152,9 @@ export function SourceView() {
       const line = e.target.position?.lineNumber
       if (line) useStore.getState().toggleBreakpoint(line)
     })
-    // 切换页签(@monaco-editor/react 换 model)后装饰集合要重新应用到新 model,
-    // 并把目标行滚动居中(内容异步到达晚于首次 reveal,这里补偿)
-    editor.onDidChangeModel(() => {
-      setModelTick((t) => t + 1)
-      const st = useStore.getState()
-      const line = st.activeTab === 'debug'
-        ? st.currentLine
-        : st.tabs.find((t) => t.key === st.activeTab)?.line
-      if (line) setTimeout(() => editorRef.current?.revealLineInCenter(line), 60)
-    })
+    // 切换页签(@monaco-editor/react 换 model)后装饰集合要重新应用到新 model。
+    // 此处不做滚动补偿:视口滚动只由 revealReq 定位信号驱动,纯页签切换保持离开时视口
+    editor.onDidChangeModel(() => setModelTick((t) => t + 1))
 
     // Ctrl+悬停/点击跳函数(类 VS Code,全自管理):
     // 悬停 = 光标下的词变蓝+下划线+手形光标,同时异步预定位(fgldb info line)缓存结果;
@@ -255,14 +248,20 @@ export function SourceView() {
 
   // 视口跟随:仅停站行号"值变化"时滚动到当前行(调试页)。
   // 绝不能放进装饰 effect——它依赖 breakpoints,加断点重跑会把视口拽回运行行
-  // 视口落位:仅在「定位事件」发生时滚动(停站/步进/跳函数→cursorLine 变化,或内容就绪)。
-  // modelTick(纯页签切换)不触发——切回页签时恢复上次离开的视口,不打断阅读连续性。
-  // 延迟 80ms:等 @monaco-editor/react 换 model/大文件 setValue 完成再居中,避免被 viewState 覆盖
+  // 视口滚动唯一驱动 = revealReq 定位信号(停站落位/步进/跳函数/选帧/断点跳转)。
+  // 纯页签切换不发信号:切回页签恢复上次离开的视口,阅读连续性不受光标位置影响。
+  // content 入依赖:定位信号先于内容到达时(新开浏览页签),内容就绪后本 effect 重跑完成滚动;
+  // 延迟 80ms 等换 model/setValue 完成,避免被 viewState 恢复覆盖
+  const revealSeq = useStore((s) => s.revealReq?.seq ?? 0)
+  const revealLine = useStore((s) => s.revealReq?.line ?? 0)
+  const revealKey = useStore((s) => s.revealReq?.key ?? '')
   useEffect(() => {
-    if (!(cursorLine > 0 && (isDebug ? state === 'stopped' : true))) return
-    const t = setTimeout(() => editorRef.current?.revealLineInCenter(cursorLine), 80)
+    const targetKey = isDebug ? 'debug' : active?.key
+    if (!(revealLine > 0) || revealKey !== targetKey) return
+    if (isDebug && state !== 'stopped') return
+    const t = setTimeout(() => editorRef.current?.revealLineInCenter(revealLine), 80)
     return () => clearTimeout(t)
-  }, [cursorLine, state, isDebug, content])
+  }, [revealSeq, revealLine, revealKey, content, isDebug, state, active?.key])
 
   // 编辑器 options 必须稳定:字面量每次渲染都是新对象,会触发 @monaco-editor/react
   // 反复 updateOptions(minimap 重建),加断点等重渲染时会把滚动位置复位
