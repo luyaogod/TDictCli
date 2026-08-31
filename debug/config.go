@@ -37,6 +37,19 @@ type NamedDB struct {
 	DBConfig
 }
 
+// NamedEnv 服务器环境:SSH 连接 + 该环境专属的启动参数。
+// 一个环境对应一台 T100 服务器(开发/测试/正式),zone/launchArgs/数据库随环境走;
+// 设置页以列表维护,activeEnv 单选生效——生效 = 合并覆盖到顶层字段。
+type NamedEnv struct {
+	Name            string    `json:"name"`
+	SSHConfig       // 匿名嵌入:host/port/user/password 提升到 env 层
+	Zone            string    `json:"zone,omitempty"`
+	TopDir          string    `json:"topDir,omitempty"`
+	LaunchArgs      string    `json:"launchArgs,omitempty"`
+	WatchdogSeconds int       `json:"watchdogSeconds,omitempty"`
+	DB              *DBConfig `json:"db,omitempty"` // TNS/企业覆盖(留空按 zone 推导)
+}
+
 // Config debug 功能配置,存放在 config.json 顶层 "debug" 键。
 // 与 dbconfig 使用同一文件但互不干扰(各取所需键)。
 type Config struct {
@@ -54,11 +67,14 @@ type Config struct {
 	PersistBPs      *bool     `json:"persistBreakpoints"` // 断点持久化开关(nil 视为 true)
 	DataDir         string    `json:"-"`               // 数据目录(断点持久化等);由 serve 注入 config.json 所在目录,空=禁用
 	DB              *DBConfig `json:"db,omitempty"`    // 数据库连接探查配置(debug db 命令用)
-	SSHS            []NamedSSH `json:"sshs,omitempty"` // 多 SSH 连接列表(设置页维护;默认连接仍在上面的 ssh)
-	DBS             []NamedDB  `json:"dbs,omitempty"`  // 多数据库连接列表(设置页维护;默认库仍在上面的 db)
+	SSHS            []NamedSSH `json:"sshs,omitempty"` // (兼容保留)旧多 SSH 列表;新配置用 envs
+	DBS             []NamedDB  `json:"dbs,omitempty"`  // (兼容保留)旧多数据库列表
+	Envs            []NamedEnv `json:"envs,omitempty"` // 服务器环境列表(SSH+启动参数,设置页维护)
+	ActiveEnv       string     `json:"activeEnv,omitempty"` // 当前生效的环境名;空=用顶层默认字段
 }
 
-// SSHByName 按名取 SSH 连接(空名/未命中返回默认 ssh);nls 大小写不敏感
+// SSHByName 按名取 SSH 连接:先查旧 sshs 列表,再查 envs(取其 SSH 部分);
+// 空名/未命中返回默认 ssh
 func (c *Config) SSHByName(name string) SSHConfig {
 	if name != "" {
 		for _, s := range c.SSHS {
@@ -69,8 +85,54 @@ func (c *Config) SSHByName(name string) SSHConfig {
 				return s.SSHConfig
 			}
 		}
+		for _, e := range c.Envs {
+			if e.Name == name {
+				if e.Port == 0 {
+					e.Port = 22
+				}
+				return e.SSHConfig
+			}
+		}
 	}
 	return c.SSH
+}
+
+// ApplyActiveEnv 把当前生效环境(activeEnv)的连接与启动参数合并覆盖到顶层字段,
+// 再重推默认值(TopDir/ModuleRoots 等)。顶层字段即「当前生效配置」,
+// manager/hLaunch/CLI 无需感知 envs 的存在;activeEnv 为空或未命中时不做任何事。
+func (c *Config) ApplyActiveEnv() {
+	if c.ActiveEnv == "" {
+		return
+	}
+	for _, e := range c.Envs {
+		if e.Name != c.ActiveEnv {
+			continue
+		}
+		if e.Host != "" {
+			c.SSH = e.SSHConfig
+			if c.SSH.Port == 0 {
+				c.SSH.Port = 22
+			}
+		}
+		if e.Zone != "" {
+			c.Zone = e.Zone
+		}
+		if e.TopDir != "" {
+			c.TopDir = e.TopDir
+		}
+		if e.LaunchArgs != "" {
+			c.LaunchArgs = e.LaunchArgs
+		}
+		if e.WatchdogSeconds > 0 {
+			c.WatchdogSeconds = e.WatchdogSeconds
+		}
+		if e.DB != nil {
+			db := *e.DB
+			c.DB = &db
+		}
+		c.fillDefaults()
+		return
+	}
 }
 
 // TNSName 返回数据库 TNS 别名(zone 36→t35prd,35→t35tst,31→t35dev,39→t35pth,t→topprd)
@@ -212,7 +274,8 @@ func LoadConfig(path string) (*Config, error) {
 	}
 	cfg := wrapper.Debug
 	cfg.fillDefaults()
-	if cfg.SSH.Host == "" || cfg.SSH.User == "" {
+	// 顶层 ssh 允许为空,前提是 envs 里有可用连接(ApplyActiveEnv 合并后自会填充)
+	if len(cfg.Envs) == 0 && (cfg.SSH.Host == "" || cfg.SSH.User == "") {
 		return nil, fmt.Errorf("debug.ssh.host / debug.ssh.user 未配置")
 	}
 	return cfg, nil
