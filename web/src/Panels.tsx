@@ -2,7 +2,7 @@
 import * as React from 'react'
 import * as AccordionPrimitive from '@radix-ui/react-accordion'
 import { useEffect, useRef, useState } from 'react'
-import { Play } from 'lucide-react'
+import { Play, Ruler } from 'lucide-react'
 import { useStore } from './store'
 import { Badge, Button, Input } from './ui'
 import { parseFglTree, type TNode } from './fglparse'
@@ -10,12 +10,15 @@ import { VarTreeNodes } from './VarTreeUi'
 
 // 运行/调试区(VS Code Run and Debug 同款):绿色运行按钮 + 目标输入框。
 // 输入作业编号或程序名(模块自动解析);也支持「模块/作业」显式指定模块。
+// 会话进行中:显示当前作业编号 + 行号校准按钮(协议行号与源码偏移时手动触发)
 function LaunchSection() {
   const launch = useStore((s) => s.launch)
   const launching = useStore((s) => s.launching)
   const sessionId = useStore((s) => s.sessionId)
+  const prog = useStore((s) => s.prog)
+  const state = useStore((s) => s.state)
+  const calibrate = useStore((s) => s.calibrate)
   const [v, setV] = useState(() => localStorage.getItem('tdict.launchTarget') || 'bsft001_wf')
-  if (sessionId) return null // 会话进行中隐藏(重启走工具条「重新开始」)
   const doLaunch = () => {
     const t = v.trim()
     if (!t || launching) return
@@ -27,23 +30,42 @@ function LaunchSection() {
   return (
     <div className="shrink-0 border-b border-border">
       <div className="flex h-8 items-center px-2.5 text-xs font-medium text-muted-foreground">运行</div>
-      <div className="flex items-center gap-1 px-1.5 pb-1.5">
-        <button
-          title="启动调试会话(Enter 同效)"
-          disabled={launching || !v.trim()}
-          onClick={doLaunch}
-          className="rounded p-1 transition-colors hover:bg-accent/60 disabled:pointer-events-none disabled:opacity-30"
-        >
-          <Play className="h-4 w-4 text-green-600 dark:text-green-500" fill="currentColor" />
-        </button>
-        <Input
-          value={v}
-          onChange={(e) => setV(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') doLaunch() }}
-          placeholder="作业编号,如 bsft001_wf 或 asf/bsft001_wf"
-          className="h-6 flex-1 px-1.5 text-xs"
-        />
-      </div>
+      {sessionId ? (
+        <div className="flex items-center gap-1 px-1.5 pb-1.5">
+          <span
+            className="min-w-0 flex-1 truncate rounded-sm bg-accent/40 px-1.5 py-0.5 font-mono text-xs text-foreground"
+            title={prog || sessionId}
+          >
+            {prog || sessionId}
+          </span>
+          <button
+            title={state === 'stopped' ? '行号校准:协议行号与源码错位时点击对齐' : '行号校准(需停站后点击)'}
+            disabled={state !== 'stopped'}
+            onClick={() => void calibrate()}
+            className="rounded p-1 transition-colors hover:bg-accent/60 disabled:pointer-events-none disabled:opacity-30"
+          >
+            <Ruler className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center gap-1 px-1.5 pb-1.5">
+          <button
+            title="启动调试会话(Enter 同效)"
+            disabled={launching || !v.trim()}
+            onClick={doLaunch}
+            className="rounded p-1 transition-colors hover:bg-accent/60 disabled:pointer-events-none disabled:opacity-30"
+          >
+            <Play className="h-4 w-4 text-green-600 dark:text-green-500" fill="currentColor" />
+          </button>
+          <Input
+            value={v}
+            onChange={(e) => setV(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') doLaunch() }}
+            placeholder="作业编号,如 bsft001_wf 或 asf/bsft001_wf"
+            className="h-6 flex-1 px-1.5 text-xs"
+          />
+        </div>
+      )}
     </div>
   )
 }

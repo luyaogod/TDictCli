@@ -883,6 +883,74 @@ func (s *Session) Functions(limit int) ([]string, int, error) {
 	return out, total, nil
 }
 
+// CalibrateOffset 行号校准:fgldb 报的行号来自 .42r 编译产物的行号表,若服务器上
+// .4gl 源码与编译产物版本不一致(如文件头部增删行),DVM 行号会与磁盘文件整体偏移。
+// 用停站源码块(行号+文本)在磁盘文件中反查真实行号,返回 offset(DVM 行号 = 磁盘行号 + offset)。
+// offset > 0 时前端在源码顶部前插 offset 个空行,即可让 Monaco 行号与协议流对齐。
+func (s *Session) CalibrateOffset() (int, error) {
+	if s.State() != StateStopped {
+		return 0, fmt.Errorf("需停站后才能校准(当前未停站)")
+	}
+	st := s.Cur()
+	if st.File == "" || len(st.Source) == 0 {
+		return 0, fmt.Errorf("当前停站没有源码上下文,无法校准")
+	}
+	// 参考行:IsCur 优先;否则取第一个非空文本行
+	ref := SourceLine{}
+	for _, sl := range st.Source {
+		if sl.IsCur && strings.TrimSpace(sl.Text) != "" {
+			ref = sl
+			break
+		}
+	}
+	if ref.Num == 0 {
+		for _, sl := range st.Source {
+			if strings.TrimSpace(sl.Text) != "" {
+				ref = sl
+				break
+			}
+		}
+	}
+	if ref.Num == 0 || strings.TrimSpace(ref.Text) == "" {
+		return 0, fmt.Errorf("源码上下文没有可匹配的行文本")
+	}
+	sf, err := s.ResolveSource(st.File, s.Module)
+	if err != nil {
+		return 0, err
+	}
+	lines := strings.Split(strings.ReplaceAll(sf.Content, "\r\n", "\n"), "\n")
+	// 验证集:源码块其余行相对 ref 的 DVM 行号差 → 文本,提高匹配唯一性
+	verify := map[int]string{}
+	for _, sl := range st.Source {
+		if sl.Num == ref.Num {
+			continue
+		}
+		if t := strings.TrimSpace(sl.Text); t != "" {
+			verify[sl.Num-ref.Num] = t
+		}
+	}
+	target := strings.TrimSpace(ref.Text)
+	// 滑动搜索 offset ∈ [-5,5]:磁盘 idx = DVM行号 - offset - 1(0-based)
+	for offset := -5; offset <= 5; offset++ {
+		idx := ref.Num - offset - 1
+		if idx < 0 || idx >= len(lines) || strings.TrimSpace(lines[idx]) != target {
+			continue
+		}
+		ok := true
+		for d, t := range verify {
+			vi := idx + d
+			if vi < 0 || vi >= len(lines) || strings.TrimSpace(lines[vi]) != t {
+				ok = false
+				break
+			}
+		}
+		if ok {
+			return offset, nil
+		}
+	}
+	return 0, fmt.Errorf("未能在源码文件中匹配到停站行(文件与编译产物版本差异过大)")
+}
+
 // InfoLine 让 fgldb 解析位置(函数名/模块名/file:line)为 DVM 源文件名与行号,
 // 是源码/符号定位的权威兜底(fgldeb 的 get_full_module_name 同款)
 func (s *Session) InfoLine(loc string) (string, int, error) {

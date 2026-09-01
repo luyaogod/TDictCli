@@ -75,6 +75,8 @@ export const api = {
   // 定位函数到源文件与行号(fgldb info line;仅停站可用)
   locate: (id: string, word: string) =>
     req<{ file: string; line: number }>(`/api/sessions/${id}/locate`, { method: 'POST', body: JSON.stringify({ word }) }),
+  // 行号校准:检测 fgldb(DVM)行号与磁盘源码的偏移(仅停站可用)
+  calibrate: (id: string) => req<{ offset: number }>(`/api/sessions/${id}/calibrate`, { method: 'POST' }),
   wsTest: (mode: string, url: string, body: string, soap: boolean) =>
     req<{ result: WSTestResult }>('/api/wstest', { method: 'POST', body: JSON.stringify({ mode, url, body, soap }) }),
   wsLogs: (service: string, onlyFail: boolean, page: number, startFrom: string, startTo: string) =>

@@ -80,6 +80,7 @@ func (s *Server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/sessions/{id}/autovars", s.hAutovars)
 	mux.HandleFunc("POST /api/sessions/{id}/frame", s.hFrame)
 	mux.HandleFunc("POST /api/sessions/{id}/locate", s.hLocate)
+	mux.HandleFunc("POST /api/sessions/{id}/calibrate", s.hCalibrate)
 	mux.HandleFunc("POST /api/sessions/{id}/breakpoints/{num}/enabled", s.hBPEnabled)
 	mux.HandleFunc("GET /api/sessions/{id}/source", s.hSource)
 	mux.HandleFunc("GET /api/source-preview", s.hSourcePreview)
@@ -424,6 +425,22 @@ func (s *Server) hLocate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, 200, map[string]any{"ok": true, "file": file, "line": line})
+}
+
+// hCalibrate 行号校准:停站后检测 fgldb(DVM)行号与磁盘源码的偏移量,
+// 供前端把 Monaco 行号对齐到协议流。POST /api/sessions/{id}/calibrate
+func (s *Server) hCalibrate(w http.ResponseWriter, r *http.Request) {
+	sess := s.sessOf(w, r)
+	if sess == nil {
+		return
+	}
+	offset, err := sess.CalibrateOffset()
+	if err != nil {
+		fail(w, 400, err)
+		return
+	}
+	log.Printf("[calibrate] session=%s offset=%d", sess.ID, offset)
+	writeJSON(w, 200, map[string]any{"ok": true, "offset": offset})
 }
 
 func (s *Server) hSources(w http.ResponseWriter, r *http.Request) {

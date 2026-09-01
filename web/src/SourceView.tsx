@@ -133,7 +133,12 @@ export function SourceView() {
   const isDebug = !active
 
   // 当前编辑器展示内容(调试页 vs 浏览页)
-  const content = isDebug ? sourceContent : (active!.content || (active!.missing ? '' : ''))
+  // 行号校准:offset > 0 时在源码顶部前插 offset 个空行,让 Monaco 行号与 fgldb(DVM)行号
+  // 对齐(协议流与编辑器不再错位;断点/停站仍按 DVM 行号自然工作)
+  const lineOffset = useStore((s) => s.lineOffset)
+  const content = isDebug
+    ? (lineOffset > 0 ? '\n'.repeat(lineOffset) + (sourceContent || '') : (sourceContent || ''))
+    : (active!.content || (active!.missing ? '' : ''))
   const modelPath = isDebug ? 'debug:' + (sourceDVM || prog) : 'tab:' + active!.file
   const cursorLine = isDebug ? currentLine : (active!.line ?? 0)
 
