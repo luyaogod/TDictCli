@@ -1,12 +1,11 @@
 // 顶栏(会话徽章 + 面板收展)+ 浮动调试工具条(脱离文档流,手柄拖拽,位置记忆)
 import { useState, type ComponentType, type ReactNode } from 'react'
 import {
-  Play, RedoDot, StepForward, ArrowDownToDot, ArrowUpFromDot, ArrowRightToLine,
+  RedoDot, StepForward, ArrowDownToDot, ArrowUpFromDot,
   RotateCcw, Square, GripVertical,
   SquareChevronRight, SquareChevronLeft, SquareChevronDown, SquareChevronUp,
 } from 'lucide-react'
 import { useStore } from './store'
-import { editorRef } from './SourceView'
 
 // 工具条内图标按钮(无独立边框,悬停浮起,禁用半透明)
 function ToolIcon({ icon: Icon, label, onClick, disabled, color = 'text-sky-600 dark:text-sky-400' }: {
@@ -90,8 +89,6 @@ export function Toolbar() {
   const quit = useStore((s) => s.quit)
   const restart = useStore((s) => s.restart)
   const control = useStore((s) => s.control)
-  const runToCursor = useStore((s) => s.runToCursor)
-  const hasSource = useStore((s) => s.sourceContent.length > 0)
   const showRight = useStore((s) => s.showRight)
   const showBottom = useStore((s) => s.showBottom)
   const toggleRight = useStore((s) => s.toggleRight)
@@ -99,9 +96,6 @@ export function Toolbar() {
   const view = useStore((s) => s.view)
 
   const stopped = useStore((s) => s.state) === 'stopped'
-  const running = useStore((s) => s.state) === 'running'
-
-  const cursorLine = () => editorRef.current?.getPosition()?.lineNumber ?? 0
 
   return (
     <>
@@ -124,21 +118,14 @@ export function Toolbar() {
       {/* 浮动调试工具条(有会话且在调试视图时显示) */}
       {view === 'debug' && (
         <FloatingToolbar>
-          <ToolIcon icon={Play} label="继续 (F5) — 运行到下一个断点" disabled={!stopped}
+          <ToolIcon icon={StepForward} label="继续 (F5) — 运行到下一个断点" disabled={!stopped}
             onClick={() => void control('continue')} />
-          <ToolIcon icon={RedoDot} label="中断 — SIGINT 拿回控制权" disabled={!running}
-            onClick={() => void control('interrupt')} />
-          <ToolIcon icon={StepForward} label="步过 (F10)" disabled={!stopped}
+          <ToolIcon icon={RedoDot} label="步过 (F10)" disabled={!stopped}
             onClick={() => void control('next')} />
           <ToolIcon icon={ArrowDownToDot} label="步入 (F11)" disabled={!stopped}
             onClick={() => void control('step')} />
           <ToolIcon icon={ArrowUpFromDot} label="步出 (finish)" disabled={!stopped}
             onClick={() => void control('finish')} />
-          <ToolIcon icon={ArrowRightToLine} label="运行到光标 (until 光标行)" disabled={!stopped || !hasSource}
-            onClick={() => {
-              const ln = cursorLine()
-              if (ln > 0) void runToCursor(ln)
-            }} />
           <ToolIcon icon={RotateCcw} label="重新开始 — 结束并重启同一作业" color="text-green-600 dark:text-green-400" disabled={launching}
             onClick={() => void restart()} />
           <ToolIcon icon={Square} label="结束会话 — quit(作业窗口随之关闭)" color="text-red-600 dark:text-red-400"
