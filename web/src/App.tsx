@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { RotateCcw, WifiOff, Bug, Globe, FlaskConical, Settings, type LucideIcon } from 'lucide-react'
+import { RotateCcw, WifiOff, Bug, Globe, FlaskConical, Settings, X, type LucideIcon } from 'lucide-react'
 import { connectWS, useStore } from './store'
 import { Toolbar } from './Toolbar'
 import { SourceView, editorRef } from './SourceView'
@@ -107,6 +107,8 @@ export function App() {
   const showBottom = useStore((s) => s.showBottom)
   const view = useStore((s) => s.view)
   const setView = useStore((s) => s.setView)
+  const launchError = useStore((s) => s.launchError)
+  const setLaunchError = useStore((s) => s.setLaunchError)
   const backendDead = useStore((s) => s.backendDead)
   const wsConnected = useStore((s) => s.wsConnected)
   const launching = useStore((s) => s.launching)
@@ -154,6 +156,16 @@ export function App() {
   return (
     <div className="flex h-screen flex-col bg-background text-foreground">
       <Toolbar />
+      {/* 启动失败横幅:显眼红色,可关闭;下次启动/下次成功时自动清除 */}
+      {launchError && (
+        <div className="flex shrink-0 items-center gap-2 border-b border-red-500/20 bg-red-500/10 px-3 py-1.5 text-xs text-red-600 dark:text-red-400">
+          <span className="min-w-0 flex-1 truncate" title={launchError}>{launchError}</span>
+          <button onClick={() => setLaunchError('')} title="关闭"
+            className="rounded p-0.5 transition-colors hover:bg-red-500/20">
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
       {banner && (
         <div className="flex shrink-0 items-center gap-2 border-b border-red-500/20 bg-red-500/10 px-3 py-1.5 text-xs text-red-600 dark:text-red-600 dark:text-red-400">
           <WifiOff className="h-3.5 w-3.5" />
