@@ -274,6 +274,11 @@ func (s *Session) Launch(ctx context.Context) error {
 	if err := s.waitRegexp(reShellPrompt, 25*time.Second, "shell 提示符"); err != nil {
 		return err
 	}
+	// 2.5 回读登录后的权威 T100 路径(选区后环境变量,与标准 debug 同源)。
+	// 覆盖静态/探针值,后续源码搜索/启动目录/ReadPath 白名单全部用它
+	if err := s.readRuntimeEnv(); err != nil {
+		s.emitEvent(Event{Type: "log", Text: "T100 环境回读失败,用配置路径兜底: " + err.Error()})
+	}
 	// 3. 进模块目录 + 源码路径
 	// 转客制的作业 42r/源码部署在 c<module> 目录(原版 T100 从 c** 启动,FGLLDPATH 也 c 优先),
 	// 这里探测:客制目录有同名 42r 就用客制,否则用标准模块目录
@@ -356,14 +361,57 @@ func (s *Session) pickLaunchDir(prog string) string {
 	return modDir
 }
 
+// readRuntimeEnv 在选区后的 shell 里回显关键 T100 环境变量并写入 cfg.Runtime。
+// 选区后是真实登录环境(与标准 debug 完全同源),是路径的最权威来源;
+// 失败时调用方回退静态配置(探针/zoneTopDir)。
+func (s *Session) readRuntimeEnv() error {
+	probe := `echo TDICT_BEGIN; echo TDICT_TOP=$TOP; echo TDICT_ERP=$ERP; echo TDICT_COM=$COM; echo TDICT_FGLDIR=$FGLDIR; echo TDICT_FGLRESOURCEPATH=$FGLRESOURCEPATH; echo TDICT_END`
+	if err := s.pty.Write(probe + "\r"); err != nil {
+		return err
+	}
+	env := &RuntimeEnv{}
+	deadline := time.After(10 * time.Second)
+	for {
+		select {
+		case ln := <-s.lines:
+			ln = strings.TrimSpace(ln)
+			if ln == "TDICT_END" {
+				if !env.valid() {
+					return fmt.Errorf("未回显到 TOP/ERP(环境脚本未设置 $TOP?)")
+				}
+				s.mu.Lock()
+				env.FetchedAt = time.Now()
+				s.cfg.Runtime = env
+				s.mu.Unlock()
+				return nil
+			}
+			switch {
+			case strings.HasPrefix(ln, "TDICT_TOP="):
+				env.TOP = strings.TrimPrefix(ln, "TDICT_TOP=")
+			case strings.HasPrefix(ln, "TDICT_ERP="):
+				env.ERP = strings.TrimPrefix(ln, "TDICT_ERP=")
+			case strings.HasPrefix(ln, "TDICT_COM="):
+				env.COM = strings.TrimPrefix(ln, "TDICT_COM=")
+			case strings.HasPrefix(ln, "TDICT_FGLDIR="):
+				env.FGLDIR = strings.TrimPrefix(ln, "TDICT_FGLDIR=")
+			case strings.HasPrefix(ln, "TDICT_FGLRESOURCEPATH="):
+				env.FGLResourcePath = strings.TrimPrefix(ln, "TDICT_FGLRESOURCEPATH=")
+			}
+		case <-deadline:
+			return fmt.Errorf("回读 T100 环境变量超时")
+		}
+	}
+}
+
 // fglsourcePathOf 按实际启动目录拼源码搜索路径(公共库仍在 TopDir/com 下)
 func (s *Session) fglsourcePathOf(dir string) string {
+	top := s.cfg.TopDirActual()
 	dirs := []string{
 		dir + "/4gl",
 		dir + "/42m",
-		s.cfg.TopDir + "/com/lib/42m",
-		s.cfg.TopDir + "/com/sub/42m",
-		s.cfg.TopDir + "/com/qry/42m",
+		top + "/com/lib/42m",
+		top + "/com/sub/42m",
+		top + "/com/qry/42m",
 	}
 	out := ""
 	for i, d := range dirs {
@@ -382,7 +430,7 @@ func (s *Session) resolveModule(prog string) (string, error) {
 	if !reProgName.MatchString(prog) {
 		return "", fmt.Errorf("作业名含非法字符: %q", prog)
 	}
-	found := searchModule42r(s.conn, s.cfg.ModuleRoots, prog)
+	found := searchModule42r(s.conn, s.cfg.ModuleRootsActual(), prog)
 	switch {
 	case len(found) == 0:
 		return "", fmt.Errorf("在各模块 42r 目录中未找到作业 %s(请检查作业名)", prog)
@@ -1571,7 +1619,7 @@ func sourceCandidatePaths(roots []string, module, dvmFile string) []string {
 
 // sourceCandidates 生成源码查找候选路径
 func (s *Session) sourceCandidates(dvmFile, module string) []string {
-	return sourceCandidatePaths(s.cfg.ModuleRoots, module, dvmFile)
+	return sourceCandidatePaths(s.cfg.ModuleRootsActual(), module, dvmFile)
 }
 
 // ResolveSource 把 DVM 报告的源文件名解析为真实路径并读取(带 mtime 缓存,避免每次停站全量拉取)
@@ -1615,7 +1663,7 @@ func (s *Session) ResolveSource(dvmFile, module string) (*SourceFile, error) {
 // ReadPath 读取任意路径(限制在配置的 moduleRoots 内,防止越权读文件)
 func (s *Session) ReadPath(path string) (*SourceFile, error) {
 	ok := false
-	for _, root := range s.cfg.ModuleRoots {
+	for _, root := range s.cfg.ModuleRootsActual() {
 		if strings.HasPrefix(path, root+"/") {
 			ok = true
 			break
