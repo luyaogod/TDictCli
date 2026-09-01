@@ -405,20 +405,9 @@ export const useStore = create<Store>((set, get) => ({
         sessionId: r.sessionId, module: mod, prog: r.prog || item.job,
         runProg: rp, state: 'loading', timeline: [], rawLog: [], watches: [], autovars: [],
         backendDead: '', selectedFrame: -1, stop: null, breakpoints: [], frames: [],
-        sourceContent: '', sourcePath: '', sourceDVM: '', currentLine: 0,
+        sourceContent: '', sourcePath: '', sourceDVM: '', currentLine: 0, loadingSource: true,
       })
-      // 入口停站前预取源码(实体程序命名)
-      if (mod && rp) {
-        void (async () => {
-          try {
-            const pr = await api.sourcePreview(mod, rp)
-            const cur = get()
-            if (cur.sourceContent || cur.sourceDVM) return
-            set({ sourceContent: pr.source.content, sourcePath: pr.source.path, sourceDVM: `${mod}_${rp}.4gl` })
-            jumpToMain(set, get)
-          } catch { /* 停站后由会话路径加载 */ }
-        })()
-      }
+      // 入口停站前保持加载态,源码由会话路径加载并定位 MAIN
       pollUntilStopped(set, get)
     } catch (e: any) {
       set({ wsLogErr: e.message || String(e), state: '' })
@@ -429,13 +418,9 @@ export const useStore = create<Store>((set, get) => ({
 
   launch: async (module, prog) => {
     set({ launching: true, timeline: [], rawLog: [], watches: [], autovars: [], backendDead: '', selectedFrame: -1 })
-    const dvm = `${module}_${prog}.4gl`
-    // 更换作业时清空旧代码;同作业重启则保留(用户可能正在翻看)
-    if (get().sourceDVM !== dvm) {
-      set({ sourceContent: '', sourcePath: '', sourceDVM: '', currentLine: 0 })
-    } else {
-      set({ currentLine: 0 })
-    }
+    // 启动调试:编辑器进入加载态(转圈),入口停站定位 MAIN 后一次性显示源码,
+    // 避免启动过程中内容跳来跳去
+    set({ sourceContent: '', sourcePath: '', sourceDVM: '', currentLine: 0, loadingSource: true })
     try {
       const r = await api.launch(module, prog)
       // 作业编号解析:后端连 gzzz_t 后回读模块与实体程序(aint301_wf → aint302_wf)
@@ -443,20 +428,7 @@ export const useStore = create<Store>((set, get) => ({
       const rp = r.runProg || prog
       set({ sessionId: r.sessionId, module: mod, prog, runProg: rp, state: 'loading' })
       get().pushTimeline({ origin: 'human', kind: 'command', text: `启动调试会话 ${mod}/${prog}` })
-      // 入口停站前预取源码(用解析出的实体程序命名,消除空白)
-      if (!get().sourceContent) {
-        void (async () => {
-          try {
-            const pr = await api.sourcePreview(mod, rp)
-            const cur = get()
-            if (cur.sourceContent || cur.sourceDVM) return // 会话路径已先行加载
-            set({ sourceContent: pr.source.content, sourcePath: pr.source.path, sourceDVM: `${mod}_${rp}.4gl` })
-            jumpToMain(set, get)
-            cur.pushTimeline({ origin: 'system', kind: 'info', text: '已预取源码(会话建立中)' })
-          } catch { /* 预取失败不致命,停站后由会话路径加载 */ }
-        })()
-      }
-      // 轮询直到入口停站
+      // 轮询直到入口停站(源码由会话路径加载并定位 MAIN)
       pollUntilStopped(set, get)
     } catch (e: any) {
       get().pushTimeline({ origin: 'system', kind: 'warn', text: `启动失败: ${e.message}` })
@@ -518,6 +490,8 @@ export const useStore = create<Store>((set, get) => ({
         jumpToMain(set, get)
         st.pushTimeline({ origin: 'system', kind: 'info', text: '入口停站:已显示源码,点击行号下断点后点「继续 F5」开始' })
       }
+      // 入口停站:跳转到 MAIN 首条语句,让用户聚焦起点(不打断后续停站定位)
+      if (entryMode && get().currentLine > 0) get().reveal('debug', get().currentLine)
     } catch {
       // 无源码(如 com 公共库只有 42m):明确置空,避免在旧文件上标错停站行
       if (entryMode) {
@@ -529,6 +503,7 @@ export const useStore = create<Store>((set, get) => ({
             jumpToMain(set, get)
             get().pushTimeline({ origin: 'system', kind: 'info', text: '入口停站:已显示客制源码,点击行号下断点后点「继续 F5」开始' })
           }
+          if (get().currentLine > 0) get().reveal('debug', get().currentLine)
           return
         } catch { /* 客制也没有 */ }
       }
