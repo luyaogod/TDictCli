@@ -258,17 +258,21 @@ func (s *Session) Launch(ctx context.Context) error {
 	if launchProg == "" {
 		launchProg = s.Prog
 	}
-	if s.Module == "" {
-		mod, err := s.resolveModule(launchProg)
-		if err != nil {
-			return fmt.Errorf("自动解析模块失败: %w", err)
+	moduleKnown := s.Module != ""
+	var resolveErr error
+	if !moduleKnown {
+		// 预会话解析(动态探针/静态兜底路径);失败不中断——登录后真实环境再重试一次
+		if mod, err := s.resolveModule(launchProg); err == nil {
+			s.Module = mod
+			moduleKnown = true
+			s.emitEvent(Event{Type: "log", Text: fmt.Sprintf("按作业名解析模块:%s → %s", launchProg, mod)})
+		} else {
+			resolveErr = err
 		}
-		s.Module = mod
-		s.emitEvent(Event{Type: "log", Text: fmt.Sprintf("按作业名解析模块:%s → %s", launchProg, mod)})
 	}
 	// 1. 等区域菜单
 	// 菜单格式两种:109 那台 `(*)Exit`,金仓这台 `*)Exit`(无左括号)
-	if err := s.waitRegexp(regexp.MustCompile(`\(\*\)?\s*Exit|\*\)\s*Exit`), 25*time.Second, "区域菜单"); err != nil {
+	if err := s.waitRegexp(reLoginMenu, 25*time.Second, "区域菜单"); err != nil {
 		return err
 	}
 	s.pty.Write(s.cfg.Zone + "\r")
@@ -280,6 +284,22 @@ func (s *Session) Launch(ctx context.Context) error {
 	// 覆盖静态/探针值,后续源码搜索/启动目录/ReadPath 白名单全部用它
 	if err := s.readRuntimeEnv(); err != nil {
 		s.emitEvent(Event{Type: "log", Text: "T100 环境回读失败,用配置路径兜底: " + err.Error()})
+	}
+	// 2.6 登录后补一次模块解析:选区后的 TOP/ERP/COM 最权威,预会话探针/静态兜底
+	// 不可靠(如区域与服务器菜单映射不一致)时在这里用真实环境纠正
+	if !moduleKnown && s.Module == "" && s.cfg.Runtime != nil && s.cfg.Runtime.valid() {
+		if mod, err := s.resolveModule(launchProg); err == nil {
+			s.Module = mod
+			s.emitEvent(Event{Type: "log", Text: fmt.Sprintf("登录后按作业名重解析模块:%s → %s", launchProg, mod)})
+		} else {
+			resolveErr = err
+		}
+	}
+	if s.Module == "" {
+		if resolveErr == nil {
+			resolveErr = fmt.Errorf("在各模块 42r 目录中未找到作业 %s(请检查作业名)", launchProg)
+		}
+		return fmt.Errorf("自动解析模块失败: %w", resolveErr)
 	}
 	// 3. 进模块目录 + 源码路径
 	// 转客制的作业 42r/源码部署在 c<module> 目录(原版 T100 从 c** 启动,FGLLDPATH 也 c 优先),
@@ -454,6 +474,11 @@ func (s *Session) resolveModule(prog string) (string, error) {
 	found := searchModule42r(s.conn, s.cfg.ModuleRootsActual(), prog)
 	switch {
 	case len(found) == 0:
+		// 动态环境未解析时,模块查找走的是静态兜底路径(可能与该区域真实路径不一致),
+		// 给用户明确提示,避免把区域配置问题误判成"作业不存在"
+		if s.cfg.Runtime == nil || !s.cfg.Runtime.valid() {
+			return "", fmt.Errorf("在各模块 42r 目录中未找到作业 %s(请检查作业名);且登录区域环境未动态解析(模块路径可能不准确,请核对设置中的登录区域)", prog)
+		}
 		return "", fmt.Errorf("在各模块 42r 目录中未找到作业 %s(请检查作业名)", prog)
 	case len(found) > 1:
 		// 标准模块与它的客制目录(首字母 a→c,如 ain/cin)并存视为同一作业,取客制

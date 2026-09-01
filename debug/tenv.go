@@ -2,6 +2,7 @@ package debug
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 	"time"
@@ -28,6 +29,146 @@ var reTEnvKV = regexp.MustCompile(`^(TDICT_TOP|TDICT_ERP|TDICT_COM|TDICT_FGLDIR|
 // reZone 区域代码白名单(31/35/36/39/t/36k/1 等):允许数字/字母/下划线/连字符,防注入
 var reZone = regexp.MustCompile(`^[A-Za-z0-9_-]{1,16}$`)
 
+// reLoginMenu T100 登录区域菜单提示(两种站点格式:109 那台 `(*)Exit`,金仓这台 `*)Exit`)。
+// 探针与会话登录共用:出现即表示菜单就绪,可以敲入区域选项号。
+var reLoginMenu = regexp.MustCompile(`\(\*\)?\s*Exit|\*\)\s*Exit`)
+
+// probeTEnv 探测登录区域对应的 T100 环境变量。
+// 配置 zone 是「登录菜单选项号」(如恒烁 1/2/3/4、109 31/35/36/39),不是 ZONE 变量字符串;
+// 因此优先「真实登录」式探测:开 PTY 等登录菜单,敲入选项号,由登录脚本完成
+// 选项号→ZONE 字符串 的映射后回读 TOP/ERP/COM——与会话登录完全同源,各站点菜单自动适配。
+// 登录式失败(无菜单/菜单拒绝)回退旧版 chenv 链脚本(选项号直接当 ZONE,仅适用于
+// 菜单码与 ZONE 值重合的站点)。
+func probeTEnv(conn *SSHConn, zone string) (*RuntimeEnv, error) {
+	if !reZone.MatchString(zone) {
+		return nil, fmt.Errorf("区域代码非法: %q", zone)
+	}
+	if env, err := probeTEnvLogin(conn, zone); err == nil {
+		return env, nil
+	} else if conn != nil {
+		log.Printf("[tenv] 登录式探针失败,回退脚本探针: %v", err)
+	}
+	return probeTEnvScript(conn, zone)
+}
+
+// probeTEnvLogin 「真实登录」式环境探针:PTY 登录 → 等区域菜单 → 敲入选项号 →
+// 等 shell 提示符 → 回显 T100 环境变量并解析。与 Session.Launch 的登录流程同源。
+func probeTEnvLogin(conn *SSHConn, zone string) (*RuntimeEnv, error) {
+	pty, err := conn.NewPTY(200, 50)
+	if err != nil {
+		return nil, err
+	}
+	done := make(chan struct{})
+	defer close(done)
+	defer pty.Close()
+	// 输出泵:与 Session.pump 同款——LineParser 按行/半行出行,提示符后面没有换行,
+	// 半行已是提示符形态就立即出行(PS1 与 (fgldb) 都是"无换行"输出,否则永远等不到)
+	lineCh := make(chan string, 256)
+	go func() {
+		defer close(lineCh)
+		pr := &LineParser{}
+		buf := make([]byte, 8192)
+		for {
+			select {
+			case <-done:
+				return
+			default:
+			}
+			n, err := pty.Read(buf)
+			if n > 0 {
+				for _, ln := range pr.Feed(buf[:n]) {
+					select {
+					case lineCh <- ln:
+					case <-done:
+						return
+					}
+				}
+				if partial := pr.PartialStr(); partial != "" {
+					if isBarePrompt(partial) || reShellPrompt.MatchString(partial) {
+						select {
+						case lineCh <- pr.FlushPartial():
+						case <-done:
+							return
+						}
+					}
+				}
+			}
+			if err != nil {
+				return
+			}
+		}
+	}()
+	waitFor := func(re *regexp.Regexp, timeout time.Duration, what string) error {
+		deadline := time.After(timeout)
+		for {
+			select {
+			case ln, ok := <-lineCh:
+				if !ok {
+					return fmt.Errorf("等待 %s 时连接已关闭(登录脚本退出?)", what)
+				}
+				if re.MatchString(ln) {
+					return nil
+				}
+			case <-deadline:
+				return fmt.Errorf("等待 %s 超时", what)
+			}
+		}
+	}
+	// 1. 登录区域菜单
+	if err := waitFor(reLoginMenu, 12*time.Second, "区域菜单"); err != nil {
+		return nil, err
+	}
+	// 2. 敲入区域选项号(菜单码 → ZONE 字符串由登录脚本映射,与手工登录一致)
+	// 菜单文本出现到 read 就绪有微小窗口,先等一拍再敲,避免输入被行编辑吞掉
+	time.Sleep(500 * time.Millisecond)
+	if err := pty.Write(zone + "\r"); err != nil {
+		return nil, err
+	}
+	// 3. 等 shell 提示符(选项号非法时登录脚本 *)exit,连接关闭会快速失败)
+	if err := waitFor(reShellPrompt, 15*time.Second, "shell 提示符"); err != nil {
+		return nil, err
+	}
+	// 4. 回显环境变量
+	if err := pty.Write("echo TDICT_TOP=$TOP; echo TDICT_ERP=$ERP; echo TDICT_COM=$COM; echo TDICT_FGLDIR=$FGLDIR; echo TDICT_FGLRESOURCEPATH=$FGLRESOURCEPATH; echo TDICT_END\r"); err != nil {
+		return nil, err
+	}
+	// 5. 解析回显
+	env := &RuntimeEnv{}
+	deadline := time.After(10 * time.Second)
+	for {
+		select {
+		case ln, ok := <-lineCh:
+			if !ok {
+				return nil, fmt.Errorf("回显 T100 环境变量时连接已关闭")
+			}
+			ln = strings.TrimSpace(ln)
+			if ln == "TDICT_END" {
+				if !env.valid() {
+					return nil, fmt.Errorf("回显未包含 TOP/ERP(区域 %s 环境脚本未加载?)", zone)
+				}
+				env.FetchedAt = time.Now()
+				return env, nil
+			}
+			if m := reTEnvKV.FindStringSubmatch(ln); m != nil {
+				switch m[1] {
+				case "TDICT_TOP":
+					env.TOP = m[2]
+				case "TDICT_ERP":
+					env.ERP = m[2]
+				case "TDICT_COM":
+					env.COM = m[2]
+				case "TDICT_FGLDIR":
+					env.FGLDIR = m[2]
+				case "TDICT_FGLRESOURCEPATH":
+					env.FGLResourcePath = m[2]
+				}
+			}
+		case <-deadline:
+			return nil, fmt.Errorf("回显 T100 环境变量超时")
+		}
+	}
+}
+
 // tenvProbeScript 拼出「加载 zone 环境并回读关键变量」的 bash 脚本。
 // 与登录 profile 链同源:chenv(区域分支)→ topenv(TOP/ERP/COM)→ topsys(模块变量);
 // 候选路径覆盖 UAT(/u3/pub)与金仓(/u1)两站点,source 失败静默跳过,最终以 echo 值为准。
@@ -53,8 +194,10 @@ echo TDICT_FGLRESOURCEPATH=$FGLRESOURCEPATH
 '`, z, z)
 }
 
-// probeTEnv 在服务器上探测登录区域对应的 T100 环境变量
-func probeTEnv(conn *SSHConn, zone string) (*RuntimeEnv, error) {
+// probeTEnvScript 旧版 exec 通道探针(选项号直接当 ZONE 变量用,仅适用于菜单码与
+// ZONE 值重合的站点,如 109 的 35/36;恒烁类站点菜单码≠ZONE 字符串,此路径会失败)。
+// 保留作登录式探针失败时的兜底。
+func probeTEnvScript(conn *SSHConn, zone string) (*RuntimeEnv, error) {
 	script := tenvProbeScript(zone)
 	if script == "" {
 		return nil, fmt.Errorf("区域代码非法: %q", zone)

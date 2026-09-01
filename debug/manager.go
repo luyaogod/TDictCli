@@ -39,9 +39,10 @@ func NewManager(cfg *Config) *Manager {
 }
 
 // getRuntimeEnv 取 T100 动态环境:缓存命中直接返回;未命中(或过期)探针一次并缓存。
-// 失败返回 nil,调用方回退静态配置。key 按 服务器+账号+区域 区分,换环境互不污染。
+// 失败返回 nil,调用方回退静态配置。key 按 服务器+账号+区域 区分(用连接的真实 host,
+// 覆盖/多环境时不受 active 环境影响),换环境互不污染。
 func (m *Manager) getRuntimeEnv(conn *SSHConn, zone string) *RuntimeEnv {
-	key := m.cfg.SSH.Host + "|" + m.cfg.SSH.User + "|" + zone
+	key := conn.cfg.Host + "|" + conn.cfg.User + "|" + zone
 	m.envMu.Lock()
 	if c, ok := m.envCache[key]; ok && time.Since(c.at) < 5*time.Minute && c.env.valid() {
 		m.envMu.Unlock()
@@ -165,8 +166,14 @@ func (m *Manager) resolveJobWith(cfg *Config, module, job string) (mod, prog, la
 	if zone == "" {
 		zone = "36"
 	}
-	// 动态路径(登录区域 → 环境脚本):探针+缓存,失败静默用静态配置兜底
-	m.ensureRuntimeEnv(conn)
+	// 动态路径(登录区域 → 环境脚本):按本次启动的区域探针+缓存(覆盖/多环境时不用
+	// 全局 active 区域),结果写入 cfg.Runtime——预会话模块解析/42r 校验直接用真实路径。
+	// 失败静默,后续用静态配置兜底
+	if cfg.Runtime == nil || !cfg.Runtime.valid() {
+		if env := m.getRuntimeEnv(conn, zone); env != nil {
+			cfg.Runtime = env
+		}
+	}
 	// 金仓:探测实例要素后连库解析;Oracle:直接用 TNS
 	var kb *kbCtx
 	tns := cfg.TNSName()
