@@ -57,6 +57,9 @@ export function SettingsView() {
       // activeEnv 指向的环境不存在(历史脏数据/已删除)时视为未设置
       const names = (c.envs || []).map((e: any) => e.name)
       if (c.activeEnv && !names.includes(c.activeEnv)) setActiveEnv('')
+      // 默认选中生效环境的明细(进入设置页即展示当前生效配置)
+      const idx = names.indexOf(c.activeEnv || '')
+      if (idx >= 0) setSelEnv(idx)
     }).catch((e) => setErr(e.message))
   }, [])
 
