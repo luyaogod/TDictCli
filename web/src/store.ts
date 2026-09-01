@@ -74,6 +74,7 @@ interface Store {
   sourceDVM: string // 当前已加载源码对应的 DVM 模块文件名(无源码模块也记录,避免错文件高亮)
   currentLine: number
   loadingSource: boolean
+  lineOffset: number // 行号校准偏移:DVM 行号 - 磁盘行号(>0 时 Monaco 顶部前插 offset 行对齐协议流)
   // 源码多页签:调试页固定第一个(跟随停站),浏览页为静态打开的其它源码文件
   tabs: SrcTab[]
   activeTab: string // 'debug' | tabs[].key
@@ -94,6 +95,7 @@ interface Store {
   closeTab: (key: string) => void
   openSourceTab: (file: string, line?: number) => Promise<void>
   locate: (word: string) => Promise<{ file: string; line: number }>
+  calibrate: () => Promise<void>
   setWsTest: (p: { mode?: string; url?: string; body?: string; soap?: boolean; result?: WSTestResult | null }) => void
   runWsTest: () => Promise<void>
   loadWsLogs: (service: string, onlyFail: boolean, page?: number, startFrom?: string, startTo?: string) => Promise<void>
@@ -147,7 +149,7 @@ export const useStore = create<Store>((set, get) => ({
   wsLogSel: null, wsLogContent: null, wsLogTab: 'info', wsLogErr: '',
   wsTestMode: '3', wsTestUrl: '', wsTestBody: '', wsTestSoap: false,
   wsTestResult: null, wsTestRunning: false, wsTestErr: '', wsTestHistory: [],
-  sourceContent: '', sourcePath: '', sourceDVM: '', currentLine: 0, loadingSource: false,
+  sourceContent: '', sourcePath: '', sourceDVM: '', currentLine: 0, loadingSource: false, lineOffset: 0,
   tabs: [], activeTab: 'debug', revealReq: null,
 
   setWsConnected: (b) => set({ wsConnected: b }),
@@ -274,6 +276,30 @@ export const useStore = create<Store>((set, get) => ({
     const { sessionId } = get()
     if (!sessionId) throw new Error('无调试会话')
     return api.locate(sessionId, word)
+  },
+
+  // 行号校准:检测 fgldb(DVM)行号与磁盘源码的偏移,前插 offset 行让 Monaco 行号对齐协议流。
+  // 用户在协议流与源码对不上时主动触发(不同文件/编译版本的偏移可能不同)
+  calibrate: async () => {
+    const { sessionId, state } = get()
+    if (!sessionId) return
+    if (state !== 'stopped') {
+      get().pushTimeline({ origin: 'system', kind: 'warn', text: '行号校准:需停站后才能检测偏移' })
+      return
+    }
+    try {
+      const { offset } = await api.calibrate(sessionId)
+      if (offset < 0) {
+        get().pushTimeline({ origin: 'system', kind: 'warn', text: `行号校准:源码比编译版本多 ${-offset} 行,无法前插对齐,请在服务器重新编译或核对源码版本` })
+        return
+      }
+      set({ lineOffset: offset })
+      get().pushTimeline({ origin: 'human', kind: 'info', text: offset > 0 ? `行号校准完成:协议行号比源码多 ${offset} 行,已前插对齐` : '行号校准完成:行号无偏移' })
+      const st = get()
+      if (st.stop?.line) get().reveal('debug', st.stop.line)
+    } catch (e: any) {
+      get().pushTimeline({ origin: 'system', kind: 'warn', text: `行号校准失败: ${e.message || String(e)}` })
+    }
   },
 
   closeTab: (key) => set((st) => {
@@ -481,7 +507,8 @@ export const useStore = create<Store>((set, get) => ({
       return
     }
     // 跨文件停站:先收光标(currentLine=0)防它在旧文件上错位,源码到位后一次性落位
-    set({ loadingSource: true, currentLine: 0 })
+    // 行号偏移逐文件不同,切文件后需重新校准
+    set({ loadingSource: true, currentLine: 0, lineOffset: 0 })
     try {
       const { source } = await api.sourceByFile(sessionId, f, module)
       set({ sourceContent: source.content, sourcePath: source.path, sourceDVM: f })
@@ -683,7 +710,7 @@ export const useStore = create<Store>((set, get) => ({
     if (snapTimer) { clearInterval(snapTimer); snapTimer = undefined }
     stopHoldTimer()
     // 保留源码:会话结束后用户可能仍想翻看代码(重启/换作业时才重载)
-    set({ sessionId: null, state: '', started: false, stop: null, breakpoints: [], frames: [], adjustedBps: {}, currentLine: 0, autovars: [], selectedFrame: -1, backendDead: '', tabs: [], activeTab: 'debug', sourceContent: '', sourcePath: '', sourceDVM: '' })
+    set({ sessionId: null, state: '', started: false, stop: null, breakpoints: [], frames: [], adjustedBps: {}, currentLine: 0, autovars: [], selectedFrame: -1, backendDead: '', tabs: [], activeTab: 'debug', sourceContent: '', sourcePath: '', sourceDVM: '', lineOffset: 0 })
   },
 
   restart: async () => {
@@ -694,7 +721,7 @@ export const useStore = create<Store>((set, get) => ({
     try { await api.quit(st.sessionId) } catch { /* 忽略,直接重启 */ }
     if (snapTimer) { clearInterval(snapTimer); snapTimer = undefined }
     stopHoldTimer()
-    set({ sessionId: null, state: '', started: false, stop: null, breakpoints: [], frames: [], adjustedBps: {}, autovars: [], selectedFrame: -1, backendDead: '' })
+    set({ sessionId: null, state: '', started: false, stop: null, breakpoints: [], frames: [], adjustedBps: {}, autovars: [], selectedFrame: -1, backendDead: '', lineOffset: 0 })
     await get().launch(module, prog)
   },
 
