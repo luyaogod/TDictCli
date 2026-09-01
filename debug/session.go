@@ -207,6 +207,8 @@ type Session struct {
 	stopTimer *time.Timer
 	kaStop    func() // 停止 SSH 心跳(主动关闭连接前调用,避免误报掉线)
 	restoring bool   // 入口停站后的断点恢复进行中(对外仍报 loading)
+
+	custModule string // 转客制作业:实际启动的客制模块名(cpm/apm→cpm),空 = 标准模块
 }
 
 // NewSession 建立 SSH 连接并打开 PTY(登录与启动由 Launch 驱动)
@@ -328,7 +330,7 @@ func (s *Session) Launch(ctx context.Context) error {
 	s.startAt = time.Now()
 	s.restoring = true
 	s.mu.Unlock()
-	s.setStop(&StopInfo{Reason: "entry"})
+	s.setStop(s.entryStopInfo())
 	// print 元素上限(防 T100 大数组 print 刷爆输出,fgldeb 同款防护)
 	if _, err := s.exec("other", fmt.Sprintf("set print elements %d", s.cfg.PrintElements), waitPrompt, 10*time.Second); err != nil {
 		s.emitEvent(Event{Type: "log", Text: "set print elements 失败(不影响使用): " + err.Error()})
@@ -355,10 +357,29 @@ func (s *Session) pickLaunchDir(prog string) string {
 	cust := strings.TrimSuffix(modDir, "/"+s.Module) + "/c" + s.Module[1:]
 	out, _ := s.conn.Output(fmt.Sprintf("ls %s/42r/%s.42r 2>/dev/null", cust, prog), 10*time.Second)
 	if strings.Contains(out, prog+".42r") {
+		s.mu.Lock()
+		s.custModule = "c" + s.Module[1:] // 客制模块名(apm→cpm):DVM 停站报的就是它
+		s.mu.Unlock()
 		s.emitEvent(Event{Type: "log", Text: fmt.Sprintf("转客制作业:使用客制目录 %s", cust)})
 		return cust
 	}
 	return modDir
+}
+
+// entryStopInfo 构造入口停站:带上实际启动的源文件(标准/客制),让前端入口就加载
+// 与 DVM 一致的文件,第一次步进不再跨文件重载
+func (s *Session) entryStopInfo() *StopInfo {
+	si := &StopInfo{Reason: "entry"}
+	mod := s.Module
+	if mod == "" || !reProgName.MatchString(mod) || s.RunProg == "" {
+		return si
+	}
+	if s.custModule != "" {
+		si.File = s.custModule + "_" + s.RunProg + ".4gl" // cpm_apmt520_wf.4gl
+	} else {
+		si.File = mod + "_" + s.RunProg + ".4gl" // apm_apmt520_wf.4gl
+	}
+	return si
 }
 
 // readRuntimeEnv 在选区后的 shell 里回显关键 T100 环境变量并写入 cfg.Runtime。

@@ -472,6 +472,9 @@ export const useStore = create<Store>((set, get) => ({
       if (!rp) return
       f = `${module ? module + '_' : ''}${rp}.4gl`
       entryMode = true
+    } else if (get().stop?.reason === 'entry') {
+      // 入口停站:后端已给出真实源文件(转客制作业是 cpm_xxx.4gl),仍需定位 MAIN
+      entryMode = true
     }
     if (f === sourceDVM) {
       // 同文件:行号直接落位
