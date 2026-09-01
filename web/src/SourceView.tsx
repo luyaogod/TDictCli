@@ -121,7 +121,6 @@ export function SourceView() {
   const module = useStore((s) => s.module)
   const theme = useStore((s) => s.theme)
   const loadingSource = useStore((s) => s.loadingSource)
-  const hasContent = useStore((s) => !!s.sourceContent)
   const prog = useStore((s) => s.prog)
   // 页签
   const tabs = useStore((s) => s.tabs)
@@ -288,7 +287,7 @@ export function SourceView() {
   )
 
   const busy = isDebug
-    ? loadingSource && hasContent
+    ? loadingSource // 启动/跨文件加载期间都显示转圈(启动时无内容也转,不闪空白)
     : !!active!.loading
 
   return (
