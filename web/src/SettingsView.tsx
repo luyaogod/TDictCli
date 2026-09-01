@@ -4,7 +4,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { CircleCheck, Circle, Plus, Save, Trash2, Monitor, Server, SlidersHorizontal, Sun, Search } from 'lucide-react'
 import { api } from './api'
-import { Button, Input } from './ui'
+import { Button, Input, Separator } from './ui'
 import { useStore } from './store'
 
 interface EnvItem {
@@ -200,12 +200,16 @@ export function SettingsView() {
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
+                    {/* SSH 连接配置 */}
                     <Field label="环境名称(留空自动为主机-区域)" className="col-span-2"><Input className={cell} placeholder={`${cur.host || 'IP'}-${cur.zone || '区域'}`} value={cur.name} onChange={(e) => patchEnv(selEnv, { name: e.target.value.trim() })} /></Field>
                     <Field label="IP 主机"><Input className={cell} value={cur.host} onChange={(e) => patchEnv(selEnv, { host: e.target.value.trim() })} /></Field>
                     <Field label="端口"><Input className={cell} value={cur.port} onChange={(e) => patchEnv(selEnv, { port: Number(e.target.value) || 22 })} /></Field>
                     <Field label="登录区域"><Input className={cell} value={cur.zone} onChange={(e) => patchEnv(selEnv, { zone: e.target.value.trim() })} /></Field>
                     <Field label="账号"><Input className={cell} value={cur.user} onChange={(e) => patchEnv(selEnv, { user: e.target.value.trim() })} /></Field>
                     <Field label="密码"><Input className={cell} type="password" value={cur.password} onChange={(e) => patchEnv(selEnv, { password: e.target.value })} /></Field>
+
+                    {/* 数据库配置 */}
+                    <GroupLabel title="数据库配置" />
                     <Field label="数据库类型" className="col-span-2">
                       <div className="flex items-center gap-1.5">
                         <select className={cell} value={cur.dbType || 'oracle'}
@@ -226,9 +230,12 @@ export function SettingsView() {
                         <Field label="库名(留空自动发现)"><Input className={cell} value={cur.dbTns} onChange={(e) => patchEnv(selEnv, { dbTns: e.target.value.trim() })} /></Field>
                       </>
                     ) : (
-                      <Field label="TNS 别名(留空按区域推导)"><Input className={cell} value={cur.dbTns} onChange={(e) => patchEnv(selEnv, { dbTns: e.target.value.trim() })} /></Field>
+                      <Field label="TNS 别名(留空按区域推导)" className="col-span-2"><Input className={cell} value={cur.dbTns} onChange={(e) => patchEnv(selEnv, { dbTns: e.target.value.trim() })} /></Field>
                     )}
-                    <Field label="企业(ENT)"><Input className={cell} value={cur.dbEnt || ''} onChange={(e) => patchEnv(selEnv, { dbEnt: Number(e.target.value) || 0 })} /></Field>
+
+                    {/* 环境变量 */}
+                    <GroupLabel title="环境变量" />
+                    <Field label="企业 TOPENT(留空用选区默认)" className="col-span-2"><Input className={cell} value={cur.dbEnt || ''} onChange={(e) => patchEnv(selEnv, { dbEnt: Number(e.target.value) || 0 })} /></Field>
                   </div>
                   {probeNote && <div className="mt-2 rounded bg-sky-500/10 px-3 py-2 text-sky-700 dark:text-sky-300">{probeNote}</div>}
                   <p className="mt-2 text-muted-foreground">
@@ -281,5 +288,15 @@ function Field({ label, children, className = '' }: { label: string; children: R
       <div className="mb-1 text-muted-foreground">{label}</div>
       {children}
     </label>
+  )
+}
+
+// 分组标题 + 分隔线(VS Code 风格):占满一行,标题左侧、分隔线右侧
+function GroupLabel({ title }: { title: string }) {
+  return (
+    <div className="col-span-2 mt-1 flex items-center gap-2">
+      <span className="shrink-0 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{title}</span>
+      <Separator className="flex-1" />
+    </div>
   )
 }
