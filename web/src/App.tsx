@@ -152,6 +152,32 @@ export function App() {
     window.addEventListener('mouseup', up)
   }
 
+  // 下方面板(操作时间线/协议流)高度拖拽(记忆到 localStorage)
+  const [bottomH, setBottomH] = useState(() => {
+    const v = Number(localStorage.getItem('tdict.bottomH'))
+    return v >= 120 && v <= 600 ? v : 192
+  })
+  const onBottomResizeDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    const el = e.currentTarget
+    el.classList.add('dragging')
+    const startY = e.clientY
+    const startH = bottomH
+    let latest = startH
+    const move = (ev: MouseEvent) => {
+      latest = Math.min(600, Math.max(120, startH + (ev.clientY - startY)))
+      setBottomH(latest)
+    }
+    const up = () => {
+      el.classList.remove('dragging')
+      localStorage.setItem('tdict.bottomH', String(latest))
+      window.removeEventListener('mousemove', move)
+      window.removeEventListener('mouseup', up)
+    }
+    window.addEventListener('mousemove', move)
+    window.addEventListener('mouseup', up)
+  }
+
   // 布局:上 Toolbar / 下 StatusBar 整条;中部 = 活动栏 + [中间列(编辑区/时间线上下) + 整高右面板]
   return (
     <div className="flex h-screen flex-col bg-background text-foreground">
@@ -201,8 +227,11 @@ export function App() {
                 <SourceView />
               </div>
               {showBottom && (
-                <div className="mt-2 h-48 shrink-0">
-                  <TimelinePanel />
+                <div className="mt-2 flex shrink-0 flex-col">
+                  <div className="row-resizer mb-1" onMouseDown={onBottomResizeDown} title="拖拽调整下方面板高度" />
+                  <div style={{ height: bottomH }} className="shrink-0">
+                    <TimelinePanel />
+                  </div>
                 </div>
               )}
             </div>

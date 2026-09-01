@@ -34,6 +34,32 @@ export function WsLogView() {
 
   const doLoad = (p = 1) => void loadWsLogs(service, onlyFail, p, from, to)
 
+  // 详情面板宽度拖拽(记忆到 localStorage)
+  const [detailW, setDetailW] = useState(() => {
+    const v = Number(localStorage.getItem('tdict.wslogW'))
+    return v >= 320 && v <= 720 ? v : 460
+  })
+  const onDetailResizeDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    const el = e.currentTarget
+    el.classList.add('dragging')
+    const startX = e.clientX
+    const startW = detailW
+    let latest = startW
+    const move = (ev: MouseEvent) => {
+      latest = Math.min(720, Math.max(320, startW + (ev.clientX - startX)))
+      setDetailW(latest)
+    }
+    const up = () => {
+      el.classList.remove('dragging')
+      localStorage.setItem('tdict.wslogW', String(latest))
+      window.removeEventListener('mousemove', move)
+      window.removeEventListener('mouseup', up)
+    }
+    window.addEventListener('mousemove', move)
+    window.addEventListener('mouseup', up)
+  }
+
   return (
     <div className="flex min-h-0 flex-1 flex-col p-2 pt-1">
       {/* 工具条:服务名 + 时间范围(awsq990 QBE 同款条件)+ 仅失败 + 刷新 + 翻页 */}
@@ -82,19 +108,19 @@ export function WsLogView() {
         <div className="mb-2 shrink-0 rounded border border-red-500/20 bg-red-500/10 px-3 py-1.5 text-xs text-red-600 dark:text-red-600 dark:text-red-400">{err}</div>
       )}
 
-      {/* 左右布局:左列列表,右列详情 */}
+      {/* 左右布局:左列列表,右列详情(列宽固定,容器变窄时列表内部横向滚动) */}
       <div className="flex min-h-0 flex-1 gap-2">
-        {/* 列表 */}
+        {/* 列表:表头与行同处一个滚动容器,横向滚动时表头跟着滚不错位 */}
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-sm border border-border bg-card/60">
-          <div className="sticky top-0 flex h-7 shrink-0 items-center gap-2 border-b border-border bg-card px-2 text-[11px] font-medium text-muted-foreground">
-            <span className="w-12 shrink-0">状态</span>
-            <span className="w-44 shrink-0">服务</span>
-            <span className="w-28 shrink-0">作业</span>
-            <span className="w-32 shrink-0">开始时间</span>
-            <span className="w-16 shrink-0">耗时(s)</span>
-            <span className="min-w-0 flex-1">错误描述</span>
-          </div>
           <div className="min-h-0 flex-1 overflow-auto">
+            <div className="sticky top-0 flex h-7 items-center gap-2 border-b border-border bg-card px-2 text-[11px] font-medium text-muted-foreground">
+              <span className="w-12 shrink-0">状态</span>
+              <span className="w-44 shrink-0">服务</span>
+              <span className="w-28 shrink-0">作业</span>
+              <span className="w-32 shrink-0">开始时间</span>
+              <span className="w-16 shrink-0">耗时(s)</span>
+              <span className="min-w-0 flex-1">错误描述</span>
+            </div>
             {wsLogs.length === 0 && !loading && (
               <div className="p-4 text-center text-xs text-muted-foreground">暂无日志记录</div>
             )}
@@ -117,8 +143,11 @@ export function WsLogView() {
           </div>
         </div>
 
+        {/* 分隔条:拖拽调整详情面板宽度 */}
+        <div className="col-resizer mx-0.5 self-stretch" onMouseDown={onDetailResizeDown} title="拖拽调整详情面板宽度" />
+
         {/* 详情(右列) */}
-        <div className="flex w-[460px] shrink-0 flex-col overflow-hidden rounded-sm border border-border bg-card/60">
+        <div style={{ width: detailW }} className="flex shrink-0 flex-col overflow-hidden rounded-sm border border-border bg-card/60">
           {sel ? (
             <>
               <div className="flex h-8 shrink-0 items-center gap-1 border-b border-border px-2">
