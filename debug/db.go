@@ -152,12 +152,6 @@ func resolveDBRun(conn *SSHConn, cfg *Config) (*dbRun, error) {
 		return nil, err
 	}
 	kb := &kbCtx{ksql: env["KSQL"], port: env["KPORT"], db: env["KDB"]}
-	if cfg.DB != nil && cfg.DB.TNS != "" {
-		kb.db = cfg.DB.TNS
-	}
-	if cfg.DB != nil && cfg.DB.Port > 0 {
-		kb.port = strconv.Itoa(cfg.DB.Port)
-	}
 	return &dbRun{kb: kb, zone: cfg.Zone, tns: kb.db}, nil
 }
 
@@ -282,12 +276,6 @@ func ProbeDB(cfg *Config, ent int) (*DBReport, error) {
 			return nil, err
 		}
 		kb = &kbCtx{ksql: env["KSQL"], port: env["KPORT"], db: env["KDB"]}
-		if cfg.DB != nil && cfg.DB.TNS != "" {
-			kb.db = cfg.DB.TNS
-		}
-		if cfg.DB != nil && cfg.DB.Port > 0 {
-			kb.port = strconv.Itoa(cfg.DB.Port) // 配置显式指定端口
-		}
 		tns = kb.db
 		report.TNS = kb.db
 		report.Env = map[string]string{"ksql": kb.ksql, "port": kb.port, "database": kb.db}

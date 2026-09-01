@@ -137,11 +137,9 @@ func (c *Config) ApplyActiveEnv() {
 	}
 }
 
-// TNSName 返回数据库 TNS 别名(zone 36→t35prd,35→t35tst,31→t35dev,39→t35pth,t→topprd)
+// TNSName 返回数据库 TNS 别名(zone 36→t35prd,35→t35tst,31→t35dev,39→t35pth,t→topprd)。
+// 完全自动:按登录区域推导,不接受手填覆盖(T100 环境约定)
 func (c *Config) TNSName() string {
-	if c.DB != nil && c.DB.TNS != "" {
-		return c.DB.TNS
-	}
 	switch c.Zone {
 	case "31":
 		return "t35dev"
