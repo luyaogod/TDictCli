@@ -339,12 +339,12 @@ export function SourceView() {
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         )}
-        {isDebug && !sourceContent && (
+        {/* 调试页:停站且确无源码时提示(启动/加载期间只显示转圈,不打扰) */}
+        {isDebug && !sourceContent && !busy && state === 'stopped' && stop?.file && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <div className="rounded-sm border border-border bg-card/90 px-4 py-3 text-sm text-muted-foreground">
-              {state === 'stopped' && stop?.file
-                ? <>该模块无源码(仅 42m),当前停站:<span className="text-foreground">{stop.file}:{stop.line}</span><br /><span className="text-xs">可继续用变量监视/调用栈分析,或继续运行回到有源码的模块</span></>
-                : '等待停站后加载源码…'}
+              该模块无源码(仅 42m),当前停站:<span className="text-foreground">{stop.file}:{stop.line}</span><br />
+              <span className="text-xs">可继续用变量监视/调用栈分析,或继续运行回到有源码的模块</span>
             </div>
           </div>
         )}
