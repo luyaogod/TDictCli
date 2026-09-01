@@ -73,6 +73,7 @@ type Config struct {
 	DBS             []NamedDB  `json:"dbs,omitempty"`  // (兼容保留)旧多数据库列表
 	Envs            []NamedEnv `json:"envs,omitempty"` // 服务器环境列表(SSH+启动参数,设置页维护)
 	ActiveEnv       string     `json:"activeEnv,omitempty"` // 当前生效的环境名;空=用顶层默认字段
+	Runtime         *RuntimeEnv `json:"-"` // 登录后动态获取的 T100 路径(探针/选区回显);nil=用静态配置兜底
 }
 
 // SSHByName 按名取 SSH 连接:先查旧 sshs 列表,再查 envs(取其 SSH 部分);
@@ -116,16 +117,11 @@ func (c *Config) ApplyActiveEnv() {
 				c.SSH.Port = 22
 			}
 		}
-		if e.Zone != "" || e.TopDir != "" {
-			// 换环境 = 换服务器,模块根目录跟随新 TopDir 重推(fillDefaults 只在空时推导)
-			c.ModuleRoots = nil
-		}
 		if e.Zone != "" {
 			c.Zone = e.Zone
 		}
-		if e.TopDir != "" {
-			c.TopDir = e.TopDir
-		}
+		// 换环境 = 换服务器/区域:清动态路径,下次探针/选区回显重新获取
+		c.Runtime = nil
 		if e.LaunchArgs != "" {
 			c.LaunchArgs = e.LaunchArgs
 		}
@@ -214,8 +210,25 @@ func (c *Config) fillDefaults() {
 	}
 }
 
+// TopDirActual 返回生效的区域顶级目录:动态获取(登录后 TOP)优先,静态配置兜底
+func (c *Config) TopDirActual() string {
+	if c.Runtime != nil && c.Runtime.TOP != "" {
+		return c.Runtime.TOP
+	}
+	return c.TopDir
+}
+
+// ModuleRootsActual 返回生效的源码查找根目录:动态获取(ERP/COM)优先,静态配置兜底
+func (c *Config) ModuleRootsActual() []string {
+	if c.Runtime != nil && c.Runtime.ERP != "" {
+		// com/wss 是 WebService 程序(wssp* / awsp*)的专用模块目录
+		return []string{c.Runtime.ERP, c.Runtime.COM, c.Runtime.COM + "/wss"}
+	}
+	return c.ModuleRoots
+}
+
 // Top 返回区域顶级目录(去尾斜杠)
-func (c *Config) Top() string { return c.TopDir }
+func (c *Config) Top() string { return c.TopDirActual() }
 
 // CloneWithZone 复制配置并覆盖区域(启动参数 --zone 用):
 // 连带推导 TopDir 与 ModuleRoots,其余字段原样共享
@@ -223,6 +236,7 @@ func (c *Config) CloneWithZone(zone string) *Config {
 	c2 := *c
 	if zone != "" && zone != c.Zone {
 		c2.Zone = zone
+		c2.Runtime = nil // 区域变了,动态路径需重新获取
 		if td := zoneTopDir[zone]; td != "" {
 			c2.TopDir = td
 			// com/wss 是 WebService 程序的专用模块目录(与 fillDefaults 同规则)
@@ -234,24 +248,26 @@ func (c *Config) CloneWithZone(zone string) *Config {
 
 // ModuleDir 返回模块主目录,如 /u1/t35prd/erp/asf;wss 模块挂载在 com 下
 func (c *Config) ModuleDir(module string) string {
+	top := c.TopDirActual()
 	if module == "wss" {
-		return c.TopDir + "/com/wss"
+		return top + "/com/wss"
 	}
-	return c.TopDir + "/erp/" + module
+	return top + "/erp/" + module
 }
 
 // FGLSOURCEPath 返回 launch 前 export 的源码搜索路径
 func (c *Config) FGLSOURCEPath(module string) string {
-	base := c.TopDir + "/erp/" + module
+	top := c.TopDirActual()
+	base := top + "/erp/" + module
 	if module == "wss" {
-		base = c.TopDir + "/com/wss"
+		base = top + "/com/wss"
 	}
 	dirs := []string{
 		base + "/4gl",
 		base + "/42m",
-		c.TopDir + "/com/lib/42m",
-		c.TopDir + "/com/sub/42m",
-		c.TopDir + "/com/qry/42m",
+		top + "/com/lib/42m",
+		top + "/com/sub/42m",
+		top + "/com/qry/42m",
 	}
 	out := ""
 	for i, d := range dirs {

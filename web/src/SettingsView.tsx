@@ -14,7 +14,6 @@ interface EnvItem {
   user: string
   password: string
   zone: string
-  topDir: string
   launchArgs: string
   watchdogSeconds: number
   dbType: string // oracle | kingbase
@@ -54,7 +53,7 @@ export function SettingsView() {
       setActiveEnv(c.activeEnv || '')
       setEnvs((c.envs || []).map((e: any) => ({
         name: e.name || '', host: e.host || '', port: e.port || 22, user: e.user || '', password: e.password || '',
-        zone: e.zone || '', topDir: e.topDir || '', launchArgs: e.launchArgs || '', watchdogSeconds: e.watchdogSeconds || 0,
+        zone: e.zone || '', launchArgs: e.launchArgs || '', watchdogSeconds: e.watchdogSeconds || 0,
         dbType: e.db?.type || 'oracle', dbTns: e.db?.tns || '', dbPort: e.db?.port || 0, dbEnt: e.db?.ent || 0,
       })))
       // activeEnv 指向的环境不存在(历史脏数据/已删除)时视为未设置
@@ -120,7 +119,7 @@ export function SettingsView() {
     }
   }
   const addEnv = () => {
-    setEnvs([...envs, { name: '', host: '', port: 22, user: '', password: '', zone: '35', topDir: '', launchArgs: '', watchdogSeconds: 0, dbType: 'oracle', dbTns: '', dbPort: 0, dbEnt: 0 }])
+    setEnvs([...envs, { name: '', host: '', port: 22, user: '', password: '', zone: '35', launchArgs: '', watchdogSeconds: 0, dbType: 'oracle', dbTns: '', dbPort: 0, dbEnt: 0 }])
     setSelEnv(envs.length)
   }
 
@@ -233,7 +232,8 @@ export function SettingsView() {
                   </div>
                   {probeNote && <div className="mt-2 rounded bg-sky-500/10 px-3 py-2 text-sky-700 dark:text-sky-300">{probeNote}</div>}
                   <p className="mt-2 text-muted-foreground">
-                    填好 SSH(主机/账号/密码)与数据库类型后点「自动获取」,连接要素从服务器探测回填;获取不到可手动填写。start --ssh 按环境名引用,清空名称恢复自动「主机-区域」。
+                    T100 目录与源码路径按「登录区域」在服务器上自动获取(与标准调试同源),无需配置。
+                    填好 SSH 与数据库类型后点「自动获取」,数据库连接要素从服务器探测回填;获取不到可手动填写。start --ssh 按环境名引用,清空名称恢复自动「主机-区域」。
                   </p>
                 </section>
               )}

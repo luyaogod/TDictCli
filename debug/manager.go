@@ -3,6 +3,7 @@ package debug
 import (
 	"fmt"
 	"io"
+	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -18,6 +19,15 @@ type Manager struct {
 
 	subMu sync.Mutex
 	subs  map[chan Event]string
+
+	// T100 动态环境缓存(登录区域 → 路径),TTL 5 分钟;探针失败不缓存
+	envMu    sync.Mutex
+	envCache map[string]cachedEnv
+}
+
+type cachedEnv struct {
+	env *RuntimeEnv
+	at  time.Time
 }
 
 func NewManager(cfg *Config) *Manager {
@@ -25,6 +35,42 @@ func NewManager(cfg *Config) *Manager {
 		cfg:      cfg,
 		sessions: map[string]*Session{},
 		subs:     map[chan Event]string{},
+		envCache: map[string]cachedEnv{},
+	}
+}
+
+// getRuntimeEnv 取 T100 动态环境:缓存命中直接返回;未命中(或过期)探针一次并缓存。
+// 失败返回 nil,调用方回退静态配置。key 按 服务器+账号+区域 区分,换环境互不污染。
+func (m *Manager) getRuntimeEnv(conn *SSHConn, zone string) *RuntimeEnv {
+	key := m.cfg.SSH.Host + "|" + m.cfg.SSH.User + "|" + zone
+	m.envMu.Lock()
+	if c, ok := m.envCache[key]; ok && time.Since(c.at) < 5*time.Minute && c.env.valid() {
+		m.envMu.Unlock()
+		return c.env
+	}
+	m.envMu.Unlock()
+	env, err := probeTEnv(conn, zone)
+	if err != nil {
+		log.Printf("[tenv] probe zone=%s failed: %v", zone, err)
+		return nil
+	}
+	m.envMu.Lock()
+	m.envCache[key] = cachedEnv{env: env, at: time.Now()}
+	m.envMu.Unlock()
+	return env
+}
+
+// ensureRuntimeEnv 确保 cfg.Runtime 有动态路径(探针+缓存);失败静默,用静态配置兜底
+func (m *Manager) ensureRuntimeEnv(conn *SSHConn) {
+	if m.cfg.Runtime != nil && m.cfg.Runtime.valid() {
+		return
+	}
+	zone := m.cfg.Zone
+	if zone == "" {
+		zone = "36"
+	}
+	if env := m.getRuntimeEnv(conn, zone); env != nil {
+		m.cfg.Runtime = env
 	}
 }
 
@@ -120,6 +166,8 @@ func (m *Manager) resolveJobWith(cfg *Config, module, job string) (mod, prog, la
 	if zone == "" {
 		zone = "36"
 	}
+	// 动态路径(登录区域 → 环境脚本):探针+缓存,失败静默用静态配置兜底
+	m.ensureRuntimeEnv(conn)
 	// 金仓:探测实例要素后连库解析;Oracle:直接用 TNS
 	var kb *kbCtx
 	tns := cfg.TNSName()
@@ -151,9 +199,9 @@ func (m *Manager) resolveJobWith(cfg *Config, module, job string) (mod, prog, la
 		return module, p, launchRef, extra // 用户显式指定模块:尊重指定,仅采纳实体程序
 	}
 	mod = strings.ToLower(jr.Module)
-	if jr.Module == "" || jr.Module == "-" || !modHas42r(conn, cfg.TopDir, mod, p) {
+	if jr.Module == "" || jr.Module == "-" || !modHas42r(conn, cfg.TopDirActual(), mod, p) {
 		// 模块码缺失或目录对不上:全模块搜索实体程序的 42r;0/多命中留给会话内兜底报错
-		if cands := searchModule42r(conn, cfg.ModuleRoots, p); len(cands) == 1 {
+		if cands := searchModule42r(conn, cfg.ModuleRootsActual(), p); len(cands) == 1 {
 			mod = cands[0]
 		} else {
 			mod = ""
@@ -296,13 +344,15 @@ func (m *Manager) SourcePreview(module, prog string) (*SourceFile, error) {
 		return nil, fmt.Errorf("SSH 连接失败: %w", err)
 	}
 	defer conn.Close()
+	// 动态路径(登录区域 → 环境脚本):探针+缓存,失败静默用静态配置兜底
+	m.ensureRuntimeEnv(conn)
 	cl, err := conn.SFTP()
 	if err != nil {
 		return nil, err
 	}
 	dvmFile := module + "_" + prog + ".4gl"
 	var lastErr error
-	for _, p := range sourceCandidatePaths(m.cfg.ModuleRoots, module, dvmFile) {
+	for _, p := range sourceCandidatePaths(m.cfg.ModuleRootsActual(), module, dvmFile) {
 		f, err := cl.Open(p)
 		if err != nil {
 			lastErr = err

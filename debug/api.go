@@ -131,7 +131,7 @@ func (s *Server) hStatus(w http.ResponseWriter, r *http.Request) {
 		"server":  "tdict-debug",
 		"ssh":     s.cfg.SSH.Host,
 		"zone":    s.cfg.Zone,
-		"topDir":  s.cfg.TopDir,
+		"topDir":  s.cfg.TopDirActual(),
 		"listen":  s.cfg.Listen,
 		"watchdog": s.cfg.WatchdogSeconds,
 	})
