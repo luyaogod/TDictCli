@@ -47,7 +47,8 @@ export function WsLogView() {
     const startW = detailW
     let latest = startW
     const move = (ev: MouseEvent) => {
-      latest = Math.min(720, Math.max(320, startW + (ev.clientX - startX)))
+      // 分隔线跟手:向左拖 = 详情面板变宽(与 VS Code 侧边栏一致)
+      latest = Math.min(720, Math.max(320, startW - (ev.clientX - startX)))
       setDetailW(latest)
     }
     const up = () => {
