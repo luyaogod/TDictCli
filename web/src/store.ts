@@ -34,6 +34,7 @@ interface Store {
   stop: StopInfo | null
   holdingSeconds: number
   launching: boolean
+  launchError: string // 启动失败显眼报错(编辑器外红色横幅,空 = 正常)
   // UI 面板显隐
   showRight: boolean
   showBottom: boolean
@@ -89,6 +90,7 @@ interface Store {
   pushTimeline: (item: Omit<TimelineItem, 'time'>) => void
   onEvent: (ev: Event) => void
   setView: (v: 'debug' | 'wslogs' | 'wstest' | 'settings') => void
+  setLaunchError: (msg: string) => void
   setTheme: (t: 'dark' | 'light') => void
   setActiveTab: (key: string) => void
   reveal: (key: string, line: number) => void
@@ -139,7 +141,7 @@ function jumpToMain(set: (p: Partial<Store>) => void, get: () => Store) {
 export const useStore = create<Store>((set, get) => ({
   wsConnected: false,
   sessionId: null, module: '', prog: '', state: '', started: false, stop: null, holdingSeconds: 0,
-  launching: false, showRight: true, showBottom: true,
+  launching: false, launchError: '', showRight: true, showBottom: true,
   breakpoints: [], adjustedBps: {}, frames: [], watches: [], autovars: [], selectedFrame: -1, backendDead: '',
   timeline: [], rawLog: [],
   runProg: '',
@@ -211,6 +213,8 @@ export const useStore = create<Store>((set, get) => ({
           st.pushTimeline({ origin: 'system', kind: 'warn', text: '会话结束' })
           if (snapTimer) { clearInterval(snapTimer); snapTimer = undefined }
           stopHoldTimer()
+          // 会话结束(含启动失败被后端终结):编辑器退出加载态,不再转圈
+          set({ loadingSource: false, currentLine: 0 })
         }
         return
       case 'dead':
@@ -252,13 +256,24 @@ export const useStore = create<Store>((set, get) => ({
       case 'ai_action':
         st.pushTimeline({ origin: 'ai', kind: 'command', text: ev.text || '' })
         return
-      case 'log':
-        st.pushTimeline({ origin: 'system', kind: 'info', text: ev.text || '' })
+      case 'log': {
+        const text = ev.text || ''
+        st.pushTimeline({ origin: 'system', kind: 'info', text })
+        // 后端异步启动失败(HTTP 已返回 200,失败发生在 goroutine):会话随即被移除,
+        // 必须立刻退出加载态、清掉会话引用并给出显眼报错,否则编辑器永久转圈、
+        // 运行区还停留在"会话进行中"而无法再次启动
+        if (text.startsWith('启动失败')) {
+          if (snapTimer) { clearInterval(snapTimer); snapTimer = undefined }
+          stopHoldTimer()
+          set({ launchError: text, sessionId: null, state: '', loadingSource: false, stop: null, currentLine: 0 })
+        }
         return
+      }
     }
   },
 
   setView: (v) => set({ view: v }),
+  setLaunchError: (msg) => set({ launchError: msg }),
   setTheme: (t) => {
     localStorage.setItem('tdict.theme', t)
     document.documentElement.classList.toggle('dark', t === 'dark')
@@ -390,7 +405,7 @@ export const useStore = create<Store>((set, get) => ({
 
   replayDebug: async (item) => {
     // 立即切到 debug 页并进入 loading 态,再发启动请求(用户点了就看到页面在动)
-    set({ view: 'debug', wsLogErr: '', launching: true, state: 'loading' })
+    set({ view: 'debug', wsLogErr: '', launching: true, launchError: '', state: 'loading' })
     try {
       // 已有会话在跑:先结束它(一次只能调一个作业)
       const old = get().sessionId
@@ -410,14 +425,14 @@ export const useStore = create<Store>((set, get) => ({
       // 入口停站前保持加载态,源码由会话路径加载并定位 MAIN
       pollUntilStopped(set, get)
     } catch (e: any) {
-      set({ wsLogErr: e.message || String(e), state: '' })
+      set({ wsLogErr: e.message || String(e), state: '', launchError: `启动失败: ${e.message}`, sessionId: null, loadingSource: false, stop: null })
     } finally {
       set({ launching: false })
     }
   },
 
   launch: async (module, prog) => {
-    set({ launching: true, timeline: [], rawLog: [], watches: [], autovars: [], backendDead: '', selectedFrame: -1 })
+    set({ launching: true, launchError: '', timeline: [], rawLog: [], watches: [], autovars: [], backendDead: '', selectedFrame: -1 })
     // 启动调试:编辑器进入加载态(转圈),入口停站定位 MAIN 后一次性显示源码,
     // 避免启动过程中内容跳来跳去
     set({ sourceContent: '', sourcePath: '', sourceDVM: '', currentLine: 0, loadingSource: true })
@@ -431,7 +446,9 @@ export const useStore = create<Store>((set, get) => ({
       // 轮询直到入口停站(源码由会话路径加载并定位 MAIN)
       pollUntilStopped(set, get)
     } catch (e: any) {
+      // 同步失败(如 prog 缺失/配置非法):HTTP 直接报错,同样必须退出加载态
       get().pushTimeline({ origin: 'system', kind: 'warn', text: `启动失败: ${e.message}` })
+      set({ launchError: `启动失败: ${e.message}`, sessionId: null, state: '', loadingSource: false, stop: null, currentLine: 0 })
       throw e
     } finally {
       set({ launching: false })
@@ -774,7 +791,21 @@ function pollUntilStopped(set: (p: Partial<Store>) => void, get: () => Store) {
         }
       }
       if (snap.state === 'exit') { clearInterval(snapTimer!); snapTimer = undefined }
-    } catch { /* ignore */ }
+    } catch {
+      // 快照失败可能因为会话已被移除(启动失败/异常退出且 WS 事件未送达):
+      // 确认会话确实消失后退出加载态并报错,避免永久转圈;瞬时网络错误则继续轮询
+      const st = get()
+      if (!st.sessionId) { if (snapTimer) { clearInterval(snapTimer); snapTimer = undefined } return }
+      try {
+        const { sessions } = await api.list()
+        if (!sessions.some((x) => x.id === st.sessionId)) {
+          if (snapTimer) { clearInterval(snapTimer); snapTimer = undefined }
+          stopHoldTimer()
+          set({ sessionId: null, state: '', loadingSource: false, stop: null,
+            launchError: st.launchError || '调试会话启动失败(会话已消失),请检查作业名或服务器状态' })
+        }
+      } catch { /* list 也失败:保持轮询,等服务恢复 */ }
+    }
   }, 1000)
 }
 
