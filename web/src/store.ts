@@ -755,10 +755,6 @@ function pollUntilStopped(set: (p: Partial<Store>) => void, get: () => Store) {
       })
       if (nl && snap.stop?.file) void get().refreshSource(snap.stop.file, snap.stop.line)
       else if (snap.state === 'stopped' && snap.stop?.line && !nl) get().reveal('debug', snap.stop.line)
-      // 源码尽早显示:不等停站,会话就绪(模块已解析)就按 entryMode 拉取,断点也随之可见
-      if (!get().sourceContent && snap.module && snap.state !== 'exit') {
-        void get().refreshSource()
-      }
       if (snap.state === 'stopped') {
         clearInterval(snapTimer!)
         snapTimer = undefined
