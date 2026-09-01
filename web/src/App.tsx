@@ -165,7 +165,8 @@ export function App() {
     const startH = bottomH
     let latest = startH
     const move = (ev: MouseEvent) => {
-      latest = Math.min(600, Math.max(120, startH + (ev.clientY - startY)))
+      // 分隔线跟手:向上拖 = 面板变高(与 VS Code 底部面板一致)
+      latest = Math.min(600, Math.max(120, startH - (ev.clientY - startY)))
       setBottomH(latest)
     }
     const up = () => {
