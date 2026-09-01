@@ -505,8 +505,12 @@ export const useStore = create<Store>((set, get) => ({
       const { source } = await api.sourceByFile(sessionId, f, module)
       set({ sourceContent: source.content, sourcePath: source.path, sourceDVM: f })
       const st = get()
-      if (line) set({ currentLine: line })
-      else if (entryMode && st.currentLine === 0) {
+      if (line) {
+        set({ currentLine: line })
+        // 跨文件停站(F11 步入/断点/运行到其它文件):源码到位后发定位信号,
+        // 由 reveal effect 滚动视口到停站行;入口停站走下方 MAIN 定位
+        if (!entryMode) get().reveal('debug', line)
+      } else if (entryMode && st.currentLine === 0) {
         jumpToMain(set, get)
         st.pushTimeline({ origin: 'system', kind: 'info', text: '入口停站:已显示源码,点击行号下断点后点「继续 F5」开始' })
       }
