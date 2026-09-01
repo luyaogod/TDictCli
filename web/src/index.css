@@ -149,6 +149,17 @@ body { margin: 0; background: var(--background); }
 .col-resizer.dragging {
   background: #3b82f680;
 }
+.row-resizer {
+  cursor: row-resize;
+  flex: 0 0 4px;
+  border-radius: 2px;
+  background: transparent;
+  transition: background 0.15s;
+}
+.row-resizer:hover,
+.row-resizer.dragging {
+  background: #3b82f680;
+}
 
 /* Ctrl+悬停函数链接样式(类 VS Code):蓝字+下划线+手形光标 */
 .fn-link {

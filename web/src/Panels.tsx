@@ -360,7 +360,7 @@ function BpsBody() {
 }
 
 export function TimelinePanel() {
-  const [tab, setTab] = useState<'timeline' | 'raw'>('timeline')
+  const [tab, setTab] = useState<'timeline' | 'raw'>('raw')
   const timeline = useStore((s) => s.timeline)
   const rawLog = useStore((s) => s.rawLog)
   const sessionId = useStore((s) => s.sessionId)
@@ -405,16 +405,16 @@ export function TimelinePanel() {
     <div className="flex h-full min-h-0 flex-col rounded-sm border border-border bg-card/60">
       <div className="flex h-8 shrink-0 items-center gap-2 border-b border-border px-2">
         <button
-          className={`rounded px-2 py-0.5 text-xs ${tab === 'timeline' ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-          onClick={() => setTab('timeline')}
-        >
-          操作时间线
-        </button>
-        <button
           className={`rounded px-2 py-0.5 text-xs ${tab === 'raw' ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
           onClick={() => setTab('raw')}
         >
           原始协议流 ({rawLog.length})
+        </button>
+        <button
+          className={`rounded px-2 py-0.5 text-xs ${tab === 'timeline' ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+          onClick={() => setTab('timeline')}
+        >
+          操作时间线
         </button>
       </div>
       <div ref={bodyRef} className="min-h-0 flex-1 overflow-auto p-1 font-mono text-[11px] leading-5">

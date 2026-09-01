@@ -104,14 +104,14 @@ export function Toolbar() {
       <div className="flex h-8 shrink-0 items-center gap-2 bg-background pl-12 pr-3">
         {/* 作业编号已由源码区调试页签展示,不再重复 */}
 
-        {/* 右上角:收展右方/下方面板 */}
+        {/* 右上角:收展下方面板 / 右方面板 */}
         <div className="ml-auto inline-flex items-center gap-0.5">
-          <ToolIcon icon={showRight ? SquareChevronRight : SquareChevronLeft}
-            label={showRight ? '收起右方面板' : '展开右方面板'} color="text-muted-foreground"
-            onClick={() => void toggleRight()} />
           <ToolIcon icon={showBottom ? SquareChevronDown : SquareChevronUp}
             label={showBottom ? '收起下方面板' : '展开下方面板'} color="text-muted-foreground"
             onClick={() => void toggleBottom()} />
+          <ToolIcon icon={showRight ? SquareChevronRight : SquareChevronLeft}
+            label={showRight ? '收起右方面板' : '展开右方面板'} color="text-muted-foreground"
+            onClick={() => void toggleRight()} />
         </div>
       </div>
 
