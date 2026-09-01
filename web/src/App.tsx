@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { RotateCcw, WifiOff, Bug, Globe, FlaskConical, Settings, type LucideIcon } from 'lucide-react'
 import { connectWS, useStore } from './store'
 import { Toolbar } from './Toolbar'
-import { SourceView } from './SourceView'
+import { SourceView, editorRef } from './SourceView'
 import { RightPanels, TimelinePanel } from './Panels'
 import { WsLogView } from './WsLogView'
 import { WsTestView } from './WsTestView'
@@ -21,6 +21,20 @@ function ActivityIcon({ icon: Icon, label, active, onClick }: {
       }`}>
       <Icon className="h-5 w-5" />
     </button>
+  )
+}
+
+// 单页面应用 keep-alive:视图首次访问后常驻挂载,切换只改 display,不卸载重挂。
+// 编辑器(Monaco)实例、源码页签、表单输入、滚动位置等状态全部保留,切换零闪烁、
+// 零重载——这正是"切换页面不像网页那样重新加载"的实现。
+function ViewPane({ show, children }: { show: boolean; children: ReactNode }) {
+  const [mounted, setMounted] = useState(show)
+  useEffect(() => { if (show) setMounted(true) }, [show])
+  if (!mounted) return null
+  return (
+    <div className={`min-h-0 min-w-0 flex-1 ${show ? 'flex' : 'hidden'}`}>
+      {children}
+    </div>
   )
 }
 
@@ -107,6 +121,14 @@ export function App() {
     const v = Number(localStorage.getItem('tdict.panelW'))
     return v >= 240 && v <= 640 ? v : 320
   })
+  // keep-alive 视图切换下,Monaco 容器被 display:none 期间 ResizeObserver 会拿到 0 尺寸;
+  // 切回调试视图后补一次 layout(),确保编辑器渲染与视口不残留错位
+  useEffect(() => {
+    if (view !== 'debug') return
+    const t = setTimeout(() => editorRef.current?.layout(), 60)
+    return () => clearTimeout(t)
+  }, [view])
+
   const onResizeDown = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault()
     const el = e.currentTarget
@@ -156,16 +178,11 @@ export function App() {
           <ActivityIcon icon={FlaskConical} label="服务测试" active={view === 'wstest'} onClick={() => setView('wstest')} />
           <ActivityIcon icon={Settings} label="设置" active={view === 'settings'} onClick={() => setView('settings')} />
         </div>
-        {view === 'wslogs' ? (
-          <WsLogView />
-        ) : view === 'wstest' ? (
-          <WsTestView />
-        ) : view === 'settings' ? (
-          <SettingsView />
-        ) : (
-          /* 中间列(编辑区 + 时间线)与整高右面板左右并排
+        {/* 四个视图全部 keep-alive:首次访问后常驻挂载,切换仅改 display */}
+        <ViewPane show={view === 'debug'}>
+          {/* 中间列(编辑区 + 时间线)与整高右面板左右并排
              min-w-0 + overflow-hidden:Monaco 会给编辑器写内联像素宽度,
-             否则 flex 最小宽度被钉死,收起再展开时编辑区不回缩、右面板被挤出屏幕 */
+             否则 flex 最小宽度被钉死,收起再展开时编辑区不回缩、右面板被挤出屏幕 */}
           <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden p-2 pt-1">
             <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
               <div className="min-h-0 flex-1 overflow-hidden rounded-sm border border-border">
@@ -186,7 +203,16 @@ export function App() {
               </>
             )}
           </div>
-        )}
+        </ViewPane>
+        <ViewPane show={view === 'wslogs'}>
+          <WsLogView />
+        </ViewPane>
+        <ViewPane show={view === 'wstest'}>
+          <WsTestView />
+        </ViewPane>
+        <ViewPane show={view === 'settings'}>
+          <SettingsView />
+        </ViewPane>
       </div>
       <StatusBar />
     </div>
