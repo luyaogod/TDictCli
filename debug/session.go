@@ -892,8 +892,11 @@ func (s *Session) CalibrateOffset() (int, error) {
 		return 0, fmt.Errorf("需停站后才能校准(当前未停站)")
 	}
 	st := s.Cur()
-	if st.File == "" || len(st.Source) == 0 {
-		return 0, fmt.Errorf("当前停站没有源码上下文,无法校准")
+	if st.File == "" {
+		return 0, fmt.Errorf("当前停站缺少源文件信息(如人工中断),请步进到具体代码行后再校准")
+	}
+	if len(st.Source) == 0 {
+		return 0, fmt.Errorf("当前停站没有源码上下文(仅紧凑停站),请步进后再校准")
 	}
 	// 参考行:IsCur 优先;否则取第一个非空文本行
 	ref := SourceLine{}
@@ -1205,6 +1208,9 @@ func (s *Session) onLine(ln string) {
 				num, _ := strconv.Atoi(m[1])
 				line, _ := strconv.Atoi(m[4])
 				collect = &stopCollect{reason: "breakpoint", bpnum: num, fn: m[2], file: m[3], line: line}
+			} else if reSource.MatchString(ln) {
+				// 源码块行(如 `-> 1532 DEFER INTERRUPT`):行内容含关键字,
+				// 不是人工中断标记,不能开启中断收集
 			} else if reInterrupt.MatchString(ln) {
 				collect = &stopCollect{reason: "interrupt"}
 			} else if state == StateRunning && !reFrame.MatchString(ln) {
