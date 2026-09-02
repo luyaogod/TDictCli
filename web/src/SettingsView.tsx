@@ -1,8 +1,8 @@
 // 设置页:VS Code 式左侧一级分类(外观/环境/高级)。
 // 「环境」是核心:SSH 连接 + 该环境专属启动参数(zone/launchArgs/库)成组维护,
 // 列表单选「设为生效」→ 后端把该环境合并到顶层字段作为当前默认配置。
-import { useEffect, useState, type ReactNode } from 'react'
-import { CircleCheck, Circle, Plus, Save, Trash2, Monitor, Server, SlidersHorizontal, Sun, Search } from 'lucide-react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { CircleCheck, Circle, Plus, Trash2, Monitor, Server, SlidersHorizontal, Sun, Search, Eye, EyeOff } from 'lucide-react'
 import { api } from './api'
 import { Button, Input, Separator } from './ui'
 import { useStore } from './store'
@@ -39,11 +39,15 @@ export function SettingsView() {
   const [envs, setEnvs] = useState<EnvItem[]>([])
   const [activeEnv, setActiveEnv] = useState('')
   const [selEnv, setSelEnv] = useState(0) // 列表浏览选中项(≠ 生效项)
-  const [msg, setMsg] = useState('')
   const [err, setErr] = useState('')
-  const [saving, setSaving] = useState(false)
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const [showPwd, setShowPwd] = useState(false) // 密码明文/密文切换
   const [probing, setProbing] = useState(false)
   const [probeNote, setProbeNote] = useState('')
+  // 自动保存:待写快照 ref + 串行落盘 + 短防抖(避免连续键入时并发 PUT 乱序)
+  const latestRef = useRef<{ cfg: any; envs: EnvItem[]; active: string } | null>(null)
+  const busyRef = useRef(false)
+  const timerRef = useRef<number | undefined>(undefined)
 
   useEffect(() => {
     api.settings().then((c) => {
@@ -63,40 +67,84 @@ export function SettingsView() {
     }).catch((e) => setErr(e.message))
   }, [])
 
-  const save = async (nextActive?: string) => {
-    if (!cfg) return
-    setSaving(true); setMsg(''); setErr('')
+  // ---- 即时保存:字段修改后短防抖自动整包写回并热生效,无需「保存」按钮 ----
+  const envName = (e: EnvItem) => e.name || `${e.host}-${e.zone}`.replace(/-$/, '')
+  const persist = async (c: any, e: EnvItem[], a: string) => {
+    const next = {
+      ...c,
+      activeEnv: a,
+      envs: e.filter((x) => x.host).map((x) => ({
+        name: envName(x), host: x.host, port: x.port || 22, user: x.user, password: x.password,
+        zone: x.zone,
+        db: (x.dbEnt > 0 || x.dbType === 'kingbase') ? { type: x.dbType || 'oracle', ent: x.dbEnt || 0 } : undefined,
+      })),
+    }
+    await api.saveSettings(next)
+    setCfg(next)
+    // 自动名(host-zone)回写列表,让生效对勾与显示名称和存储一致;手填名保留
+    setEnvs((prev) => prev.map((x) => ({ ...x, name: envName(x) })))
+    setActiveEnv(a)
+  }
+  const drain = async () => {
+    if (busyRef.current) return
+    const snap = latestRef.current
+    if (!snap) return
+    latestRef.current = null
+    busyRef.current = true
     try {
-      const active = nextActive ?? activeEnv
-      // 环境名自动 = 主机-区域(用户只填 IP/端口/区域/账号/密码/ENT)
-      const envName = (e: EnvItem) => e.name || `${e.host}-${e.zone}`.replace(/-$/, '')
-      const next = {
-        ...cfg,
-        activeEnv: active,
-        envs: envs.filter((e) => e.host).map((e) => ({
-          name: envName(e), host: e.host, port: e.port || 22, user: e.user, password: e.password,
-          zone: e.zone,
-          db: (e.dbEnt > 0 || e.dbType === 'kingbase') ? { type: e.dbType || 'oracle', ent: e.dbEnt || 0 } : undefined,
-        })),
-      }
-      setActiveEnv(active)
-      // 自动生成的环境名(host-zone)写回列表,保持显示一致
-      setEnvs(envs.filter((e) => e.host).map((e) => ({ ...e, name: envName(e) })))
-      await api.saveSettings(next)
-      setCfg(next)
-      setMsg(nextActive !== undefined ? `已切换生效环境:${nextActive}` : '已保存并热生效(监听地址改端口需重启 serve)')
-    } catch (e: any) {
-      setErr(e.message)
+      await persist(snap.cfg, snap.envs, snap.active)
+      setSaveState('saved')
+    } catch (ex: any) {
+      setErr(ex.message)
+      setSaveState('idle')
     } finally {
-      setSaving(false)
+      busyRef.current = false
+      if (latestRef.current) void drain() // 落盘期间又有修改,继续写最新快照
     }
   }
-
-  const patchEnv = (i: number, patch: Partial<EnvItem>) => {
-    // 生效环境改名时同步 activeEnv,否则合并失联
-    if (patch.name !== undefined && envs[i]?.name === activeEnv) setActiveEnv(patch.name)
-    setEnvs(envs.map((x, j) => j === i ? { ...x, ...patch } : x))
+  const scheduleSave = (c: any, e: EnvItem[], a: string, immediate = false) => {
+    latestRef.current = { cfg: c, envs: e, active: a }
+    setSaveState('saving')
+    window.clearTimeout(timerRef.current)
+    if (immediate) { void drain(); return }
+    timerRef.current = window.setTimeout(() => void drain(), 600)
   }
+  // 修改统一入口:先更新本地状态,再登记一次自动保存(用修改后的快照,避免闭包旧值)
+  const change = (patch: { cfg?: any; envs?: EnvItem[]; active?: string }, immediate = false) => {
+    const nc = patch.cfg ?? cfg
+    const ne = patch.envs ?? envs
+    const na = patch.active ?? activeEnv
+    if (patch.cfg !== undefined) setCfg(nc)
+    if (patch.envs !== undefined) setEnvs(ne)
+    if (patch.active !== undefined) setActiveEnv(na)
+    scheduleSave(nc, ne, na, immediate)
+  }
+  const patchEnv = (i: number, patch: Partial<EnvItem>) => {
+    const next = envs.map((x, j) => (j === i ? { ...x, ...patch } : x))
+    let na: string | undefined
+    // 生效环境改名时同步 activeEnv,否则合并失联
+    if (patch.name !== undefined && envs[i]?.name === activeEnv) na = patch.name
+    change({ envs: next, active: na })
+  }
+  const patchCfg = (patch: any) => change({ cfg: { ...cfg, ...patch } })
+  const addEnv = () => {
+    setSelEnv(envs.length)
+    change({ envs: [...envs, { name: '', host: '', port: 22, user: '', password: '', zone: '35', launchArgs: '', watchdogSeconds: 0, dbType: 'oracle', dbEnt: 0 }] })
+  }
+  const delEnv = () => {
+    const cur2 = envs[selEnv]
+    const activeKey = cur2 ? cur2.name || `${cur2.host}-${cur2.zone}`.replace(/-$/, '') : ''
+    setSelEnv(Math.max(0, selEnv - 1))
+    change({ envs: envs.filter((_, j) => j !== selEnv), active: activeKey === activeEnv ? '' : undefined }, true)
+  }
+  // 卸载时清掉未落盘的防抖计时
+  useEffect(() => () => window.clearTimeout(timerRef.current), [])
+  // 「已自动保存」提示短暂停留后恢复默认文案
+  useEffect(() => {
+    if (saveState !== 'saved') return
+    const t = window.setTimeout(() => setSaveState('idle'), 2000)
+    return () => window.clearTimeout(t)
+  }, [saveState])
 
   // 测试数据库连接:SSH 上服务器自动探测连接要素并验证连通(只读命令),结果仅展示
   const autoProbe = async () => {
@@ -117,11 +165,6 @@ export function SettingsView() {
       setProbing(false)
     }
   }
-  const addEnv = () => {
-    setEnvs([...envs, { name: '', host: '', port: 22, user: '', password: '', zone: '35', launchArgs: '', watchdogSeconds: 0, dbType: 'oracle', dbEnt: 0 }])
-    setSelEnv(envs.length)
-  }
-
   if (!cfg) return <div className="p-6 text-sm text-muted-foreground">{err || '加载配置中…'}</div>
   const cur = envs[selEnv]
   return (
@@ -143,11 +186,11 @@ export function SettingsView() {
         <div className="mx-auto max-w-3xl p-4">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-medium text-foreground">{SECTIONS.find((s) => s.key === section)?.label}设置</h2>
-            <Button size="sm" disabled={saving} onClick={() => void save()}>
-              <Save className="mr-1 h-3.5 w-3.5" />{saving ? '保存中…' : '保存'}
-            </Button>
+            {/* 即时保存状态:修改自动落盘并热生效,无需保存按钮 */}
+            <span className={`text-[11px] ${saveState === 'saved' ? 'text-emerald-600 dark:text-emerald-400' : saveState === 'saving' ? 'text-muted-foreground' : ''}`}>
+              {saveState === 'saving' ? '保存中…' : saveState === 'saved' ? '已自动保存 ✓' : '修改即时生效'}
+            </span>
           </div>
-          {msg && <div className="mb-3 bg-emerald-500/10 px-3 py-2 text-emerald-700 dark:text-emerald-300">{msg}</div>}
           {err && <div className="mb-3 bg-red-500/10 px-3 py-2 text-red-600 dark:text-red-400">{err}</div>}
 
           {/* 环境:列表单选生效 + 表单维护(扁平布局,列表与表单以分割线相连) */}
@@ -184,16 +227,12 @@ export function SettingsView() {
                     </h3>
                     <div className="flex gap-1.5">
                       <Button size="sm" variant="secondary" disabled={!cur.host || (!cur.name && `${cur.host}-${cur.zone}` === activeEnv)}
-                        title={activeEnv === (cur.name || `${cur.host}-${cur.zone}`) ? '已是生效环境' : '把该环境设为当前默认(保存后热生效)'}
-                        onClick={() => void save(cur.name || `${cur.host}-${cur.zone}`.replace(/-$/, ''))}>
+                        title={activeEnv === (cur.name || `${cur.host}-${cur.zone}`) ? '已是生效环境' : '设为当前默认并立即热生效'}
+                        onClick={() => change({ active: cur.name || `${cur.host}-${cur.zone}`.replace(/-$/, '') }, true)}>
                         设为生效
                       </Button>
                       <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-red-600 dark:hover:text-red-400"
-                        onClick={() => {
-                          setEnvs(envs.filter((_, j) => j !== selEnv))
-                          if (activeEnv === (cur.name || `${cur.host}-${cur.zone}`)) setActiveEnv('')
-                          setSelEnv(Math.max(0, selEnv - 1))
-                        }}>
+                        onClick={delEnv}>
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
@@ -205,7 +244,17 @@ export function SettingsView() {
                     <Field label="端口"><Input className={cell} value={cur.port} onChange={(e) => patchEnv(selEnv, { port: Number(e.target.value) || 22 })} /></Field>
                     <Field label="登录区域"><Input className={cell} value={cur.zone} onChange={(e) => patchEnv(selEnv, { zone: e.target.value.trim() })} /></Field>
                     <Field label="账号"><Input className={cell} value={cur.user} onChange={(e) => patchEnv(selEnv, { user: e.target.value.trim() })} /></Field>
-                    <Field label="密码"><Input className={cell} type="password" value={cur.password} onChange={(e) => patchEnv(selEnv, { password: e.target.value })} /></Field>
+                    <Field label="密码">
+                      <div className="relative">
+                        <Input className={`${cell} pr-8`} type={showPwd ? 'text' : 'password'} value={cur.password}
+                          onChange={(e) => patchEnv(selEnv, { password: e.target.value })} />
+                        <button type="button" title={showPwd ? '隐藏密码' : '显示密码'}
+                          onClick={() => setShowPwd((v) => !v)}
+                          className="absolute inset-y-0 right-0.5 flex w-6 items-center justify-center text-muted-foreground hover:text-foreground">
+                          {showPwd ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                        </button>
+                      </div>
+                    </Field>
 
                     {/* 数据库配置:连接要素(TNS/实例)完全自动探测,无需手填 */}
                     <GroupLabel title="数据库配置" />
@@ -257,12 +306,12 @@ export function SettingsView() {
             <section>
               <h3 className="mb-2 font-medium text-foreground">本机参数</h3>
               <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-                <Field label="启动参数模板({prog} 替换)" className="col-span-2 md:col-span-3"><Input className={input} value={cfg.launchArgs || ''} onChange={(e) => setCfg({ ...cfg, launchArgs: e.target.value })} /></Field>
-                <Field label="监听地址"><Input className={input} value={cfg.listen || ''} onChange={(e) => setCfg({ ...cfg, listen: e.target.value })} /></Field>
-                <Field label="停站看门狗默认(秒)"><Input className={input} value={cfg.watchdogSeconds || 0} onChange={(e) => setCfg({ ...cfg, watchdogSeconds: Number(e.target.value) || 0 })} /></Field>
-                <Field label="print 数组元素上限"><Input className={input} value={cfg.printElements || 0} onChange={(e) => setCfg({ ...cfg, printElements: Number(e.target.value) || 0 })} /></Field>
-                <Field label="终端宽"><Input className={input} value={cfg.termWidth || 200} onChange={(e) => setCfg({ ...cfg, termWidth: Number(e.target.value) || 200 })} /></Field>
-                <Field label="终端高"><Input className={input} value={cfg.termHeight || 50} onChange={(e) => setCfg({ ...cfg, termHeight: Number(e.target.value) || 50 })} /></Field>
+                <Field label="启动参数模板({prog} 替换)" className="col-span-2 md:col-span-3"><Input className={input} value={cfg.launchArgs || ''} onChange={(e) => patchCfg({ launchArgs: e.target.value })} /></Field>
+                <Field label="监听地址"><Input className={input} value={cfg.listen || ''} onChange={(e) => patchCfg({ listen: e.target.value })} /></Field>
+                <Field label="停站看门狗默认(秒)"><Input className={input} value={cfg.watchdogSeconds || 0} onChange={(e) => patchCfg({ watchdogSeconds: Number(e.target.value) || 0 })} /></Field>
+                <Field label="print 数组元素上限"><Input className={input} value={cfg.printElements || 0} onChange={(e) => patchCfg({ printElements: Number(e.target.value) || 0 })} /></Field>
+                <Field label="终端宽"><Input className={input} value={cfg.termWidth || 200} onChange={(e) => patchCfg({ termWidth: Number(e.target.value) || 200 })} /></Field>
+                <Field label="终端高"><Input className={input} value={cfg.termHeight || 50} onChange={(e) => patchCfg({ termHeight: Number(e.target.value) || 50 })} /></Field>
               </div>
             </section>
           )}
