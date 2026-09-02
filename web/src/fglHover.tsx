@@ -4,6 +4,8 @@
 //   标量显示原始值;头部右上角复制按钮复制 fgldb print 原始文本
 // - 仅停站(stopped)时取值:走 api.print(fgldb print),按表达式缓存;
 //   停站行变化(步进/落站)即清缓存保证取值新鲜
+// - 先求值后弹卡:驻留 500ms 后静默调用 print,拿到结果才显示卡片——
+//   No symbol(非变量)永不弹卡,其余错误直接以错误态弹出
 import { useState } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { Copy } from 'lucide-react'
@@ -13,10 +15,10 @@ import { api } from './api'
 import { parseFglTree } from './fglparse'
 import { VarTreeNodes } from './VarTreeUi'
 
-interface HoverData { expr: string; loading?: boolean; v?: string; e?: string }
-
-// 悬浮卡片:头部(表达式 + 类型 + 右上角复制)+ 树/原始值
-function HoverCard({ expr, loading, v, e: err }: HoverData) {
+// 悬浮卡片:头部(表达式 + 类型 + 右上角复制)+ 树/原始值。
+// 卡片只在拿到求值结果后才弹出(加载中不显示,避免 No symbol 时闪烁)
+interface HoverData { expr: string; v?: string; e?: string }
+function HoverCard({ expr, v, e: err }: HoverData) {
   const [copied, setCopied] = useState(false)
   const kids = v !== undefined ? parseFglTree(v) : null
   const isRecord = !!kids && kids.some((k) => !k.name.startsWith('['))
@@ -36,9 +38,7 @@ function HoverCard({ expr, loading, v, e: err }: HoverData) {
           {copied ? '已复制' : <Copy className="h-3 w-3" />}
         </button>
       </div>
-      {loading ? (
-        <div className="fgl-hover-value text-muted-foreground">fgldb print 中…</div>
-      ) : err ? (
+      {err ? (
         <div className="fgl-hover-value text-red-400">{err}</div>
       ) : kids ? (
         <VarTreeNodes nodes={[{ name: expr, open: true, children: kids, type: isRecord ? 'RECORD' : `ARRAY[${kids!.length}]` }]} />
@@ -108,33 +108,37 @@ export function attachHover(editor: monaco.editor.IStandaloneCodeEditor) {
   editor.addContentWidget(widget)
 
   const render = (d: HoverData) => root.render(<HoverCard {...d} />)
-  const show = (expr: string, pos: monaco.Position) => {
+  // 真正弹卡:只在拿到求值结果后调用
+  const present = (expr: string, pos: monaco.Position, data: { v?: string; e?: string }) => {
     wpos = { line: pos.lineNumber, column: pos.column }
-    const token = ++seq
-    current = { expr, token }
-    const cached = cache.get(expr)
+    current = { expr, token: ++seq }
     dom.style.display = 'block'
     visible = true
-    render({ expr, loading: !cached, v: cached?.v, e: cached?.e })
+    render({ expr, v: data.v, e: data.e })
     editor.layoutContentWidget(widget)
-    if (!cached) {
-      const st = useStore.getState()
-      api.print(st.sessionId!, expr)
-        .then(({ value }) => {
-          cache.set(expr, { v: value })
-          if (current?.token === token) render({ expr, v: value })
-        })
-        .catch((err: Error) => {
-          // No symbol = 该词不是变量:静默拦截,不弹卡、记负缓存后续也不再请求
-          if (/no symbol/i.test(err.message)) {
-            noSymbol.add(expr)
-            if (current?.token === token) hide()
-            return
-          }
-          cache.set(expr, { e: err.message })
-          if (current?.token === token) render({ expr, e: err.message })
-        })
-    }
+  }
+  // 驻留到期:缓存命中直接弹卡;否则先静默求值,拿到结果才弹——
+  // No symbol(非变量)永不弹卡,其余错误以错误态弹出
+  const dwell = (expr: string, pos: monaco.Position) => {
+    const cached = cache.get(expr)
+    if (cached) { present(expr, pos, cached); return }
+    const token = ++seq
+    current = { expr, token } // 占位:等待结果期间同词不重触发(卡片未显示)
+    const st = useStore.getState()
+    api.print(st.sessionId!, expr)
+      .then(({ value }) => {
+        cache.set(expr, { v: value })
+        if (current?.token === token) present(expr, pos, { v: value })
+      })
+      .catch((err: Error) => {
+        if (/no symbol/i.test(err.message)) {
+          noSymbol.add(expr)
+          if (current?.token === token) current = null // 静默放弃,从未显示过
+          return
+        }
+        cache.set(expr, { e: err.message })
+        if (current?.token === token) present(expr, pos, { e: err.message })
+      })
   }
   // 悬停驻留延时:同一变量上停稳 500ms 才发卡并求值,快速扫过不触发
   const HOVER_DELAY_MS = 500
@@ -147,9 +151,9 @@ export function attachHover(editor: monaco.editor.IStandaloneCodeEditor) {
   }
   const hide = () => {
     cancelPending()
+    current = null // 求值占位一并作废(结果回来后不再弹卡)
     if (!visible) return
     visible = false
-    current = null
     wpos = null
     dom.style.display = 'none'
     editor.layoutContentWidget(widget)
@@ -177,7 +181,7 @@ export function attachHover(editor: monaco.editor.IStandaloneCodeEditor) {
     const expr = exprAt(model, pos)
     if (!expr) { hideIfOutside(mx, my); return }
     if (noSymbol.has(expr)) { hide(); return } // 已知非变量,静默略过
-    if (visible && current?.expr === expr) return
+    if (current?.expr === expr) return // 已展示或求值进行中(同词不重触发)
     if (visible && inCard(mx, my)) return // 移向卡片途中不切换
     if (pending?.expr === expr) return // 已在驻留等待中,不重复计时
     cancelPending()
@@ -187,14 +191,14 @@ export function attachHover(editor: monaco.editor.IStandaloneCodeEditor) {
       pos,
       timer: window.setTimeout(() => {
         pending = null
-        show(expr, pos)
+        dwell(expr, pos)
       }, HOVER_DELAY_MS),
     }
   })
   editor.onMouseLeave(() => hide())
   // 兜底:鼠标移出编辑器区域(右侧面板/顶栏等)也收卡——不完全依赖 Monaco 的 leave 事件
   const onDocMove = (ev: MouseEvent) => {
-    if (!visible) return
+    if (!current) return // 无卡片也无私下求值时无需处理
     const edom = editor.getDomNode()
     if (!edom) return
     if (edom.contains(ev.target as Node)) return // 编辑器内部交给 editor.onMouseMove
