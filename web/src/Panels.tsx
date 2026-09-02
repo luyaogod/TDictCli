@@ -4,7 +4,7 @@ import * as AccordionPrimitive from '@radix-ui/react-accordion'
 import { useEffect, useRef, useState } from 'react'
 import { Play, Ruler } from 'lucide-react'
 import { useStore } from './store'
-import { Badge, Button, Input } from './ui'
+import { Badge, Input } from './ui'
 import { parseFglTree, type TNode } from './fglparse'
 import { VarTreeNodes } from './VarTreeUi'
 
@@ -280,7 +280,6 @@ function AutovarsBody() {
 
 function WatchesBody() {
   const watches = useStore((s) => s.watches)
-  const addWatch = useStore((s) => s.addWatch)
   const removeWatch = useStore((s) => s.removeWatch)
   const doPrint = useStore((s) => s.doPrint)
   const [expr, setExpr] = useState('')
@@ -295,15 +294,12 @@ function WatchesBody() {
           value={expr}
           onChange={(e) => setExpr(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && expr.trim()) { void addWatch(expr.trim()); setExpr('') }
+            // 回车即求值:doPrint 会先 print 显示一次,再自动加入监视列表
+            if (e.key === 'Enter' && expr.trim()) { void doPrint(expr.trim()); setExpr('') }
           }}
-          placeholder="表达式,如 lp_str / g_qryparam.*"
+          placeholder="表达式,如 lp_str / g_qryparam.*(回车求值)"
           className="h-7 flex-1 text-xs"
         />
-        <Button size="sm" variant="outline" disabled={!expr.trim()}
-          onClick={() => { void doPrint(expr.trim()); setExpr('') }}>
-          求值
-        </Button>
       </div>
       {views.map((v) => (
         <div key={v.expr} className="flex items-start gap-1 border-b border-border/60 px-2 py-1 text-xs">
