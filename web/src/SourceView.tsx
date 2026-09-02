@@ -9,6 +9,7 @@ import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
 import 'monaco-editor/esm/vs/base/browser/ui/codicons/codiconStyles.js'
 import { useStore } from './store'
 import { cn } from './lib/utils'
+import { attachHover } from './fglHover'
 
 export const editorRef = { current: null as monaco.editor.IStandaloneCodeEditor | null }
 
@@ -151,6 +152,8 @@ export function SourceView() {
     editorRef.current = editor
     decosRef.current = editor.createDecorationsCollection([])
     setEditorReady(true)
+    // 变量悬浮取值卡片(仅 debug model、仅停站时取值)
+    attachHover(editor)
     // 点击行号/边栏切换断点
     editor.onMouseDown((e) => {
       const t = e.target.type
@@ -294,6 +297,7 @@ export function SourceView() {
       lineNumbersMinChars: 5,
       folding: false,
       automaticLayout: true,
+      fixedOverflowWidgets: true, // 悬浮卡片越界时改挂 fixed 容器,避免被编辑器裁剪
       scrollbar: { verticalScrollbarSize: 10, horizontalScrollbarSize: 10 },
     }),
     [],
