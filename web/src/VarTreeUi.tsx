@@ -8,7 +8,7 @@ function NodeRow({ node, depth, toggle }: { node: TNode; depth: number; toggle: 
   return (
     <>
       <div
-        className={`flex items-baseline gap-1 rounded px-1 hover:bg-foreground/5 ${expandable ? 'cursor-pointer' : 'cursor-default'}`}
+        className={`flex items-baseline gap-1 px-1 hover:bg-foreground/5 ${expandable ? 'cursor-pointer' : 'cursor-default'}`}
         style={{ paddingLeft: depth * 14 + 4 }}
         onClick={() => expandable && toggle(node)}
       >

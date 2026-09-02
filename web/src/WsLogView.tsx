@@ -62,23 +62,23 @@ export function WsLogView() {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col p-2 pt-1">
-      {/* 工具条:服务名 + 时间范围(awsq990 QBE 同款条件)+ 仅失败 + 刷新 + 翻页 */}
-      <div className="mb-2 flex shrink-0 flex-wrap items-center gap-2">
+    <div className="flex min-h-0 flex-1 flex-col">
+      {/* 工具条:服务名 + 时间范围(awsq990 QBE 同款条件)+ 仅失败 + 刷新 + 翻页;下缘分割线与列表连成整体 */}
+      <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border px-2 py-1.5">
         <input
           value={service}
           onChange={(e) => setService(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') doLoad(1) }}
           placeholder="按服务名过滤,如 icd.erp.wo*(回车生效)"
-          className="h-7 w-56 rounded-md border border-border bg-background px-2 text-xs text-foreground placeholder:text-muted-foreground focus:border-border focus:outline-none"
+          className="h-7 w-56 border border-border bg-background px-2 text-xs text-foreground placeholder:text-muted-foreground focus:border-border focus:outline-none"
         />
         <label className="flex items-center gap-1 text-xs text-muted-foreground">
           开始时间
           <input type="date" value={from} onChange={(e) => setFrom(e.target.value)}
-            className="h-7 rounded-md border border-border bg-background px-1.5 text-xs text-foreground focus:border-border focus:outline-none" />
+            className="h-7 border border-border bg-background px-1.5 text-xs text-foreground focus:border-border focus:outline-none" />
           ~
           <input type="date" value={to} onChange={(e) => setTo(e.target.value)}
-            className="h-7 rounded-md border border-border bg-background px-1.5 text-xs text-foreground focus:border-border focus:outline-none" />
+            className="h-7 border border-border bg-background px-1.5 text-xs text-foreground focus:border-border focus:outline-none" />
         </label>
         <label className="flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground">
           <input type="checkbox" checked={onlyFail} onChange={(e) => { setOnlyFail(e.target.checked); setTimeout(() => doLoad(1), 0) }}
@@ -86,19 +86,19 @@ export function WsLogView() {
           仅失败
         </label>
         <button onClick={() => doLoad(1)} disabled={loading} title="重新加载"
-          className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40">
+          className="p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-40">
           <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
         {/* 分页 */}
         <div className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
           <span>{wsLogs.length} 条</span>
           <button onClick={() => doLoad(page - 1)} disabled={loading || page <= 1} title="上一页"
-            className="rounded p-1 hover:bg-accent hover:text-foreground disabled:opacity-30">
+            className="p-1 hover:bg-accent hover:text-foreground disabled:opacity-30">
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <span className="w-10 text-center font-mono">第 {page} 页</span>
+          <span className="whitespace-nowrap font-mono">第 {page} 页</span>
           <button onClick={() => doLoad(page + 1)} disabled={loading || !hasMore} title="下一页"
-            className="rounded p-1 hover:bg-accent hover:text-foreground disabled:opacity-30">
+            className="p-1 hover:bg-accent hover:text-foreground disabled:opacity-30">
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
@@ -106,15 +106,15 @@ export function WsLogView() {
       </div>
 
       {err && (
-        <div className="mb-2 shrink-0 rounded border border-red-500/20 bg-red-500/10 px-3 py-1.5 text-xs text-red-600 dark:text-red-600 dark:text-red-400">{err}</div>
+        <div className="mb-2 shrink-0 border border-red-500/20 bg-red-500/10 px-3 py-1.5 text-xs text-red-600 dark:text-red-600 dark:text-red-400">{err}</div>
       )}
 
-      {/* 左右布局:左列列表,右列详情(列宽固定,容器变窄时列表内部横向滚动) */}
-      <div className="flex min-h-0 flex-1 gap-2">
+      {/* 左右布局:左列列表,右列详情(列宽固定,容器变窄时列表内部横向滚动);无间隙,仅 sash 分割线 */}
+      <div className="flex min-h-0 flex-1">
         {/* 列表:表头与行同处一个滚动容器,横向滚动时表头跟着滚不错位 */}
-        <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-sm border border-border bg-card/60">
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-background">
           <div className="min-h-0 flex-1 overflow-auto">
-            <div className="sticky top-0 flex h-7 items-center gap-2 border-b border-border bg-card px-2 text-[11px] font-medium text-muted-foreground">
+            <div className="sticky top-0 flex h-7 items-center gap-2 border-b border-border bg-background px-2 text-[11px] font-medium text-muted-foreground">
               <span className="w-12 shrink-0">状态</span>
               <span className="w-44 shrink-0">服务</span>
               <span className="w-28 shrink-0">作业</span>
@@ -145,16 +145,16 @@ export function WsLogView() {
         </div>
 
         {/* 分隔条:拖拽调整详情面板宽度 */}
-        <div className="col-resizer mx-0.5 self-stretch" onMouseDown={onDetailResizeDown} title="拖拽调整详情面板宽度" />
+        <div className="col-resizer self-stretch" onMouseDown={onDetailResizeDown} title="拖拽调整详情面板宽度" />
 
         {/* 详情(右列) */}
-        <div style={{ width: detailW }} className="flex shrink-0 flex-col overflow-hidden rounded-sm border border-border bg-card/60">
+        <div style={{ width: detailW }} className="flex shrink-0 flex-col overflow-hidden bg-background">
           {sel ? (
             <>
               <div className="flex h-8 shrink-0 items-center gap-1 border-b border-border px-2">
                 {([['info', '基本信息'], ['request', 'Request'], ['response', 'Response']] as const).map(([k, label]) => (
                   <button key={k} onClick={() => setWsLogTab(k)}
-                    className={`rounded px-2 py-0.5 text-xs ${tab === k ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+                    className={`px-2 py-0.5 text-xs ${tab === k ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
                     {label}
                   </button>
                 ))}
@@ -162,7 +162,7 @@ export function WsLogView() {
                   onClick={() => void replayDebug(sel)}
                   disabled={!!sessionId}
                   title="用该日志的报文重放此接口调用并进入调试(T100 r.dg 同款)"
-                  className="ml-auto inline-flex items-center gap-1 rounded border border-emerald-500/20 px-2 py-0.5 text-xs text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-40"
+                  className="ml-auto inline-flex items-center gap-1 border border-emerald-500/20 px-2 py-0.5 text-xs text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-40"
                 >
                   <Bug className="h-3.5 w-3.5" />
                   调试此调用

@@ -16,7 +16,7 @@ function ActivityIcon({ icon: Icon, label, active, onClick }: {
 }) {
   return (
     <button title={label} onClick={onClick}
-      className={`flex h-8 w-8 items-center justify-center rounded-md transition-colors ${
+      className={`flex h-8 w-8 items-center justify-center transition-colors ${
         active ? 'bg-foreground/10 text-foreground' : 'text-muted-foreground hover:text-foreground'
       }`}>
       <Icon className="h-5 w-5" />
@@ -188,7 +188,7 @@ export function App() {
         <div className="flex shrink-0 items-center gap-2 border-b border-red-500/20 bg-red-500/10 px-3 py-1.5 text-xs text-red-600 dark:text-red-400">
           <span className="min-w-0 flex-1 truncate" title={launchError}>{launchError}</span>
           <button onClick={() => setLaunchError('')} title="关闭"
-            className="rounded p-0.5 transition-colors hover:bg-red-500/20">
+            className="p-0.5 transition-colors hover:bg-red-500/20">
             <X className="h-3.5 w-3.5" />
           </button>
         </div>
@@ -199,7 +199,7 @@ export function App() {
           <span>{banner}</span>
           {backendDead && (
             <button
-              className="ml-auto inline-flex items-center gap-1 rounded border border-red-500/30 px-2 py-0.5 hover:bg-red-500/10 disabled:opacity-40"
+              className="ml-auto inline-flex items-center gap-1 border border-red-500/30 px-2 py-0.5 hover:bg-red-500/10 disabled:opacity-40"
               disabled={launching}
               onClick={() => void restart()}
             >
@@ -210,8 +210,8 @@ export function App() {
         </div>
       )}
       <div className="flex min-h-0 flex-1">
-        {/* VS Code 风格活动栏:背景与编辑区同色,仅图标高亮区分 */}
-        <div className="flex w-10 shrink-0 flex-col items-center gap-1 bg-background py-2">
+        {/* VS Code 经典活动栏:与侧栏同底色,右缘 1px 分割线与内容区分隔 */}
+        <div className="flex w-10 shrink-0 flex-col items-center gap-1 border-r border-border bg-background py-2">
           <ActivityIcon icon={Bug} label="调试" active={view === 'debug'} onClick={() => setView('debug')} />
           <ActivityIcon icon={Globe} label="接口日志" active={view === 'wslogs'} onClick={() => setView('wslogs')} />
           <ActivityIcon icon={FlaskConical} label="服务测试" active={view === 'wstest'} onClick={() => setView('wstest')} />
@@ -219,17 +219,17 @@ export function App() {
         </div>
         {/* 四个视图全部 keep-alive:首次访问后常驻挂载,切换仅改 display */}
         <ViewPane show={view === 'debug'}>
-          {/* 中间列(编辑区 + 时间线)与整高右面板左右并排
+          {/* 面板紧贴(VS Code 经典密度):无外边距,仅靠 sash 分割线分区
              min-w-0 + overflow-hidden:Monaco 会给编辑器写内联像素宽度,
              否则 flex 最小宽度被钉死,收起再展开时编辑区不回缩、右面板被挤出屏幕 */}
-          <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden p-2 pt-1">
+          <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
             <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-              <div className="min-h-0 flex-1 overflow-hidden rounded-sm border border-border">
+              <div className="min-h-0 flex-1 overflow-hidden bg-card">
                 <SourceView />
               </div>
               {showBottom && (
-                <div className="mt-2 flex shrink-0 flex-col">
-                  <div className="row-resizer mb-1" onMouseDown={onBottomResizeDown} title="拖拽调整下方面板高度" />
+                <div className="flex shrink-0 flex-col">
+                  <div className="row-resizer" onMouseDown={onBottomResizeDown} title="拖拽调整下方面板高度" />
                   <div style={{ height: bottomH }} className="shrink-0">
                     <TimelinePanel />
                   </div>
@@ -238,7 +238,7 @@ export function App() {
             </div>
             {showRight && (
               <>
-                  <div className="col-resizer mx-0.5" onMouseDown={onResizeDown} title="拖拽调整代码区与侧边栏宽度" />
+                  <div className="col-resizer" onMouseDown={onResizeDown} title="拖拽调整代码区与侧边栏宽度" />
                 <div style={{ width: panelW }} className="min-h-0 shrink-0">
                   <RightPanels />
                 </div>

@@ -4,6 +4,13 @@ import { App } from './App'
 import { editorRef } from './SourceView'
 import './index.css'
 
+// 启动即同步主题类(store 默认 dark,但 setTheme 只在手动切换时挂 .dark,
+// 首帧不挂会一直渲染亮色)——与 store.theme 的取值规则保持一致
+document.documentElement.classList.toggle(
+  'dark',
+  localStorage.getItem('tdict.theme') !== 'light',
+)
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />

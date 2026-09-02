@@ -63,36 +63,38 @@ function setupMonaco() {
   monaco.editor.defineTheme('tdict-dark', {
     base: 'vs-dark',
     inherit: true,
+    // 语法配色对齐 VS Code Dark Modern 默认主题
     rules: [
-      { token: 'keyword', foreground: '7aa2f7' },
-      { token: 'type', foreground: '9ece6a' },
-      { token: 'comment', foreground: '6b7280' },
-      { token: 'string', foreground: 'e0af68' },
-      { token: 'number', foreground: 'ff9e64' },
+      { token: 'keyword', foreground: '569cd6' },
+      { token: 'type', foreground: '4ec9b0' },
+      { token: 'comment', foreground: '6a9955' },
+      { token: 'string', foreground: 'ce9178' },
+      { token: 'number', foreground: 'b5cea8' },
     ],
     colors: {
-      'editor.background': '#101013',
-      // 滚动条适配暗色
-      'scrollbarSlider.background': '#3f3f4680',
-      'scrollbarSlider.hoverBackground': '#52525bb0',
-      'scrollbarSlider.activeBackground': '#71717ac0',
+      'editor.background': '#1f1f1f',
+      // 滚动条适配暗色(VS Code 半透明方形滑块)
+      'scrollbarSlider.background': '#79797966',
+      'scrollbarSlider.hoverBackground': '#797979b3',
+      'scrollbarSlider.activeBackground': '#797979b3',
     },
   })
   monaco.editor.defineTheme('tdict-light', {
     base: 'vs',
     inherit: true,
+    // 语法配色对齐 VS Code Light Modern 默认主题
     rules: [
-      { token: 'keyword', foreground: '1d4ed8' },
-      { token: 'type', foreground: '15803d' },
-      { token: 'comment', foreground: '9ca3af' },
-      { token: 'string', foreground: 'b45309' },
-      { token: 'number', foreground: 'c2410c' },
+      { token: 'keyword', foreground: '0000ff' },
+      { token: 'type', foreground: '267f99' },
+      { token: 'comment', foreground: '008000' },
+      { token: 'string', foreground: 'a31515' },
+      { token: 'number', foreground: '098658' },
     ],
     colors: {
       'editor.background': '#ffffff',
-      'scrollbarSlider.background': '#d4d4d880',
-      'scrollbarSlider.hoverBackground': '#a1a1aab0',
-      'scrollbarSlider.activeBackground': '#71717ac0',
+      'scrollbarSlider.background': '#64646466',
+      'scrollbarSlider.hoverBackground': '#646464b3',
+      'scrollbarSlider.activeBackground': '#646464b3',
     },
   })
 }
@@ -296,21 +298,21 @@ export function SourceView() {
       <div className="flex h-8 shrink-0 items-stretch overflow-x-auto border-b border-border bg-background">
         <button onClick={() => setActiveTab('debug')}
           className={cn('flex shrink-0 items-center gap-1.5 border-r border-border px-3 text-xs transition-colors',
-            isDebug ? 'bg-accent font-medium text-accent-foreground' : 'text-muted-foreground hover:bg-accent/60')}>
+            isDebug ? 'tab-active bg-card font-medium text-foreground' : 'text-muted-foreground hover:bg-accent/60')}>
           <Bug className="h-3 w-3" />
           {prog || '调试'}
         </button>
         {tabs.map((t) => (
           <div key={t.key}
             className={cn('group flex shrink-0 items-center border-r border-border transition-colors',
-              activeTab === t.key ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-accent/60')}>
+              activeTab === t.key ? 'tab-active bg-card text-foreground' : 'text-muted-foreground hover:bg-accent/60')}>
             <button className="max-w-45 truncate px-3 text-xs" title={t.path || t.file}
               onClick={() => setActiveTab(t.key)}>
               {t.loading ? <Loader2 className="mr-1 inline h-3 w-3 animate-spin" /> : null}
               {t.file}
               {t.missing ? ' (无源码)' : ''}
             </button>
-            <button className="mr-1 rounded p-0.5 opacity-40 transition-opacity hover:bg-accent hover:opacity-100"
+            <button className="mr-1 p-0.5 opacity-40 transition-opacity hover:bg-accent hover:opacity-100"
               onClick={() => closeTab(t.key)}>
               <X className="h-3 w-3" />
             </button>
@@ -342,7 +344,7 @@ export function SourceView() {
         {/* 调试页:停站且确无源码时提示(启动/加载期间只显示转圈,不打扰) */}
         {isDebug && !sourceContent && !busy && state === 'stopped' && stop?.file && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <div className="rounded-sm border border-border bg-card/90 px-4 py-3 text-sm text-muted-foreground">
+            <div className="border border-border bg-card/90 px-4 py-3 text-sm text-muted-foreground">
               该模块无源码(仅 42m),当前停站:<span className="text-foreground">{stop.file}:{stop.line}</span><br />
               <span className="text-xs">可继续用变量监视/调用栈分析,或继续运行回到有源码的模块</span>
             </div>
@@ -350,7 +352,7 @@ export function SourceView() {
         )}
         {!isDebug && active!.missing && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <div className="rounded-sm border border-border bg-card/90 px-4 py-3 text-sm text-muted-foreground">
+            <div className="border border-border bg-card/90 px-4 py-3 text-sm text-muted-foreground">
               该文件无源码(仅 42m 编译产物),无法静态浏览
             </div>
           </div>

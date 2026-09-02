@@ -5,7 +5,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from './lib/utils'
 
 const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-md text-sm font-medium transition-colors outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4",
+  "inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap text-sm font-medium transition-colors outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
@@ -35,7 +35,7 @@ export function Button({ className, variant, size, asChild = false, ...props }:
 }
 
 const badgeVariants = cva(
-  'inline-flex items-center rounded-md border px-1.5 py-0.5 text-[11px] font-medium',
+  'inline-flex items-center border px-1.5 py-0.5 text-[11px] font-medium',
   {
     variants: {
       tone: {
@@ -60,7 +60,7 @@ export function Panel({ title, right, children, className }: {
   title: React.ReactNode; right?: React.ReactNode; children: React.ReactNode; className?: string
 }) {
   return (
-    <div className={cn('flex min-h-0 flex-col rounded-sm border border-border bg-card', className)}>
+    <div className={cn('flex min-h-0 flex-col border border-border bg-card', className)}>
       <div className="flex h-8 shrink-0 items-center justify-between border-b border-border px-2.5">
         <span className="text-xs font-medium text-muted-foreground">{title}</span>
         {right}
@@ -75,7 +75,7 @@ export function Input({ className, type, ...props }: React.InputHTMLAttributes<H
     <input
       type={type}
       className={cn(
-        'flex h-8 w-full min-w-0 rounded-md border border-input bg-transparent px-2 py-1 text-sm transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30',
+        'flex h-8 w-full min-w-0 border border-input bg-transparent px-2 py-1 text-sm transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30',
         className,
       )}
       {...props}

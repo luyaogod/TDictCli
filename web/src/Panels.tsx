@@ -33,7 +33,7 @@ function LaunchSection() {
       {sessionId ? (
         <div className="flex items-center gap-1 px-1.5 pb-1.5">
           <span
-            className="min-w-0 flex-1 truncate rounded-sm bg-accent/40 px-1.5 py-0.5 font-mono text-xs text-foreground"
+            className="min-w-0 flex-1 truncate bg-accent/40 px-1.5 py-0.5 font-mono text-xs text-foreground"
             title={prog || sessionId}
           >
             {prog || sessionId}
@@ -42,7 +42,7 @@ function LaunchSection() {
             title={state === 'stopped' ? '行号校准:协议行号与源码错位时点击对齐' : '行号校准(需停站后点击)'}
             disabled={state !== 'stopped'}
             onClick={() => void calibrate()}
-            className="rounded p-1 transition-colors hover:bg-accent/60 disabled:pointer-events-none disabled:opacity-30"
+            className="p-1 transition-colors hover:bg-accent/60 disabled:pointer-events-none disabled:opacity-30"
           >
             <Ruler className="h-4 w-4 text-sky-600 dark:text-sky-400" />
           </button>
@@ -53,7 +53,7 @@ function LaunchSection() {
             title="启动调试会话(Enter 同效)"
             disabled={launching || !v.trim()}
             onClick={doLaunch}
-            className="rounded p-1 transition-colors hover:bg-accent/60 disabled:pointer-events-none disabled:opacity-30"
+            className="p-1 transition-colors hover:bg-accent/60 disabled:pointer-events-none disabled:opacity-30"
           >
             <Play className="h-4 w-4 text-green-600 dark:text-green-500" fill="currentColor" />
           </button>
@@ -129,8 +129,8 @@ AccordionContent.displayName = 'AccordionContent'
 
 export function RightPanels() {
   return (
-    // 一体化面板:单个圆角容器,各区块间用分割线区分(VS Code 风格)
-    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-sm border border-border bg-card/60">
+    // 一体化侧栏面板(VS Code 经典):与侧栏同底色、无外框无圆角,区块间用分割线区分
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-background">
       <LaunchSection />
       <Accordion
         type="multiple"
@@ -402,16 +402,16 @@ export function TimelinePanel() {
     }
   }
   return (
-    <div className="flex h-full min-h-0 flex-col rounded-sm border border-border bg-card/60">
+    <div className="flex h-full min-h-0 flex-col bg-background">
       <div className="flex h-8 shrink-0 items-center gap-2 border-b border-border px-2">
         <button
-          className={`rounded px-2 py-0.5 text-xs ${tab === 'raw' ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+          className={`px-2 py-0.5 text-xs ${tab === 'raw' ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
           onClick={() => setTab('raw')}
         >
           原始协议流 ({rawLog.length})
         </button>
         <button
-          className={`rounded px-2 py-0.5 text-xs ${tab === 'timeline' ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+          className={`px-2 py-0.5 text-xs ${tab === 'timeline' ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
           onClick={() => setTab('timeline')}
         >
           操作时间线
@@ -449,10 +449,10 @@ export function TimelinePanel() {
             onKeyDown={onCmdKey}
             disabled={!canSend}
             placeholder={canSend ? 'fgldb 命令,如 print lp_str / info breakpoints(↑↓ 历史)' : '需停站后才能发送命令'}
-            className="h-6 min-w-0 flex-1 rounded-sm border border-border bg-background px-2 font-mono text-xs text-foreground placeholder:text-muted-foreground focus:border-border focus:outline-none disabled:opacity-50"
+            className="h-6 min-w-0 flex-1 border border-border bg-background px-2 font-mono text-xs text-foreground placeholder:text-muted-foreground focus:border-border focus:outline-none disabled:opacity-50"
           />
           <button
-            className="shrink-0 rounded-sm border border-border px-2 py-0.5 text-xs text-foreground transition-colors hover:bg-accent disabled:pointer-events-none disabled:opacity-40"
+            className="shrink-0 border border-border px-2 py-0.5 text-xs text-foreground transition-colors hover:bg-accent disabled:pointer-events-none disabled:opacity-40"
             disabled={!canSend || !cmd.trim()}
             onClick={submit}
           >
