@@ -20,7 +20,7 @@ function ToolIcon({ icon: Icon, label, onClick, disabled, color = 'text-sky-600 
       title={label}
       disabled={disabled}
       onClick={onClick}
-      className={`rounded p-1 transition-colors hover:bg-accent/60 disabled:pointer-events-none disabled:opacity-30 ${color}`}
+      className={`p-1 transition-colors hover:bg-accent/60 disabled:pointer-events-none disabled:opacity-30 ${color}`}
     >
       <Icon className="h-4 w-4" />
     </button>
@@ -69,13 +69,13 @@ function FloatingToolbar({ children }: { children: ReactNode }) {
 
   return (
     <div
-      className="fixed z-50 inline-flex items-center gap-0.5 rounded-sm border border-border/70 bg-card/95 px-1 py-0.5 shadow-xl"
+      className="fixed z-50 inline-flex items-center gap-0.5 border border-border/70 bg-card/95 px-1 py-0.5 shadow-xl"
       style={style}
     >
       <span
         title="拖拽移动工具条"
         onMouseDown={onDragStart}
-        className="cursor-grab rounded p-0.5 text-muted-foreground hover:bg-accent/60 hover:text-muted-foreground active:cursor-grabbing"
+        className="cursor-grab p-0.5 text-muted-foreground hover:bg-accent/60 hover:text-muted-foreground active:cursor-grabbing"
       >
         <GripVertical className="h-3.5 w-3.5" />
       </span>

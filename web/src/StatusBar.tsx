@@ -17,7 +17,7 @@ export function StatusBar() {
     msg = `已停站${loc ? ` ${loc}` : ''} · 停留 ${Math.round(hold)}s`
     title = '程序已暂停,可查看变量/下断点/继续'
   } else if (state === 'running') {
-    bar = 'bg-sky-700 text-white'
+    bar = 'bg-[#0078d4] text-white'
     msg = '运行中 · 请到 GDC 操作'
     title = '程序运行中,请在 GDC 操作作业界面'
   } else if (state === 'loading') {

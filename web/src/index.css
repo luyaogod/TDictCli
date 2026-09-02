@@ -1,50 +1,68 @@
 @import "tailwindcss";
 
-/* shadcn/ui 标准主题体系(Tailwind v4):语义 token + .dark 变体。
+/* VS Code 经典风格主题(Tailwind v4):语义 token + .dark 变体。
+   配色对齐 VS Code Dark / Light Modern(侧栏 #181818 / 编辑区 #1f1f1f / 分割线 #2b2b2b);
    组件一律用语义工具类(bg-background/border-border/text-muted-foreground...),
-   亮暗两套取值集中在这里维护,禁止在组件里写死 zinc 色板。 */
+   亮暗两套取值集中在这里维护,禁止在组件里写死 zinc 色板。
+   布局密度对齐 VS Code 经典 UI:面板紧贴,仅以 1px 分割线(sash)相隔,全站零圆角。 */
 @custom-variant dark (&:is(.dark *));
 
+/* 零圆角:rounded-sm/md/... 走这里的 radius token(统一清零);
+   裸 rounded 是字面量工具类不走 token,单独压平。两层兜底保证全站无圆角 */
+@theme {
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
+}
+.rounded { border-radius: 0px; }
+
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.141 0.005 285.823);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.005 285.823);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.21 0.006 285.885);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.21 0.006 285.885);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.705 0.015 286.067);
+  /* VS Code Light Modern */
+  --background: #f8f8f8;
+  --foreground: #3b3b3b;
+  --card: #ffffff;
+  --card-foreground: #3b3b3b;
+  --popover: #ffffff;
+  --popover-foreground: #3b3b3b;
+  --primary: #005fb8;
+  --primary-foreground: #ffffff;
+  --secondary: #f2f2f2;
+  --secondary-foreground: #3b3b3b;
+  --muted: #f2f2f2;
+  --muted-foreground: #616161;
+  --accent: #e8e8e8;
+  --accent-foreground: #3b3b3b;
+  --destructive: #e51400;
+  --border: #e5e5e5;
+  --input: #cecece;
+  --ring: #005fb8;
 }
 
 .dark {
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.92 0.004 286.32);
-  --primary-foreground: oklch(0.21 0.006 285.885);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.552 0.016 285.938);
+  /* VS Code Dark Modern */
+  --background: #181818;
+  --foreground: #cccccc;
+  --card: #1f1f1f;
+  --card-foreground: #cccccc;
+  --popover: #1f1f1f;
+  --popover-foreground: #cccccc;
+  --primary: #0078d4;
+  --primary-foreground: #ffffff;
+  --secondary: #313131;
+  --secondary-foreground: #cccccc;
+  --muted: #2a2d2e;
+  --muted-foreground: #9d9d9d;
+  --accent: #2a2d2e;
+  --accent-foreground: #cccccc;
+  --destructive: #f14c4c;
+  --border: #2b2b2b;
+  --input: #313131;
+  --ring: #0078d4;
 }
 
 @theme inline {
@@ -102,18 +120,18 @@ body { margin: 0; background: var(--background); }
     linear-gradient(#eab308, #eab308) 0 center / 100% 2px no-repeat;
 }
 
-/* 全局滚动条:暗/亮两套 thumb */
+/* 全局滚动条:VS Code 式方形半透明 thumb,亮暗两套 */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 .dark {
-  --scrollbar-thumb: #3f3f46;
-  --scrollbar-thumb-hover: #52525b;
+  --scrollbar-thumb: rgba(121, 121, 121, 0.4);
+  --scrollbar-thumb-hover: rgba(121, 121, 121, 0.7);
 }
 :root:not(.dark) {
-  --scrollbar-thumb: #d4d4d8;
-  --scrollbar-thumb-hover: #a1a1aa;
+  --scrollbar-thumb: rgba(100, 100, 100, 0.4);
+  --scrollbar-thumb-hover: rgba(100, 100, 100, 0.7);
 }
 ::-webkit-scrollbar {
   width: 10px;
@@ -123,47 +141,44 @@ body { margin: 0; background: var(--background); }
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb, #3f3f46);
-  border-radius: 5px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
+  background: var(--scrollbar-thumb, rgba(121, 121, 121, 0.4));
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-thumb-hover, #52525b);
-  border: 2px solid transparent;
-  background-clip: padding-box;
+  background: var(--scrollbar-thumb-hover, rgba(121, 121, 121, 0.7));
 }
 ::-webkit-scrollbar-corner {
   background: transparent;
 }
 
-/* 分割条拖拽把手 */
+/* 面板分割条(VS Code sash):常显 1px 分割线把相邻面板连成整体,
+   悬停/拖拽时变主色加粗提示可抓取 */
 .col-resizer {
   cursor: col-resize;
-  flex: 0 0 4px;
-  border-radius: 2px;
-  background: transparent;
-  transition: background 0.15s;
+  flex: 0 0 5px;
+  background: linear-gradient(var(--border), var(--border)) center / 1px 100% no-repeat;
 }
 .col-resizer:hover,
 .col-resizer.dragging {
-  background: #3b82f680;
+  background: linear-gradient(var(--ring), var(--ring)) center / 2px 100% no-repeat;
 }
 .row-resizer {
   cursor: row-resize;
-  flex: 0 0 4px;
-  border-radius: 2px;
-  background: transparent;
-  transition: background 0.15s;
+  flex: 0 0 5px;
+  background: linear-gradient(var(--border), var(--border)) center / 100% 1px no-repeat;
 }
 .row-resizer:hover,
 .row-resizer.dragging {
-  background: #3b82f680;
+  background: linear-gradient(var(--ring), var(--ring)) center / 100% 2px no-repeat;
+}
+
+/* 活动页签(VS Code 签名样式):与编辑区同底色融入下方 + 顶部主色细线 */
+.tab-active {
+  box-shadow: inset 0 1px 0 0 var(--primary);
 }
 
 /* Ctrl+悬停函数链接样式(类 VS Code):蓝字+下划线+手形光标 */
 .fn-link {
-  color: #0563cf !important;
+  color: #005fb8 !important;
   text-decoration: underline !important;
   cursor: pointer !important;
 }

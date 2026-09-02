@@ -130,7 +130,7 @@ export function SettingsView() {
       <div className="w-36 shrink-0 space-y-0.5 overflow-auto border-r border-border p-2">
         {SECTIONS.map(({ key, label, icon: Icon }) => (
           <button key={key} onClick={() => setSection(key)}
-            className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors ${
+            className={`flex w-full items-center gap-2 px-2 py-1.5 text-left transition-colors ${
               section === key ? 'bg-accent text-accent-foreground font-medium' : 'text-muted-foreground hover:bg-accent/60'
             }`}>
             <Icon className="h-3.5 w-3.5" />{label}
@@ -147,18 +147,18 @@ export function SettingsView() {
               <Save className="mr-1 h-3.5 w-3.5" />{saving ? '保存中…' : '保存'}
             </Button>
           </div>
-          {msg && <div className="mb-3 rounded bg-emerald-500/10 px-3 py-2 text-emerald-700 dark:text-emerald-300">{msg}</div>}
-          {err && <div className="mb-3 rounded bg-red-500/10 px-3 py-2 text-red-600 dark:text-red-400">{err}</div>}
+          {msg && <div className="mb-3 bg-emerald-500/10 px-3 py-2 text-emerald-700 dark:text-emerald-300">{msg}</div>}
+          {err && <div className="mb-3 bg-red-500/10 px-3 py-2 text-red-600 dark:text-red-400">{err}</div>}
 
-          {/* 环境:列表单选生效 + 表单维护 */}
+          {/* 环境:列表单选生效 + 表单维护(扁平布局,列表与表单以分割线相连) */}
           {section === 'envs' && (
-            <div className="flex gap-3">
-              <div className="w-44 shrink-0">
-                <div className="rounded-sm border border-border bg-card/60 p-1.5">
+            <div className="flex">
+              <div className="w-44 shrink-0 border-r border-border pr-1.5">
+                <div className="py-1">
                   {envs.length === 0 && <div className="p-2 text-muted-foreground">(空)</div>}
                   {envs.map((e, i) => (
                     <button key={i} onClick={() => setSelEnv(i)}
-                      className={`flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-left transition-colors ${
+                      className={`flex w-full items-center gap-1.5 px-2 py-1.5 text-left transition-colors ${
                         selEnv === i ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/60'
                       }`}>
                       {activeEnv === e.name
@@ -177,7 +177,7 @@ export function SettingsView() {
               </div>
 
               {cur && (
-                <section className="min-w-0 flex-1 rounded-sm border border-border bg-card/60 p-3">
+                <section className="min-w-0 flex-1 pl-3">
                   <div className="mb-2 flex items-center justify-between">
                     <h3 className="font-medium text-foreground">
                       环境参数{cur.host && activeEnv === (cur.name || `${cur.host}-${cur.zone}`.replace(/-$/, '')) && <span className="ml-2 text-emerald-600 dark:text-emerald-400">(生效中)</span>}
@@ -228,7 +228,7 @@ export function SettingsView() {
                     <GroupLabel title="环境变量" />
                     <Field label="企业 TOPENT(留空用选区默认)" className="col-span-2"><Input className={cell} value={cur.dbEnt || ''} onChange={(e) => patchEnv(selEnv, { dbEnt: Number(e.target.value) || 0 })} /></Field>
                   </div>
-                  {probeNote && <div className="mt-2 rounded bg-sky-500/10 px-3 py-2 text-sky-700 dark:text-sky-300">{probeNote}</div>}
+                  {probeNote && <div className="mt-2 bg-sky-500/10 px-3 py-2 text-sky-700 dark:text-sky-300">{probeNote}</div>}
                   <p className="mt-2 text-muted-foreground">
                     T100 目录与源码路径按「登录区域」在服务器上自动获取(与标准调试同源),无需配置。数据库连接要素(TNS/实例/库名)也完全自动探测,点「测试连接」可验证连通。start --ssh 按环境名引用,清空名称恢复自动「主机-区域」。
                   </p>
@@ -239,7 +239,7 @@ export function SettingsView() {
 
           {/* 外观 */}
           {section === 'appearance' && (
-            <section className="rounded-sm border border-border bg-card/60 p-3">
+            <section>
               <h3 className="mb-2 font-medium text-foreground">主题</h3>
               <div className="flex gap-2">
                 <Button size="sm" variant={theme === 'dark' ? 'secondary' : 'outline'} onClick={() => setTheme('dark')}>
@@ -254,7 +254,7 @@ export function SettingsView() {
 
           {/* 高级:本机参数(不随环境走) */}
           {section === 'advanced' && (
-            <section className="rounded-sm border border-border bg-card/60 p-3">
+            <section>
               <h3 className="mb-2 font-medium text-foreground">本机参数</h3>
               <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
                 <Field label="启动参数模板({prog} 替换)" className="col-span-2 md:col-span-3"><Input className={input} value={cfg.launchArgs || ''} onChange={(e) => setCfg({ ...cfg, launchArgs: e.target.value })} /></Field>

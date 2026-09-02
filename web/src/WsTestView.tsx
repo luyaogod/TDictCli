@@ -35,12 +35,12 @@ export function WsTestView() {
   const doRun = () => void runWsTest()
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-2 p-2 pt-1">
-      {/* 工具条 */}
-      <div className="flex shrink-0 flex-wrap items-center gap-2">
+    <div className="flex min-h-0 flex-1 flex-col">
+      {/* 工具条:下缘分割线与报文区连成整体 */}
+      <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border px-2 py-1.5">
         {/* <FlaskConical className="h-4 w-4 text-muted-foreground" /> */}
         <select value={mode} onChange={(e) => setWsTest({ mode: e.target.value, url: '' })}
-          className="h-7 rounded-md border border-border bg-background px-1.5 text-xs text-foreground focus:border-border focus:outline-none">
+          className="h-7 border border-border bg-background px-1.5 text-xs text-foreground focus:border-border focus:outline-none">
           {MODES.map(([v, ep2, label]) => (
             <option key={v} value={v}>{label} ({ep2})</option>
           ))}
@@ -49,7 +49,7 @@ export function WsTestView() {
           value={url}
           onChange={(e) => setWsTest({ url: e.target.value })}
           placeholder={defaultUrl}
-          className="h-7 min-w-0 flex-1 rounded-md border border-border bg-background px-2 font-mono text-xs text-foreground placeholder:text-muted-foreground focus:border-border focus:outline-none"
+          className="h-7 min-w-0 flex-1 border border-border bg-background px-2 font-mono text-xs text-foreground placeholder:text-muted-foreground focus:border-border focus:outline-none"
           title={defaultUrl}
         />
         {isSoap && (
@@ -61,7 +61,7 @@ export function WsTestView() {
         )}
         <button onClick={doRun} disabled={running || !body.trim()}
           title="执行接口调用(服务器侧 curl POST)"
-          className="inline-flex items-center gap-1 rounded border border-emerald-500/20 px-2.5 py-1 text-xs text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-40">
+          className="inline-flex items-center gap-1 border border-emerald-500/20 px-2.5 py-1 text-xs text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-40">
           <Play className="h-3.5 w-3.5" fill="currentColor" />
           {running ? '执行中…' : '执行'}
         </button>
@@ -69,24 +69,24 @@ export function WsTestView() {
           <button
             onClick={() => setWsTest({ body: wsLogContent?.request || wsLogSel.reqPath, soap: false })}
             title={`带入日志报文:${wsLogSel.service}`}
-            className="rounded border border-border px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
+            className="border border-border px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
           >
             从日志带入({wsLogSel.service.length > 16 ? wsLogSel.service.slice(0, 16) + '…' : wsLogSel.service})
           </button>
         )}
         {history.length > 0 && (
           <button onClick={() => setShowHist(!showHist)}
-            className="rounded border border-border px-2 py-1 text-xs text-muted-foreground hover:bg-accent">
+            className="border border-border px-2 py-1 text-xs text-muted-foreground hover:bg-accent">
             历史({history.length})
           </button>
         )}
       </div>
 
-      {err && <div className="shrink-0 rounded border border-red-500/20 bg-red-500/10 px-3 py-1.5 text-xs text-red-600 dark:text-red-600 dark:text-red-400">{err}</div>}
+      {err && <div className="shrink-0 border border-red-500/20 bg-red-500/10 px-3 py-1.5 text-xs text-red-600 dark:text-red-600 dark:text-red-400">{err}</div>}
 
-      <div className="flex min-h-0 flex-1 flex-col gap-2 lg:flex-row">
-        {/* 请求报文 */}
-        <div className="flex min-h-40 flex-1 flex-col overflow-hidden rounded-sm border border-border bg-card/60">
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+        {/* 请求报文:竖排时下缘分割线,横排时右缘分割线(与响应区紧贴相连) */}
+        <div className="flex min-h-40 flex-1 flex-col overflow-hidden border-b border-border bg-background lg:border-b-0 lg:border-r">
           <div className="flex h-8 shrink-0 items-center border-b border-border px-2.5 text-xs font-medium text-muted-foreground">
             请求报文(JSON / XML)
           </div>
@@ -100,7 +100,7 @@ export function WsTestView() {
         </div>
 
         {/* 响应 */}
-        <div className="flex min-h-40 flex-1 flex-col overflow-hidden rounded-sm border border-border bg-card/60">
+        <div className="flex min-h-40 flex-1 flex-col overflow-hidden bg-background">
           <div className="flex h-8 shrink-0 items-center gap-3 border-b border-border px-2.5 text-xs font-medium text-muted-foreground">
             响应
             {result && result.httpCode > 0 && (
@@ -125,7 +125,7 @@ export function WsTestView() {
 
       {/* 执行历史 */}
       {showHist && history.length > 0 && (
-        <div className="max-h-44 shrink-0 overflow-auto rounded-sm border border-border bg-card/60">
+        <div className="max-h-44 shrink-0 overflow-auto border-t border-border bg-background">
           {history.map((h, i) => (
             <div key={i} onClick={() => setWsTest({ result: { httpCode: h.httpCode, durationSec: h.durationSec, response: h.response } })}
               title="点击回看该次响应"
