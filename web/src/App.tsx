@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { RotateCcw, WifiOff, Bug, Globe, FlaskConical, Settings, X, type LucideIcon } from 'lucide-react'
+import { RotateCcw, WifiOff, Bug, Globe, FlaskConical, Settings, X, ListTree, type LucideIcon } from 'lucide-react'
 import { connectWS, useStore } from './store'
 import { Toolbar } from './Toolbar'
 import { SourceView, editorRef } from './SourceView'
 import { RightPanels, TimelinePanel } from './Panels'
+import { OutlinePanel } from './OutlinePanel'
 import { WsLogView } from './WsLogView'
 import { WsTestView } from './WsTestView'
 import { SettingsView } from './SettingsView'
@@ -106,6 +107,8 @@ export function App() {
 
   const showRight = useStore((s) => s.showRight)
   const showBottom = useStore((s) => s.showBottom)
+  const rightView = useStore((s) => s.rightView)
+  const setRightView = useStore((s) => s.setRightView)
   const view = useStore((s) => s.view)
   const setView = useStore((s) => s.setView)
   const launchError = useStore((s) => s.launchError)
@@ -241,7 +244,18 @@ export function App() {
               <>
                   <div className="col-resizer" onMouseDown={onResizeDown} title="拖拽调整代码区与侧边栏宽度" />
                 <div style={{ width: panelW }} className="min-h-0 shrink-0">
-                  <RightPanels />
+                  {/* 双 sheet keep-alive:切换仅改 display,保留手风琴展开/监视输入等本地状态 */}
+                  <div className={rightView === 'debug' ? 'h-full min-h-0 w-full' : 'hidden'}>
+                    <RightPanels />
+                  </div>
+                  <div className={rightView === 'outline' ? 'h-full min-h-0 w-full' : 'hidden'}>
+                    <OutlinePanel />
+                  </div>
+                </div>
+                {/* 右侧 sheet 切换栏(仿左侧活动栏):与右侧边栏一同受折叠按钮控制 */}
+                <div className="flex w-10 shrink-0 flex-col border-l border-border bg-background py-2">
+                  <ActivityIcon icon={Bug} label="调试面板" active={rightView === 'debug'} onClick={() => setRightView('debug')} />
+                  <ActivityIcon icon={ListTree} label="大纲" active={rightView === 'outline'} onClick={() => setRightView('outline')} />
                 </div>
               </>
             )}

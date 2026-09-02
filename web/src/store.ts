@@ -38,6 +38,7 @@ interface Store {
   // UI 面板显隐
   showRight: boolean
   showBottom: boolean
+  rightView: 'debug' | 'outline' // 右侧边栏当前 sheet(调试面板/大纲),localStorage tdict.rightView 持久化
   // 数据
   breakpoints: Breakpoint[]
   adjustedBps: Record<number, number> // 点击行号 → 实际注册断点编号(fgldb 会把非可执行行的断点自动下移)
@@ -85,6 +86,7 @@ interface Store {
   setWsConnected: (b: boolean) => void
   toggleRight: () => void
   toggleBottom: () => void
+  setRightView: (v: 'debug' | 'outline') => void
   pushRaw: (line: string) => void
   sendRaw: (cmd: string) => Promise<void>
   pushTimeline: (item: Omit<TimelineItem, 'time'>) => void
@@ -142,6 +144,7 @@ export const useStore = create<Store>((set, get) => ({
   wsConnected: false,
   sessionId: null, module: '', prog: '', state: '', started: false, stop: null, holdingSeconds: 0,
   launching: false, launchError: '', showRight: true, showBottom: true,
+  rightView: (localStorage.getItem('tdict.rightView') === 'outline' ? 'outline' : 'debug') as 'debug' | 'outline',
   breakpoints: [], adjustedBps: {}, frames: [], watches: [], autovars: [], selectedFrame: -1, backendDead: '',
   timeline: [], rawLog: [],
   runProg: '',
@@ -157,6 +160,10 @@ export const useStore = create<Store>((set, get) => ({
   setWsConnected: (b) => set({ wsConnected: b }),
   toggleRight: () => set((st) => ({ showRight: !st.showRight })),
   toggleBottom: () => set((st) => ({ showBottom: !st.showBottom })),
+  setRightView: (v) => {
+    localStorage.setItem('tdict.rightView', v)
+    set({ rightView: v })
+  },
 
   pushRaw: (line) => set((st) => {
     const log = st.rawLog.length > 3000 ? st.rawLog.slice(-2000) : st.rawLog
