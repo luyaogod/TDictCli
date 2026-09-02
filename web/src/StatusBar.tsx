@@ -26,7 +26,7 @@ export function StatusBar() {
   }
 
   return (
-    <div className={`flex h-7 shrink-0 items-center gap-3 px-3 text-[11px] transition-colors ${bar}`}>
+    <div className={`flex h-7 shrink-0 items-center gap-3 border-t border-border px-3 text-[11px] transition-colors ${bar}`}>
       {/* 左:源码文件路径 */}
       <span className="min-w-0 flex-1 truncate font-mono" title={sourcePath || ''}>
         {sourcePath || ' '}
