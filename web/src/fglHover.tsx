@@ -127,7 +127,17 @@ export function attachHover(editor: monaco.editor.IStandaloneCodeEditor) {
         })
     }
   }
+  // 悬停驻留延时:同一变量上停稳 500ms 才发卡并求值,快速扫过不触发
+  const HOVER_DELAY_MS = 500
+  let pending: { expr: string; pos: monaco.Position; timer: number } | null = null
+  const cancelPending = () => {
+    if (pending) {
+      window.clearTimeout(pending.timer)
+      pending = null
+    }
+  }
   const hide = () => {
+    cancelPending()
     if (!visible) return
     visible = false
     current = null
@@ -159,8 +169,17 @@ export function attachHover(editor: monaco.editor.IStandaloneCodeEditor) {
     if (!expr) { hideIfOutside(mx, my); return }
     if (visible && current?.expr === expr) return
     if (visible && inCard(mx, my)) return // 移向卡片途中不切换
+    if (pending?.expr === expr) return // 已在驻留等待中,不重复计时
+    cancelPending()
     hide()
-    show(expr, pos)
+    pending = {
+      expr,
+      pos,
+      timer: window.setTimeout(() => {
+        pending = null
+        show(expr, pos)
+      }, HOVER_DELAY_MS),
+    }
   })
   editor.onMouseLeave(() => hide())
   // 兜底:鼠标移出编辑器区域(右侧面板/顶栏等)也收卡——不完全依赖 Monaco 的 leave 事件
