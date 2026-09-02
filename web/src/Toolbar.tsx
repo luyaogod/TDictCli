@@ -61,11 +61,11 @@ function FloatingToolbar({ children }: { children: ReactNode }) {
     window.addEventListener('mouseup', up)
   }
 
-  // 默认:代码编辑器右上角(避开右侧栏;右侧栏收起时贴视口右缘)
+  // 默认:代码编辑器右上角(避开右侧栏 40px 的右侧 sheet 图标栏;右侧栏收起时贴视口右缘)
   const panelW = Number(localStorage.getItem('tdict.panelW')) || 320
   const style = pos
     ? { top: pos.top, left: pos.left }
-    : { top: 44, right: showRight ? panelW + 24 : 8 }
+    : { top: 44, right: showRight ? panelW + 64 : 8 }
 
   return (
     <div
