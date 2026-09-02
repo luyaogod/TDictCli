@@ -252,20 +252,31 @@ export function SourceView() {
     decos.set(list)
   }, [breakpoints, cursorLine, state, content, isDebug, sourceDVM, active?.file, active?.line, editorReady, modelTick, module])
 
-  // 视口跟随:仅停站行号"值变化"时滚动到当前行(调试页)。
-  // 绝不能放进装饰 effect——它依赖 breakpoints,加断点重跑会把视口拽回运行行
-  // 视口滚动唯一驱动 = revealReq 定位信号(停站落位/步进/跳函数/选帧/断点跳转)。
+  // 视口跟随(VS Code 式):高亮平移与滚动解耦——黄色高亮始终即时移动到新停站行,
+  // 但视口只在「停站行不在视口内」时才居中(revealLineInCenterIfOutsideViewport),
+  // 行还看得见就绝不翻页:单步时行向底边自然漂移,出界后才重新居中,无抖动。
+  // 视口滚动唯一驱动 = revealReq 定位信号(停站落位/步进/跳函数/选帧/断点跳转);
+  // 停站保持期间的快照刷新不发信号,手动滚走的位置也被尊重,直到下一次真停站。
+  // 绝不能放进装饰 effect——它依赖 breakpoints,加断点重跑会把视口拽回运行行。
   // 纯页签切换不发信号:切回页签恢复上次离开的视口,阅读连续性不受光标位置影响。
-  // content 入依赖:定位信号先于内容到达时(新开浏览页签),内容就绪后本 effect 重跑完成滚动;
-  // 延迟 80ms 等换 model/setValue 完成,避免被 viewState 恢复覆盖
+  // 每个定位信号只消费一次(revealedSeqRef):content/state 变化引发的 effect 重跑不再重复滚动;
+  // 内容未就绪(模型行数不够)时不消费,等 content 到位后重跑再滚——延迟 80ms 等换 model/setValue 完成
   const revealSeq = useStore((s) => s.revealReq?.seq ?? 0)
   const revealLine = useStore((s) => s.revealReq?.line ?? 0)
   const revealKey = useStore((s) => s.revealReq?.key ?? '')
+  const revealedSeqRef = useRef(0)
   useEffect(() => {
     const targetKey = isDebug ? 'debug' : active?.key
     if (!(revealLine > 0) || revealKey !== targetKey) return
     if (isDebug && state !== 'stopped') return
-    const t = setTimeout(() => editorRef.current?.revealLineInCenter(revealLine), 80)
+    if (revealSeq === revealedSeqRef.current) return
+    const t = setTimeout(() => {
+      const ed = editorRef.current
+      if (!ed) return
+      if ((ed.getModel()?.getLineCount() ?? 0) < revealLine) return
+      revealedSeqRef.current = revealSeq
+      ed.revealLineInCenterIfOutsideViewport(revealLine)
+    }, 80)
     return () => clearTimeout(t)
   }, [revealSeq, revealLine, revealKey, content, isDebug, state, active?.key])
 
