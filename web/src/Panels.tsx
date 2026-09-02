@@ -403,19 +403,19 @@ export function TimelinePanel() {
   }
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
-      <div className="flex h-8 shrink-0 items-center gap-2 border-b border-border px-2">
-        <button
-          className={`px-2 py-0.5 text-xs ${tab === 'raw' ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-          onClick={() => setTab('raw')}
-        >
-          原始协议流 ({rawLog.length})
-        </button>
-        <button
-          className={`px-2 py-0.5 text-xs ${tab === 'timeline' ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-          onClick={() => setTab('timeline')}
-        >
-          操作时间线
-        </button>
+      {/* 面板页签(VS Code PROBLEMS/OUTPUT 式):纯文字 + 活动页签主色下划线压住分割线 */}
+      <div className="flex h-8 shrink-0 items-center gap-1 border-b border-border px-1.5">
+        {([['raw', `原始协议流 (${rawLog.length})`], ['timeline', '操作时间线']] as const).map(([k, label]) => (
+          <button key={k}
+            className={`relative flex h-full items-center px-2.5 text-xs transition-colors ${
+              tab === k ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+            }`}
+            onClick={() => setTab(k)}
+          >
+            {label}
+            {tab === k && <span className="absolute inset-x-0 bottom-0 h-px bg-primary" />}
+          </button>
+        ))}
       </div>
       <div ref={bodyRef} className="min-h-0 flex-1 overflow-auto p-1 font-mono text-[11px] leading-5">
         {tab === 'timeline' && (
@@ -441,23 +441,17 @@ export function TimelinePanel() {
         )}
       </div>
       {tab === 'raw' && (
-        <div className="flex h-8 shrink-0 items-center gap-1 border-t border-border px-2">
-          <span className="shrink-0 font-mono text-xs text-sky-600 dark:text-sky-400">{canSend ? '(fgldb)' : '—'}</span>
+        // 命令输入(VS Code Debug Console 式):> 提示符 + 无边框输入行,回车即发送
+        <div className="flex h-8 shrink-0 items-center gap-1.5 border-t border-border px-2.5">
+          <span className="shrink-0 font-mono text-xs leading-none text-sky-600 dark:text-sky-400" title="fgldb 命令直通">&gt;</span>
           <input
             value={cmd}
             onChange={(e) => setCmd(e.target.value)}
             onKeyDown={onCmdKey}
             disabled={!canSend}
-            placeholder={canSend ? 'fgldb 命令,如 print lp_str / info breakpoints(↑↓ 历史)' : '需停站后才能发送命令'}
-            className="h-6 min-w-0 flex-1 border border-border bg-background px-2 font-mono text-xs text-foreground placeholder:text-muted-foreground focus:border-border focus:outline-none disabled:opacity-50"
+            placeholder={canSend ? 'fgldb 命令,如 print lp_str / info breakpoints(↑↓ 历史),回车发送' : '需停站后才能发送命令'}
+            className="h-6 min-w-0 flex-1 bg-transparent font-mono text-xs text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
           />
-          <button
-            className="shrink-0 border border-border px-2 py-0.5 text-xs text-foreground transition-colors hover:bg-accent disabled:pointer-events-none disabled:opacity-40"
-            disabled={!canSend || !cmd.trim()}
-            onClick={submit}
-          >
-            发送
-          </button>
         </div>
       )}
     </div>
