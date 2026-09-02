@@ -89,6 +89,9 @@ export function attachHover(editor: monaco.editor.IStandaloneCodeEditor) {
   let current: { expr: string; token: number } | null = null
   let seq = 0
   const cache = new Map<string, { v?: string; e?: string }>()
+  // fgldb 报 No symbol 的词 = 不是变量:负缓存,悬浮直接略过(步进/换帧后清空——
+  // 同名符号在不同函数作用域可能存在)
+  const noSymbol = new Set<string>()
 
   const widget: monaco.editor.IContentWidget = {
     getId: () => 'fgl.hover.card',
@@ -122,6 +125,12 @@ export function attachHover(editor: monaco.editor.IStandaloneCodeEditor) {
           if (current?.token === token) render({ expr, v: value })
         })
         .catch((err: Error) => {
+          // No symbol = 该词不是变量:静默拦截,不弹卡、记负缓存后续也不再请求
+          if (/no symbol/i.test(err.message)) {
+            noSymbol.add(expr)
+            if (current?.token === token) hide()
+            return
+          }
           cache.set(expr, { e: err.message })
           if (current?.token === token) render({ expr, e: err.message })
         })
@@ -167,6 +176,7 @@ export function attachHover(editor: monaco.editor.IStandaloneCodeEditor) {
     if (!pos) { hideIfOutside(mx, my); return }
     const expr = exprAt(model, pos)
     if (!expr) { hideIfOutside(mx, my); return }
+    if (noSymbol.has(expr)) { hide(); return } // 已知非变量,静默略过
     if (visible && current?.expr === expr) return
     if (visible && inCard(mx, my)) return // 移向卡片途中不切换
     if (pending?.expr === expr) return // 已在驻留等待中,不重复计时
@@ -197,7 +207,8 @@ export function attachHover(editor: monaco.editor.IStandaloneCodeEditor) {
   })
   editor.onKeyDown((e) => { if (e.keyCode === monaco.KeyCode.Escape) hide() })
   editor.onDidChangeModel(() => hide())
-  // 离开停站即收卡;停站行变化(步进/换帧)清缓存,保证下次悬浮取到新值
+  // 离开停站即收卡;停站行变化(步进/换帧)清缓存与负缓存,保证下次悬浮取到新值
+  // (同名符号在别的函数作用域可能是变量)
   let lastStop = ''
   useStore.subscribe((s) => {
     if (s.state !== 'stopped') hide()
@@ -205,6 +216,7 @@ export function attachHover(editor: monaco.editor.IStandaloneCodeEditor) {
     if (k !== lastStop) {
       lastStop = k
       cache.clear()
+      noSymbol.clear()
     }
   })
 }
