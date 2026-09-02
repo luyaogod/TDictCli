@@ -10,13 +10,14 @@ import { SettingsView } from './SettingsView'
 import { StatusBar } from './StatusBar'
 import { api } from './api'
 
-// VS Code 风格活动栏图标按钮:选中态灰色底色(无左侧蓝条),未选中透明显灰
+// VS Code 风格活动栏图标按钮:通栏占满活动栏宽度(悬停/选中底色左右贴边,无留白差),
+// 选中态灰色底色(无左侧蓝条),未选中透明显灰
 function ActivityIcon({ icon: Icon, label, active, onClick }: {
   icon: LucideIcon; label: string; active: boolean; onClick: () => void
 }) {
   return (
     <button title={label} onClick={onClick}
-      className={`flex h-8 w-8 items-center justify-center transition-colors ${
+      className={`flex h-8 w-full shrink-0 items-center justify-center transition-colors ${
         active ? 'bg-foreground/10 text-foreground' : 'text-muted-foreground hover:text-foreground'
       }`}>
       <Icon className="h-5 w-5" />
