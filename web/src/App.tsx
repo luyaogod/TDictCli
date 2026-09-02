@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { RotateCcw, WifiOff, Bug, Globe, FlaskConical, Settings, X, ListTree, type LucideIcon } from 'lucide-react'
+import { RotateCcw, WifiOff, Bug, Globe, FlaskConical, Settings, X, ListTree, Sword, type LucideIcon } from 'lucide-react'
 import { connectWS, useStore } from './store'
 import { Toolbar } from './Toolbar'
 import { SourceView, editorRef } from './SourceView'
@@ -254,7 +254,7 @@ export function App() {
                 </div>
                 {/* 右侧 sheet 切换栏(仿左侧活动栏):与右侧边栏一同受折叠按钮控制 */}
                 <div className="flex w-10 shrink-0 flex-col border-l border-border bg-background py-2">
-                  <ActivityIcon icon={Bug} label="调试面板" active={rightView === 'debug'} onClick={() => setRightView('debug')} />
+                  <ActivityIcon icon={Sword} label="调试面板" active={rightView === 'debug'} onClick={() => setRightView('debug')} />
                   <ActivityIcon icon={ListTree} label="大纲" active={rightView === 'outline'} onClick={() => setRightView('outline')} />
                 </div>
               </>
