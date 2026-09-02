@@ -99,9 +99,9 @@ export function Toolbar() {
 
   return (
     <>
-      {/* 顶栏(融入背景,无边框,低高度;启动控件已移至右侧面板顶部)
-          左内边距 48px = 活动栏 40 + 内容区 p-2 8,与代码编辑器左缘对齐 */}
-      <div className="flex h-8 shrink-0 items-center gap-2 bg-background pl-12 pr-3">
+      {/* 顶栏(低高度;启动控件已移至右侧面板顶部),下缘分割线与内容区分隔
+          左内边距 48px = 活动栏 40 + 分割线 1 + 编辑区余量,与代码编辑器左缘对齐 */}
+      <div className="flex h-8 shrink-0 items-center gap-2 border-b border-border bg-background pl-12 pr-3">
         {/* 作业编号已由源码区调试页签展示,不再重复 */}
 
         {/* 右上角:收展下方面板 / 右方面板 */}
