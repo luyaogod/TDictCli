@@ -185,3 +185,54 @@ body { margin: 0; background: var(--background); }
 .dark .fn-link {
   color: #4daafc !important;
 }
+
+/* 变量悬浮卡片(Monaco content widget):侧边栏同款树 + 右上角复制 */
+.fgl-hover {
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  padding: 6px 8px;
+  min-width: 180px;
+  max-width: 480px;
+  max-height: 320px;
+  overflow: auto;
+  font-size: 12px;
+  user-select: text;
+  cursor: default;
+}
+.fgl-hover-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 4px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+.fgl-hover-name {
+  font-weight: 600;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.fgl-hover-type {
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+.fgl-hover-copy {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 4px;
+  color: var(--muted-foreground);
+  border: 1px solid var(--border);
+}
+.fgl-hover-copy:hover:not(:disabled) {
+  color: var(--foreground);
+  background: var(--accent);
+}
+.fgl-hover-copy:disabled {
+  opacity: 40%;
+}
+.fgl-hover-value {
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
