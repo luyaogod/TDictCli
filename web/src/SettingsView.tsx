@@ -187,16 +187,11 @@ export function SettingsView() {
         <div className="mx-auto max-w-3xl p-4">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-medium text-foreground">{SECTIONS.find((s) => s.key === section)?.label}设置</h2>
-            {/* 手动保存:有未保存修改时出现保存按钮(修改不再即时写回) */}
+            {/* 保存状态:修改后仅提示,保存按钮统一放在环境表单行(设为默认旁) */}
             <span className="flex items-center gap-2">
               <span className={`text-[11px] ${saveState === 'saved' ? 'text-emerald-600 dark:text-emerald-400' : dirty ? 'text-amber-600 dark:text-amber-400' : ''}`}>
                 {saveState === 'saving' ? '保存中…' : saveState === 'saved' ? '已保存 ✓' : dirty ? '有未保存的修改' : ''}
               </span>
-              {(dirty || saveState === 'saving') && (
-                <Button size="sm" variant="secondary" className="h-6 text-xs" disabled={saveState === 'saving'} onClick={() => void saveAll()}>
-                  {saveState === 'saving' ? '保存中…' : '保存'}
-                </Button>
-              )}
             </span>
           </div>
           {err && <div className="mb-3 bg-red-500/10 px-3 py-2 text-red-600 dark:text-red-400">{err}</div>}
@@ -327,7 +322,8 @@ export function SettingsView() {
                 <Field label="终端宽"><Input className={input} value={cfg.termWidth || 200} onChange={(e) => patchCfg({ termWidth: Number(e.target.value) || 200 })} /></Field>
                 <Field label="终端高"><Input className={input} value={cfg.termHeight || 50} onChange={(e) => patchCfg({ termHeight: Number(e.target.value) || 50 })} /></Field>
               </div>
-              {(dirty || saveState === 'saving') && (
+              {/* 高级区修改后同样只在顶部提示,保存按钮统一在环境表单行;无环境时兜底显示在此 */}
+              {(dirty || saveState === 'saving') && envs.length === 0 && (
                 <div className="mt-3">
                   <Button size="sm" variant="secondary" className="h-7" disabled={saveState === 'saving'} onClick={() => void saveAll()}>
                     {saveState === 'saving' ? '保存中…' : '保存'}
