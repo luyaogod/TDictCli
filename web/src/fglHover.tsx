@@ -71,6 +71,43 @@ function exprAt(model: monaco.editor.ITextModel, pos: monaco.Position): string |
   return expr || null
 }
 
+// SQL / 4GL 常用关键字:取值后复制的"粗暴"变量识别时跳过,减少无效 print 往返
+// (不在表里的标识符一律照试,由 fgldb 的 No symbol 判定)
+const KEYWORDS = new Set(('select from where and or not in as on join left right inner outer full cross '
+  + 'group by order having insert into values update set delete create table index view drop alter '
+  + 'union all distinct case when then else end like between is null exists asc desc top limit offset '
+  + 'define let display if then return for to while do call initialize continue exit when otherwise '
+  + 'true false null record array of char char1 date integer decimal string varchar datetime '
+  + 'main function procedure report schema require to end goto label sleep run exit program').split(/\s+/))
+
+// 从文本提取候选变量 token(标识符链 a.b.c 与 cust.* 两种形态),去重、滤关键字
+function candidateVars(text: string): string[] {
+  const seen = new Set<string>()
+  const out: string[] = []
+  const re = /(?:[A-Za-z_][A-Za-z0-9_]*\.)+\*|[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z0-9_]+)*/g
+  for (const m of text.matchAll(re)) {
+    const t = m[0]
+    if (KEYWORDS.has(t.toLowerCase()) || seen.has(t)) continue
+    seen.add(t)
+    out.push(t)
+  }
+  return out
+}
+
+// 取值结果转 SQL 可嵌入字面量:双引号字符串 → 单引号(内部单引号 '' 转义);其余原样
+function valueForSql(v: string): string {
+  const t = v.trim()
+  if (t.length >= 2 && t.startsWith('"') && t.endsWith('"')) {
+    return "'" + t.slice(1, -1).replace(/'/g, "''") + "'"
+  }
+  return t
+}
+
+// 剪贴板写入(测试可 patch 捕获)
+function writeClipboard(text: string): Promise<void> {
+  return navigator.clipboard.writeText(text)
+}
+
 let attachedTo: monaco.editor.IStandaloneCodeEditor | null = null
 
 // 在 SourceView onMount 里调用(单编辑器实例)
@@ -226,5 +263,81 @@ export function attachHover(editor: monaco.editor.IStandaloneCodeEditor) {
       cache.clear()
       noSymbol.clear()
     }
+  })
+
+  // ---- 右键菜单:取值复制(复用悬浮的 cache / noSymbol / print 链路) ----
+  const st = () => useStore.getState()
+  const timeline = (text: string, kind: 'info' | 'warn' = 'info') =>
+    st().pushTimeline({ origin: 'human', kind, text })
+
+  // 取一个表达式:cache 命中直接用;否则 print(No symbol 记负缓存并抛标记)
+  const evalExpr = async (expr: string): Promise<string> => {
+    const cached = cache.get(expr)
+    if (cached?.v !== undefined) return cached.v
+    try {
+      const { value } = await api.print(st().sessionId!, expr)
+      cache.set(expr, { v: value })
+      return value
+    } catch (err: any) {
+      if (/no symbol/i.test(err.message)) noSymbol.add(expr)
+      throw err
+    }
+  }
+
+  // 「取值后复制」:选中区域内标识符逐个取值,解析成功的替换进文本(双引号串转单引号),
+  // 结果整体写剪贴板——用于把代码里的 SQL 抠出来直接可用
+  editor.addAction({
+    id: 'fgl.copyWithValues',
+    label: '取值后复制(变量替换为值)',
+    contextMenuGroupId: 'fgl',
+    contextMenuOrder: 1,
+    run: async (ed) => {
+      const sel = ed.getSelection()
+      const text = sel ? ed.getModel()?.getValueInRange(sel) || '' : ''
+      if (!text.trim()) { timeline('取值后复制:请先选中要处理的文本(如 SQL)', 'warn'); return }
+      if (st().state !== 'stopped') { timeline('取值后复制:仅停站时可取值', 'warn'); return }
+      const vars = candidateVars(text)
+      if (!vars.length) { timeline('取值后复制:选中内容里没有可尝试的变量', 'warn'); return }
+      const repl: [string, string][] = []
+      for (const v of vars) {
+        if (noSymbol.has(v)) continue
+        try {
+          repl.push([v, valueForSql(await evalExpr(v))])
+        } catch { /* No symbol 或取值失败:原样保留 */ }
+      }
+      if (!repl.length) { timeline('取值后复制:选中内容中的名称都不是可取值变量', 'warn'); return }
+      let out = text
+      for (const [name, val] of repl.sort((a, b) => b[0].length - a[0].length)) {
+        out = out.replace(new RegExp(`\\b${name.replace(/\./g, '\\.')}\\b`, 'g'), val)
+      }
+      await writeClipboard(out)
+      timeline(`取值后复制:已替换 ${repl.length}/${vars.length} 个变量并复制(${repl.map(([n]) => n).join(', ')})`)
+    },
+  })
+
+  // 「复制值」:对选中文本或光标处表达式执行一次取值,原始值写剪贴板
+  editor.addAction({
+    id: 'fgl.copyValue',
+    label: '复制值',
+    contextMenuGroupId: 'fgl',
+    contextMenuOrder: 2,
+    run: async (ed) => {
+      const sel = ed.getSelection()
+      const selText = sel ? ed.getModel()?.getValueInRange(sel) || '' : ''
+      const expr = selText.trim() || (() => {
+        const model = ed.getModel()
+        const pos = ed.getPosition()
+        return model && pos ? exprAt(model, pos) : null
+      })()
+      if (!expr?.trim()) { timeline('复制值:请先把光标放在变量上或选中表达式', 'warn'); return }
+      if (st().state !== 'stopped') { timeline(`复制值:仅停站时可取值(${expr})`, 'warn'); return }
+      try {
+        const value = await evalExpr(expr.trim())
+        await writeClipboard(value)
+        timeline(`复制值 ${expr} → ${value.length > 120 ? value.slice(0, 120) + '…' : value}`)
+      } catch (e: any) {
+        timeline(`复制值 ${expr} 失败: ${/no symbol/i.test(e.message || '') ? '不是可取值变量' : e.message}`, 'warn')
+      }
+    },
   })
 }
