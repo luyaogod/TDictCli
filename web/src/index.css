@@ -186,50 +186,48 @@ body { margin: 0; background: var(--background); }
   color: #4daafc !important;
 }
 
-/* 变量悬浮卡片(Monaco content widget):侧边栏同款树 + 右上角复制 */
+/* 变量悬浮卡片(Monaco content widget):直接显示值(无头部/变量名/分割线)。
+   固定统一宽度:break-all 文本的 fit-content 会塌缩成最短断行宽,导致卡片忽宽忽窄;
+   固定宽度下长值换行、树形展开有空间,观感一致 */
 .fgl-hover {
+  position: relative;
   background: var(--card);
   border: 1px solid var(--border);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
-  padding: 6px 8px;
-  min-width: 180px;
-  max-width: 480px;
-  max-height: 320px;
-  overflow: auto;
+  width: 440px;
+  max-width: calc(100vw - 24px);
   font-size: 12px;
   user-select: text;
   cursor: default;
 }
-.fgl-hover-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding-bottom: 4px;
-  margin-bottom: 4px;
-  border-bottom: 1px solid var(--border);
-}
-.fgl-hover-name {
-  font-weight: 600;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-}
-.fgl-hover-type {
-  color: var(--muted-foreground);
-  font-size: 11px;
+.fgl-hover-body {
+  max-height: 320px;
+  overflow: auto;
+  padding: 6px 10px;
 }
 .fgl-hover-copy {
-  margin-left: auto;
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
-  padding: 1px 4px;
+  padding: 2px 4px;
   color: var(--muted-foreground);
+  background: var(--card);
   border: 1px solid var(--border);
+  opacity: 0; /* 悬停卡片才浮现,平时不打扰值展示 */
+  transition: opacity 0.12s;
+}
+.fgl-hover:hover .fgl-hover-copy {
+  opacity: 1;
 }
 .fgl-hover-copy:hover:not(:disabled) {
   color: var(--foreground);
   background: var(--accent);
 }
 .fgl-hover-copy:disabled {
-  opacity: 40%;
+  visibility: hidden; /* 错误态无值可复制,连同悬停也不显示 */
 }
 .fgl-hover-value {
   white-space: pre-wrap;

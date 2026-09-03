@@ -1,7 +1,9 @@
 // 调试编辑器变量悬浮取值(仅 debug model 生效):
 // - Monaco IContentWidget 承载悬浮卡片,锚定在变量词下方,随内容滚动
-// - 卡片用 React 渲染:Record/ARRAY 复用侧边栏同款 VarTreeNodes 树(可展开),
-//   标量显示原始值;头部右上角复制按钮复制 fgldb print 原始文本
+// - 卡片只显示值本身(无变量名/分割线):Record/ARRAY 复用侧边栏同款 VarTreeNodes
+//   树并默认展开,标量显示原始文本;右上角悬停浮现复制按钮(复制 fgldb print 原始值)
+// - 固定统一宽度(内容换行),内容超高时卡片内部滚动:滚轮在卡片上被拦截不上传,
+//   避免长值滚动时编辑器代码跟着滚
 // - 仅停站(stopped)时取值:走 api.print(fgldb print),按表达式缓存;
 //   停站行变化(步进/落站)即清缓存保证取值新鲜
 // - 先求值后弹卡:驻留 500ms 后静默调用 print,拿到结果才显示卡片——
@@ -15,13 +17,10 @@ import { api } from './api'
 import { parseFglTree } from './fglparse'
 import { VarTreeNodes } from './VarTreeUi'
 
-// 悬浮卡片:头部(表达式 + 类型 + 右上角复制)+ 树/原始值。
-// 卡片只在拿到求值结果后才弹出(加载中不显示,避免 No symbol 时闪烁)
-interface HoverData { expr: string; v?: string; e?: string }
-function HoverCard({ expr, v, e: err }: HoverData) {
+// 悬浮卡片:直接展示值(树/原始文本/错误)。只在拿到求值结果后弹出(无加载态,防闪烁)
+function HoverCard({ v, e: err }: { v?: string; e?: string }) {
   const [copied, setCopied] = useState(false)
   const kids = v !== undefined ? parseFglTree(v) : null
-  const isRecord = !!kids && kids.some((k) => !k.name.startsWith('['))
   const copy = () => {
     if (v === undefined) return
     navigator.clipboard.writeText(v).then(() => {
@@ -30,21 +29,19 @@ function HoverCard({ expr, v, e: err }: HoverData) {
     })
   }
   return (
-    <div className="fgl-hover" onMouseDown={(ev) => ev.stopPropagation()}>
-      <div className="fgl-hover-head">
-        <span className="fgl-hover-name">{expr}</span>
-        {kids && <span className="fgl-hover-type">{isRecord ? 'RECORD' : `ARRAY[${kids.length}]`}</span>}
-        <button className="fgl-hover-copy" title="复制原始值" disabled={v === undefined} onClick={copy}>
-          {copied ? '已复制' : <Copy className="h-3 w-3" />}
-        </button>
+    <div className="fgl-hover">
+      <button className="fgl-hover-copy" title="复制原始值" disabled={v === undefined} onClick={copy}>
+        {copied ? '已复制' : <Copy className="h-3 w-3" />}
+      </button>
+      <div className="fgl-hover-body">
+        {err ? (
+          <div className="fgl-hover-value text-red-400">{err}</div>
+        ) : kids ? (
+          <VarTreeNodes nodes={kids} />
+        ) : (
+          <div className="fgl-hover-value">{v}</div>
+        )}
       </div>
-      {err ? (
-        <div className="fgl-hover-value text-red-400">{err}</div>
-      ) : kids ? (
-        <VarTreeNodes nodes={[{ name: expr, open: true, children: kids, type: isRecord ? 'RECORD' : `ARRAY[${kids!.length}]` }]} />
-      ) : (
-        <div className="fgl-hover-value">{v}</div>
-      )}
     </div>
   )
 }
@@ -107,14 +104,21 @@ export function attachHover(editor: monaco.editor.IStandaloneCodeEditor) {
   }
   editor.addContentWidget(widget)
 
-  const render = (d: HoverData) => root.render(<HoverCard {...d} />)
+  // 滚动接管:卡片内容可滚动时,滚轮只滚卡片、不冒泡给编辑器(否则长值滚动时代码跟着滚);
+  // 卡片内容不滚动时放行,滚轮仍滚代码
+  dom.addEventListener('wheel', (e) => {
+    const body = dom.querySelector('.fgl-hover-body')
+    if (body && body.scrollHeight > body.clientHeight) e.stopPropagation()
+  })
+
+  const render = (d: { v?: string; e?: string }) => root.render(<HoverCard {...d} />)
   // 真正弹卡:只在拿到求值结果后调用
   const present = (expr: string, pos: monaco.Position, data: { v?: string; e?: string }) => {
     wpos = { line: pos.lineNumber, column: pos.column }
     current = { expr, token: ++seq }
     dom.style.display = 'block'
     visible = true
-    render({ expr, v: data.v, e: data.e })
+    render({ v: data.v, e: data.e })
     editor.layoutContentWidget(widget)
   }
   // 驻留到期:缓存命中直接弹卡;否则先静默求值,拿到结果才弹——
