@@ -24,10 +24,11 @@ var rawDebug = os.Getenv("TDBG_RAW") == "1"
 type State string
 
 const (
-	StateLoading State = "loading" // 正在建立(菜单/shell/启动 fglrun)
+	StateLoading State = "loading" // 正在建立(菜单/shell/启动 fglrun)或正在启动新一轮调试
 	StateStopped State = "stopped" // 停在 (fgldb) 提示符,可发命令
 	StateRunning State = "running" // 程序运行中,禁止发命令,仅可 \x03 中断
-	StateExit    State = "exit"    // 会话结束
+	StateIdle    State = "idle"    // 本轮调试已结束,宿主 shell 保留(单一常驻会话,可直接再启动)
+	StateExit    State = "exit"    // 会话已断开(SSH 已释放)
 )
 
 // ErrNotStopped 运行期发命令被闸门拒绝
@@ -209,14 +210,22 @@ type Session struct {
 	restoring bool   // 入口停站后的断点恢复进行中(对外仍报 loading)
 
 	custModule string // 转客制作业:实际启动的客制模块名(cpm/apm→cpm),空 = 标准模块
+
+	// ---- 单一常驻会话(复用宿主) ----
+	envName    string // 会话所连环境名(设置页 envs 名称;空 = 顶层默认/推导名)
+	booted     bool   // 是否已完成首次登录(菜单→shell),宿主可复用
+	shellReady bool   // pty 当前停在 shell 提示符,可直接敲 shell 命令
 }
 
-// NewSession 建立 SSH 连接并打开 PTY(登录与启动由 Launch 驱动)
+// NewSession 建立 SSH 连接并打开 PTY(登录与启动由 Launch 驱动)。
+// cfg 做一份快照:会话跨多轮调试存在,设置热更新不应改变其连接目标与启动参数
+// (启动一轮时 Manager 会按最新生效配置重刷,见 SetRun)。
 func NewSession(cfg *Config, module, prog, runProg, launchRef, extraArgs string, emit func(Event)) (*Session, error) {
 	conn, err := Dial(cfg.SSH)
 	if err != nil {
 		return nil, fmt.Errorf("SSH 连接失败: %w", err)
 	}
+	cc := *cfg
 	s := &Session{
 		ID:        fmt.Sprintf("s%d", time.Now().UnixMilli()),
 		Module:    module,
@@ -224,9 +233,10 @@ func NewSession(cfg *Config, module, prog, runProg, launchRef, extraArgs string,
 		RunProg:   runProg,
 		LaunchRef: launchRef,
 		ExtraArgs: extraArgs,
-		cfg:       cfg,
+		cfg:       &cc,
 		conn:      conn,
 		state:     StateLoading,
+		envName:   cfg.EnvName(),
 		bps:       map[int]*Breakpoint{},
 		srcCache:  map[string]srcCacheEntry{},
 		emit:      emit,
@@ -250,26 +260,128 @@ func NewSession(cfg *Config, module, prog, runProg, launchRef, extraArgs string,
 
 // ---------- 生命周期 ----------
 
-// Launch 登录 → 选区 → 进模块目录 → 启动 fglrun -d,直到出现 (fgldb) 提示符
-func (s *Session) Launch(ctx context.Context) error {
-	// 42r 用实体程序(RunProg,由 Manager 启动前连库按 gendbg 语义从 gzzz_t 解析);
-	// 模块仍空(未配置 db 或未命中)时按名称做 42r 文件搜索兜底
-	launchProg := s.RunProg
-	if launchProg == "" {
-		launchProg = s.Prog
+// runProgName 取本轮的实体程序名(优先 RunProg,回退 Prog)
+func (s *Session) runProgName() string {
+	if s.RunProg != "" {
+		return s.RunProg
 	}
-	moduleKnown := s.Module != ""
+	return s.Prog
+}
+
+// EnvName 返回会话所属环境名
+func (s *Session) EnvName() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.envName
+}
+
+// sameTarget 判断另一配置是否指向同一宿主(host/port/user/zone 全同)
+func (s *Session) sameTarget(cfg *Config) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if cfg == nil || s.cfg == nil {
+		return false
+	}
+	a, b := s.cfg.SSH, cfg.SSH
+	return a.Host == b.Host && a.Port == b.Port && a.User == b.User && s.cfg.Zone == cfg.Zone
+}
+
+// Launch 启动一轮调试(单一常驻会话):
+// - 首次调用:先完成登录(区域菜单 → shell → 回读运行时环境),之后宿主常驻;
+// - 后续调用:复用已登录宿主,直接从「进目录 → fglrun」开始,免去重复登录;
+// 一轮结束只回到 idle(enterIdle),SSH/登录态保留;失败则尽力把宿主收回空闲。
+func (s *Session) Launch(ctx context.Context) error {
+	s.beginRun()
+	err := s.launchInner(ctx)
+	if err != nil && s.booted {
+		// 复用宿主上启动失败(常见:作业名错误 fglrun 未起):回收宿主到空闲,
+		// 不销毁连接——避免失败一次就重新登录;真卡死由用户用「重启会话」重建
+		s.enterIdle("启动失败,会话保留(可换作业重试或重启会话): " + err.Error())
+	}
+	return err
+}
+
+// launchInner 启动流程主体(见 Launch 说明)
+func (s *Session) launchInner(ctx context.Context) error {
+	launchProg := s.runProgName()
 	var resolveErr error
-	if !moduleKnown {
-		// 预会话解析(动态探针/静态兜底路径);失败不中断——登录后真实环境再重试一次
+
+	// 模块解析:已有动态路径(复用宿主登录环境/探测缓存)先试;登录后再用权威环境补一次
+	if s.Module == "" && s.cfg.Runtime != nil && s.cfg.Runtime.valid() {
 		if mod, err := s.resolveModule(launchProg); err == nil {
-			s.Module = mod
-			moduleKnown = true
-			s.emitEvent(Event{Type: "log", Text: fmt.Sprintf("按作业名解析模块:%s → %s", launchProg, mod)})
+			s.setResolvedModule(launchProg, mod)
 		} else {
 			resolveErr = err
 		}
 	}
+
+	if !s.booted {
+		// 预登录解析(动态探针/静态兜底路径);失败不中断——登录后真实环境再重试一次
+		if s.Module == "" {
+			if mod, err := s.resolveModule(launchProg); err == nil {
+				s.setResolvedModule(launchProg, mod)
+			} else {
+				resolveErr = err
+			}
+		}
+		if err := s.bootHost(ctx); err != nil {
+			return err
+		}
+		// 登录后补一次模块解析:选区后的 TOP/ERP/COM 最权威,预登录探测/静态兜底
+		// 不可靠(如区域与服务器菜单映射不一致)时在这里用真实环境纠正
+		if s.Module == "" && s.cfg.Runtime != nil && s.cfg.Runtime.valid() {
+			if mod, err := s.resolveModule(launchProg); err == nil {
+				s.setResolvedModule(launchProg, mod)
+			} else {
+				resolveErr = err
+			}
+		}
+	} else if !s.shellReady {
+		if err := s.ensureShellForRun(); err != nil {
+			return err
+		}
+	}
+
+	if s.Module == "" {
+		if resolveErr == nil {
+			resolveErr = fmt.Errorf("在各模块 42r 目录中未找到作业 %s(请检查作业名)", launchProg)
+		}
+		return fmt.Errorf("自动解析模块失败: %w", resolveErr)
+	}
+	return s.startRun(ctx, launchProg)
+}
+
+// setResolvedModule 记录模块解析结果并广播日志
+func (s *Session) setResolvedModule(prog, mod string) {
+	s.Module = mod
+	s.emitEvent(Event{Type: "log", Text: fmt.Sprintf("按作业名解析模块:%s → %s", prog, mod)})
+}
+
+// beginRun 开启新一轮调试前的复位:清上一轮现场,置 loading(宿主可能复用)。
+// 注意:不动 booted/shellReady(宿主登录态跨轮保留)。
+func (s *Session) beginRun() {
+	s.mu.Lock()
+	prev := s.state
+	s.state = StateLoading
+	s.started = false
+	s.pending = nil
+	s.collect = nil
+	s.quitReq = false
+	s.cur = StopInfo{}
+	s.curFrame = 0
+	s.bps = map[int]*Breakpoint{}
+	s.lastAutovars = nil
+	s.restoring = false
+	s.custModule = ""
+	s.mu.Unlock()
+	s.stopWatchdog()
+	if prev != StateLoading {
+		s.emitEvent(Event{Type: "state", State: string(StateLoading)})
+	}
+}
+
+// bootHost 首次登录:区域菜单 → 选区 → shell → 回读运行时环境。仅调用一次。
+func (s *Session) bootHost(ctx context.Context) error {
 	// 1. 等区域菜单
 	// 菜单格式两种:109 那台 `(*)Exit`,金仓这台 `*)Exit`(无左括号)
 	if err := s.waitRegexp(reLoginMenu, 25*time.Second, "区域菜单"); err != nil {
@@ -280,27 +392,58 @@ func (s *Session) Launch(ctx context.Context) error {
 	if err := s.waitRegexp(reShellPrompt, 25*time.Second, "shell 提示符"); err != nil {
 		return err
 	}
+	s.markShellReady()
 	// 2.5 回读登录后的权威 T100 路径(选区后环境变量,与标准 debug 同源)。
 	// 覆盖静态/探针值,后续源码搜索/启动目录/ReadPath 白名单全部用它
 	if err := s.readRuntimeEnv(); err != nil {
 		s.emitEvent(Event{Type: "log", Text: "T100 环境回读失败,用配置路径兜底: " + err.Error()})
 	}
-	// 2.6 登录后补一次模块解析:选区后的 TOP/ERP/COM 最权威,预会话探针/静态兜底
-	// 不可靠(如区域与服务器菜单映射不一致)时在这里用真实环境纠正
-	if !moduleKnown && s.Module == "" && s.cfg.Runtime != nil && s.cfg.Runtime.valid() {
-		if mod, err := s.resolveModule(launchProg); err == nil {
-			s.Module = mod
-			s.emitEvent(Event{Type: "log", Text: fmt.Sprintf("登录后按作业名重解析模块:%s → %s", launchProg, mod)})
-		} else {
-			resolveErr = err
+	s.mu.Lock()
+	s.booted = true
+	s.mu.Unlock()
+	s.emitEvent(Event{Type: "log", Text: fmt.Sprintf("已登录 %s(环境 %s),会话将常驻复用", s.cfg.SSH.Host, s.envName)})
+	return nil
+}
+
+// ensureShellForRun 复用宿主开跑前,确保 pty 当前停在可用的 shell 提示符:
+// 若上一轮结束在 (fgldb) 残留(fglrun 未随程序退出),先补发 quit 回到 shell。
+func (s *Session) ensureShellForRun() error {
+	s.mu.Lock()
+	if s.shellReady {
+		s.mu.Unlock()
+		return nil
+	}
+	s.mu.Unlock()
+	s.emitEvent(Event{Type: "log", Text: "上一轮调试器未完全退出,先回到 shell"})
+	deadline := time.After(8 * time.Second)
+	for {
+		select {
+		case ln := <-s.lines:
+			if reShellPrompt.MatchString(ln) {
+				s.markShellReady()
+				return nil
+			}
+			if isBarePrompt(ln) {
+				if err := s.pty.Write("quit\r"); err != nil {
+					return err
+				}
+				if err := s.waitRegexp(reShellPrompt, 20*time.Second, "shell 提示符(退出残留调试器)"); err != nil {
+					return err
+				}
+				s.markShellReady()
+				return nil
+			}
+		case <-deadline:
+			// 没有提示符可循:保守按已停在 shell 处理(直接敲命令,若真卡住由超时回落)
+			s.markShellReady()
+			return nil
 		}
 	}
-	if s.Module == "" {
-		if resolveErr == nil {
-			resolveErr = fmt.Errorf("在各模块 42r 目录中未找到作业 %s(请检查作业名)", launchProg)
-		}
-		return fmt.Errorf("自动解析模块失败: %w", resolveErr)
-	}
+}
+
+// startRun 运行启动段:进模块目录 → fglrun -d → 入口停站就绪。
+// 前提:已登录(首次 bootHost 或复用),shellReady 为真,Module 已解析。
+func (s *Session) startRun(ctx context.Context, launchProg string) error {
 	// 3. 进模块目录 + 源码路径
 	// 转客制的作业 42r/源码部署在 c<module> 目录(原版 T100 从 c** 启动,FGLLDPATH 也 c 优先),
 	// 这里探测:客制目录有同名 42r 就用客制,否则用标准模块目录
@@ -338,6 +481,9 @@ func (s *Session) Launch(ctx context.Context) error {
 		runCmd = fmt.Sprintf("fglrun -d 42r/%s.42r %s", launchProg, args)
 	}
 	log.Printf("[debug] 会话 %s 启动: %s", s.ID, runCmd)
+	s.mu.Lock()
+	s.shellReady = false // 离开 shell 进入 fglrun/程序
+	s.mu.Unlock()
 	s.pty.Write(runCmd + "\r")
 	if err := s.waitBarePrompt(90*time.Second, "(fgldb) 提示符"); err != nil {
 		return err
@@ -362,6 +508,83 @@ func (s *Session) Launch(ctx context.Context) error {
 	s.emitEvent(Event{Type: "state", State: string(StateStopped)})
 	s.emitEvent(Event{Type: "log", Text: "调试会话就绪: " + s.Prog + "@" + s.cfg.Zone})
 	return nil
+}
+
+// markShellReady 标记 pty 已停在 shell 提示符
+func (s *Session) markShellReady() {
+	s.mu.Lock()
+	s.shellReady = true
+	s.mu.Unlock()
+}
+
+// Booted 宿主是否已完成首次登录(可复用)
+func (s *Session) Booted() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.booted
+}
+
+// CloneCfg 返回会话连接配置的快照(同环境重启/重连用)
+func (s *Session) CloneCfg() *Config {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	cc := *s.cfg
+	return &cc
+}
+
+// BootIdle 仅完成登录并回到空闲(不启动调试)——会话「重启/切换/连接」用
+func (s *Session) BootIdle(ctx context.Context) error {
+	if !s.booted {
+		if err := s.bootHost(ctx); err != nil {
+			return err
+		}
+	}
+	s.enterIdle("会话已就绪(空闲),可直接启动调试")
+	return nil
+}
+
+// SetRun 复用宿主的下一轮运行参数(由 Manager 在复用启动前按最新生效配置调用)
+func (s *Session) SetRun(cfg *Config, module, prog, runProg, launchRef, extra string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if cfg != nil {
+		cc := *cfg
+		cc.Runtime = s.cfg.Runtime // 会话内动态路径保留(同一宿主/区域)
+		s.cfg = &cc
+	}
+	s.Module = module
+	s.Prog = prog
+	s.RunProg = runProg
+	s.LaunchRef = launchRef
+	s.ExtraArgs = extra
+	s.ArgsOverride = ""
+	s.custModule = ""
+}
+
+// enterIdle 把会话置为空闲(宿主 shell 保留、无调试运行)并广播 state=idle。
+// 程序自然退出 / 结束调试 / 复用启动失败都会回到这个状态。
+func (s *Session) enterIdle(logMsg string) {
+	s.mu.Lock()
+	if s.state == StateExit {
+		s.mu.Unlock()
+		return
+	}
+	wasIdle := s.state == StateIdle
+	s.state = StateIdle
+	s.pending = nil
+	s.collect = nil
+	s.quitReq = false
+	s.cur = StopInfo{}
+	s.curFrame = 0
+	s.lastAutovars = nil
+	s.mu.Unlock()
+	s.stopWatchdog()
+	if !wasIdle {
+		s.emitEvent(Event{Type: "state", State: string(StateIdle)})
+	}
+	if logMsg != "" {
+		s.emitEvent(Event{Type: "log", Text: logMsg})
+	}
 }
 
 // reProgName 作业名白名单(用于拼 shell 命令,防注入)
@@ -543,8 +766,49 @@ func modHas42r(conn *SSHConn, topDir, mod, prog string) bool {
 	return strings.Contains(out, prog+".42r")
 }
 
-// Quit 结束会话:必要时先中断,再 quit,最后关闭连接
-func (s *Session) Quit() error {
+// EndRun 结束本轮调试,保留宿主会话(回到 idle):
+// 运行中先中断拿回控制权,再向 fgldb 发 quit 回到 shell,连接不释放。
+// 若拿不回控制权(卡死)或状态异常,降级为整体断开 Close()。
+func (s *Session) EndRun() error {
+	s.mu.Lock()
+	if s.quitting || s.state == StateExit || s.state == StateIdle {
+		s.mu.Unlock()
+		return nil
+	}
+	st := s.state
+	s.mu.Unlock()
+
+	if st == StateRunning {
+		_ = s.Interrupt()
+		deadline := time.Now().Add(20 * time.Second)
+		for time.Now().Before(deadline) {
+			if s.State() == StateStopped {
+				break
+			}
+			time.Sleep(300 * time.Millisecond)
+		}
+	}
+	if s.State() != StateStopped {
+		// running 拿不回控制权 / loading 启动中:没有可保留的干净宿主,整体断开
+		return s.Close()
+	}
+	r, err := s.exec("other", "quit", waitPrompt, 20*time.Second)
+	if err != nil || !r.SawShell {
+		// quit 未正常回到 shell(状态不可靠):整体断开兜底
+		if err == nil {
+			err = fmt.Errorf("quit 后未回到 shell")
+		}
+		s.emitEvent(Event{Type: "log", Text: "结束本轮调试异常,改为断开会话: " + err.Error()})
+		return s.Close()
+	}
+	s.markShellReady()
+	s.enterIdle("结束调试:本轮运行已结束,会话保留(可直接再次启动)")
+	return nil
+}
+
+// Close 彻底结束会话并释放 SSH(切换环境/重启会话/服务退出/异常兜底用):
+// 必要时先中断,再向 fgldb quit,最后关闭连接。
+func (s *Session) Close() error {
 	s.mu.Lock()
 	if s.quitting {
 		s.mu.Unlock()
@@ -606,7 +870,7 @@ func (s *Session) forceExit() {
 	}
 	if !already {
 		s.emitEvent(Event{Type: "state", State: string(StateExit)})
-		s.emitEvent(Event{Type: "log", Text: "调试会话已结束,SSH 连接已释放(可启动其它作业)"})
+		s.emitEvent(Event{Type: "log", Text: "会话已断开,SSH 连接已释放(下次启动将重新登录)"})
 	}
 	// 先停心跳再关连接:这条连接是本会话独占的,关闭属于正常释放而非掉线
 	if s.kaStop != nil {
@@ -1117,7 +1381,9 @@ func (s *Session) Step(cmd string) (*StopInfo, error) {
 		return r.Stop, nil
 	}
 	if r.SawShell {
-		s.setState(StateExit)
+		// 步进过程中程序结束回 shell:本轮运行结束,会话保留(免重新登录)
+		s.markShellReady()
+		s.enterIdle("程序已退出,会话保留")
 		return nil, nil
 	}
 	// 解析步进结果:优先带源码上下文的块(-> 行);
@@ -1171,7 +1437,7 @@ func (s *Session) WaitForStop(timeout time.Duration) (*StopInfo, error) {
 		case StateStopped:
 			st := s.Cur()
 			return &st, nil
-		case StateExit:
+		case StateExit, StateIdle:
 			return nil, fmt.Errorf("程序已退出")
 		}
 		time.Sleep(200 * time.Millisecond)
@@ -1362,12 +1628,11 @@ func (s *Session) onLine(ln string) {
 	if pending != nil {
 		pending.addLine(ln)
 
-		// 程序退出(作业窗口被关闭或正常结束):立即置 exit,避免
-		// waitMarker/waitPrompt 等不到完成信号而超时,也避免被裸提示符误判成停站
+		// 程序退出(作业窗口被关闭或正常结束):立即结束本轮命令,回空闲保留宿主,
+		// 避免 waitMarker/waitPrompt 等不到完成信号而超时,也避免被裸提示符误判成停站
 		if reProgramExited.MatchString(ln) {
 			s.completePending(&execResult{Cmd: pending.cmd, Lines: pending.lines, Err: "program exited"})
-			s.setState(StateExit)
-			s.emitEvent(Event{Type: "log", Text: "程序已退出(作业窗口被关闭或正常结束)"})
+			s.enterIdle("程序已退出(作业窗口被关闭或正常结束),会话保留")
 			return
 		}
 
@@ -1443,11 +1708,19 @@ func (s *Session) onLine(ln string) {
 	}
 
 	// ---- 无 pending 时的异步状态迁移 ----
+	// idle 收尾:本轮已结束,等待宿主回 shell。残留的 (fgldb)(自然退出后
+	// fglrun 未随程序退出)不在 idle 期补 quit——统一交给下次启动的
+	// ensureShellForRun 清理,避免与启动流程重复发 quit
+	if state == StateIdle {
+		if reShellPrompt.MatchString(ln) {
+			s.markShellReady()
+		}
+		return // idle 期其它输出(退出回显等)直接忽略
+	}
 	if reProgramExited.MatchString(ln) {
-		// 程序退出(作业窗口被关闭或正常结束):必须置 exit 而不是当停站处理,
-		// 否则后续裸提示符会被下面的"保守置 stopped"误判成停站(实际是 pre-run 态)
-		s.setState(StateExit)
-		s.emitEvent(Event{Type: "log", Text: "程序已退出(作业窗口被关闭或正常结束)"})
+		// 程序退出(作业窗口被关闭或正常结束):本轮运行结束,回空闲保留宿主;
+		// 不能当停站处理,否则后续裸提示符会被下面的"保守置 stopped"误判
+		s.enterIdle("程序已退出(作业窗口被关闭或正常结束),会话保留")
 		return
 	}
 	if reContinuing.MatchString(ln) && state == StateStopped {
@@ -1461,9 +1734,9 @@ func (s *Session) onLine(ln string) {
 		return
 	}
 	if reShellPrompt.MatchString(ln) && state == StateRunning {
-		// 程序运行中看到 shell 提示符 = 程序结束
-		s.setState(StateExit)
-		s.emitEvent(Event{Type: "log", Text: "程序已退出"})
+		// 程序运行中看到 shell 提示符 = 程序已退出回到 shell
+		s.markShellReady()
+		s.enterIdle("程序已退出,会话保留")
 	}
 }
 

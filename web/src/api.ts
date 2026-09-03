@@ -10,6 +10,7 @@ export interface VarItem { expr: string; value?: string }
 export interface VarDecl { name: string; type: string }
 export interface SessionBrief {
   id: string; module: string; prog: string; runProg?: string; state: string
+  env?: string
   file?: string; line?: number; func?: string; reason?: string
   holdingSeconds: number; breakpoints: number; watchdogSeconds: number
 }
@@ -53,7 +54,12 @@ export const api = {
   launch: (module: string, prog: string, opts?: { ssh?: string; zone?: string }) =>
     req<{ sessionId: string; module?: string; prog?: string; runProg?: string }>('/api/sessions', { method: 'POST', body: JSON.stringify({ module, prog, ...opts }) }),
   snapshot: (id: string) => req<any>(`/api/sessions/${id}`),
+  // 结束调试:只结束本轮运行,宿主会话保留(idle),可直接再次启动
   quit: (id: string) => req<any>(`/api/sessions/${id}`, { method: 'DELETE' }),
+  // 会话管理(单一常驻会话)
+  sessionRestart: (id: string) => req<{ sessionId: string; env?: string; state?: string }>(`/api/sessions/${id}/restart`, { method: 'POST' }),
+  sessionClose: (id: string) => req<any>(`/api/sessions/${id}/close`, { method: 'POST' }),
+  sessionSwitch: (env: string) => req<{ sessionId: string; env?: string; state?: string }>('/api/sessions/switch', { method: 'POST', body: JSON.stringify({ env }) }),
   bpAdd: (id: string, location: string) =>
     req<{ breakpoint: Breakpoint }>(`/api/sessions/${id}/breakpoints`, { method: 'POST', body: JSON.stringify({ location }) }),
   bpDel: (id: string, num: number) => req<any>(`/api/sessions/${id}/breakpoints/${num}`, { method: 'DELETE' }),

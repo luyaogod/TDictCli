@@ -29,7 +29,8 @@ interface Store {
   sessionId: string | null
   module: string
   prog: string
-  state: string // loading|stopped|running|exit|''
+  state: string // loading|stopped|running|idle|exit|''
+  sessionEnv: string // 会话所属环境名(设置页 envs;idle/状态栏/会话列表显示)
   started: boolean // 程序是否已 run 过(入口停站时步进不可用)
   stop: StopInfo | null
   holdingSeconds: number
@@ -38,7 +39,7 @@ interface Store {
   // UI 面板显隐
   showRight: boolean
   showBottom: boolean
-  rightView: 'debug' | 'outline' // 右侧边栏当前 sheet(调试面板/大纲),localStorage tdict.rightView 持久化
+  rightView: 'debug' | 'outline' | 'session' // 右侧边栏当前 sheet(调试面板/大纲/会话),localStorage tdict.rightView 持久化
   // 数据
   breakpoints: Breakpoint[]
   adjustedBps: Record<number, number> // 点击行号 → 实际注册断点编号(fgldb 会把非可执行行的断点自动下移)
@@ -86,7 +87,7 @@ interface Store {
   setWsConnected: (b: boolean) => void
   toggleRight: () => void
   toggleBottom: () => void
-  setRightView: (v: 'debug' | 'outline') => void
+  setRightView: (v: 'debug' | 'outline' | 'session') => void
   pushRaw: (line: string) => void
   sendRaw: (cmd: string) => Promise<void>
   pushTimeline: (item: Omit<TimelineItem, 'time'>) => void
@@ -124,6 +125,9 @@ interface Store {
   restart: () => Promise<void>
   doPrint: (expr: string) => Promise<void>
   adoptExisting: () => Promise<void>
+  // 会话管理(右侧「会话」sheet):切换/重启/结束常驻会话(会先结束当前 debug)
+  sessionOp: (op: 'close' | 'restart' | 'switch', env?: string) => Promise<void>
+  syncFromSessions: () => Promise<void>
 }
 
 let snapTimer: number | undefined
@@ -142,9 +146,9 @@ function jumpToMain(set: (p: Partial<Store>) => void, get: () => Store) {
 
 export const useStore = create<Store>((set, get) => ({
   wsConnected: false,
-  sessionId: null, module: '', prog: '', state: '', started: false, stop: null, holdingSeconds: 0,
+  sessionId: null, module: '', prog: '', state: '', sessionEnv: '', started: false, stop: null, holdingSeconds: 0,
   launching: false, launchError: '', showRight: true, showBottom: true,
-  rightView: (localStorage.getItem('tdict.rightView') === 'outline' ? 'outline' : 'debug') as 'debug' | 'outline',
+  rightView: (['outline', 'session'].includes(localStorage.getItem('tdict.rightView') || '') ? localStorage.getItem('tdict.rightView') : 'debug') as 'debug' | 'outline' | 'session',
   breakpoints: [], adjustedBps: {}, frames: [], watches: [], autovars: [], selectedFrame: -1, backendDead: '',
   timeline: [], rawLog: [],
   runProg: '',
@@ -211,17 +215,18 @@ export const useStore = create<Store>((set, get) => ({
           void get().refreshWatches()
           startHoldTimer(set, get)
         }
-        if (ev.state === 'running' || ev.state === 'exit') {
+        if (ev.state === 'running' || ev.state === 'idle' || ev.state === 'exit') {
           if (snapTimer) { clearInterval(snapTimer); snapTimer = undefined }
           stopHoldTimer()
           if (ev.state === 'running') set({ selectedFrame: -1 })
         }
+        if (ev.state === 'idle') {
+          // 本轮调试结束,宿主会话保留(idle):清运行现场,源码保留便于浏览/再次启动
+          set({ started: false, stop: null, currentLine: 0, loadingSource: false, selectedFrame: -1, autovars: [], breakpoints: [], frames: [], adjustedBps: {} })
+        }
         if (ev.state === 'exit') {
-          st.pushTimeline({ origin: 'system', kind: 'warn', text: '会话结束' })
-          if (snapTimer) { clearInterval(snapTimer); snapTimer = undefined }
-          stopHoldTimer()
-          // 会话结束(含启动失败被后端终结):编辑器退出加载态,不再转圈
-          set({ loadingSource: false, currentLine: 0 })
+          st.pushTimeline({ origin: 'system', kind: 'warn', text: '会话已断开(结束会话/切换环境或连接中断)' })
+          set({ loadingSource: false, currentLine: 0, started: false, stop: null })
         }
         return
       case 'dead':
@@ -473,6 +478,7 @@ export const useStore = create<Store>((set, get) => ({
         state: snap.state, stop: snap.stop, breakpoints: snap.breakpoints || [],
         started: !!snap.started,
         holdingSeconds: snap.holdingSeconds || 0,
+        sessionEnv: snap.env || get().sessionEnv,
         // 免模块启动时后端会按作业名解析模块,回读给前端(源码兜底路径依赖它)
         module: snap.module || get().module,
         runProg: snap.runProg || get().runProg,
@@ -709,14 +715,27 @@ export const useStore = create<Store>((set, get) => ({
   quit: async () => {
     const st = get()
     if (!st.sessionId) return
+    let kept = true
     try {
-      await api.quit(st.sessionId)
-      st.pushTimeline({ origin: 'human', kind: 'command', text: '结束会话' })
+      const r = await api.quit(st.sessionId)
+      kept = r?.kept !== false
+      st.pushTimeline({ origin: 'human', kind: 'command', text: '结束调试(会话保留,可直接再次启动)' })
     } catch { /* ignore */ }
     if (snapTimer) { clearInterval(snapTimer); snapTimer = undefined }
     stopHoldTimer()
-    // 保留源码:会话结束后用户可能仍想翻看代码(重启/换作业时才重载)
-    set({ sessionId: null, state: '', started: false, stop: null, breakpoints: [], frames: [], adjustedBps: {}, currentLine: 0, autovars: [], selectedFrame: -1, backendDead: '', tabs: [], activeTab: 'debug', sourceContent: '', sourcePath: '', sourceDVM: '', lineOffset: 0 })
+    // 结束本轮调试:运行现场清空,会话与源码保留(idle)。仅在后端整体断开时才清绑定
+    const base = {
+      started: false, stop: null, breakpoints: [], frames: [], adjustedBps: {},
+      currentLine: 0, autovars: [], selectedFrame: -1,
+    }
+    if (kept) {
+      set({ state: 'idle', ...base })
+    } else {
+      set({
+        sessionId: null, module: '', prog: '', runProg: '', sessionEnv: '', state: '', ...base,
+        backendDead: '', tabs: [], activeTab: 'debug', sourceContent: '', sourcePath: '', sourceDVM: '', lineOffset: 0,
+      })
+    }
   },
 
   restart: async () => {
@@ -727,7 +746,8 @@ export const useStore = create<Store>((set, get) => ({
     try { await api.quit(st.sessionId) } catch { /* 忽略,直接重启 */ }
     if (snapTimer) { clearInterval(snapTimer); snapTimer = undefined }
     stopHoldTimer()
-    set({ sessionId: null, state: '', started: false, stop: null, breakpoints: [], frames: [], adjustedBps: {}, autovars: [], selectedFrame: -1, backendDead: '', lineOffset: 0 })
+    // 结束本轮(会话保留 idle),再启动新的一轮——宿主复用,免重新登录
+    set({ state: 'idle', started: false, stop: null, breakpoints: [], frames: [], adjustedBps: {}, autovars: [], selectedFrame: -1, currentLine: 0 })
     await get().launch(module, prog)
   },
 
@@ -748,7 +768,12 @@ export const useStore = create<Store>((set, get) => ({
       const { sessions } = await api.list()
       if (!sessions.length) return
       const s = sessions[0]
-      set({ sessionId: s.id, module: s.module, prog: s.prog, runProg: s.runProg || s.prog, state: s.state })
+      set({ sessionId: s.id, module: s.module, prog: s.prog, runProg: s.runProg || s.prog, state: s.state, sessionEnv: s.env || '' })
+      if (s.state === 'idle') {
+        // 空闲宿主(idle):仅接管绑定,不刷源码;等下一次启动直接复用
+        get().pushTimeline({ origin: 'system', kind: 'info', text: `会话空闲(环境 ${s.env || '默认'}),可直接启动调试` })
+        return
+      }
       get().pushTimeline({ origin: 'system', kind: 'info', text: `接管已存在的会话 ${s.module}/${s.prog}` })
       const snap = await api.snapshot(s.id)
       set({
@@ -760,6 +785,56 @@ export const useStore = create<Store>((set, get) => ({
       void get().refreshFrames()
       void get().refreshWatches()
     } catch { /* ignore */ }
+  },
+
+  // 会话管理:右侧「会话」sheet 的 结束/重启/切换(后端会先结束当前 debug)
+  sessionOp: async (op, env) => {
+    const st = get()
+    const label = op === 'close' ? '结束会话' : op === 'restart' ? '重启会话' : '切换会话'
+    try {
+      if (op === 'close' && st.sessionId) await api.sessionClose(st.sessionId)
+      else if (op === 'restart' && st.sessionId) await api.sessionRestart(st.sessionId)
+      else if (op === 'switch' && env) await api.sessionSwitch(env)
+      st.pushTimeline({ origin: 'human', kind: 'command', text: label + (env ? ' → ' + env : '') })
+    } catch (e: any) {
+      st.pushTimeline({ origin: 'system', kind: 'warn', text: `${label}失败: ${e.message || String(e)}` })
+      throw e
+    }
+    await get().syncFromSessions()
+  },
+
+  // 会话被替换/关闭后,按服务端现状对齐本地绑定(源码保留便于浏览)
+  syncFromSessions: async () => {
+    if (snapTimer) { clearInterval(snapTimer); snapTimer = undefined }
+    stopHoldTimer()
+    const clearRun = {
+      started: false, stop: null, currentLine: 0, breakpoints: [], adjustedBps: {},
+      frames: [], autovars: [], selectedFrame: -1, holdingSeconds: 0,
+    }
+    try {
+      const { sessions } = await api.list()
+      const s0 = sessions[0]
+      if (!s0) {
+        // 会话全部断开
+        set({ sessionId: null, module: '', prog: '', runProg: '', sessionEnv: '', state: '', ...clearRun, loadingSource: false })
+        return
+      }
+      set({
+        sessionId: s0.id, module: s0.module, prog: s0.prog, runProg: s0.runProg || s0.prog,
+        sessionEnv: s0.env || '', state: s0.state,
+      })
+      if (s0.state === 'idle' || s0.state === 'loading') {
+        set({ ...clearRun, loadingSource: false })
+        return
+      }
+      if (s0.state === 'stopped') {
+        const snap = await api.snapshot(s0.id)
+        set({ stop: snap.stop, breakpoints: snap.breakpoints || [], started: !!snap.started, holdingSeconds: snap.holdingSeconds || 0 })
+        if (snap.stop?.file) void get().refreshSource(snap.stop.file, snap.stop.line)
+        void get().refreshFrames()
+        void get().refreshWatches()
+      }
+    } catch { /* list/snapshot 失败:保持现状 */ }
   },
 }))
 
@@ -776,6 +851,7 @@ function pollUntilStopped(set: (p: Partial<Store>) => void, get: () => Store) {
         state: snap.state, stop: snap.stop, breakpoints: snap.breakpoints || [],
         started: !!snap.started,
         holdingSeconds: snap.holdingSeconds || 0,
+        sessionEnv: snap.env || get().sessionEnv,
         module: snap.module || get().module,
         runProg: snap.runProg || get().runProg,
         currentLine: nl ? 0 : (snap.stop?.line || get().currentLine),
@@ -802,6 +878,12 @@ function pollUntilStopped(set: (p: Partial<Store>) => void, get: () => Store) {
         }
       }
       if (snap.state === 'exit') { clearInterval(snapTimer!); snapTimer = undefined }
+      if (snap.state === 'idle') {
+        // 本轮运行直接结束(程序立即退出等):回空闲,清运行现场(会话保留)
+        clearInterval(snapTimer!); snapTimer = undefined
+        stopHoldTimer()
+        set({ started: false, stop: null, currentLine: 0, loadingSource: false, selectedFrame: -1, autovars: [], breakpoints: [], frames: [], adjustedBps: {} })
+      }
     } catch {
       // 快照失败可能因为会话已被移除(启动失败/异常退出且 WS 事件未送达):
       // 确认会话确实消失后退出加载态并报错,避免永久转圈;瞬时网络错误则继续轮询

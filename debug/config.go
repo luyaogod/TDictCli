@@ -23,11 +23,11 @@ type NamedSSH struct {
 
 // DBConfig 数据库连接探查配置(config.json debug.db 节,全部可选)
 type DBConfig struct {
-	Type       string `json:"type"`       // 数据库类型:"oracle"(默认)| "kingbase"(人大金仓,PG 引擎)
-	Ent        int    `json:"ent"`        // 默认企业编号(TOPENT);0=不指定
-	SQLPlus    string `json:"sqlplus"`    // oracle: sqlplus 路径,留空自动探测
-	OracleHome string `json:"oracleHome"` // oracle: ORACLE_HOME,留空自动探测
-	TNS        string `json:"tns"`        // oracle: TNS 别名(如 t35prd)/ kingbase: 库名,留空自动发现实例
+	Type       string `json:"type"`           // 数据库类型:"oracle"(默认)| "kingbase"(人大金仓,PG 引擎)
+	Ent        int    `json:"ent"`            // 默认企业编号(TOPENT);0=不指定
+	SQLPlus    string `json:"sqlplus"`        // oracle: sqlplus 路径,留空自动探测
+	OracleHome string `json:"oracleHome"`     // oracle: ORACLE_HOME,留空自动探测
+	TNS        string `json:"tns"`            // oracle: TNS 别名(如 t35prd)/ kingbase: 库名,留空自动发现实例
 	Port       int    `json:"port,omitempty"` // kingbase: 实例端口,0=自动发现(默认 54321)
 }
 
@@ -44,7 +44,7 @@ type NamedDB struct {
 // 设置页以列表维护,activeEnv 单选生效——生效 = 合并覆盖到顶层字段。
 type NamedEnv struct {
 	Name            string    `json:"name"`
-	SSHConfig       // 匿名嵌入:host/port/user/password 提升到 env 层
+	SSHConfig                 // 匿名嵌入:host/port/user/password 提升到 env 层
 	Zone            string    `json:"zone,omitempty"`
 	TopDir          string    `json:"topDir,omitempty"`
 	LaunchArgs      string    `json:"launchArgs,omitempty"`
@@ -55,25 +55,25 @@ type NamedEnv struct {
 // Config debug 功能配置,存放在 config.json 顶层 "debug" 键。
 // 与 dbconfig 使用同一文件但互不干扰(各取所需键)。
 type Config struct {
-	SSH             SSHConfig `json:"ssh"`
-	Zone            string    `json:"zone"`            // 登录后区域菜单代码:31开发 35测试 36正式 39PATCH t出货
-	Listen          string    `json:"listen"`          // HTTP 监听地址
-	LaunchArgs      string    `json:"launchArgs"`      // T100 作业启动参数模板,{prog} 替换为作业名
-	WatchdogSeconds int       `json:"watchdogSeconds"` // 停站停留超时(秒),超时自动 continue;0=禁用
-	ModuleRoots     []string  `json:"moduleRoots"`     // 源码查找根目录
-	FGLServer       string    `json:"fglserver"`       // 留空使用 T100 按 SSH 来源 IP 自动设置
-	TopDir          string    `json:"topDir"`          // 区域顶级目录如 /u1/t35prd;留空按 zone 推导
-	TermWidth       int       `json:"termWidth"`
-	TermHeight      int       `json:"termHeight"`
-	PrintElements   int       `json:"printElements"`     // fgldb 单次 print 的数组元素上限(防大数组刷爆);0=默认 1000
-	PersistBPs      *bool     `json:"persistBreakpoints"` // 断点持久化开关(nil 视为 true)
-	DataDir         string    `json:"-"`               // 数据目录(断点持久化等);由 serve 注入 config.json 所在目录,空=禁用
-	DB              *DBConfig `json:"db,omitempty"`    // 数据库连接探查配置(debug db 命令用)
-	SSHS            []NamedSSH `json:"sshs,omitempty"` // (兼容保留)旧多 SSH 列表;新配置用 envs
-	DBS             []NamedDB  `json:"dbs,omitempty"`  // (兼容保留)旧多数据库列表
-	Envs            []NamedEnv `json:"envs,omitempty"` // 服务器环境列表(SSH+启动参数,设置页维护)
-	ActiveEnv       string     `json:"activeEnv,omitempty"` // 当前生效的环境名;空=用顶层默认字段
-	Runtime         *RuntimeEnv `json:"-"` // 登录后动态获取的 T100 路径(探针/选区回显);nil=用静态配置兜底
+	SSH             SSHConfig   `json:"ssh"`
+	Zone            string      `json:"zone"`            // 登录后区域菜单代码:31开发 35测试 36正式 39PATCH t出货
+	Listen          string      `json:"listen"`          // HTTP 监听地址
+	LaunchArgs      string      `json:"launchArgs"`      // T100 作业启动参数模板,{prog} 替换为作业名
+	WatchdogSeconds int         `json:"watchdogSeconds"` // 停站停留超时(秒),超时自动 continue;0=禁用
+	ModuleRoots     []string    `json:"moduleRoots"`     // 源码查找根目录
+	FGLServer       string      `json:"fglserver"`       // 留空使用 T100 按 SSH 来源 IP 自动设置
+	TopDir          string      `json:"topDir"`          // 区域顶级目录如 /u1/t35prd;留空按 zone 推导
+	TermWidth       int         `json:"termWidth"`
+	TermHeight      int         `json:"termHeight"`
+	PrintElements   int         `json:"printElements"`       // fgldb 单次 print 的数组元素上限(防大数组刷爆);0=默认 1000
+	PersistBPs      *bool       `json:"persistBreakpoints"`  // 断点持久化开关(nil 视为 true)
+	DataDir         string      `json:"-"`                   // 数据目录(断点持久化等);由 serve 注入 config.json 所在目录,空=禁用
+	DB              *DBConfig   `json:"db,omitempty"`        // 数据库连接探查配置(debug db 命令用)
+	SSHS            []NamedSSH  `json:"sshs,omitempty"`      // (兼容保留)旧多 SSH 列表;新配置用 envs
+	DBS             []NamedDB   `json:"dbs,omitempty"`       // (兼容保留)旧多数据库列表
+	Envs            []NamedEnv  `json:"envs,omitempty"`      // 服务器环境列表(SSH+启动参数,设置页维护)
+	ActiveEnv       string      `json:"activeEnv,omitempty"` // 当前生效的环境名;空=用顶层默认字段
+	Runtime         *RuntimeEnv `json:"-"`                   // 登录后动态获取的 T100 路径(探针/选区回显);nil=用静态配置兜底
 }
 
 // SSHByName 按名取 SSH 连接:先查旧 sshs 列表,再查 envs(取其 SSH 部分);
@@ -137,6 +137,56 @@ func (c *Config) ApplyActiveEnv() {
 	}
 }
 
+// EnvName 会话所属环境名:优先设置页 envs 的 activeEnv,缺省用 host-zone 推导名
+func (c *Config) EnvName() string {
+	if c.ActiveEnv != "" {
+		return c.ActiveEnv
+	}
+	return c.SSH.Host + "-" + c.Zone
+}
+
+// CloneEnv 复制配置并切换到指定环境(name 命中 Envs 之一):应用该环境的
+// SSH/zone/启动参数/看门狗/库配置,用于会话「切换/重启」按目标环境重连;未命中返回 nil。
+func (c *Config) CloneEnv(name string) *Config {
+	if name == "" {
+		return nil
+	}
+	var hit *NamedEnv
+	for i := range c.Envs {
+		if c.Envs[i].Name == name {
+			hit = &c.Envs[i]
+			break
+		}
+	}
+	if hit == nil {
+		return nil
+	}
+	c2 := *c
+	if hit.Host != "" {
+		c2.SSH = hit.SSHConfig
+		if c2.SSH.Port == 0 {
+			c2.SSH.Port = 22
+		}
+	}
+	if hit.Zone != "" {
+		c2.Zone = hit.Zone
+	}
+	c2.ActiveEnv = name
+	c2.Runtime = nil // 环境/服务器变了,动态路径需重新获取
+	if hit.LaunchArgs != "" {
+		c2.LaunchArgs = hit.LaunchArgs
+	}
+	if hit.WatchdogSeconds > 0 {
+		c2.WatchdogSeconds = hit.WatchdogSeconds
+	}
+	if hit.DB != nil {
+		db := *hit.DB
+		c2.DB = &db
+	}
+	c2.fillDefaults()
+	return &c2
+}
+
 // TNSName 返回数据库 TNS 别名(zone 36→t35prd,35→t35tst,31→t35dev,39→t35pth,t→topprd)。
 // 完全自动:按登录区域推导,不接受手填覆盖(T100 环境约定)
 func (c *Config) TNSName() string {
@@ -163,7 +213,9 @@ func (c *Config) DBEnt() int {
 }
 
 // BPsPersisted 断点持久化是否启用
-func (c *Config) BPsPersisted() bool { return c.DataDir != "" && (c.PersistBPs == nil || *c.PersistBPs) }
+func (c *Config) BPsPersisted() bool {
+	return c.DataDir != "" && (c.PersistBPs == nil || *c.PersistBPs)
+}
 
 // zoneTopDir 区域代码 → T100 顶级目录(默认推导)
 var zoneTopDir = map[string]string{

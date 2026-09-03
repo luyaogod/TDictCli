@@ -111,18 +111,6 @@ func (m *Manager) LaunchWith(cfg *Config, module, prog string) (*Session, error)
 }
 
 func (m *Manager) launchWith(cfg *Config, module, prog string) (*Session, error) {
-	m.mu.Lock()
-	for id, s := range m.sessions {
-		if s.State() == StateExit {
-			delete(m.sessions, id)
-		}
-	}
-	if len(m.sessions) > 0 {
-		m.mu.Unlock()
-		return nil, fmt.Errorf("已存在调试会话,请先结束当前会话(M4 将支持多会话)")
-	}
-	m.mu.Unlock()
-
 	// 对齐 T100 gendbg:启动前连库把作业编号解析成实体程序+模块+启动引用(gzzz_t JOIN gzza_t),
 	// 源码与 42r 都跟实体程序走;未配置 db/查询失败/未命中 → 会话内按名称文件搜索兜底
 	runProg, launchRef, extra := "", "", ""
@@ -133,13 +121,57 @@ func (m *Manager) launchWith(cfg *Config, module, prog string) (*Session, error)
 			module = mod2
 		}
 	}
-
-	sess, err := NewSession(cfg, module, prog, runProg, launchRef, extra, m.emit)
+	sess, err := m.prepareSession(cfg, module, prog, runProg, launchRef, extra, "")
 	if err != nil {
 		return nil, err
 	}
 	if runProg != "" && runProg != prog {
 		sess.emitEvent(Event{Type: "log", Text: fmt.Sprintf("作业编号 %s → 实体程序 %s(gzzz_t)", prog, runProg)})
+	}
+	return sess, nil
+}
+
+// prepareSession 启动一轮运行前的会话准备(单一常驻会话):
+// - 已有空闲(idle)且目标相同的会话 → 复用宿主,仅刷新本轮运行参数(免重新登录);
+// - 已有会话但目标不同(默认环境切换/按名启动其它服务器)→ 断开旧的再新建;
+// - 已有活跃运行且目标相同 → 报错(请先结束当前调试);
+// - 无会话 → 新建。
+// 返回已登记的会话,由调用方驱动 Launch 登录/启动。
+func (m *Manager) prepareSession(cfg *Config, module, prog, runProg, launchRef, extra, argsOverride string) (*Session, error) {
+	m.mu.Lock()
+	for id, s := range m.sessions {
+		if s.State() == StateExit {
+			delete(m.sessions, id) // 已断开(close/切换/EOF)的残留,资源已释放
+		}
+	}
+	var live *Session
+	for _, s := range m.sessions {
+		live = s
+		break
+	}
+	m.mu.Unlock()
+
+	if live != nil {
+		if live.State() == StateIdle && live.sameTarget(cfg) {
+			live.SetRun(cfg, module, prog, runProg, launchRef, extra)
+			live.ArgsOverride = argsOverride
+			return live, nil
+		}
+		if !live.sameTarget(cfg) {
+			log.Printf("[debug] 目标切换为 %s,断开旧会话 %s 后重建", cfg.EnvName(), live.ID)
+			_ = live.Close()
+			m.Remove(live.ID)
+		} else {
+			return nil, fmt.Errorf("已存在调试会话(%s 运行中/已停站),请先结束当前调试", live.Prog)
+		}
+	}
+
+	sess, err := NewSession(cfg, module, prog, runProg, launchRef, extra, m.emit)
+	if err != nil {
+		return nil, err
+	}
+	if argsOverride != "" {
+		sess.ArgsOverride = argsOverride
 	}
 	m.mu.Lock()
 	m.sessions[sess.ID] = sess
@@ -213,19 +245,8 @@ func (m *Manager) resolveJobWith(cfg *Config, module, job string) (mod, prog, la
 // LaunchReplay 接口日志重放调试:等价 T100 日志内嵌的 `r.dg <作业> '<req>' '<rsp>'`。
 // 作业取 wsfa012(gzja_t 服务→程序的解析结果),再走 gzzz_t 解析实体程序+模块;
 // 报文文件被清理时用 CLOB 内容落到服务器临时文件再重放。
+// 会话复用规则与普通启动一致:同目标空闲宿主直接复用。
 func (m *Manager) LaunchReplay(item *WSLogItem, content *WSLogContent) (*Session, error) {
-	m.mu.Lock()
-	for id, s := range m.sessions {
-		if s.State() == StateExit {
-			delete(m.sessions, id)
-		}
-	}
-	if len(m.sessions) > 0 {
-		m.mu.Unlock()
-		return nil, fmt.Errorf("已存在调试会话,请先结束当前会话")
-	}
-	m.mu.Unlock()
-
 	job := strings.TrimSpace(item.Job)
 	if job == "" {
 		return nil, fmt.Errorf("该日志没有关联作业编号(wsfa012 为空),无法重放")
@@ -252,18 +273,14 @@ func (m *Manager) LaunchReplay(item *WSLogItem, content *WSLogContent) (*Session
 	if rspPath != "" {
 		args += " " + q(rspPath)
 	}
-	sess, err := NewSession(m.cfg, module, job, runProg, launchRef, extra, m.emit)
+	sess, err := m.prepareSession(m.cfg, module, job, runProg, launchRef, extra, args)
 	if err != nil {
 		return nil, err
 	}
-	sess.ArgsOverride = args
 	if runProg != "" && runProg != job {
 		sess.emitEvent(Event{Type: "log", Text: fmt.Sprintf("重放调试:作业 %s → 实体程序 %s(gzzz_t)", job, runProg)})
 	}
 	sess.emitEvent(Event{Type: "log", Text: fmt.Sprintf("重放 %s:fglrun -d %s %s", item.Service, runProgOr(job, runProg), args)})
-	m.mu.Lock()
-	m.sessions[sess.ID] = sess
-	m.mu.Unlock()
 	return sess, nil
 }
 
@@ -298,6 +315,7 @@ type SessionBrief struct {
 	Prog     string  `json:"prog"`
 	RunProg  string  `json:"runProg,omitempty"`
 	State    string  `json:"state"`
+	Env      string  `json:"env,omitempty"` // 会话所属环境名(设置页 envs)
 	Started  bool    `json:"started"`
 	File     string  `json:"file,omitempty"`
 	Line     int     `json:"line,omitempty"`
@@ -316,7 +334,7 @@ func (m *Manager) Snapshot() []SessionBrief {
 		cur := s.Cur()
 		out = append(out, SessionBrief{
 			ID: s.ID, Module: s.Module, Prog: s.Prog, RunProg: s.RunProg,
-			State: string(s.State()), Started: s.Started(), File: cur.File, Line: cur.Line,
+			State: string(s.State()), Env: s.EnvName(), Started: s.Started(), File: cur.File, Line: cur.Line,
 			Func: cur.Func, Reason: cur.Reason,
 			Holding:  s.HoldingSeconds(),
 			Breaks:   len(s.Breakpoints()),
@@ -331,6 +349,26 @@ func (m *Manager) Remove(id string) {
 	m.mu.Lock()
 	delete(m.sessions, id)
 	m.mu.Unlock()
+}
+
+// CreateSessionOn 新建并登记一个纯宿主会话(module/prog 为空,登录后回到 idle),
+// 供「会话重启/切换/连接」在指定目标环境上重连;调用方随后驱动 BootIdle。
+func (m *Manager) CreateSessionOn(cfg *Config) (*Session, error) {
+	m.mu.Lock()
+	for id, s := range m.sessions {
+		if s.State() == StateExit {
+			delete(m.sessions, id)
+		}
+	}
+	m.mu.Unlock()
+	sess, err := NewSession(cfg, "", "", "", "", "", m.emit)
+	if err != nil {
+		return nil, err
+	}
+	m.mu.Lock()
+	m.sessions[sess.ID] = sess
+	m.mu.Unlock()
+	return sess, nil
 }
 
 // SourcePreview 会话建立前预取源码:用独立短连接读母版,消除前端启动期空白。
@@ -373,7 +411,7 @@ func (m *Manager) SourcePreview(module, prog string) (*SourceFile, error) {
 	return nil, fmt.Errorf("源码未找到(%s): %w", dvmFile, lastErr)
 }
 
-// CloseAll 结束全部会话(服务退出时调用)
+// CloseAll 断开全部会话(服务退出时调用)
 func (m *Manager) CloseAll() {
 	m.mu.Lock()
 	ss := make([]*Session, 0, len(m.sessions))
@@ -383,6 +421,6 @@ func (m *Manager) CloseAll() {
 	m.sessions = map[string]*Session{}
 	m.mu.Unlock()
 	for _, s := range ss {
-		_ = s.Quit()
+		_ = s.Close()
 	}
 }
