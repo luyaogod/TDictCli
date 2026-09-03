@@ -95,7 +95,11 @@ export function Toolbar() {
   const toggleBottom = useStore((s) => s.toggleBottom)
   const view = useStore((s) => s.view)
 
-  const stopped = useStore((s) => s.state) === 'stopped'
+  const state = useStore((s) => s.state)
+  const sessionId = useStore((s) => s.sessionId)
+  const stopped = state === 'stopped'
+  // 存在本轮调试(idle/exit/无会话之外)时才允许「结束调试」/步进类
+  const inRun = !!sessionId && state !== '' && state !== 'exit' && state !== 'idle'
 
   return (
     <>
@@ -126,9 +130,9 @@ export function Toolbar() {
             onClick={() => void control('step')} />
           <ToolIcon icon={ArrowUpFromDot} label="步出 (finish)" disabled={!stopped}
             onClick={() => void control('finish')} />
-          <ToolIcon icon={RotateCcw} label="重新开始 — 结束并重启同一作业" color="text-green-600 dark:text-green-400" disabled={launching}
+          <ToolIcon icon={RotateCcw} label="重新开始 — 复用会话重启同一作业" color="text-green-600 dark:text-green-400" disabled={launching || !sessionId}
             onClick={() => void restart()} />
-          <ToolIcon icon={Square} label="结束会话 — quit(作业窗口随之关闭)" color="text-red-600 dark:text-red-400"
+          <ToolIcon icon={Square} label="结束调试 — 只结束本轮运行(会话保留)" color="text-red-600 dark:text-red-400" disabled={!inRun}
             onClick={() => void quit()} />
         </FloatingToolbar>
       )}

@@ -17,11 +17,11 @@ import (
 
 // Server 本地调试服务:REST + WebSocket + Web 前端
 type Server struct {
-	cfg        *Config
-	cfgPath    string // config.json 路径(设置页写回用)
-	web        fs.FS
-	webSub     fs.FS // web/dist 子文件系统(未构建前端时为 nil)
-	mgr        *Manager
+	cfg     *Config
+	cfgPath string // config.json 路径(设置页写回用)
+	web     fs.FS
+	webSub  fs.FS // web/dist 子文件系统(未构建前端时为 nil)
+	mgr     *Manager
 }
 
 // NewServer 创建服务实例;cfgPath 为 config.json 路径(设置页写回用,可为空=只读)
@@ -66,6 +66,9 @@ func (s *Server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/sessions", s.hList)
 	mux.HandleFunc("GET /api/sessions/{id}", s.hSnapshot)
 	mux.HandleFunc("DELETE /api/sessions/{id}", s.hQuit)
+	mux.HandleFunc("POST /api/sessions/{id}/restart", s.hSessionRestart)
+	mux.HandleFunc("POST /api/sessions/{id}/close", s.hSessionClose)
+	mux.HandleFunc("POST /api/sessions/switch", s.hSessionSwitch)
 	mux.HandleFunc("GET /api/sessions/{id}/breakpoints", s.hBPList)
 	mux.HandleFunc("POST /api/sessions/{id}/breakpoints", s.hBPAdd)
 	mux.HandleFunc("DELETE /api/sessions/{id}/breakpoints/{num}", s.hBPDel)
@@ -128,11 +131,11 @@ func (s *Server) sessOf(w http.ResponseWriter, r *http.Request) *Session {
 
 func (s *Server) hStatus(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, map[string]any{
-		"server":  "tdict-debug",
-		"ssh":     s.cfg.SSH.Host,
-		"zone":    s.cfg.Zone,
-		"topDir":  s.cfg.TopDirActual(),
-		"listen":  s.cfg.Listen,
+		"server":   "tdict-debug",
+		"ssh":      s.cfg.SSH.Host,
+		"zone":     s.cfg.Zone,
+		"topDir":   s.cfg.TopDirActual(),
+		"listen":   s.cfg.Listen,
 		"watchdog": s.cfg.WatchdogSeconds,
 	})
 }
@@ -141,7 +144,7 @@ func (s *Server) hLaunch(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Module string `json:"module"`
 		Prog   string `json:"prog"`
-		SSH    string `json:"ssh"` // 多 SSH 配置名(设置页维护);空 = 默认连接
+		SSH    string `json:"ssh"`  // 多 SSH 配置名(设置页维护);空 = 默认连接
 		Zone   string `json:"zone"` // 区域覆盖(31/35/36/39/t);空 = 默认区域
 	}
 	if !readBody(w, r, &req) {
@@ -170,9 +173,17 @@ func (s *Server) hLaunch(w http.ResponseWriter, r *http.Request) {
 		if err := sess.Launch(r.Context()); err != nil {
 			log.Printf("[debug] 会话 %s(%s) 启动失败: %v", sess.ID, sess.Prog, err)
 			s.mgr.emit(Event{Type: "log", SessionID: sess.ID, Text: "启动失败: " + err.Error()})
-			// 失败会话终结并移除,避免卡在 loading 且挡住下一次启动
-			sess.ForceExit()
-			s.mgr.Remove(sess.ID)
+			if sess.Booted() {
+				// 复用宿主上启动失败:Launch 已把会话收回空闲(可换作业重试/重启会话);
+				// 仅在异常退回 exit 时移除,避免卡在 loading
+				if sess.State() == StateExit {
+					s.mgr.Remove(sess.ID)
+				}
+			} else {
+				// 首次登录失败:宿主不可用,终结并移除,避免卡在 loading 挡住下一次启动
+				sess.ForceExit()
+				s.mgr.Remove(sess.ID)
+			}
 		}
 	}()
 	// runProg: gzzz_t 解析出的实体程序(前端源码命名/预取要用它,而不是作业编号)
@@ -193,6 +204,7 @@ func (s *Server) hSnapshot(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, map[string]any{
 		"ok": true,
 		"id": sess.ID, "module": sess.Module, "prog": sess.Prog, "runProg": sess.RunProg,
+		"env":   sess.EnvName(),
 		"state": string(sess.State()), "stop": cur,
 		"started":         sess.Started(),
 		"breakpoints":     sess.Breakpoints(),
@@ -206,13 +218,163 @@ func (s *Server) hQuit(w http.ResponseWriter, r *http.Request) {
 	if sess == nil {
 		return
 	}
+	// 「结束调试」只结束本轮运行,宿主会话保留(idle);再次启动免重新登录。
+	// 卡死降级整体断开时(StateExit)才移除会话。
+	if err := sess.EndRun(); err != nil {
+		fail(w, 500, err)
+		return
+	}
+	kept := sess.State() != StateExit
+	if !kept {
+		s.mgr.Remove(sess.ID)
+	}
+	writeJSON(w, 200, map[string]any{"ok": true, "kept": kept, "state": "idle"})
+}
+
+// ---------- 会话管理(单一常驻会话的切换/重启/结束) ----------
+
+// envCfgFor 取指定环境的生效配置(CloneEnv);若与当前生效目标同名(或未配置 envs 列表)则用当前配置快照
+func (s *Server) envCfgFor(name string) *Config {
+	if c := s.cfg.CloneEnv(name); c != nil {
+		return c
+	}
+	if name != "" && s.cfg.EnvName() == name {
+		cc := *s.cfg
+		return &cc
+	}
+	return nil
+}
+
+// setActiveEnv 把 activeEnv 写入 config.json 并热生效(会话切换/设为默认共用)。
+// cfg 为已按该环境合并、填充默认值的生效配置;nil 表示只改文件不改内存。
+func (s *Server) setActiveEnv(name string, cfg *Config) error {
+	if s.cfgPath == "" {
+		return fmt.Errorf("服务未挂接 config.json 路径,无法保存")
+	}
+	raw, err := os.ReadFile(s.cfgPath)
+	if err != nil {
+		return fmt.Errorf("读取 config.json 失败: %w", err)
+	}
+	var root map[string]any
+	if err := json.Unmarshal(raw, &root); err != nil || root == nil {
+		root = map[string]any{}
+	}
+	dbg, _ := root["debug"].(map[string]any)
+	if dbg == nil {
+		return fmt.Errorf("config.json 缺少 debug 配置节")
+	}
+	dbg["activeEnv"] = name
+	out, err := json.MarshalIndent(root, "", "  ")
+	if err != nil {
+		return err
+	}
+	tmp := s.cfgPath + ".tmp"
+	if err := os.WriteFile(tmp, out, 0o644); err != nil {
+		return err
+	}
+	if err := os.Rename(tmp, s.cfgPath); err != nil {
+		return err
+	}
+	if cfg != nil {
+		*s.cfg = *cfg
+	}
+	return nil
+}
+
+// bootToIdle 异步登录新会话到 idle(切换/重启用),失败终结并移除
+func (s *Server) bootToIdle(ns *Session, ctx context.Context) {
+	if err := ns.BootIdle(ctx); err != nil {
+		log.Printf("[debug] 会话 %s(%s) 登录失败: %v", ns.ID, ns.EnvName(), err)
+		s.mgr.emit(Event{Type: "log", SessionID: ns.ID, Text: "会话连接失败: " + err.Error()})
+		ns.ForceExit()
+		s.mgr.Remove(ns.ID)
+	}
+}
+
+// hSessionClose 「结束会话」:结束当前 debug 并彻底断开连接(与设置默认解耦)
+func (s *Server) hSessionClose(w http.ResponseWriter, r *http.Request) {
+	sess := s.sessOf(w, r)
+	if sess == nil {
+		return
+	}
+	if err := sess.Close(); err != nil {
+		fail(w, 500, err)
+		return
+	}
+	s.mgr.Remove(sess.ID)
+	writeJSON(w, 200, map[string]any{"ok": true, "state": "exit"})
+}
+
+// hSessionRestart 「重启会话」:断开并重连同环境,回到 idle 待启动
+func (s *Server) hSessionRestart(w http.ResponseWriter, r *http.Request) {
+	sess := s.sessOf(w, r)
+	if sess == nil {
+		return
+	}
+	env := sess.EnvName()
 	id := sess.ID
-	if err := sess.Quit(); err != nil {
+	// 先收口当前会话(运行中会先中断/quit),再重建连接
+	if err := sess.Close(); err != nil {
 		fail(w, 500, err)
 		return
 	}
 	s.mgr.Remove(id)
-	writeJSON(w, 200, map[string]any{"ok": true})
+	cfg := s.envCfgFor(env)
+	if cfg == nil {
+		cfg = s.envCfgFor(s.cfg.EnvName()) // 原环境已被删除:退回当前默认
+	}
+	if cfg == nil {
+		fail(w, 500, fmt.Errorf("找不到可用的连接配置(环境 %q 已被删除)", env))
+		return
+	}
+	ns, err := s.mgr.CreateSessionOn(cfg)
+	if err != nil {
+		fail(w, 502, err)
+		return
+	}
+	s.mgr.emit(Event{Type: "log", Text: fmt.Sprintf("重启会话:重新连接 %s …", cfg.EnvName())})
+	go s.bootToIdle(ns, r.Context())
+	writeJSON(w, 200, map[string]any{"ok": true, "sessionId": ns.ID, "env": cfg.EnvName(), "state": "loading"})
+}
+
+// hSessionSwitch 「切换会话」:把目标环境设为默认(持久化),断开旧连接并按目标环境重连到 idle。
+// 若已是目标环境会话则幂等返回(不改动正在进行的调试)。
+func (s *Server) hSessionSwitch(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Env string `json:"env"`
+	}
+	if !readBody(w, r, &req) {
+		return
+	}
+	cfg := s.envCfgFor(req.Env)
+	if cfg == nil {
+		fail(w, 404, fmt.Errorf("环境 %q 不存在(请在设置中添加)", req.Env))
+		return
+	}
+	if s.cfg.ActiveEnv != req.Env {
+		if err := s.setActiveEnv(req.Env, cfg); err != nil {
+			fail(w, 500, err)
+			return
+		}
+	}
+	cur := s.mgr.Current()
+	if cur != nil {
+		if cur.sameTarget(cfg) {
+			writeJSON(w, 200, map[string]any{"ok": true, "sessionId": cur.ID, "env": req.Env, "state": string(cur.State())})
+			return
+		}
+		s.mgr.emit(Event{Type: "log", SessionID: cur.ID, Text: fmt.Sprintf("切换会话到 %s,断开当前会话", req.Env)})
+		_ = cur.Close()
+		s.mgr.Remove(cur.ID)
+	}
+	ns, err := s.mgr.CreateSessionOn(cfg)
+	if err != nil {
+		fail(w, 502, err)
+		return
+	}
+	s.mgr.emit(Event{Type: "log", Text: fmt.Sprintf("切换会话:正在连接 %s …", req.Env)})
+	go s.bootToIdle(ns, r.Context())
+	writeJSON(w, 200, map[string]any{"ok": true, "sessionId": ns.ID, "env": req.Env, "state": "loading"})
 }
 
 // ---------- 断点 ----------
@@ -678,11 +840,18 @@ func (s *Server) hWSLogDebug(w http.ResponseWriter, r *http.Request) {
 		fail(w, 500, err)
 		return
 	}
-	// 已有会话先结束(重放调试独占通道,旧会话不再有用)
+	// 已有会话先收口:同目标(可复用空闲宿主)只结束本轮运行;不同目标直接断开。
+	// 重放调试独占调试通道,旧会话不再有用。
 	if cur := s.mgr.Current(); cur != nil {
-		s.mgr.emit(Event{Type: "log", SessionID: cur.ID, Text: "重放调试启动,自动结束当前会话"})
-		_ = cur.Quit()
-		s.mgr.Remove(cur.ID)
+		if cur.sameTarget(s.cfg) {
+			s.mgr.emit(Event{Type: "log", SessionID: cur.ID, Text: "重放调试启动,结束当前调试(会话保留)"})
+			_ = cur.EndRun()
+			// EndRun 卡死时降级为 Close(StateExit),残留会话由 prepareSession 清扫
+		} else {
+			s.mgr.emit(Event{Type: "log", SessionID: cur.ID, Text: "重放调试启动,断开当前会话"})
+			_ = cur.Close()
+			s.mgr.Remove(cur.ID)
+		}
 	}
 	sess, err := s.mgr.LaunchReplay(item, content)
 	if err != nil {
@@ -692,8 +861,14 @@ func (s *Server) hWSLogDebug(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		if err := sess.Launch(r.Context()); err != nil {
 			s.mgr.emit(Event{Type: "log", SessionID: sess.ID, Text: "启动失败: " + err.Error()})
-			sess.ForceExit()
-			s.mgr.Remove(sess.ID)
+			if sess.Booted() {
+				if sess.State() == StateExit {
+					s.mgr.Remove(sess.ID)
+				}
+			} else {
+				sess.ForceExit()
+				s.mgr.Remove(sess.ID)
+			}
 		}
 	}()
 	writeJSON(w, 200, map[string]any{"ok": true, "sessionId": sess.ID,

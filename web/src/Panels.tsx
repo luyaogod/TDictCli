@@ -17,6 +17,7 @@ function LaunchSection() {
   const sessionId = useStore((s) => s.sessionId)
   const prog = useStore((s) => s.prog)
   const state = useStore((s) => s.state)
+  const sessionEnv = useStore((s) => s.sessionEnv)
   const calibrate = useStore((s) => s.calibrate)
   const [v, setV] = useState(() => localStorage.getItem('tdict.launchTarget') || 'bsft001_wf')
   const doLaunch = () => {
@@ -27,16 +28,18 @@ function LaunchSection() {
     if (i > 0) void launch(t.slice(0, i).trim(), t.slice(i + 1).trim())
     else void launch('', t)
   }
+  // 单一常驻会话:会话空闲(idle)时仍显示启动输入,可复用宿主启动/换作业
+  const inRun = !!sessionId && state !== 'idle' && state !== 'exit'
   return (
     <div className="shrink-0 border-b border-border">
       <div className="flex h-8 items-center px-2.5 text-xs font-medium text-muted-foreground">运行</div>
-      {sessionId ? (
+      {inRun ? (
         <div className="flex items-center gap-1 px-1.5 pb-1.5">
           <span
             className="min-w-0 flex-1 truncate bg-accent/40 px-1.5 py-0.5 font-mono text-xs text-foreground"
-            title={prog || sessionId}
+            title={prog || sessionId || ''}
           >
-            {prog || sessionId}
+            {prog || (state === 'loading' ? '连接中…' : sessionEnv || '会话')}
           </span>
           <button
             title={state === 'stopped' ? '行号校准:协议行号与源码错位时点击对齐' : '行号校准(需停站后点击)'}
@@ -48,22 +51,29 @@ function LaunchSection() {
           </button>
         </div>
       ) : (
-        <div className="flex items-center gap-1 px-1.5 pb-1.5">
-          <button
-            title="启动调试会话(Enter 同效)"
-            disabled={launching || !v.trim()}
-            onClick={doLaunch}
-            className="p-1 transition-colors hover:bg-accent/60 disabled:pointer-events-none disabled:opacity-30"
-          >
-            <Play className="h-4 w-4 text-green-600 dark:text-green-500" fill="currentColor" />
-          </button>
-          <Input
-            value={v}
-            onChange={(e) => setV(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') doLaunch() }}
-            placeholder="作业编号,如 bsft001_wf 或 asf/bsft001_wf"
-            className="h-6 flex-1 px-1.5 text-xs"
-          />
+        <div className="px-1.5 pb-1.5">
+          {state === 'idle' && (
+            <div className="pb-1 text-[11px] text-muted-foreground">
+              {sessionEnv ? `会话空闲(${sessionEnv}),可直接启动调试或换作业` : '会话空闲,可直接启动调试'}
+            </div>
+          )}
+          <div className="flex items-center gap-1">
+            <button
+              title="启动调试会话(Enter 同效)"
+              disabled={launching || !v.trim()}
+              onClick={doLaunch}
+              className="p-1 transition-colors hover:bg-accent/60 disabled:pointer-events-none disabled:opacity-30"
+            >
+              <Play className="h-4 w-4 text-green-600 dark:text-green-500" fill="currentColor" />
+            </button>
+            <Input
+              value={v}
+              onChange={(e) => setV(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') doLaunch() }}
+              placeholder="作业编号,如 bsft001_wf 或 asf/bsft001_wf"
+              className="h-6 flex-1 px-1.5 text-xs"
+            />
+          </div>
         </div>
       )}
     </div>

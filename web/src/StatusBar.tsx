@@ -7,6 +7,7 @@ export function StatusBar() {
   const state = useStore((s) => s.state)
   const stop = useStore((s) => s.stop)
   const hold = useStore((s) => s.holdingSeconds)
+  const sessionEnv = useStore((s) => s.sessionEnv)
 
   let bar = 'bg-background text-muted-foreground'
   let msg: string | null = null
@@ -23,6 +24,11 @@ export function StatusBar() {
   } else if (state === 'loading') {
     bar = 'bg-accent text-foreground'
     msg = '启动中…'
+  } else if (state === 'idle') {
+    // 本轮调试结束,宿主会话保留(idle):再次启动/换作业免重新登录
+    bar = 'bg-foreground/10 text-foreground'
+    msg = sessionEnv ? `会话空闲(${sessionEnv}) · 可直接启动调试` : '会话空闲 · 可直接启动调试'
+    title = '会话保留中(SSH/登录态未断开),可直接启动新一轮调试'
   }
 
   return (

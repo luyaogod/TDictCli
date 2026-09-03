@@ -72,7 +72,7 @@ var debugProbeCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		defer sess.Quit()
+		defer sess.Close()
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 		go func() { // Ctrl-C 优雅退出

@@ -1,7 +1,8 @@
 // 设置页:VS Code 式左侧一级分类(外观/环境/高级)。
 // 「环境」是核心:SSH 连接 + 该环境专属启动参数(zone/launchArgs/库)成组维护,
-// 列表单选「设为生效」→ 后端把该环境合并到顶层字段作为当前默认配置。
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+// 列表单选「设为默认」只记录默认目标(尚无会话时自动建在哪);会话的切换/断开
+// 在调试页右侧「会话」面板操作,设置里改默认不会打断正在进行的会话。
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { CircleCheck, Circle, Plus, Trash2, Monitor, Server, SlidersHorizontal, Sun, Search, Eye, EyeOff } from 'lucide-react'
 import { api } from './api'
 import { Button, Input, Separator } from './ui'
@@ -49,7 +50,8 @@ export function SettingsView() {
   const busyRef = useRef(false)
   const timerRef = useRef<number | undefined>(undefined)
 
-  useEffect(() => {
+  // 从服务端回读配置(进入设置页/再次进入「环境」时;调试页「会话」面板切换会改默认环境)
+  const loadSettings = useCallback(() => {
     api.settings().then((c) => {
       setCfg(c)
       setActiveEnv(c.activeEnv || '')
@@ -66,6 +68,14 @@ export function SettingsView() {
       if (idx >= 0) setSelEnv(idx)
     }).catch((e) => setErr(e.message))
   }, [])
+
+  useEffect(() => { loadSettings() }, [loadSettings])
+  // keep-alive 常驻挂载:再次切到「环境」时回读,避免显示切换会话前的旧默认
+  useEffect(() => {
+    if (section !== 'envs') return
+    void loadSettings()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [section])
 
   // ---- 即时保存:字段修改后短防抖自动整包写回并热生效,无需「保存」按钮 ----
   const envName = (e: EnvItem) => e.name || `${e.host}-${e.zone}`.replace(/-$/, '')
@@ -223,13 +233,13 @@ export function SettingsView() {
                 <section className="min-w-0 flex-1 pl-3">
                   <div className="mb-2 flex items-center justify-between">
                     <h3 className="font-medium text-foreground">
-                      环境参数{cur.host && activeEnv === (cur.name || `${cur.host}-${cur.zone}`.replace(/-$/, '')) && <span className="ml-2 text-emerald-600 dark:text-emerald-400">(生效中)</span>}
+                      环境参数{cur.host && activeEnv === (cur.name || `${cur.host}-${cur.zone}`.replace(/-$/, '')) && <span className="ml-2 text-emerald-600 dark:text-emerald-400">(默认)</span>}
                     </h3>
                     <div className="flex gap-1.5">
                       <Button size="sm" variant="secondary" disabled={!cur.host || (!cur.name && `${cur.host}-${cur.zone}` === activeEnv)}
-                        title={activeEnv === (cur.name || `${cur.host}-${cur.zone}`) ? '已是生效环境' : '设为当前默认并立即热生效'}
+                        title={activeEnv === (cur.name || `${cur.host}-${cur.zone}`) ? '已是默认环境' : '设为默认(新会话的自动建立目标)'}
                         onClick={() => change({ active: cur.name || `${cur.host}-${cur.zone}`.replace(/-$/, '') }, true)}>
-                        设为生效
+                        设为默认
                       </Button>
                       <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-red-600 dark:hover:text-red-400"
                         onClick={delEnv}>
