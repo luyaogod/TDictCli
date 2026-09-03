@@ -20,23 +20,29 @@ const STATE_DOT: Record<string, string> = {
   exit: 'bg-muted-foreground/50',
 }
 
-// 折叠区头(仿 RightPanels 手风琴):标题 + 旋转箭头;extra 放右侧附加控件
-function SectionHead({ title, open, onToggle, extra }: {
-  title: string; open: boolean; onToggle: () => void; extra?: ReactNode
+// 折叠区头(仿 RightPanels 手风琴):标题(可点击)…附加控件…折叠箭头;
+// topLine 为真时块顶加分割线(与会话内容分隔,避免与上一块底边线叠成双线)
+function SectionHead({ title, open, onToggle, topLine, extra }: {
+  title: string; open: boolean; onToggle: () => void; topLine?: boolean; extra?: ReactNode
 }) {
+  const tip = open ? `收起${title}` : `展开${title}`
   return (
-    <div className="flex h-8 shrink-0 items-center border-b border-border px-2.5 text-xs font-medium text-muted-foreground">
-      <button onClick={onToggle}
-        title={open ? `收起${title}` : `展开${title}`}
-        className="flex min-w-0 flex-1 items-center justify-between gap-1 hover:text-foreground">
-        <span className="truncate">{title}</span>
+    <div className={`flex h-8 shrink-0 items-center border-b border-border px-2.5 text-xs font-medium text-muted-foreground ${
+      topLine ? 'border-t border-t-border' : ''
+    }`}>
+      <button onClick={onToggle} title={tip}
+        className="min-w-0 flex-1 truncate text-left hover:text-foreground">
+        {title}
+      </button>
+      {extra}
+      <button onClick={onToggle} title={tip}
+        className="p-0.5 text-muted-foreground transition-colors hover:text-foreground">
         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
           className={`shrink-0 text-muted-foreground transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>
           <path d="m6 9 6 6 6-6" />
         </svg>
       </button>
-      {extra}
     </div>
   )
 }
@@ -194,8 +200,8 @@ export function SessionPanel() {
           </div>
         )}
 
-        {/* 区域二:环境变量(TOPENT 设置,空闲会话可改) */}
-        <SectionHead title="环境变量" open={open.env} onToggle={() => toggle('env')} />
+        {/* 区域二:环境变量(TOPENT 设置,空闲会话可改);会话展开时块顶加分割线 */}
+        <SectionHead title="环境变量" open={open.env} onToggle={() => toggle('env')} topLine={open.session} />
         {open.env && (
           <div className="py-1">
             <div className="flex items-center gap-1.5 px-2 py-0.5">
