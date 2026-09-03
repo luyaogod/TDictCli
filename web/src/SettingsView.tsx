@@ -18,7 +18,7 @@ interface EnvItem {
   launchArgs: string
   watchdogSeconds: number
   dbType: string // oracle | kingbase
-  dbEnt: number
+  dbEnt: string // 企业 TOPENT(数字或文本;空 = 不指定,沿用登录默认)
 }
 
 type Section = 'appearance' | 'envs' | 'advanced'
@@ -59,7 +59,7 @@ export function SettingsView() {
       setEnvs((c.envs || []).map((e: any) => ({
         name: e.name || '', host: e.host || '', port: e.port || 22, user: e.user || '', password: e.password || '',
         zone: e.zone || '', launchArgs: e.launchArgs || '', watchdogSeconds: e.watchdogSeconds || 0,
-        dbType: e.db?.type || 'oracle', dbEnt: e.db?.ent || 0,
+        dbType: e.db?.type || 'oracle', dbEnt: e.db?.ent != null ? String(e.db?.ent) : '',
       })))
       // activeEnv 指向的环境不存在(历史脏数据/已删除)时视为未设置
       const names = (c.envs || []).map((e: any) => e.name)
@@ -89,7 +89,8 @@ export function SettingsView() {
       envs: e.filter((x) => x.host).map((x) => ({
         name: envName(x), host: x.host, port: x.port || 22, user: x.user, password: x.password,
         zone: x.zone,
-        db: (x.dbEnt > 0 || x.dbType === 'kingbase') ? { type: x.dbType || 'oracle', ent: x.dbEnt || 0 } : undefined,
+        // 企业 TOPENT 剔除两侧空白(数字/文本均可;全空白视为未指定)
+        db: (x.dbEnt.trim() || x.dbType === 'kingbase') ? { type: x.dbType || 'oracle', ent: x.dbEnt.trim() } : undefined,
       })),
     }
     await api.saveSettings(next)
@@ -132,7 +133,7 @@ export function SettingsView() {
   const patchCfg = (patch: any) => change({ cfg: { ...cfg, ...patch } })
   const addEnv = () => {
     setSelEnv(envs.length)
-    change({ envs: [...envs, { name: '', host: '', port: 22, user: '', password: '', zone: '35', launchArgs: '', watchdogSeconds: 0, dbType: 'oracle', dbEnt: 0 }] })
+    change({ envs: [...envs, { name: '', host: '', port: 22, user: '', password: '', zone: '35', launchArgs: '', watchdogSeconds: 0, dbType: 'oracle', dbEnt: '' }] })
   }
   const delEnv = () => {
     const cur2 = envs[selEnv]
@@ -284,7 +285,7 @@ export function SettingsView() {
 
                     {/* 环境变量 */}
                     <GroupLabel title="环境变量" />
-                    <Field label="企业 TOPENT(留空用选区默认)" className="col-span-2"><Input className={cell} value={cur.dbEnt || ''} onChange={(e) => patchEnv(selEnv, { dbEnt: Number(e.target.value) || 0 })} /></Field>
+                    <Field label="企业 TOPENT(留空用选区默认;数字或文本,两侧空白自动剔除)" className="col-span-2"><Input className={cell} value={cur.dbEnt || ''} onChange={(e) => patchEnv(selEnv, { dbEnt: e.target.value })} /></Field>
                   </div>
                   {probeNote && <div className="mt-2 bg-sky-500/10 px-3 py-2 text-sky-700 dark:text-sky-300">{probeNote}</div>}
                   <p className="mt-2 text-muted-foreground">
