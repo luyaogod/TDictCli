@@ -187,15 +187,15 @@ body { margin: 0; background: var(--background); }
 }
 
 /* 变量悬浮卡片(Monaco content widget):直接显示值(无头部/变量名/分割线)。
-   固定统一宽度:break-all 文本的 fit-content 会塌缩成最短断行宽,导致卡片忽宽忽窄;
-   固定宽度下长值换行、树形展开有空间,观感一致 */
+   自适应宽度(max-content):短值卡片收窄(复制按钮近在眼前),长值封顶换行 */
 .fgl-hover {
   position: relative;
   background: var(--card);
   border: 1px solid var(--border);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
-  width: 440px;
-  max-width: calc(100vw - 24px);
+  width: max-content;
+  min-width: 140px;
+  max-width: min(560px, calc(100vw - 24px));
   font-size: 12px;
   user-select: text;
   cursor: default;
