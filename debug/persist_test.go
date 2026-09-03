@@ -80,11 +80,19 @@ func TestPrepareSessionRejectsActiveRun(t *testing.T) {
 
 func TestTopentForRun(t *testing.T) {
 	c := cfgFor("h1", "36")
-	c.DB = &DBConfig{Ent: 7}
+	c.DB = &DBConfig{Ent: "7"}
 	s := fakeIdleSession("s1", "h1", "36")
 	s.cfg = c
 	if got := s.topentForRun(); got != "7" {
 		t.Fatalf("无手动设置时应回退配置 DB.Ent,got %q", got)
+	}
+	// 文本型 TOPENT(设置页/会话面板均允许)原样透传
+	c2 := cfgFor("h1", "36")
+	c2.DB = &DBConfig{Ent: " txt-9 "}
+	s3 := fakeIdleSession("s3", "h1", "36")
+	s3.cfg = c2
+	if got := s3.topentForRun(); got != "txt-9" {
+		t.Fatalf("文本型配置 TOPENT 应剔除两侧空白透传,got %q", got)
 	}
 	s.mu.Lock()
 	s.topentOverride = "99"
@@ -99,13 +107,16 @@ func TestTopentForRun(t *testing.T) {
 	if got := s.TopentOverride(); got != "99" {
 		t.Fatalf("TopentOverride 应返回手动值,got %q", got)
 	}
+	if got := s.TopentCfg(); got != "7" {
+		t.Fatalf("TopentCfg 应返回配置值,got %q", got)
+	}
 }
 
 func TestCloneEnvAndEnvName(t *testing.T) {
 	c := &Config{
 		SSH: SSHConfig{Host: "top", Port: 22, User: "u"},
 		Envs: []NamedEnv{
-			{Name: "E1", SSHConfig: SSHConfig{Host: "e1h", Port: 22, User: "u1"}, Zone: "35", DB: &DBConfig{Ent: 7}},
+			{Name: "E1", SSHConfig: SSHConfig{Host: "e1h", Port: 22, User: "u1"}, Zone: "35", DB: &DBConfig{Ent: "7"}},
 			{Name: "E2", SSHConfig: SSHConfig{Host: "e2h", Port: 22, User: "u2"}, Zone: "36"},
 		},
 	}
@@ -118,7 +129,7 @@ func TestCloneEnvAndEnvName(t *testing.T) {
 	if clone.SSH.Host != "e1h" || clone.Zone != "35" || clone.ActiveEnv != "E1" {
 		t.Fatalf("CloneEnv 字段不符: %+v", clone.SSH)
 	}
-	if clone.DB == nil || clone.DB.Ent != 7 {
+	if clone.DB == nil || clone.DB.Ent != "7" {
 		t.Fatal("CloneEnv 应带环境专属 DB 配置")
 	}
 	if c.SSH.Host != "top" {

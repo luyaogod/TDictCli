@@ -570,14 +570,14 @@ func (s *Session) TopentOverride() string {
 	return s.topentOverride
 }
 
-// TopentCfg 配置级企业编号(设置页该环境 db.ent;未手动设置时运行生效值)
-func (s *Session) TopentCfg() int {
+// TopentCfg 配置级企业 TOPENT(设置页该环境 db.ent;未手动设置时运行生效值)
+func (s *Session) TopentCfg() string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.cfg.DB != nil {
-		return s.cfg.DB.Ent
+		return string(s.cfg.DB.Ent)
 	}
-	return 0
+	return ""
 }
 
 // topentForRun 本轮运行生效的 TOPENT:会话内手动设置优先,其次配置企业(ENT),再否则不导出(沿用登录默认)
@@ -587,8 +587,8 @@ func (s *Session) topentForRun() string {
 	if s.topentOverride != "" {
 		return s.topentOverride
 	}
-	if s.cfg.DB != nil && s.cfg.DB.Ent > 0 {
-		return strconv.Itoa(s.cfg.DB.Ent)
+	if s.cfg.DB != nil {
+		return strings.TrimSpace(string(s.cfg.DB.Ent))
 	}
 	return ""
 }

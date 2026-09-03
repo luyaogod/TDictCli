@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
 
 // SSHConfig 远程服务器连接配置
@@ -21,14 +22,38 @@ type NamedSSH struct {
 	SSHConfig
 }
 
+// EntValue 企业编号(TOPENT):数字或文本均可,兼容旧配置的 JSON 数字。
+// 数据库探测等需要真实编号的场景用 Int()(非数字返回 false)
+type EntValue string
+
+// UnmarshalJSON 同时接受 JSON 数字与字符串(旧配置 "ent": 99 / 新文本 "ent": "99x")
+func (e *EntValue) UnmarshalJSON(b []byte) error {
+	s := strings.TrimSpace(string(b))
+	if s == "null" {
+		*e = ""
+		return nil
+	}
+	*e = EntValue(strings.Trim(s, `"`))
+	return nil
+}
+
+// MarshalJSON 统一序列化为字符串
+func (e EntValue) MarshalJSON() ([]byte, error) { return json.Marshal(string(e)) }
+
+// Int 解析为数字(供数据库探测按企业编号匹配;非数字内容返回 false)
+func (e EntValue) Int() (int, bool) {
+	n, err := strconv.Atoi(strings.TrimSpace(string(e)))
+	return n, err == nil
+}
+
 // DBConfig 数据库连接探查配置(config.json debug.db 节,全部可选)
 type DBConfig struct {
-	Type       string `json:"type"`           // 数据库类型:"oracle"(默认)| "kingbase"(人大金仓,PG 引擎)
-	Ent        int    `json:"ent"`            // 默认企业编号(TOPENT);0=不指定
-	SQLPlus    string `json:"sqlplus"`        // oracle: sqlplus 路径,留空自动探测
-	OracleHome string `json:"oracleHome"`     // oracle: ORACLE_HOME,留空自动探测
-	TNS        string `json:"tns"`            // oracle: TNS 别名(如 t35prd)/ kingbase: 库名,留空自动发现实例
-	Port       int    `json:"port,omitempty"` // kingbase: 实例端口,0=自动发现(默认 54321)
+	Type       string   `json:"type"`           // 数据库类型:"oracle"(默认)| "kingbase"(人大金仓,PG 引擎)
+	Ent        EntValue `json:"ent"`            // 默认企业编号(TOPENT);空=不指定;数字或文本均可
+	SQLPlus    string   `json:"sqlplus"`        // oracle: sqlplus 路径,留空自动探测
+	OracleHome string   `json:"oracleHome"`     // oracle: ORACLE_HOME,留空自动探测
+	TNS        string   `json:"tns"`            // oracle: TNS 别名(如 t35prd)/ kingbase: 库名,留空自动发现实例
+	Port       int      `json:"port,omitempty"` // kingbase: 实例端口,0=自动发现(默认 54321)
 }
 
 // NamedDB 命名数据库连接(设置页维护的多数据库列表)
@@ -204,12 +229,13 @@ func (c *Config) TNSName() string {
 	}
 }
 
-// DBEnt 返回默认企业编号(配置值)
+// DBEnt 返回默认企业编号(数据库探测用,须为数字;文本/未配置返回 0=仅列映射)
 func (c *Config) DBEnt() int {
-	if c.DB != nil {
-		return c.DB.Ent
+	if c.DB == nil {
+		return 0
 	}
-	return 0
+	n, _ := c.DB.Ent.Int()
+	return n
 }
 
 // BPsPersisted 断点持久化是否启用
