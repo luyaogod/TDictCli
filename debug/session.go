@@ -458,7 +458,8 @@ func (s *Session) startRun(ctx context.Context, launchProg string) error {
 	// TOPENT:会话内手动设置优先,其次配置企业(ENT);都没有则不导出,沿用选区登录默认
 	// (选区输出的是机器默认值如「TOPENT = 99」;作业运行/数据库连接都以 TOPENT 为准)
 	if ent := s.topentForRun(); ent != "" {
-		setup += fmt.Sprintf("export TOPENT=%s\r\n", ent)
+		// 单引号包裹并剔除内嵌单引号(值不限文本,防注入/拆词),与 SetTopent 同规则
+		setup += "export TOPENT='" + strings.ReplaceAll(ent, "'", "") + "'\r\n"
 	}
 	s.pty.Write(setup)
 	if err := s.waitRegexp(reShellPrompt, 15*time.Second, "shell 提示符(cd)"); err != nil {
@@ -600,7 +601,9 @@ func (s *Session) SetTopent(value string) error {
 	s.mu.Unlock()
 	cmd := "unset TOPENT; echo TDICT_TOPENT_OK\r"
 	if value != "" {
-		cmd = fmt.Sprintf("export TOPENT=%s; echo TDICT_TOPENT_OK\r", value)
+		// 值不限数字/文本:shell 单引号包裹并剔除内嵌单引号,防注入/拆词
+		q := "'" + strings.ReplaceAll(value, "'", "") + "'"
+		cmd = "export TOPENT=" + q + "; echo TDICT_TOPENT_OK\r"
 	}
 	if err := s.pty.Write(cmd); err != nil {
 		return fmt.Errorf("写入终端失败: %w", err)

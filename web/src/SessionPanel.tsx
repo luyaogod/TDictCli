@@ -121,11 +121,9 @@ export function SessionPanel() {
   useEffect(() => { loadTopent() }, [loadTopent])
   const saveTopent = async () => {
     if (!canSetTopent || !sessionId) return
+    // 不限数字/文本:仅剔除两侧空白,留空 = 清除手动设置
     const v = topent.trim()
-    if (v && !/^\d{1,3}$/.test(v)) {
-      setTopentErr('TOPENT 须为 1~3 位数字(留空 = 清除手动设置)')
-      return
-    }
+    setTopent(v)
     setTopentErr('')
     try {
       await api.topent(sessionId, v)
@@ -210,7 +208,7 @@ export function SessionPanel() {
               <Input value={topent} disabled={!canSetTopent}
                 onChange={(e) => setTopent(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') void saveTopent() }}
-                title="1~3 位数字;留空 = 清除手动设置"
+                title="数字或文本均可;保存时自动剔除两侧空白,留空 = 清除手动设置"
                 className="h-6 min-w-0 flex-1 px-1.5 font-mono text-xs" />
               <button disabled={!canSetTopent} onClick={() => void saveTopent()}
                 title="保存 TOPENT(下一轮调试启动时采用)"
