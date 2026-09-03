@@ -42,15 +42,16 @@ export function SettingsView() {
   const [selEnv, setSelEnv] = useState(0) // 列表浏览选中项(≠ 生效项)
   const [err, setErr] = useState('')
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const [dirty, setDirty] = useState(false) // 有未保存的修改(显式点「保存」才写回并热生效)
+  const dirtyRef = useRef(false)
+  const markDirty = () => { dirtyRef.current = true; setDirty(true) }
+  const markClean = () => { dirtyRef.current = false; setDirty(false) }
   const [showPwd, setShowPwd] = useState(false) // 密码明文/密文切换
   const [probing, setProbing] = useState(false)
   const [probeNote, setProbeNote] = useState('')
-  // 自动保存:待写快照 ref + 串行落盘 + 短防抖(避免连续键入时并发 PUT 乱序)
-  const latestRef = useRef<{ cfg: any; envs: EnvItem[]; active: string } | null>(null)
-  const busyRef = useRef(false)
-  const timerRef = useRef<number | undefined>(undefined)
 
-  // 从服务端回读配置(进入设置页/再次进入「环境」时;调试页「会话」面板切换会改默认环境)
+  // 从服务端回读配置(进入设置页/再次进入「环境」时;调试页「会话」面板切换会改默认环境)。
+  // 有未保存修改时不回读,避免冲掉正在编辑的内容
   const loadSettings = useCallback(() => {
     api.settings().then((c) => {
       setCfg(c)
@@ -66,18 +67,20 @@ export function SettingsView() {
       // 默认选中生效环境的明细(进入设置页即展示当前生效配置)
       const idx = names.indexOf(c.activeEnv || '')
       if (idx >= 0) setSelEnv(idx)
+      markClean()
+      setSaveState('idle')
     }).catch((e) => setErr(e.message))
   }, [])
 
   useEffect(() => { loadSettings() }, [loadSettings])
-  // keep-alive 常驻挂载:再次切到「环境」时回读,避免显示切换会话前的旧默认
+  // keep-alive 常驻挂载:再次切到「环境」时回读(无未保存修改时),避免显示切换会话前的旧默认
   useEffect(() => {
-    if (section !== 'envs') return
+    if (section !== 'envs' || dirtyRef.current) return
     void loadSettings()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [section])
 
-  // ---- 即时保存:字段修改后短防抖自动整包写回并热生效,无需「保存」按钮 ----
+  // ---- 手动保存:修改只落本地并标记,显式点「保存」才整包写回热生效 ----
   const envName = (e: EnvItem) => e.name || `${e.host}-${e.zone}`.replace(/-$/, '')
   const persist = async (c: any, e: EnvItem[], a: string) => {
     const next = {
@@ -95,39 +98,29 @@ export function SettingsView() {
     setEnvs((prev) => prev.map((x) => ({ ...x, name: envName(x) })))
     setActiveEnv(a)
   }
-  const drain = async () => {
-    if (busyRef.current) return
-    const snap = latestRef.current
-    if (!snap) return
-    latestRef.current = null
-    busyRef.current = true
+  const saveAll = async () => {
+    if (saveState === 'saving') return
+    setErr('')
+    setSaveState('saving')
     try {
-      await persist(snap.cfg, snap.envs, snap.active)
+      await persist(cfg, envs, activeEnv)
+      markClean()
       setSaveState('saved')
     } catch (ex: any) {
-      setErr(ex.message)
+      setErr(ex.message || String(ex))
       setSaveState('idle')
-    } finally {
-      busyRef.current = false
-      if (latestRef.current) void drain() // 落盘期间又有修改,继续写最新快照
     }
   }
-  const scheduleSave = (c: any, e: EnvItem[], a: string, immediate = false) => {
-    latestRef.current = { cfg: c, envs: e, active: a }
-    setSaveState('saving')
-    window.clearTimeout(timerRef.current)
-    if (immediate) { void drain(); return }
-    timerRef.current = window.setTimeout(() => void drain(), 600)
-  }
-  // 修改统一入口:先更新本地状态,再登记一次自动保存(用修改后的快照,避免闭包旧值)
-  const change = (patch: { cfg?: any; envs?: EnvItem[]; active?: string }, immediate = false) => {
+  // 修改统一入口:更新本地状态并标记未保存(不自动写回)
+  const change = (patch: { cfg?: any; envs?: EnvItem[]; active?: string }) => {
     const nc = patch.cfg ?? cfg
     const ne = patch.envs ?? envs
     const na = patch.active ?? activeEnv
     if (patch.cfg !== undefined) setCfg(nc)
     if (patch.envs !== undefined) setEnvs(ne)
     if (patch.active !== undefined) setActiveEnv(na)
-    scheduleSave(nc, ne, na, immediate)
+    markDirty()
+    setSaveState('idle')
   }
   const patchEnv = (i: number, patch: Partial<EnvItem>) => {
     const next = envs.map((x, j) => (j === i ? { ...x, ...patch } : x))
@@ -145,11 +138,9 @@ export function SettingsView() {
     const cur2 = envs[selEnv]
     const activeKey = cur2 ? cur2.name || `${cur2.host}-${cur2.zone}`.replace(/-$/, '') : ''
     setSelEnv(Math.max(0, selEnv - 1))
-    change({ envs: envs.filter((_, j) => j !== selEnv), active: activeKey === activeEnv ? '' : undefined }, true)
+    change({ envs: envs.filter((_, j) => j !== selEnv), active: activeKey === activeEnv ? '' : undefined })
   }
-  // 卸载时清掉未落盘的防抖计时
-  useEffect(() => () => window.clearTimeout(timerRef.current), [])
-  // 「已自动保存」提示短暂停留后恢复默认文案
+  // 「已保存」提示短暂停留后回到空闲
   useEffect(() => {
     if (saveState !== 'saved') return
     const t = window.setTimeout(() => setSaveState('idle'), 2000)
@@ -196,9 +187,16 @@ export function SettingsView() {
         <div className="mx-auto max-w-3xl p-4">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-medium text-foreground">{SECTIONS.find((s) => s.key === section)?.label}设置</h2>
-            {/* 即时保存状态:修改自动落盘并热生效,无需保存按钮 */}
-            <span className={`text-[11px] ${saveState === 'saved' ? 'text-emerald-600 dark:text-emerald-400' : saveState === 'saving' ? 'text-muted-foreground' : ''}`}>
-              {saveState === 'saving' ? '保存中…' : saveState === 'saved' ? '已自动保存 ✓' : '修改即时生效'}
+            {/* 手动保存:有未保存修改时出现保存按钮(修改不再即时写回) */}
+            <span className="flex items-center gap-2">
+              <span className={`text-[11px] ${saveState === 'saved' ? 'text-emerald-600 dark:text-emerald-400' : dirty ? 'text-amber-600 dark:text-amber-400' : ''}`}>
+                {saveState === 'saving' ? '保存中…' : saveState === 'saved' ? '已保存 ✓' : dirty ? '有未保存的修改' : ''}
+              </span>
+              {(dirty || saveState === 'saving') && (
+                <Button size="sm" variant="secondary" className="h-6 text-xs" disabled={saveState === 'saving'} onClick={() => void saveAll()}>
+                  {saveState === 'saving' ? '保存中…' : '保存'}
+                </Button>
+              )}
             </span>
           </div>
           {err && <div className="mb-3 bg-red-500/10 px-3 py-2 text-red-600 dark:text-red-400">{err}</div>}
@@ -236,15 +234,21 @@ export function SettingsView() {
                       环境参数{cur.host && activeEnv === (cur.name || `${cur.host}-${cur.zone}`.replace(/-$/, '')) && <span className="ml-2 text-emerald-600 dark:text-emerald-400">(默认)</span>}
                     </h3>
                     <div className="flex gap-1.5">
-                      <Button size="sm" variant="secondary" disabled={!cur.host || (!cur.name && `${cur.host}-${cur.zone}` === activeEnv)}
-                        title={activeEnv === (cur.name || `${cur.host}-${cur.zone}`) ? '已是默认环境' : '设为默认(新会话的自动建立目标)'}
-                        onClick={() => change({ active: cur.name || `${cur.host}-${cur.zone}`.replace(/-$/, '') }, true)}>
-                        设为默认
-                      </Button>
                       <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-red-600 dark:hover:text-red-400"
+                        title="删除该环境(保存后生效)"
                         onClick={delEnv}>
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
+                      <Button size="sm" variant="secondary" disabled={!cur.host || (!cur.name && `${cur.host}-${cur.zone}` === activeEnv)}
+                        title={activeEnv === (cur.name || `${cur.host}-${cur.zone}`) ? '已是默认环境' : '设为默认(新会话的自动建立目标)'}
+                        onClick={() => change({ active: cur.name || `${cur.host}-${cur.zone}`.replace(/-$/, '') })}>
+                        设为默认
+                      </Button>
+                      {(dirty || saveState === 'saving') && (
+                        <Button size="sm" variant="secondary" className="h-7" disabled={saveState === 'saving'} onClick={() => void saveAll()}>
+                          {saveState === 'saving' ? '保存中…' : '保存'}
+                        </Button>
+                      )}
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
@@ -323,6 +327,13 @@ export function SettingsView() {
                 <Field label="终端宽"><Input className={input} value={cfg.termWidth || 200} onChange={(e) => patchCfg({ termWidth: Number(e.target.value) || 200 })} /></Field>
                 <Field label="终端高"><Input className={input} value={cfg.termHeight || 50} onChange={(e) => patchCfg({ termHeight: Number(e.target.value) || 50 })} /></Field>
               </div>
+              {(dirty || saveState === 'saving') && (
+                <div className="mt-3">
+                  <Button size="sm" variant="secondary" className="h-7" disabled={saveState === 'saving'} onClick={() => void saveAll()}>
+                    {saveState === 'saving' ? '保存中…' : '保存'}
+                  </Button>
+                </div>
+              )}
             </section>
           )}
         </div>
