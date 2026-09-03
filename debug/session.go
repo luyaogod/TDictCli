@@ -212,9 +212,10 @@ type Session struct {
 	custModule string // 转客制作业:实际启动的客制模块名(cpm/apm→cpm),空 = 标准模块
 
 	// ---- 单一常驻会话(复用宿主) ----
-	envName    string // 会话所连环境名(设置页 envs 名称;空 = 顶层默认/推导名)
-	booted     bool   // 是否已完成首次登录(菜单→shell),宿主可复用
-	shellReady bool   // pty 当前停在 shell 提示符,可直接敲 shell 命令
+	envName        string // 会话所连环境名(设置页 envs 名称;空 = 顶层默认/推导名)
+	booted         bool   // 是否已完成首次登录(菜单→shell),宿主可复用
+	shellReady     bool   // pty 当前停在 shell 提示符,可直接敲 shell 命令
+	topentOverride string // 会话内手动设置的 TOPENT(空 = 未设置,按配置/登录默认)
 }
 
 // NewSession 建立 SSH 连接并打开 PTY(登录与启动由 Launch 驱动)。
@@ -454,10 +455,10 @@ func (s *Session) startRun(ctx context.Context, launchProg string) error {
 	if s.cfg.FGLServer != "" {
 		setup += "export FGLSERVER=" + s.cfg.FGLServer + "\r\n"
 	}
-	// 配置了企业(ENT)时覆盖选区菜单给的 TOPENT(选区输出的是机器默认值,
-	// 如「TOPENT = 99」;作业运行/数据库连接都以 TOPENT 为准)
-	if s.cfg.DB != nil && s.cfg.DB.Ent > 0 {
-		setup += fmt.Sprintf("export TOPENT=%d\r\n", s.cfg.DB.Ent)
+	// TOPENT:会话内手动设置优先,其次配置企业(ENT);都没有则不导出,沿用选区登录默认
+	// (选区输出的是机器默认值如「TOPENT = 99」;作业运行/数据库连接都以 TOPENT 为准)
+	if ent := s.topentForRun(); ent != "" {
+		setup += fmt.Sprintf("export TOPENT=%s\r\n", ent)
 	}
 	s.pty.Write(setup)
 	if err := s.waitRegexp(reShellPrompt, 15*time.Second, "shell 提示符(cd)"); err != nil {
@@ -560,6 +561,60 @@ func (s *Session) SetRun(cfg *Config, module, prog, runProg, launchRef, extra st
 	s.ArgsOverride = ""
 	s.custModule = ""
 }
+
+// TopentOverride 会话内手动设置的 TOPENT(空 = 未设置,按配置/登录默认)
+func (s *Session) TopentOverride() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.topentOverride
+}
+
+// TopentCfg 配置级企业编号(设置页该环境 db.ent;未手动设置时运行生效值)
+func (s *Session) TopentCfg() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.cfg.DB != nil {
+		return s.cfg.DB.Ent
+	}
+	return 0
+}
+
+// topentForRun 本轮运行生效的 TOPENT:会话内手动设置优先,其次配置企业(ENT),再否则不导出(沿用登录默认)
+func (s *Session) topentForRun() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.topentOverride != "" {
+		return s.topentOverride
+	}
+	if s.cfg.DB != nil && s.cfg.DB.Ent > 0 {
+		return strconv.Itoa(s.cfg.DB.Ent)
+	}
+	return ""
+}
+
+// SetTopent 空闲态重新设置宿主 shell 的 TOPENT(空值 = 清除手动设置,回到配置/登录默认)。
+// 立即 export/unset 到 shell,并在随后各轮调试启动时优先导出该值。
+func (s *Session) SetTopent(value string) error {
+	s.mu.Lock()
+	s.topentOverride = value
+	s.mu.Unlock()
+	cmd := "unset TOPENT; echo TDICT_TOPENT_OK\r"
+	if value != "" {
+		cmd = fmt.Sprintf("export TOPENT=%s; echo TDICT_TOPENT_OK\r", value)
+	}
+	if err := s.pty.Write(cmd); err != nil {
+		return fmt.Errorf("写入终端失败: %w", err)
+	}
+	// 等待 shell 回执(确认命令已被执行;失败只记日志,不阻断保存)
+	if err := s.waitRegexp(reTopentOK, 5*time.Second, "TOPENT 设置回执"); err != nil {
+		s.emitEvent(Event{Type: "log", Text: "TOPENT 已保存但未等到 shell 回执: " + err.Error()})
+	}
+	s.emitEvent(Event{Type: "log", Text: fmt.Sprintf("TOPENT 已设置为 %q(会话内,下一轮调试生效)", value)})
+	return nil
+}
+
+// reTopentOK SetTopent 的 shell 回执标记
+var reTopentOK = regexp.MustCompile(`TDICT_TOPENT_OK`)
 
 // enterIdle 把会话置为空闲(宿主 shell 保留、无调试运行)并广播 state=idle。
 // 程序自然退出 / 结束调试 / 复用启动失败都会回到这个状态。

@@ -78,6 +78,29 @@ func TestPrepareSessionRejectsActiveRun(t *testing.T) {
 	}
 }
 
+func TestTopentForRun(t *testing.T) {
+	c := cfgFor("h1", "36")
+	c.DB = &DBConfig{Ent: 7}
+	s := fakeIdleSession("s1", "h1", "36")
+	s.cfg = c
+	if got := s.topentForRun(); got != "7" {
+		t.Fatalf("无手动设置时应回退配置 DB.Ent,got %q", got)
+	}
+	s.mu.Lock()
+	s.topentOverride = "99"
+	s.mu.Unlock()
+	if got := s.topentForRun(); got != "99" {
+		t.Fatalf("手动设置应优先于配置企业,got %q", got)
+	}
+	s2 := fakeIdleSession("s2", "h1", "36")
+	if got := s2.topentForRun(); got != "" {
+		t.Fatalf("无 DB 且无手动设置应返回空(沿用登录默认),got %q", got)
+	}
+	if got := s.TopentOverride(); got != "99" {
+		t.Fatalf("TopentOverride 应返回手动值,got %q", got)
+	}
+}
+
 func TestCloneEnvAndEnvName(t *testing.T) {
 	c := &Config{
 		SSH: SSHConfig{Host: "top", Port: 22, User: "u"},

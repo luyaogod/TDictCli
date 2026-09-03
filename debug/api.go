@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -68,6 +69,7 @@ func (s *Server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("DELETE /api/sessions/{id}", s.hQuit)
 	mux.HandleFunc("POST /api/sessions/{id}/restart", s.hSessionRestart)
 	mux.HandleFunc("POST /api/sessions/{id}/close", s.hSessionClose)
+	mux.HandleFunc("POST /api/sessions/{id}/topent", s.hTopent)
 	mux.HandleFunc("POST /api/sessions/switch", s.hSessionSwitch)
 	mux.HandleFunc("GET /api/sessions/{id}/breakpoints", s.hBPList)
 	mux.HandleFunc("POST /api/sessions/{id}/breakpoints", s.hBPAdd)
@@ -210,6 +212,8 @@ func (s *Server) hSnapshot(w http.ResponseWriter, r *http.Request) {
 		"breakpoints":     sess.Breakpoints(),
 		"holdingSeconds":  sess.HoldingSeconds(),
 		"watchdogSeconds": s.cfg.WatchdogSeconds,
+		"topent":          sess.TopentOverride(),
+		"topentCfg":       sess.TopentCfg(),
 	})
 }
 
@@ -336,6 +340,37 @@ func (s *Server) hSessionRestart(w http.ResponseWriter, r *http.Request) {
 	go s.bootToIdle(ns, r.Context())
 	writeJSON(w, 200, map[string]any{"ok": true, "sessionId": ns.ID, "env": cfg.EnvName(), "state": "loading"})
 }
+
+// hTopent 空闲态重新设置 TOPENT(会话内,下一轮调试生效)。
+// 仅允许 idle(宿主 shell 就绪、无调试运行);留空 = 清除手动设置回到配置/登录默认。
+func (s *Server) hTopent(w http.ResponseWriter, r *http.Request) {
+	sess := s.sessOf(w, r)
+	if sess == nil {
+		return
+	}
+	var req struct {
+		Value string `json:"value"`
+	}
+	if !readBody(w, r, &req) {
+		return
+	}
+	if req.Value != "" && !reTopentVal.MatchString(req.Value) {
+		fail(w, 400, fmt.Errorf("TOPENT 须为 1~3 位数字(留空 = 清除手动设置)"))
+		return
+	}
+	if st := sess.State(); st != StateIdle {
+		fail(w, 409, fmt.Errorf("仅会话空闲时可设置 TOPENT(当前 %s),请先结束当前调试", st))
+		return
+	}
+	if err := sess.SetTopent(req.Value); err != nil {
+		fail(w, 500, err)
+		return
+	}
+	writeJSON(w, 200, map[string]any{"ok": true, "topent": req.Value})
+}
+
+// reTopentVal TOPENT 取值校验(数字;注入防护:值会拼进 shell export)
+var reTopentVal = regexp.MustCompile(`^[0-9]{1,3}$`)
 
 // hSessionSwitch 「切换会话」:把目标环境设为默认(持久化),断开旧连接并按目标环境重连到 idle。
 // 若已是目标环境会话则幂等返回(不改动正在进行的调试)。
