@@ -20,7 +20,7 @@
       "password": ""
     },
     "zone": "35",
-    "listen": "127.0.0.1:8000",
+    "listen": "127.0.0.1:28670",
     "launchArgs": "{prog}",
     "watchdogSeconds": 180,
     "mode": "pty",

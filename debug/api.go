@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"strconv"
@@ -38,11 +39,51 @@ func NewServer(cfg *Config, web fs.FS, cfgPath string) *Server {
 	return s
 }
 
-// Run 启动 HTTP 服务(阻塞到 ctx 取消)
+// Run 启动 HTTP 服务(阻塞到 ctx 取消)。
+// 先按 cfg.Listen 建监听;端口被占用时自动顺延到下一个空闲端口(最多尝试 maxPortTries 个),
+// 并把实际监听地址写回 cfg.Listen,调用方可用 s.ListenAddr()/cfg.Listen 取真实地址。
 func (s *Server) Run(ctx context.Context) error {
+	ln, addr, err := s.Listen()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("[tdict debug] 服务已启动  前端+API: http://%s\n", addr)
+	return s.Serve(ctx, ln)
+}
+
+// maxPortTries 端口被占用时最多顺延尝试的次数。
+const maxPortTries = 50
+
+// Listen 建监听;cfg.Listen 被占用时尝试后续端口,成功后将 cfg.Listen 更新为实际地址。
+// 返回 listener 与实际监听地址(host:port)。
+func (s *Server) Listen() (net.Listener, string, error) {
+	host, portStr, err := net.SplitHostPort(s.cfg.Listen)
+	if err != nil {
+		return nil, "", fmt.Errorf("非法监听地址 %q: %w", s.cfg.Listen, err)
+	}
+	port, err := strconv.Atoi(portStr)
+	if err != nil || port < 0 || port > 65535 {
+		return nil, "", fmt.Errorf("非法监听端口 %q: %w", portStr, err)
+	}
+	var lastErr error
+	for i := 0; i < maxPortTries; i++ {
+		addr := net.JoinHostPort(host, strconv.Itoa(port+i))
+		ln, err := net.Listen("tcp", addr)
+		if err == nil {
+			s.cfg.Listen = addr
+			return ln, addr, nil
+		}
+		lastErr = err
+	}
+	return nil, "", fmt.Errorf("监听 %s 失败(尝试 %d 个端口均不可用): %w",
+		s.cfg.Listen, maxPortTries, lastErr)
+}
+
+// Serve 用既有 listener 提供 HTTP 服务(阻塞到 ctx 取消或连接关闭)。
+func (s *Server) Serve(ctx context.Context, ln net.Listener) error {
 	mux := http.NewServeMux()
 	s.routes(mux)
-	srv := &http.Server{Addr: s.cfg.Listen, Handler: mux}
+	srv := &http.Server{Handler: mux}
 
 	go func() {
 		<-ctx.Done()
@@ -51,14 +92,16 @@ func (s *Server) Run(ctx context.Context) error {
 		_ = srv.Shutdown(shutdownCtx)
 	}()
 
-	fmt.Printf("[tdict debug] 服务已启动  前端+API: http://%s\n", s.cfg.Listen)
-	err := srv.ListenAndServe()
+	err := srv.Serve(ln)
 	if err == http.ErrServerClosed {
 		s.mgr.CloseAll()
 		return nil
 	}
 	return err
 }
+
+// ListenAddr 返回实际监听地址(可能因端口顺延而不同于配置值)。
+func (s *Server) ListenAddr() string { return s.cfg.Listen }
 
 func (s *Server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/status", s.hStatus)

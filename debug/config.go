@@ -77,6 +77,11 @@ type NamedEnv struct {
 	DB              *DBConfig `json:"db,omitempty"` // TNS/企业覆盖(留空按 zone 推导)
 }
 
+// DefaultListen 是 serve 未显式配置监听地址时的默认地址。
+// 选用不常用端口(28670),降低与其它开发服务(8000/8080/3000 等)冲突的概率;
+// 若仍被占用,serve 启动时会自动顺延到下一个空闲端口。
+const DefaultListen = "127.0.0.1:28670"
+
 // Config debug 功能配置,存放在 config.json 顶层 "debug" 键。
 // 与 dbconfig 使用同一文件但互不干扰(各取所需键)。
 type Config struct {
@@ -260,7 +265,7 @@ func (c *Config) fillDefaults() {
 		c.TopDir = zoneTopDir[c.Zone]
 	}
 	if c.Listen == "" {
-		c.Listen = "127.0.0.1:8000"
+		c.Listen = DefaultListen
 	}
 	if c.LaunchArgs == "" {
 		c.LaunchArgs = "BBDL512840855a 2 12345 'N' {prog}"
