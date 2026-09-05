@@ -1,6 +1,7 @@
-// Package live 提供"在线直查 ERP 数据库"的数据访问层。
-// 与 db(SQLite 镜像) 同语义:同一套字典表(dzea_t 等)与 JOIN SQL,但直接连远程库执行。
-// 目前实现 rt(表字典) 的金仓(PG)方言;oracle 方言与 rv/scc/desc/rq/win 属后续阶段。
+// Package live 提供"远程 ERP 库直查"的数据访问层。
+// *Live 实现 db.Source:与本地 SQLite 镜像(db 包)同语义 —— 同一套字典表
+// (dzea_t 等 24 张)与 JOIN SQL,直接连远程库执行,rt/rv/desc/scc/rq 的数据源
+// 切到某环境时即经本包(金仓 + Oracle 双方言,见 source.go)。
 //
 // 设计要点:
 //   - erpdb.Connector 走简单协议(simple protocol),不支持绑定参数 → 所有值经
@@ -10,8 +11,6 @@ package live
 
 import (
 	"context"
-	"fmt"
-	"net"
 
 	"tdict/dbconfig"
 	"tdict/erpdb"
@@ -57,14 +56,9 @@ func Open(ctx context.Context, c dbconfig.Connection) (*Live, error) {
 		if err != nil {
 			return nil, err
 		}
-		// 连接器连本地转发端口(host 固定 127.0.0.1)
+		// 连接器连本地转发端口(host 固定 127.0.0.1;oracle 保持 service 不变)
 		effective.Host = "127.0.0.1"
 		effective.Port = t.LocalPort
-		if effective.Type == "oracle" && effective.ConnectString != "" {
-			// oracle 用 connectString 时同样改写:host:port/service → 本地转发
-			effective.ConnectString = fmt.Sprintf("%s:%d/%s", "127.0.0.1", t.LocalPort,
-				serviceOf(c.ConnectString))
-		}
 		conn, err := erpdb.Open(ctx, effective)
 		if err != nil {
 			t.Close()
@@ -77,25 +71,4 @@ func Open(ctx context.Context, c dbconfig.Connection) (*Live, error) {
 		return nil, err
 	}
 	return &Live{conn: conn}, nil
-}
-
-// serviceOf 从 oracle connectString "host:port/service" 中取 service 部分。
-func serviceOf(cs string) string {
-	for i := len(cs) - 1; i >= 0; i-- {
-		if cs[i] == '/' {
-			return cs[i+1:]
-		}
-	}
-	return cs
-}
-
-// resolveHostPort 备用:把 host:port 拆开(未用时可删)。
-func resolveHostPort(addr string) (string, int) {
-	h, p, err := net.SplitHostPort(addr)
-	if err != nil {
-		return addr, 0
-	}
-	var port int
-	fmt.Sscanf(p, "%d", &port)
-	return h, port
 }

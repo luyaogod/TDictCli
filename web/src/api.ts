@@ -47,9 +47,15 @@ export const api = {
   status: () => req<any>('/api/status'),
   settings: () => req<any>('/api/settings'),
   saveSettings: (cfg: any) => req<any>('/api/settings', { method: 'PUT', body: JSON.stringify(cfg) }),
-  // 自动获取数据库连接要素(SSH 上服务器探测;拿不到字段留空待手填,note 说明原因)
+  // 自动获取数据库连接要素(SSH 上服务器探测「从服务器获取」;note 说明未获取到的原因)
   probeDB: (body: { host: string; port: number; user: string; password: string; zone: string; type: string }) =>
-    req<{ type: string; tns?: string; port?: number; database?: string; oracleHome?: string; twoTask?: string; host?: string; service?: string; note?: string }>('/api/dbprobe', { method: 'POST', body: JSON.stringify(body) }),
+    req<{ type: string; tns?: string; port?: number; database?: string; sqlplus?: string; oracleHome?: string; twoTask?: string; host?: string; service?: string; note?: string }>('/api/dbprobe', { method: 'POST', body: JSON.stringify(body) }),
+  // 客户端直连测试(按表单显式字段连库,凭据取账号列表首项)
+  connTest: (body: { type: string; host: string; port: number; service?: string; database?: string; accounts?: { account: string; password: string }[] }) =>
+    req<{ ok: boolean; version?: string; error?: string }>('/api/conntest', { method: 'POST', body: JSON.stringify(body) }),
+  // 账号清单「验证」:SSH 上服务器以该账号+密码连显式目标库 select 1(只读)
+  dbAccVerify: (body: { host: string; port: number; user: string; password: string; zone: string; type: string; account: string; acctPassword: string; dbHost?: string; dbPort?: number; dbSvc?: string; dbDatabase?: string }) =>
+    req<{ ok: boolean; error?: string }>('/api/dbaccverify', { method: 'POST', body: JSON.stringify(body) }),
   list: () => req<{ sessions: SessionBrief[] }>('/api/sessions'),
   launch: (module: string, prog: string, opts?: { ssh?: string; zone?: string }) =>
     req<{ sessionId: string; module?: string; prog?: string; runProg?: string }>('/api/sessions', { method: 'POST', body: JSON.stringify({ module, prog, ...opts }) }),

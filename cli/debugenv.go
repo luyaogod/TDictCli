@@ -34,21 +34,18 @@ type dbgSnapshot struct {
 
 // dbgEnvItem 环境清单中的一项(取自 /api/settings 返回的完整配置)。
 type dbgEnvItem struct {
-	Name string `json:"name"`
-	Host string `json:"host"`
-	Port int    `json:"port"`
-	Zone string `json:"zone"`
-	DB   *struct {
-		Type string `json:"type"`
-		Ent  string `json:"ent"`
-	} `json:"db"`
+	Name   string `json:"name"`
+	Host   string `json:"host"`
+	Port   int    `json:"port"`
+	Zone   string `json:"zone"`
+	Topent string `json:"topent"`
+	DBConn string `json:"dbConn"`
 }
 
 // dbgSettingsView /api/settings 返回的顶层 debug 配置(仅本命令需要)。
 type dbgSettingsView struct {
 	ActiveEnv string       `json:"activeEnv"`
-	SSH       dbgEnvSSH    `json:"ssh"` // 未配置 envs 时顶层的直接连接
-	Envs      []dbgEnvItem `json:"envs"`
+	SSHs      []dbgEnvItem `json:"sshs"`
 }
 
 type dbgEnvSSH struct {
@@ -164,30 +161,30 @@ func dbgEnvList() error {
 	if IsJSON() {
 		type out struct {
 			ActiveEnv string `json:"activeEnv"`
-			Envs      []any  `json:"envs"`
+			SSHs      []any  `json:"sshs"`
 			Session   any    `json:"session,omitempty"`
 		}
-		envs := make([]any, 0, len(s.Envs))
-		for _, e := range s.Envs {
+		envs := make([]any, 0, len(s.SSHs))
+		for _, e := range s.SSHs {
 			envs = append(envs, e)
 		}
 		var sess any
 		if curEnv != "" {
 			sess = map[string]any{"env": curEnv, "state": curState}
 		}
-		return printJSON(out{ActiveEnv: s.ActiveEnv, Envs: envs, Session: sess})
+		return printJSON(out{ActiveEnv: s.ActiveEnv, SSHs: envs, Session: sess})
 	}
 
-	fmt.Printf("当前生效(activeEnv): %s\n", orDefault(s.ActiveEnv, "未设置(用顶层 ssh)"))
+	fmt.Printf("当前生效(activeEnv): %s\n", orDefault(s.ActiveEnv, "未设置"))
 	if curEnv != "" {
 		fmt.Printf("当前会话:           %s (%s)\n", curEnv, dbgStateLabel(curState))
 	}
-	if len(s.Envs) == 0 {
-		fmt.Printf("环境: 未配置 envs;直连 %s:%d (user %s)\n", s.SSH.Host, s.SSH.Port, s.SSH.User)
+	if len(s.SSHs) == 0 {
+		fmt.Println("环境: 未配置 sshs")
 		return nil
 	}
-	fmt.Printf("环境(%d):\n", len(s.Envs))
-	for _, e := range s.Envs {
+	fmt.Printf("环境(%d):\n", len(s.SSHs))
+	for _, e := range s.SSHs {
 		mark := "  "
 		if s.ActiveEnv == e.Name {
 			mark = " *"
@@ -196,14 +193,9 @@ func dbgEnvList() error {
 		if curEnv == e.Name {
 			name += " ← 当前会话"
 		}
-		dbType, dbEnt := "", ""
-		if e.DB != nil {
-			dbType = e.DB.Type
-			dbEnt = e.DB.Ent
-		}
-		extra := dbType
-		if dbEnt != "" {
-			extra += " (TOPENT默认=" + dbEnt + ")"
+		extra := e.DBConn
+		if e.Topent != "" {
+			extra += " (TOPENT默认=" + e.Topent + ")"
 		}
 		fmt.Printf("  %s %-12s %s:%d  zone=%-4s %s\n", mark, name, e.Host, e.Port, e.Zone, extra)
 	}
@@ -218,7 +210,7 @@ func dbgEnvSwitch(name string) error {
 		return err
 	}
 	found := false
-	for _, e := range s.Envs {
+	for _, e := range s.SSHs {
 		if e.Name == name {
 			found = true
 			break

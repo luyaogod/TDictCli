@@ -46,11 +46,15 @@ var dbSyncCmd = &cobra.Command{
 同步前将原数据库备份为 <数据库>.bak；可用 --table 指定同步子集。`,
 	Example: `  tdict db sync
   tdict db sync --table dzea_t,dzeal_t
-  tdict db sync --conn 恒烁dsdemo`,
+  tdict db sync --conn 恒烁正式区`,
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		conn, err := resolveConnection(dbSyncConn)
+		conn, envName, err := resolveDbConn(dbSyncConn)
 		if err != nil {
+			return err
+		}
+		// 客户端直连凭据 = 账号列表首项(SelectAllSQL 用它限定 user.table schema)
+		if err := conn.FillDialCred(); err != nil {
 			return err
 		}
 
@@ -98,7 +102,7 @@ var dbSyncCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Printf("正在从 ERP 拉取字典数据 (连接: %s) -> %s\n", conn.Name, target)
+		fmt.Printf("正在从 ERP 拉取字典数据 (环境: %s) -> %s\n", envName, target)
 		var results []syncResult
 		var dzedCols []string
 		var dzedRows [][]string
@@ -138,9 +142,7 @@ var dbSyncCmd = &cobra.Command{
 			totalRows += r.rows
 		}
 
-		if err := sq.Close(); err != nil {
-			return fail(fmt.Errorf("关闭临时数据库失败: %w", err))
-		}
+		sq.Close()
 
 		// 原子替换: 原库备份为 .bak, 临时库替换为正式库
 		if _, err := os.Stat(target); err == nil {

@@ -91,15 +91,15 @@ var winCmd = &cobra.Command{
 func runWinList() error {
 	rows, err := GetDB().QueryWinList(winLang, winKW)
 	if err != nil {
-		if isNoSuchTable(err) {
-			fmt.Println("本地库尚未包含开窗定义数据 (dzca_t 等表)。请先在有数据库的环境执行: tdict db sync")
+		if db.IsMissingTable(err) {
+			fmt.Println(missingHint("开窗定义 (dzca_t 等表)"))
 			return nil
 		}
 		return err
 	}
 	items := mergeWinList(rows)
 	if len(items) == 0 {
-		fmt.Println("暂无开窗定义数据。请先执行: tdict db sync")
+		fmt.Println(emptyHint("开窗定义"))
 		return nil
 	}
 
@@ -152,8 +152,8 @@ func runWinDetail(id string) error {
 
 	headers, err := GetDB().QueryWinHeaders(id, winLang)
 	if err != nil {
-		if isNoSuchTable(err) {
-			return fmt.Errorf("本地库尚未包含开窗定义数据 (dzca_t 等表)。请先在有数据库的环境执行: tdict db sync")
+		if db.IsMissingTable(err) {
+			return fmt.Errorf("%s", missingHint("开窗定义 (dzca_t 等表)"))
 		}
 		return err
 	}
@@ -163,11 +163,11 @@ func runWinDetail(id string) error {
 	}
 
 	params, err := GetDB().QueryWinParams(id, winLang)
-	if err != nil && !isNoSuchTable(err) {
+	if err != nil && !db.IsMissingTable(err) {
 		return err
 	}
 	cols, err := GetDB().QueryWinCols(id)
-	if err != nil && !isNoSuchTable(err) {
+	if err != nil && !db.IsMissingTable(err) {
 		return err
 	}
 

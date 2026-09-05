@@ -1,51 +1,58 @@
 {
-  "connections": [
-    {
-      "name": "示例连接 (金仓)",
-      "type": "kingbase",
-      "host": "10.0.0.1",
-      "port": 54321,
-      "database": "topprd",
-      "user": "dsdemo",
-      "password": "",
-      "isDefault": true,
-      "description": "数据字典查询连接 (tdict db / --online 使用)"
-    },
-    {
-      "name": "示例连接 (Oracle)",
-      "type": "oracle",
-      "user": "dsdemo",
-      "password": "",
-      "connectString": "10.0.0.3:1521/topprd",
-      "isDefault": false,
-      "description": "Oracle 连接示例 (go-ora;字典查询方言接入后可用)"
-    }
-  ],
   "debug": {
-    "ssh": {
-      "host": "10.0.0.2",
-      "port": 22,
-      "user": "tiptop",
-      "password": ""
-    },
-    "zone": "35",
-    "listen": "127.0.0.1:28670",
-    "launchArgs": "{prog}",
-    "watchdogSeconds": 180,
-    "mode": "pty",
-    "db": {
-      "ent": 99
-    },
-    "envs": [
+    "sshs": [
       {
-        "name": "示例环境",
+        "name": "正式区",
+        "host": "10.0.0.1",
+        "port": 22,
+        "user": "tiptop",
+        "password": "tiptop",
+        "zone": "36",
+        "topDir": "",
+        "topent": "99",
+        "db": {
+          "type": "oracle",
+          "host": "10.0.0.1",
+          "port": 1521,
+          "service": "t35prd",
+          "accounts": [
+            { "account": "dsdemo", "password": "dsdemo" },
+            { "account": "ds", "password": "ds" }
+          ]
+        }
+      },
+      {
+        "name": "测试区",
         "host": "10.0.0.2",
         "port": 22,
         "user": "tiptop",
-        "password": "",
+        "password": "tiptop",
         "zone": "35",
-        "dbConn": "示例连接 (金仓)"
+        "topent": "99",
+        "db": {
+          "type": "kingbase",
+          "host": "10.0.0.2",
+          "port": 54321,
+          "database": "topprd",
+          "accounts": [
+            { "account": "dsdata", "password": "dsdata" },
+            { "account": "ds", "password": "ds" }
+          ]
+        }
       }
-    ]
+    ],
+    "activeEnv": "正式区",
+    "listen": "127.0.0.1:28670",
+    "launchArgs": "BBDL512840855a 2 12345 'N' {prog}",
+    "watchdogSeconds": 1800,
+    "moduleRoots": [],
+    "fglserver": "",
+    "termWidth": 200,
+    "termHeight": 50,
+    "printElements": 1000,
+    "persistBreakpoints": null
+  },
+  "query": {
+    "source": "local"
   }
 }

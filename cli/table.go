@@ -19,7 +19,8 @@ var tableCmd = &cobra.Command{
 使用逗号分隔多个表名。输出使用简体中文 (zh_CN)。`,
 	Example: `  tdict rt dzea_t
   tdict rt "dzea_t,dzeb_t,dzed_t"
-  tdict rt dzea_t --json`,
+  tdict rt dzea_t --json
+  tdict rt dzea_t --conn 主机正式区   # 切到某环境的远程库直查(--conn local 回本地)`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		tables := splitNames(args[0])
@@ -53,9 +54,6 @@ var tableCmd = &cobra.Command{
 
 // queryTableDict assembles a table's complete dictionary (meta + fields + keys + indexes).
 func queryTableDict(name string) (*db.TableDict, error) {
-	if useOnline {
-		return queryTableDictOnline(name)
-	}
 	d := &db.TableDict{TableName: name}
 
 	meta, err := GetDB().QueryTableMeta(name)
@@ -75,10 +73,10 @@ func queryTableDict(name string) (*db.TableDict, error) {
 	}
 	d.Fields = fields
 
-	// 键值/索引依赖 dzed_t/dzec_t，旧库可能尚未包含这两张表
+	// 键值/索引依赖 dzed_t/dzec_t，部分库可能未含这两张表
 	keys, err := GetDB().QueryKeys(name)
 	if err != nil {
-		if isNoSuchTable(err) {
+		if db.IsMissingTable(err) {
 			keys = nil
 		} else {
 			return nil, err
@@ -88,7 +86,7 @@ func queryTableDict(name string) (*db.TableDict, error) {
 
 	indexes, err := GetDB().QueryIndexes(name)
 	if err != nil {
-		if isNoSuchTable(err) {
+		if db.IsMissingTable(err) {
 			indexes = nil
 		} else {
 			return nil, err
@@ -184,11 +182,6 @@ func keyTypeLabel(code string) string {
 	default:
 		return code
 	}
-}
-
-// isNoSuchTable reports whether the error is a missing SQLite table.
-func isNoSuchTable(err error) bool {
-	return err != nil && strings.Contains(err.Error(), "no such table")
 }
 
 func init() {

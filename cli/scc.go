@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 
+	"tdict/db"
 	"tdict/output"
 
 	"github.com/spf13/cobra"
@@ -82,14 +83,14 @@ var sccCmd = &cobra.Command{
 func runSccList() error {
 	rows, err := GetDB().QuerySccList(sccLang, sccKW)
 	if err != nil {
-		if isNoSuchTable(err) {
-			fmt.Println("本地库尚未包含系统分类码数据 (gzca_t 等表)。请先在有数据库的环境执行: tdict db sync")
+		if db.IsMissingTable(err) {
+			fmt.Println(missingHint("系统分类码 (gzca_t 等表)"))
 			return nil
 		}
 		return err
 	}
 	if len(rows) == 0 {
-		fmt.Println("暂无系统分类码数据。请先执行: tdict db sync")
+		fmt.Println(emptyHint("系统分类码"))
 		return nil
 	}
 
@@ -127,8 +128,8 @@ func runSccDetail(id string) error {
 
 	header, err := GetDB().QuerySccHeader(id, sccLang)
 	if err != nil {
-		if isNoSuchTable(err) {
-			return fmt.Errorf("本地库尚未包含系统分类码数据 (gzca_t 等表)。请先在有数据库的环境执行: tdict db sync")
+		if db.IsMissingTable(err) {
+			return fmt.Errorf("%s", missingHint("系统分类码 (gzca_t 等表)"))
 		}
 		return err
 	}
@@ -138,7 +139,7 @@ func runSccDetail(id string) error {
 	}
 
 	values, err := GetDB().QuerySccValues(id, sccLang)
-	if err != nil && !isNoSuchTable(err) {
+	if err != nil && !db.IsMissingTable(err) {
 		return err
 	}
 

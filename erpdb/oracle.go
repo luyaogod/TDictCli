@@ -20,17 +20,20 @@ import (
 
 // OracleConnector 用 go-ora(database/sql)连 Oracle,查询文本化返回。
 type OracleConnector struct {
-	name string
+	addr string
 	typ  string
 	db   *sql.DB
 }
 
-// OpenOracle 连接 Oracle。connection.ConnectString 形如 "host:port/service";
-// 也兼容回退到 Host/Port/Database 字段。
+// OpenOracle 连接 Oracle。统一显式模型:host/port/service(service 也接受 database 旧值);
+// service 为空时用 host 的 database 字段兜底。
 func OpenOracle(ctx context.Context, c dbconfig.Connection) (*OracleConnector, error) {
-	server, port, service := oracleParts(c)
+	server, port, service := c.Host, c.Port, c.Svc()
+	if port == 0 {
+		port = 1521
+	}
 	if server == "" || service == "" {
-		return nil, fmt.Errorf("Oracle 连接缺少地址/服务名 (connectString 形如 host:port/service,或填 host/port/database)")
+		return nil, fmt.Errorf("Oracle 连接缺少地址或服务名 (需填 host/port/service)")
 	}
 	dsn := goOraDSN(server, port, service, c.User, c.Password)
 	db, err := sql.Open("oracle", dsn)
@@ -41,43 +44,9 @@ func OpenOracle(ctx context.Context, c dbconfig.Connection) (*OracleConnector, e
 	defer cancel()
 	if err := db.PingContext(pingCtx); err != nil {
 		db.Close()
-		return nil, fmt.Errorf("连接 Oracle 失败 (%s, %s:%d/%s): %w", c.Name, server, port, service, err)
+		return nil, fmt.Errorf("连接 Oracle 失败 (%s:%d/%s): %w", server, port, service, err)
 	}
-	return &OracleConnector{name: c.Name, typ: c.Type, db: db}, nil
-}
-
-// oracleParts 从 Connection 解析 host/port/service。
-func oracleParts(c dbconfig.Connection) (host string, port int, service string) {
-	if s := strings.TrimSpace(c.ConnectString); s != "" {
-		// host:port/service (service 不含再斜杠)
-		if i := strings.LastIndex(s, "/"); i >= 0 {
-			service = strings.TrimPrefix(s[i+1:], "")
-			hostPort := s[:i]
-			if h, p, err := net.SplitHostPort(hostPort); err == nil {
-				host = h
-				if n, e := strconv.Atoi(p); e == nil {
-					port = n
-				}
-			} else {
-				host = hostPort
-			}
-		} else {
-			host = s
-		}
-	}
-	if host == "" {
-		host = c.Host
-	}
-	if port == 0 {
-		port = c.Port
-	}
-	if port == 0 {
-		port = 1521
-	}
-	if service == "" {
-		service = c.Database
-	}
-	return
+	return &OracleConnector{addr: c.Address(), typ: c.Type, db: db}, nil
 }
 
 func goOraDSN(host string, port int, service, user, password string) string {

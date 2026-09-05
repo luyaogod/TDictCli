@@ -83,15 +83,15 @@ var checkCmd = &cobra.Command{
 func runCheckList() error {
 	rows, err := GetDB().QueryCheckList(checkLang, checkKW)
 	if err != nil {
-		if isNoSuchTable(err) {
-			fmt.Println("本地库尚未包含校验定义数据 (dzcd_t 等表)。请先在有数据库的环境执行: tdict db sync")
+		if db.IsMissingTable(err) {
+			fmt.Println(missingHint("校验定义 (dzcd_t 等表)"))
 			return nil
 		}
 		return err
 	}
 	items := mergeCheckList(rows)
 	if len(items) == 0 {
-		fmt.Println("暂无校验定义数据。请先执行: tdict db sync")
+		fmt.Println(emptyHint("校验定义"))
 		return nil
 	}
 
@@ -145,8 +145,8 @@ func runCheckDetail(id string) error {
 
 	headers, err := GetDB().QueryCheckHeaders(id, checkLang)
 	if err != nil {
-		if isNoSuchTable(err) {
-			return fmt.Errorf("本地库尚未包含校验定义数据 (dzcd_t 等表)。请先在有数据库的环境执行: tdict db sync")
+		if db.IsMissingTable(err) {
+			return fmt.Errorf("%s", missingHint("校验定义 (dzcd_t 等表)"))
 		}
 		return err
 	}
@@ -156,11 +156,11 @@ func runCheckDetail(id string) error {
 	}
 
 	params, err := GetDB().QueryCheckParams(id, checkLang)
-	if err != nil && !isNoSuchTable(err) {
+	if err != nil && !db.IsMissingTable(err) {
 		return err
 	}
 	conds, err := GetDB().QueryCheckConds(id)
-	if err != nil && !isNoSuchTable(err) {
+	if err != nil && !db.IsMissingTable(err) {
 		return err
 	}
 
@@ -244,7 +244,7 @@ func printCheckDetail(d *checkDetail) {
 			output.PrintTable(headers, rows)
 		}
 	}
-	fmt.Println(checkTagLegend)
+	fmt.Print(checkTagLegend)
 }
 
 // custLabel maps dzcd002/dzce003/dzch005 cust flags to Chinese labels.

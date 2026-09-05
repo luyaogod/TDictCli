@@ -238,18 +238,12 @@ func (m *Manager) resolveJobWith(cfg *Config, module, job string) (mod, prog, la
 			cfg.Runtime = env
 		}
 	}
-	// 金仓:探测实例要素后连库解析;Oracle:直接用 TNS
-	var kb *kbCtx
-	tns := cfg.TNSName()
-	if cfg.DBType() == "kingbase" {
-		env, err := probeKBEnv(conn)
-		if err != nil {
-			return "", "", "", ""
-		}
-		kb = &kbCtx{ksql: env["KSQL"], port: env["KPORT"], db: env["KDB"]}
-		tns = kb.db
+	// 显式连接(SSH 页 dbConn 引用)连库解析作业;失败静默,由调用方回退文件搜索
+	d, err := resolveDBRun(conn, cfg)
+	if err != nil {
+		return "", "", "", ""
 	}
-	jr, err := dbResolveJob(conn, zone, tns, job, kb)
+	jr, err := dbResolveJob(conn, d, job)
 	if err != nil || jr.Prog == "" {
 		return "", "", "", ""
 	}

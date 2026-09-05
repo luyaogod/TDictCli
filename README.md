@@ -2,7 +2,7 @@
 
 面向 **T100 / Genero(4GL) ERP** 的本地命令行工具，两条主线：
 
-1. **数据字典查询**（给"读代码、做配置"提供上下文）：基于 T100 数据字典，既支持**离线 SQLite**（`tdict db sync` 提前拉取 24 张字典表），也支持 **--online 在线直查**远程 ERP 库。`tdict rt` 查单张表完整字典（表名、字段、键值、索引），`tdict rv` 查校验带值 (r.v)，`tdict scc` 查系统分类码 (SCC)，`tdict desc` 查字段规格 (dzep_t)，`tdict rq` 查可复用开窗 (r.q)。
+1. **数据字典查询**（给"读代码、做配置"提供上下文）：基于 T100 数据字典，查询命令（`tdict rt` 表字典 / `rv` 校验带值 / `scc` 系统分类码 / `desc` 字段规格 / `rq` 可复用开窗）统一走同一数据源接口——既可用**本地 SQLite 镜像**（`tdict db sync` 提前拉取 24 张字典表），也可经 `config.json` 的 `query.source` 或 `--conn` 切换为**远程 ERP 库直查**（金仓/Oracle，同一批表、同一输出）。
 2. **AI 人机协同调试 T100 作业**（`tdict debug`）：通过 SSH 在 T100 服务器上驱动 `fglrun -d` 的 (fgldb) 文本调试协议，提供 Web 调试界面与命令行控制端，让 AI/人协同排查作业逻辑错误、跟踪变量、验证接口报文场景。
 
 所有输出默认使用**简体中文 (zh_CN)**。
@@ -340,56 +340,89 @@ tdict debug quit                      # 结束本轮调试(会话保留可复用
 - 断点支持持久化(下次调试自动恢复);接口日志 `wslogs`/`wsdebug` 支持报文重放调试。
 - 完整用法见内嵌技能 `.claude/skills/tdict-debug.md`(含原生 fgldb 命令参考与人机交接范式)。
 
-## 直连 ERP 数据库（tdict db sync / --online）
+## 本地源码镜像（tdict mirror）
 
-连接配置存于项目根目录 `config.json`（JSON，开发阶段明文，勿用于生产）：
+把某环境(T100 服务器)的源代码镜像到本地目录,供 **AI 用本地文件工具读码**(ls/rg/带行号读),避免每次读取都经服务器往返、也避免给 AI 服务器端查询权限。**只镜像各模块 `4gl`(源码)与 `4fd`(前端字段描述)两棵树**——per(界面源)、编译产物(42m/42r/42f)、多语言、设计器辅助目录一律不拉;目录与服务器同构(`<镜像根>/<环境名>/erp/<模块>/{4gl,4fd}/...`、`com/{lib,sub,qry,wss}/...`),客制模块 `c<mod>` 与标准模块并列,同路径下客制优先。
+
+镜像根目录配置在 config.json 顶层 `mirror` 键(**必须显式设置**,不设默认避免隐式落盘):
+
+```json
+{ "debug": { ... }, "query": { "source": "local" }, "mirror": { "dir": "D:\\dev\\erp-src" } }
+```
+
+```bash
+tdict mirror dir                     # 查看当前镜像根
+tdict mirror dir D:\dev\erp-src      # 设置/更换镜像根(写入 config.json;相对路径存为绝对)
+tdict mirror pull                    # 默认环境(activeEnv/首条)增量更新
+tdict mirror pull 主机正式区          # 指定环境增量更新
+tdict mirror pull 主机正式区 --full   # 全量重建(整目录替换,删除服务器已不存在的残留)
+tdict mirror path                    # 打印镜像目录绝对路径,第一行即路径(AI 前往)
+tdict mirror path 主机正式区
+```
+
+- **增量机制**:服务器 TOP 下保留 `.tdict-mirror-<环境>.mark` 基线,默认只打包 `find -newer` 的变更文件(秒级);首次拉取与 `--full` 走全量(数百 MB~数 GB,视站点规模,服务器 gzip 打包 + SFTP 流式下载,完成后清理归档、保留 marker)。
+- **打包根(topDir)解析**:环境显式 `topDir` > 区域静态表 > SSH 登录探测(如恒烁 zone "1"/"2" 未显式配置时必须探测;失败会报错提示补 topDir)。
+- AI 工作流:`tdict mirror path` 拿目录 → 本地工具读码;未镜像的文件(如 per)仍走 `tdict debug source` 白名单通道;调试停站行号来自服务器编译表,与镜像不同代时以服务器文件为准(先 pull)。
+
+## 数据库连接与查询数据源（config.json）
+
+连接配置存于项目根目录 `config.json`（JSON，开发阶段明文，勿用于生产）。数据库连接按 SSH 环境**一对一挂载**：每个环境在 `debug.sshs[]` 内嵌一个 `db`（显式 host/port + `service`(oracle) 或 `database`(kingbase) + 账号列表）；服务器侧 sqlplus/ksql 工具路径自动探测，无需配置。顶层 `query` 键记录查询命令的默认数据源（与 debug 平级，设置页保存环境不会覆盖它）：
 
 ```json
 {
-  "connections": [
-    { "name": "恒烁dsdata", "type": "kingbase", "host": "172.19.93.55", "port": 54321,
-      "database": "topprd", "user": "dsdata", "password": "dsdata", "isDefault": true },
-    { "name": "惟清dsdemo", "type": "oracle", "user": "dsdemo", "password": "dsdemo",
-      "connectString": "10.100.2.41:1521/topprd" }
-  ]
+  "debug": {
+    "sshs": [
+      { "name": "主机正式区", "host": "172.16.1.109", "port": 22, "user": "tiptop",
+        "password": "tiptop", "zone": "36", "topent": "99", "topDir": "/u1/topprd",
+        "db": {
+          "type": "oracle",
+          "host": "172.16.1.109", "port": 1521,
+          "service": "t35prd",
+          "accounts": [
+            { "account": "dsdemo", "password": "dsdemo" },
+            { "account": "ds", "password": "ds" }
+          ]
+        } }
+    ],
+    "activeEnv": "主机正式区"
+  },
+  "query": { "source": "local" }
 }
 ```
 
-配置文件查找优先级：`$TDICT_CONFIG` > `--config` 参数 > 可执行文件同目录 > 当前工作目录。
+- **账号规则**：无"主账号"，所有账号都在 `accounts` 列表，不区分默认。客户端直连（查询数据源 / `db ping` / `db sync` / 连接测试）取列表**首项**；服务器侧调试连库由会话 TOPENT 经服务器 `gzou_t` 解析出账号名后回本表查密码（未收录时按"账号=密码"惯例）。
+- `viaSsh`（可选）：客户端不可达 DB、但 DB 对 SSH 服务器可达时，经 SSH 端口转发再直连（本地起转发端口 → 驱动连 `127.0.0.1:本地端口`）；缺省远端取连接自身 host/port。
+- 支持类型：`kingbase`（人大金仓，PostgreSQL 协议，pgx）、`oracle`（go-ora 纯 Go 驱动）。
+- 配置文件查找优先级：`$TDICT_CONFIG` > `--config` 参数 > 可执行文件同目录 > 当前工作目录。
 
-连接字段扩展（均可省，旧配置兼容）：
+### 查询数据源切换（本地 SQLite ⇄ 远程库）
 
-```json
-{ "name": "恒烁dsdata", "type": "kingbase", "host": "172.19.93.55", "port": 54321,
-  "database": "topprd", "user": "dsdata", "password": "dsdata", "isDefault": true,
-  "source": "manual",
-  "viaSsh": { "host": "172.19.93.55", "port": 22, "user": "tiptop", "password": "tiptop",
-              "remoteHost": "127.0.0.1", "remotePort": 54321 } }
-```
+`rt/rv/desc/scc/rq` 五个查询命令统一走同一查询接口（`db.Source`）：本地 SQLite 镜像与远程 ERP 库查的是**同一批 24 张字典表**，输出完全一致；命令层不感知数据源。解析优先级：
 
-- `source`：连接来源标记（`manual` 或 `ssh:<环境名>`），不参与连接逻辑；
-- `viaSsh`：客户端不可达 DB、但 DB 对 SSH 服务器可达时，经 SSH 端口转发再直连
-  （本地起转发端口 → 驱动连 `127.0.0.1:本地端口`）；缺省远端取连接自身 host/port。
-
-当前支持连接类型：`kingbase`（金仓，PostgreSQL 协议，pgx）；`oracle`（go-ora 纯 Go 驱动）。
-
-### 在线直查字典（--online）
-
-`rt`（及后续将覆盖的 rv/scc/desc/rq/win）可加 `--online` 跳过本地 SQLite、直接查远程 ERP 库：
+1. `--conn <环境名>`：本次调用远程直查该环境的库（`--conn local` 回本地）；
+2. `config.json` 顶层 `query.source`：设为环境名（如 `"恒烁正式区"`）即默认远程直查该环境；
+3. 缺省 `local`：本地 SQLite（`-d`/`TDICT_DB` 定位的 `erp_data.db`），与旧版行为一致。
 
 ```bash
-tdict rt dzea_t --online                        # 连接解析:--conn > activeEnv.dbConn > isDefault
-tdict rt dzea_t --online --conn 恒烁dsdata      # 指定连接
-tdict db ping --conn 恒烁dsdata                 # 验证连接可达(只读;支持 viaSsh)
-tdict db list                                   # 列出连接(含 source/viaSsh)
-tdict db discover --env 恒烁正式区 --type kingbase --save   # SSH 自动发现并保存连接
+tdict rt dzea_t                                # 默认本地 SQLite
+tdict rt dzea_t --conn 恒烁正式区               # 远程直查恒烁正式区(金仓 dsdata)
+tdict desc oobd_t oobd002 --conn 主机正式区     # 远程直查主机正式区(oracle dsdemo)
+tdict rv v_ooba002_07 --conn local             # 显式切回本地
 ```
 
-- 当前 `--online` 实现支持 **kingbase(金仓)**；oracle 在线查询属后续阶段
-  （连接/ping 已可用,字典查询方言待接入）。
-- `db discover`：登录 debug 环境(env)的 SSH,按区域自动探测连接要素
-  （oracle:ORACLE_HOME/TNS/tnsnames;kingbase:实例发现）→ 预览或 `--save` 写入 connections；
-  自动发现给出"服务器视角"地址,客户端不可达时改 host 或补 `viaSsh`。
+远程直查使用客户端驱动直连 `db.host:port`（账号取列表首项，`--conn`/`query.source` 与此无关），不要求本地已 sync；金仓与 Oracle 均为完整支持（列表 `--kw` 过滤大小写不敏感，与本地一致）。查询是只读单条 SELECT，值经白名单/转义内联。
+
+`db` 子命令（连接管理，与查询数据源独立；`--conn` 语义同为环境名）：
+
+```bash
+tdict db list                                  # 按环境列出挂载的库(类型/地址/账号数)
+tdict db ping [--conn <环境名>]                # 验证连接可达(只读;缺省 activeEnv 环境的库)
+tdict db sync [--conn <环境名>]                # 拉取该环境字典数据写入本地 SQLite(见前节)
+tdict db discover --env 主机正式区 --type oracle [--save]   # SSH 自动发现连接要素 → 预览或写入该环境 db
+```
+
+- `db discover` 给出"服务器视角"连接要素；客户端不可达时改 `db.host` 或补 `viaSsh`。
+- 注意：root 的 `--conn`（查询数据源切换）与 `db sync/ping` 组内自带的 `-c/--conn` 是两个独立 flag，值都取 SSH 环境名。
 
 ## 数据库 Schema
 
@@ -445,46 +478,50 @@ SELECT dzed004 FROM dzed_t WHERE dzed001 = '表名' AND dzed003 = 'P'
 TDictCli/
 ├── main.go              # 入口(内嵌 web/dist 与 .claude/skills)
 ├── go.mod / go.sum      # Go module
-├── config.json          # ERP 连接 + debug(SSH/环境) 配置(JSON,开发阶段明文)
+├── config.json          # debug + query(查询数据源) + mirror(源码镜像根) 配置(JSON,开发阶段明文)
 ├── cli/
-│   ├── root.go          # 根命令 + 全局 --json/--csv/-d/--config/--online/--conn
-│   ├── table.go         # tdict rt(表名/字段/键值/索引;离线 + --online)
+│   ├── root.go          # 根命令 + 全局 --json/--csv/-d/--config/--conn
+│   ├── table.go         # tdict rt(表名/字段/键值/索引)
 │   ├── check.go         # tdict rv(校验带值 dzcd001 查询)
 │   ├── scc.go           # tdict scc(系统分类码 gzca001 查询)
 │   ├── spec.go          # tdict desc(字段规格 dzep_t 查询)
 │   ├── win.go           # tdict rq(可复用开窗 dzca001 查询)
+│   ├── source.go        # 查询数据源解析(本地 SQLite ⇄ --conn/query.source 远程库)
+│   ├── mirror.go        # tdict mirror(本地源码镜像 dir/pull/path)
 │   ├── install.go       # tdict install(安装内嵌 Claude Code 技能)
 │   ├── db.go            # tdict db 命令组(连接配置加载)
 │   ├── db_sync.go       # tdict db sync(拉取 ERP 字典数据 → SQLite)
 │   ├── dbops.go         # tdict db list / ping / discover(连接管理 + SSH 自动发现)
-│   ├── online.go        # --online 在线直查(rt;连接解析 + 金仓方言 SQL)
 │   ├── debug*.go        # tdict debug 命令族(serve/start/exec/...)
 │   ├── debugctl.go      # debug 控制端(REST 薄封装)
 │   ├── debugctx.go      # debug 信息通道(stop/source/logs/locate/resolve/interrupt)
 │   ├── debugenv.go      # debug env/topent 切换
 │   └── servebg*.go      # debug serve 后台常驻(单实例/端口顺延/stop)
 ├── dbconfig/
-│   └── dbconfig.go      # 连接配置模型(source/viaSsh)加载
+│   └── dbconfig.go      # db 连接配置模型(dbconfig.Connection;每环境挂一个)
 ├── erpdb/
-│   ├── erpdb.go         # ERP 连接接口(只读查询);kingbase 经 pgx
+│   ├── erpdb.go         # ERP 连接器(只读 Query);kingbase 经 pgx
 │   ├── oracle.go        # oracle 经 go-ora
-│   └── ident.go         # SQL 标识符/字面量安全(在线查询内联)
+│   └── ident.go         # SQL 标识符/字面量安全(查询内联)
 ├── db/
-│   ├── db.go            # SQLite 连接与查询封装
+│   ├── db.go            # SQLite 连接与查询封装 + db.Source 接口定义
 │   ├── check.go         # 校验带值查询(dzcd_t/dzce_t/dzch_t 等)
 │   ├── scc.go           # 系统分类码查询(gzca_t/gzcb_t 等)
 │   ├── spec.go          # 字段规格查询(dzep_t)
-│   └── win.go           # 可复用开窗查询(dzca_t/dzcb_t/dzcc_t 等)
+│   ├── win.go           # 可复用开窗查询(dzca_t/dzcb_t/dzcc_t 等)
+│   └── source.go        # 查询数据源统一接口(db.Source)/缺表判定
 ├── debug/
 │   ├── api.go           # 调试服务 REST + WS + 静态前端
 │   ├── session.go       # fgldb 会话/PTY 协议驱动
 │   ├── manager.go       # 会话管理器 + 事件流/源码读取/作业解析
 │   ├── config.go        # debug 配置(SSH/envs/TOPENT 等)
 │   ├── db.go            # 数据库探查(服务器端 sqlplus/ksql)
+│   ├── mirror.go        # 源码镜像引擎(服务器 4gl/4fd 打包 → SFTP 下载 → 本地解压)
 │   ├── sshx.go          # SSH/SFTP/PTY 封装
 │   └── ...              # parser/tenv/wslog/bpsstore 等
 ├── live/
-│   └── live.go          # 远程数据源(在线查询;viaSsh 隧道支持)
+│   ├── live.go          # 远程数据源(live.Open;viaSsh 隧道支持)
+│   └── source.go        # 远程查询实现(db.Source 的金仓/Oracle 方言)
 ├── sshtun/
 │   └── sshtun.go        # SSH 端口转发隧道组件
 ├── output/
