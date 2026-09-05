@@ -31,6 +31,10 @@ var rootCmd = &cobra.Command{
 查询本地 SQLite (erp_data.db) 中的数据字典，并通过 tdict db sync 从 ERP 实时刷新。
 所有输出使用简体中文 (zh_CN)。`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		if useOnline {
+			// 在线直查:打开远程 ERP 连接(而非本地 SQLite)
+			return openOnline(cmd.Name())
+		}
 		resolvedPath, err := resolveDBPath(dbPath)
 		if err != nil {
 			return err
@@ -46,6 +50,10 @@ var rootCmd = &cobra.Command{
 		return nil
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
+		if useOnline {
+			closeOnline()
+			return
+		}
 		if database != nil {
 			database.Close()
 		}

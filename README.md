@@ -315,7 +315,39 @@ tdict install D:/path/to/project
 
 配置文件查找优先级：`$TDICT_CONFIG` > `--config` 参数 > 可执行文件同目录 > 当前工作目录。
 
-当前支持连接类型：`kingbase`（金仓，走 PostgreSQL 协议，Go 端用纯 Go 驱动 pgx）；`oracle` 计划在后续阶段支持。
+连接字段扩展（均可省，旧配置兼容）：
+
+```json
+{ "name": "恒烁dsdata", "type": "kingbase", "host": "172.19.93.55", "port": 54321,
+  "database": "topprd", "user": "dsdata", "password": "dsdata", "isDefault": true,
+  "source": "manual",
+  "viaSsh": { "host": "172.19.93.55", "port": 22, "user": "tiptop", "password": "tiptop",
+              "remoteHost": "127.0.0.1", "remotePort": 54321 } }
+```
+
+- `source`：连接来源标记（`manual` 或 `ssh:<环境名>`），不参与连接逻辑；
+- `viaSsh`：客户端不可达 DB、但 DB 对 SSH 服务器可达时，经 SSH 端口转发再直连
+  （本地起转发端口 → 驱动连 `127.0.0.1:本地端口`）；缺省远端取连接自身 host/port。
+
+当前支持连接类型：`kingbase`（金仓，PostgreSQL 协议，pgx）；`oracle`（go-ora 纯 Go 驱动）。
+
+### 在线直查字典（--online）
+
+`rt`（及后续将覆盖的 rv/scc/desc/rq/win）可加 `--online` 跳过本地 SQLite、直接查远程 ERP 库：
+
+```bash
+tdict rt dzea_t --online                        # 连接解析:--conn > activeEnv.dbConn > isDefault
+tdict rt dzea_t --online --conn 恒烁dsdata      # 指定连接
+tdict db ping --conn 恒烁dsdata                 # 验证连接可达(只读;支持 viaSsh)
+tdict db list                                   # 列出连接(含 source/viaSsh)
+tdict db discover --env 恒烁正式区 --type kingbase --save   # SSH 自动发现并保存连接
+```
+
+- 当前 `--online` 实现支持 **kingbase(金仓)**；oracle 在线查询属后续阶段
+  （连接/ping 已可用,字典查询方言待接入）。
+- `db discover`：登录 debug 环境(env)的 SSH,按区域自动探测连接要素
+  （oracle:ORACLE_HOME/TNS/tnsnames;kingbase:实例发现）→ 预览或 `--save` 写入 connections；
+  自动发现给出"服务器视角"地址,客户端不可达时改 host 或补 `viaSsh`。
 
 ## 数据库 Schema
 
