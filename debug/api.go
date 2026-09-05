@@ -105,6 +105,9 @@ func (s *Server) ListenAddr() string { return s.cfg.Listen }
 
 func (s *Server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/status", s.hStatus)
+	mux.HandleFunc("GET /api/events", s.hEvents)
+	mux.HandleFunc("GET /api/source-file", s.hSourceFile)
+	mux.HandleFunc("GET /api/jobinfo", s.hJobInfo)
 	mux.HandleFunc("POST /api/sessions", s.hLaunch)
 	mux.HandleFunc("GET /api/sessions", s.hList)
 	mux.HandleFunc("GET /api/sessions/{id}", s.hSnapshot)
@@ -182,6 +185,37 @@ func (s *Server) hStatus(w http.ResponseWriter, r *http.Request) {
 		"listen":   s.cfg.Listen,
 		"watchdog": s.cfg.WatchdogSeconds,
 	})
+}
+
+// hEvents 最近会话事件(tail):GET /api/events?tail=N,供 AI/CLI 观察"发生了什么"。
+func (s *Server) hEvents(w http.ResponseWriter, r *http.Request) {
+	tail, _ := strconv.Atoi(r.URL.Query().Get("tail"))
+	writeJSON(w, 200, map[string]any{"ok": true, "events": s.mgr.Events(tail)})
+}
+
+// hSourceFile 会话外白名单源码读取:GET /api/source-file?module=&file=&path=&from=&to=
+// (AI 信息通道;独立短连接,不经会话,路径限制在 moduleRoots)
+func (s *Server) hSourceFile(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	from, _ := strconv.Atoi(q.Get("from"))
+	to, _ := strconv.Atoi(q.Get("to"))
+	res, err := s.mgr.ReadSourceStandalone(q.Get("module"), q.Get("file"), q.Get("path"), from, to)
+	if err != nil {
+		fail(w, 400, err)
+		return
+	}
+	writeJSON(w, 200, map[string]any{"ok": true, "source": res})
+}
+
+// hJobInfo 作业→实体程序/模块解析:GET /api/jobinfo?prog=&module= (不启动会话)
+func (s *Server) hJobInfo(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	prog := strings.TrimSpace(q.Get("prog"))
+	if prog == "" {
+		fail(w, 400, fmt.Errorf("需要 prog 参数"))
+		return
+	}
+	writeJSON(w, 200, map[string]any{"ok": true, "job": s.mgr.ResolveJob(strings.TrimSpace(q.Get("module")), prog)})
 }
 
 func (s *Server) hLaunch(w http.ResponseWriter, r *http.Request) {
@@ -589,6 +623,7 @@ func (s *Server) hRaw(w http.ResponseWriter, r *http.Request) {
 	}
 	var req struct {
 		Command string `json:"command"`
+		Timeout int    `json:"timeout"` // 等待命令完成的秒数(0=默认30);continue/until 等长命令可调大
 	}
 	if !readBody(w, r, &req) {
 		return
@@ -603,7 +638,14 @@ func (s *Server) hRaw(w http.ResponseWriter, r *http.Request) {
 		fail(w, 400, fmt.Errorf("请使用会话控制接口执行 quit/run"))
 		return
 	}
-	lines, err := sess.Raw(cmd, 30*time.Second)
+	timeout := req.Timeout
+	if timeout <= 0 {
+		timeout = 30
+	}
+	if timeout > 600 {
+		timeout = 600
+	}
+	lines, err := sess.Raw(cmd, time.Duration(timeout)*time.Second)
 	if err != nil {
 		fail(w, 400, err)
 		return

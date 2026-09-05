@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// Manager 调试会话管理器:持有会话、向订阅者(WS/MCP)广播事件
+// Manager 调试会话管理器:持有会话、向订阅者(WS/MCP)广播事件、保留最近事件供查询
 type Manager struct {
 	cfg *Config
 
@@ -19,10 +19,17 @@ type Manager struct {
 	subMu sync.Mutex
 	subs  map[chan Event]string
 
+	// 最近事件环形缓冲(供 AI/日志 tail 查询;只存结构化事件,output/autovars 不入)
+	evMu sync.Mutex
+	evs  []Event
+
 	// T100 动态环境缓存(登录区域 → 路径),TTL 5 分钟;探针失败不缓存
 	envMu    sync.Mutex
 	envCache map[string]cachedEnv
 }
+
+// maxBufferedEvents 环形缓冲上限。
+const maxBufferedEvents = 4000
 
 type cachedEnv struct {
 	env *RuntimeEnv
@@ -87,8 +94,19 @@ func (m *Manager) Subscribe(tag string) (<-chan Event, func()) {
 	}
 }
 
-// emit 会话事件回调:广播给所有订阅者(非阻塞,满则丢弃)
+// emit 会话事件回调:入环形缓冲并广播给所有订阅者(非阻塞,满则丢弃)
 func (m *Manager) emit(ev Event) {
+	// 只保留对"发生了什么"有信息量的结构化事件(输出流/自动变量列表不入缓冲,
+	// 会占用大量内存且 AI 用 tail 查询时噪声过大)
+	switch ev.Type {
+	case "state", "stopped", "log", "dead", "watchdog", "ai_action":
+		m.evMu.Lock()
+		m.evs = append(m.evs, ev)
+		if len(m.evs) > maxBufferedEvents {
+			m.evs = m.evs[len(m.evs)-maxBufferedEvents:]
+		}
+		m.evMu.Unlock()
+	}
 	m.subMu.Lock()
 	defer m.subMu.Unlock()
 	for ch := range m.subs {
@@ -97,6 +115,20 @@ func (m *Manager) emit(ev Event) {
 		default: // 订阅者消费太慢,丢弃(前端靠 state/stopped 事件对齐,丢原始行无碍)
 		}
 	}
+}
+
+// Events 返回最近 n 条事件(按时间升序;n<=0 返回全部缓冲)。
+func (m *Manager) Events(n int) []Event {
+	m.evMu.Lock()
+	defer m.evMu.Unlock()
+	if n <= 0 || n >= len(m.evs) {
+		out := make([]Event, len(m.evs))
+		copy(out, m.evs)
+		return out
+	}
+	out := make([]Event, n)
+	copy(out, m.evs[len(m.evs)-n:])
+	return out
 }
 
 // Launch 创建并启动一个调试会话(同一时间仅允许一个会话,保证生产安全)。
@@ -410,6 +442,166 @@ func (m *Manager) SourcePreview(module, prog string) (*SourceFile, error) {
 	}
 	return nil, fmt.Errorf("源码未找到(%s): %w", dvmFile, lastErr)
 }
+
+// ---------- 会话外只读能力(AI/CLI 信息通道;不经会话,独立短连接,白名单限 moduleRoots) ----------
+
+// SourceResult 会话外源码读取结果(带行段裁剪,避免大文件整读灌满 AI 上下文)。
+type SourceResult struct {
+	SourceFile
+	From int `json:"from"` // 1-based 返回行段起点
+	To   int `json:"to"`   // 1-based 返回行段终点(含)
+	All  int `json:"all"`  // 文件总行数
+}
+
+// maxSourceFileBytes 会话外读取的文件大小上限(源码一般远小于此)。
+const maxSourceFileBytes = 4 << 20
+
+// ReadSourceStandalone 用独立短连接读取 moduleRoots 内的源码文件。
+//   - path 非空:直接按路径读(白名单校验 moduleRoots 前缀);
+//   - path 为空:file(如 asf_bsft001_wf.4gl)按 sourceCandidatePaths 候选解析,module 可空(仅查公共目录);
+//   - from/to(1-based):返回行段(from<=0 从头,to<=0 到底),行文本超长截断防注入超长行。
+//
+// 返回裁剪后的内容与文件总行数。
+func (m *Manager) ReadSourceStandalone(module, file, path string, from, to int) (*SourceResult, error) {
+	if path == "" && file == "" {
+		return nil, fmt.Errorf("需要 file 或 path 参数")
+	}
+	conn, err := Dial(m.cfg.SSH)
+	if err != nil {
+		return nil, fmt.Errorf("SSH 连接失败: %w", err)
+	}
+	defer conn.Close()
+	m.ensureRuntimeEnv(conn)
+	cl, err := conn.SFTP()
+	if err != nil {
+		return nil, fmt.Errorf("打开 SFTP 失败: %w", err)
+	}
+	roots := m.cfg.ModuleRootsActual()
+
+	readOne := func(p string) ([]byte, time.Time, error) {
+		f, err := cl.Open(p)
+		if err != nil {
+			return nil, time.Time{}, err
+		}
+		defer f.Close()
+		var mt time.Time
+		if fi, err := f.Stat(); err == nil {
+			mt = fi.ModTime()
+		}
+		data, err := io.ReadAll(f)
+		return data, mt, err
+	}
+
+	// 路径白名单:必须在 moduleRoots 之内
+	inRoots := func(p string) bool {
+		for _, root := range roots {
+			if strings.HasPrefix(p, root+"/") {
+				return true
+			}
+		}
+		return false
+	}
+
+	var (
+		data []byte
+		mt   time.Time
+	)
+	if path != "" {
+		if !inRoots(path) {
+			return nil, fmt.Errorf("路径不在 moduleRoots 内: %s", path)
+		}
+		data, mt, err = readOne(path)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		var lastErr error
+		for _, p := range sourceCandidatePaths(roots, module, file) {
+			if !inRoots(p) {
+				continue
+			}
+			d, t, e := readOne(p)
+			if e == nil {
+				data, mt, file = d, t, file
+				path = p
+				break
+			}
+			lastErr = e
+		}
+		if data == nil {
+			return nil, fmt.Errorf("源码未找到(%s): %v", file, lastErr)
+		}
+	}
+	if len(data) > maxSourceFileBytes {
+		data = data[:maxSourceFileBytes]
+	}
+	lines := strings.Split(string(data), "\n")
+	all := len(lines)
+	// 去尾部空行(文件常见尾换行)
+	for all > 0 && strings.TrimSpace(lines[all-1]) == "" {
+		all--
+	}
+	if from <= 0 {
+		from = 1
+	}
+	if to <= 0 || to > all {
+		to = all
+	}
+	if from > to {
+		from, to = 1, all
+	}
+	slice := lines[from-1 : to]
+	// 单行超长截断(记录行/极长字符串防爆)
+	for i, ln := range slice {
+		if len(ln) > 4096 {
+			slice[i] = ln[:4096] + "…(截断)"
+		}
+	}
+	res := &SourceResult{
+		SourceFile: SourceFile{DVMFile: file, Path: path, ModTime: mt},
+		From:       from, To: to, All: all,
+	}
+	if from <= all {
+		res.Content = strings.Join(slice, "\n")
+	}
+	return res, nil
+}
+
+// JobInfo 作业编号 → 实体程序/模块解析结果(信息通道,不启动会话)。
+type JobInfo struct {
+	Prog      string `json:"prog"`                // 用户作业编号
+	Module    string `json:"module"`              // 解析出的模块目录(空=未解析)
+	RunProg   string `json:"runProg"`             // 实体程序(gzzz_t 解析;空=未解析)
+	LaunchRef string `json:"launchRef,omitempty"` //
+	Extra     string `json:"extra,omitempty"`     //
+	Note      string `json:"note,omitempty"`      // 未解析/降级时的说明
+}
+
+// ResolveJob 尽力解析作业:未配置 db 或连库失败/未命中时返回 note,不报错(启动时会再次解析/兜底)。
+func (m *Manager) ResolveJob(module, prog string) *JobInfo {
+	out := &JobInfo{Prog: prog, Module: module}
+	if m.cfg.DB == nil {
+		out.Note = "config.json 未配置 debug.db,无法按 gzzz_t 解析实体程序;将按作业名直接启动"
+		return out
+	}
+	if !reProgName.MatchString(prog) {
+		out.Note = "作业名非标准标识符,跳过库解析"
+		return out
+	}
+	// resolveJobWith 内部含 连库→gzzz_t→42r 校验,失败时返回空串(不抛)
+	mod, run, ref, extra := m.resolveJobWith(m.cfg, module, prog)
+	if run == "" {
+		out.Note = "未能按 gzzz_t 解析(连库失败或未命中);将按作业名直接启动"
+		return out
+	}
+	if mod != "" {
+		out.Module = mod
+	}
+	out.RunProg, out.LaunchRef, out.Extra = run, ref, extra
+	return out
+}
+
+// ---------- 会话生命周期 ----------
 
 // CloseAll 断开全部会话(服务退出时调用)
 func (m *Manager) CloseAll() {
