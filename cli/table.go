@@ -53,6 +53,9 @@ var tableCmd = &cobra.Command{
 
 // queryTableDict assembles a table's complete dictionary (meta + fields + keys + indexes).
 func queryTableDict(name string) (*db.TableDict, error) {
+	if useOnline {
+		return queryTableDictOnline(name)
+	}
 	d := &db.TableDict{TableName: name}
 
 	meta, err := GetDB().QueryTableMeta(name)

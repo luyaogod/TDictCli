@@ -20,10 +20,11 @@ var (
 // so `tdict db *` does not depend on the local erp_data.db.
 var dbCmd = &cobra.Command{
 	Use:   "db",
-	Short: "从 ERP 数据库同步字典数据",
+	Short: "管理 ERP 数据库连接与同步/在线查询",
 	Long: `从 config.json 读取 ERP 数据库连接配置 (--config / TDICT_CONFIG)。
-当前子命令: sync (从 ERP 拉取字典数据写入 SQLite)。
-支持连接类型: kingbase (PostgreSQL 协议)。oracle 计划在后续版本支持。`,
+子命令: sync (从 ERP 拉取字典数据写入 SQLite) / list (列连接) /
+ping (验证连接可达) / discover (SSH 自动发现连接要素并保存)。
+支持连接类型: kingbase (金仓, PostgreSQL 协议)、oracle (go-ora)。`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		path, err := resolveConfigPath(configPath)
 		if err != nil {
