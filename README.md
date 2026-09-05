@@ -1,6 +1,11 @@
-# TDict — ERP 数据字典 CLI 查询工具
+# TDict — ERP 数据字典 CLI / T100 作业调试工具
 
-基于 T100 ERP 数据字典的 SQLite 命令行查询工具。`tdict rt` 查询单张表的完整字典（**表名、字段、键值、索引**），`tdict rv` 查询**校验带值 (r.v) 定义**（dzcd001：校验 SQL、外部参数、判断条件），`tdict scc` 查询**系统分类码 (SCC)**（gzca001：群组、状态、分类值列表），`tdict desc` 查询**字段规格**（dzep_t：控件类型、SCC 码、格式等画面设计参考配置），`tdict rq` 查询**可复用开窗 (r.q)**（dzca001：开窗 SQL、参数、显现设定），`tdict db sync` 从 ERP 数据库实时刷新本地数据。所有输出使用**简体中文 (zh_CN)**。
+面向 **T100 / Genero(4GL) ERP** 的本地命令行工具，两条主线：
+
+1. **数据字典查询**（给"读代码、做配置"提供上下文）：基于 T100 数据字典，既支持**离线 SQLite**（`tdict db sync` 提前拉取 24 张字典表），也支持 **--online 在线直查**远程 ERP 库。`tdict rt` 查单张表完整字典（表名、字段、键值、索引），`tdict rv` 查校验带值 (r.v)，`tdict scc` 查系统分类码 (SCC)，`tdict desc` 查字段规格 (dzep_t)，`tdict rq` 查可复用开窗 (r.q)。
+2. **AI 人机协同调试 T100 作业**（`tdict debug`）：通过 SSH 在 T100 服务器上驱动 `fglrun -d` 的 (fgldb) 文本调试协议，提供 Web 调试界面与命令行控制端，让 AI/人协同排查作业逻辑错误、跟踪变量、验证接口报文场景。
+
+所有输出默认使用**简体中文 (zh_CN)**。
 
 ## 数据规模
 
@@ -288,7 +293,7 @@ tdict db sync --conn 恒烁dsdemo -d D:/path/to/erp_data.db
 
 ### `tdict install [目录]`
 
-将 TDict 的 Claude Code 技能文件（`tdict`、`erp-code-reader`、`erp-modify`）安装到目标项目的 `.claude/skills/` 目录，使 Claude Code Agent 能够自动理解和使用本工具，并能安全修改框架生成的 ERP 4GL 源码。技能内容由二进制内嵌（`go:embed`），安装的就是当前版本。
+将 TDict 的 Claude Code 技能文件（`tdict`、`tdict-debug`、`erp-read`、`erp-modify`）安装到目标项目的 `.claude/skills/` 目录，使 Claude Code Agent 能够自动理解和使用本工具，并能安全修改框架生成的 ERP 4GL 源码。技能内容由二进制内嵌（`go:embed`），安装的就是当前版本。
 
 ```bash
 # 安装到当前工作目录
@@ -298,7 +303,44 @@ tdict install
 tdict install D:/path/to/project
 ```
 
-## 直连 ERP 数据库（tdict db sync）
+### T100 作业调试（`tdict debug`）
+
+通过 SSH 在 T100 服务器上驱动 `fglrun -d` 的 (fgldb) 文本调试协议，实现"人操作 GDC 界面 + AI 借助命令行检查分析"的人机协同调试。依赖 `config.json` 的 `debug` 节（SSH/区域/多环境）。
+
+```bash
+# 1. 启动调试服务(默认后台常驻、单实例;打印地址后返回,会话不被占用)
+tdict debug serve                 # 前端+API: http://127.0.0.1:28670(端口占用自动顺延)
+tdict debug serve --stop          # 停止后台实例
+tdict debug serve --foreground    # 前台运行(日志直出)
+
+# 2. 连接并启动作业调试(等入口停站,返回 JSON 快照)
+tdict debug start bsft001_wf -m asf
+
+# 3. 透传任意 fgldb 标准命令,原样返回输出(原生文本)
+tdict debug exec "break 4450"        # 下断点
+tdict debug exec "info breakpoints"
+tdict debug exec "print ls_sql"      # 求值变量
+tdict debug exec "continue"          # 继续(阻塞到下次停站;--timeout 300 调大)
+tdict debug exec "where"             # 调用栈
+
+# 4. AI 信息通道(原生命令行给不了的"看"):
+tdict debug stop                      # 可复取的停站现场快照
+tdict debug source bsft001_wf.4gl -m asf --from 4400 --to 4600  # 读服务器源码(白名单只读)
+tdict debug logs --tail 50            # 会话事件日志
+tdict debug locate b_fill             # 函数定义定位
+tdict debug resolve bsft001_wf -m asf # 作业→实体程序/模块(gzzz_t)
+
+# 5. 环境/会话管理
+tdict debug env                       # 查看/切换当前生效环境(SSH 配置)
+tdict debug topent 99                 # 设置会话 TOPENT(企业编号)
+tdict debug quit                      # 结束本轮调试(会话保留可复用)
+```
+
+- 控制端命令默认自动发现后台实例真实地址(端口顺延后仍可达),也可 `--url` 显式指定。
+- 断点支持持久化(下次调试自动恢复);接口日志 `wslogs`/`wsdebug` 支持报文重放调试。
+- 完整用法见内嵌技能 `.claude/skills/tdict-debug.md`(含原生 fgldb 命令参考与人机交接范式)。
+
+## 直连 ERP 数据库（tdict db sync / --online）
 
 连接配置存于项目根目录 `config.json`（JSON，开发阶段明文，勿用于生产）：
 
@@ -401,40 +443,61 @@ SELECT dzed004 FROM dzed_t WHERE dzed001 = '表名' AND dzed003 = 'P'
 
 ```
 TDictCli/
-├── main.go              # 入口
+├── main.go              # 入口(内嵌 web/dist 与 .claude/skills)
 ├── go.mod / go.sum      # Go module
-├── config.json          # ERP 数据库连接配置（JSON，开发阶段明文）
+├── config.json          # ERP 连接 + debug(SSH/环境) 配置(JSON,开发阶段明文)
 ├── cli/
-│   ├── root.go          # 根命令 + 全局 --json/--csv/-d/--config
-│   ├── table.go         # tdict rt（表名/字段/键值/索引）
-│   ├── check.go         # tdict rv（校验带值 dzcd001 定义查询）
-│   ├── scc.go           # tdict scc（系统分类码 gzca001 查询）
-│   ├── spec.go          # tdict desc（字段规格 dzep_t 查询）
-│   ├── win.go           # tdict rq（可复用开窗 dzca001 查询）
-│   ├── install.go       # tdict install（安装内嵌的 Claude Code 技能）
-│   ├── db.go            # tdict db 命令组（连接配置加载）
-│   └── db_sync.go       # tdict db sync（拉取 ERP 字典数据 → SQLite）
+│   ├── root.go          # 根命令 + 全局 --json/--csv/-d/--config/--online/--conn
+│   ├── table.go         # tdict rt(表名/字段/键值/索引;离线 + --online)
+│   ├── check.go         # tdict rv(校验带值 dzcd001 查询)
+│   ├── scc.go           # tdict scc(系统分类码 gzca001 查询)
+│   ├── spec.go          # tdict desc(字段规格 dzep_t 查询)
+│   ├── win.go           # tdict rq(可复用开窗 dzca001 查询)
+│   ├── install.go       # tdict install(安装内嵌 Claude Code 技能)
+│   ├── db.go            # tdict db 命令组(连接配置加载)
+│   ├── db_sync.go       # tdict db sync(拉取 ERP 字典数据 → SQLite)
+│   ├── dbops.go         # tdict db list / ping / discover(连接管理 + SSH 自动发现)
+│   ├── online.go        # --online 在线直查(rt;连接解析 + 金仓方言 SQL)
+│   ├── debug*.go        # tdict debug 命令族(serve/start/exec/...)
+│   ├── debugctl.go      # debug 控制端(REST 薄封装)
+│   ├── debugctx.go      # debug 信息通道(stop/source/logs/locate/resolve/interrupt)
+│   ├── debugenv.go      # debug env/topent 切换
+│   └── servebg*.go      # debug serve 后台常驻(单实例/端口顺延/stop)
 ├── dbconfig/
-│   └── dbconfig.go      # 连接配置模型 (config.json) 加载
+│   └── dbconfig.go      # 连接配置模型(source/viaSsh)加载
 ├── erpdb/
-│   └── erpdb.go         # ERP 数据库连接 (Kingbase 经 pgx) + 只读查询
+│   ├── erpdb.go         # ERP 连接接口(只读查询);kingbase 经 pgx
+│   ├── oracle.go        # oracle 经 go-ora
+│   └── ident.go         # SQL 标识符/字面量安全(在线查询内联)
 ├── db/
-│   ├── db.go            # SQLite 连接与查询封装（含 dict 查询、批量写入）
-│   ├── check.go         # 校验带值查询（dzcd_t/dzce_t/dzch_t 等 5 表）
-│   ├── scc.go           # 系统分类码查询（gzca_t/gzcb_t 等 4 表）
-│   ├── spec.go          # 字段规格查询（dzep_t）
-│   └── win.go           # 可复用开窗查询（dzca_t/dzcb_t/dzcc_t 等 5 表）
+│   ├── db.go            # SQLite 连接与查询封装
+│   ├── check.go         # 校验带值查询(dzcd_t/dzce_t/dzch_t 等)
+│   ├── scc.go           # 系统分类码查询(gzca_t/gzcb_t 等)
+│   ├── spec.go          # 字段规格查询(dzep_t)
+│   └── win.go           # 可复用开窗查询(dzca_t/dzcb_t/dzcc_t 等)
+├── debug/
+│   ├── api.go           # 调试服务 REST + WS + 静态前端
+│   ├── session.go       # fgldb 会话/PTY 协议驱动
+│   ├── manager.go       # 会话管理器 + 事件流/源码读取/作业解析
+│   ├── config.go        # debug 配置(SSH/envs/TOPENT 等)
+│   ├── db.go            # 数据库探查(服务器端 sqlplus/ksql)
+│   ├── sshx.go          # SSH/SFTP/PTY 封装
+│   └── ...              # parser/tenv/wslog/bpsstore 等
+├── live/
+│   └── live.go          # 远程数据源(在线查询;viaSsh 隧道支持)
+├── sshtun/
+│   └── sshtun.go        # SSH 端口转发隧道组件
 ├── output/
 │   └── output.go        # 表格/JSON/CSV 输出格式化
-├── data/                # 原始 CSV 数据文件（旧快照来源）
+├── web/                 # 调试 Web 前端(React/Vite;产物嵌入 dist)
 ├── .claude/
 │   └── skills/
-│       ├── tdict.md              # Claude Code Agent Skill
-│       ├── erp-code-reader.md    # 阅读/分析 ERP 4GL 源码 Skill
-│       └── erp-modify.md         # 修改框架生成 4GL 源码（add-point）Skill
-├── import_to_sqlite.py  # CSV → SQLite 导入脚本
-├── erp_data.db          # SQLite 数据库（tdict db sync 刷新）
-├── erp_data.db.bak      # 最近一次同步前的备份
+│       ├── tdict.md              # 数据字典查询 Skill
+│       ├── tdict-debug.md        # T100 作业调试 Skill
+│       ├── erp-read.md           # 阅读/分析 ERP 4GL 源码 Skill
+│       └── erp-modify.md         # 修改框架生成 4GL 源码(add-point)Skill
+├── erp_data.db          # SQLite 数据库(tdict db sync 刷新)
+├── dist/                # 便携版打包产物(build_portable.bat)
 └── README.md
 ```
 
@@ -445,6 +508,9 @@ TDictCli/
 | 语言 | Go 1.26 |
 | SQLite 驱动 | [modernc.org/sqlite](https://modernc.org/sqlite)（纯 Go，无 CGO） |
 | Kingbase 驱动 | [jackc/pgx](https://github.com/jackc/pgx)（纯 Go，PostgreSQL 协议） |
+| Oracle 驱动 | [sijms/go-ora/v2](https://github.com/sijms/go-ora)（纯 Go） |
+| SSH/SFTP | [golang.org/x/crypto/ssh](https://pkg.go.dev/golang.org/x/crypto/ssh) + [pkg/sftp](https://github.com/pkg/sftp) |
+| WebSocket | [coder/websocket](https://github.com/coder/websocket) |
 | CLI 框架 | [cobra](https://github.com/spf13/cobra) |
+| Web 前端 | React + Vite + Monaco（调试界面） |
 | 输出 | `text/tabwriter` + `encoding/json` |
-| 数据库构建 | Python 3 + csv + sqlite3 |
