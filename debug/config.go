@@ -74,7 +74,8 @@ type NamedEnv struct {
 	TopDir          string    `json:"topDir,omitempty"`
 	LaunchArgs      string    `json:"launchArgs,omitempty"`
 	WatchdogSeconds int       `json:"watchdogSeconds,omitempty"`
-	DB              *DBConfig `json:"db,omitempty"` // TNS/企业覆盖(留空按 zone 推导)
+	DB              *DBConfig `json:"db,omitempty"`     // TNS/企业覆盖(留空按 zone 推导)
+	DBConn          string    `json:"dbConn,omitempty"` // 该环境在线查询默认连接名(引用 top.connections;可省)
 }
 
 // DefaultListen 是 serve 未显式配置监听地址时的默认地址。
