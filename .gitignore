@@ -8,6 +8,7 @@
 # 运行时产物
 debug-bps/
 *.log
+.tdict-serve.json
 
 # 数据文件(110MB,可用 tdict db sync 重建)
 erp_data.db

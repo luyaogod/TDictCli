@@ -29,6 +29,12 @@ var (
 
 // dbgAPI 调 serve REST;非 2xx 时解析 {"error": ...} 返回错误
 func dbgAPI(method, path string, body any) ([]byte, error) {
+	base := dbgAPIURL
+	if base == "" {
+		// 自动寻址:优先取后台实例状态文件里的真实地址(端口被占用顺延过);
+		// 无实例时回退 config debug.listen / 内置默认,再给出"请先启动"提示。
+		base = debugAutoURL()
+	}
 	var rd io.Reader
 	if body != nil {
 		b, err := json.Marshal(body)
@@ -37,7 +43,7 @@ func dbgAPI(method, path string, body any) ([]byte, error) {
 		}
 		rd = bytes.NewReader(b)
 	}
-	req, err := http.NewRequest(method, dbgAPIURL+path, rd)
+	req, err := http.NewRequest(method, base+path, rd)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +53,7 @@ func dbgAPI(method, path string, body any) ([]byte, error) {
 	cli := &http.Client{Timeout: 5 * time.Minute}
 	resp, err := cli.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("无法连接调试服务(%s): %w —— 请先运行 tdict debug serve", dbgAPIURL, err)
+		return nil, fmt.Errorf("无法连接调试服务(%s): %w —— 请先运行 tdict debug serve", base, err)
 	}
 	defer resp.Body.Close()
 	data, err := io.ReadAll(resp.Body)
@@ -282,7 +288,6 @@ rowid 从 tdict debug wslogs 输出中取。`,
 	},
 }
 
-
 func boolInt(b bool) int {
 	if b {
 		return 1
@@ -300,6 +305,6 @@ func init() {
 	debugWslogsCmd.Flags().BoolVar(&wsOnlyFail, "fail", false, "只看失败日志")
 	debugWslogsCmd.Flags().IntVar(&wsPage, "page", 1, "页码(每页 50 条)")
 	debugWslogsCmd.Flags().BoolVar(&wsJSON, "json", false, "输出原始 JSON")
-	debugCmd.PersistentFlags().StringVar(&dbgAPIURL, "url", "http://127.0.0.1:8000", "调试服务地址")
+	debugCmd.PersistentFlags().StringVar(&dbgAPIURL, "url", "", "调试服务地址(默认自动发现运行中的后台实例;也可显式指定)")
 	debugCmd.AddCommand(debugStartCmd, debugExecCmd, debugStatusCmd, debugQuitCmd, debugWslogsCmd, debugWsdebugCmd)
 }

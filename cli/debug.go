@@ -146,11 +146,26 @@ var debugProbeCmd = &cobra.Command{
 	},
 }
 
-// debugServeCmd M1+:启动本地服务(REST+WS+MCP+Web 前端)
+// debugServeCmd M1+:启动本地服务(REST+WS+MCP+Web 前端)。
+// 默认在后台常驻(单实例):打印实际地址后立即返回,终端不被占用;
+// 端口被占用时自动顺延到下一个空闲端口,并把真实地址写入状态文件供 debugctl 自动发现。
 var debugServeCmd = &cobra.Command{
 	Use:   "serve",
-	Short: "启动本地调试服务(HTTP :8000,前端 + REST + WS)",
+	Short: "启动本地调试服务(默认后台常驻;端口占用自动顺延)",
+	Long: `启动本地调试服务(HTTP 前端 + REST + WS + MCP)。
+
+默认后台运行(单实例):命令打印服务地址与 pid 后立即返回,当前会话可继续输入其它命令;
+停止用 tdict debug serve --stop,前台运行(日志直出)用 --foreground。
+监听地址取 config.json debug.listen(默认 127.0.0.1:28670,不常用端口);
+端口被占用时自动顺延到下一个空闲端口并打印真实地址。`,
+	Example: `  tdict debug serve                  # 后台启动(单实例),打印地址后返回
+  tdict debug serve --stop          # 停止后台实例
+  tdict debug serve --foreground    # 前台运行,日志直出终端
+  tdict debug serve --listen 127.0.0.1:9123`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if dbgServeStop {
+			return debugServeStop()
+		}
 		cfgPath, err := resolveConfigPath(configPath)
 		if err != nil {
 			return err
@@ -165,8 +180,10 @@ var debugServeCmd = &cobra.Command{
 		}
 		// 数据目录 = config.json 所在目录(断点持久化等)
 		cfg.DataDir = filepath.Dir(cfgPath)
-		srv := debug.NewServer(cfg, webFS, cfgPath)
-		return srv.Run(context.Background())
+		if dbgServeForeground {
+			return debugServeForeground(cfg, cfgPath)
+		}
+		return debugServeBackground(cfg, cfgPath)
 	},
 }
 
@@ -253,6 +270,8 @@ func init() {
 	debugProbeCmd.Flags().StringVarP(&dbgProg, "prog", "p", "bsft001_wf", "作业名(如 bsft001_wf)")
 	debugProbeCmd.Flags().IntVarP(&dbgLine, "line", "l", 4452, "探针断点行号")
 	debugServeCmd.Flags().StringVar(&dbgListen, "listen", "", "覆盖监听地址(默认取配置)")
+	debugServeCmd.Flags().BoolVar(&dbgServeForeground, "foreground", false, "前台运行,日志直出终端(默认后台常驻)")
+	debugServeCmd.Flags().BoolVar(&dbgServeStop, "stop", false, "停止后台运行的调试服务(单实例)")
 	debugDBCmd.Flags().IntVar(&dbEnt, "ent", 0, "企业编号(TOPENT),验证该企业账号连接;0=取 config.json debug.db.ent")
 	debugDBCmd.Flags().BoolVar(&dbJSON, "json", false, "输出 JSON")
 	debugCmd.AddCommand(debugProbeCmd, debugServeCmd, debugDBCmd)
