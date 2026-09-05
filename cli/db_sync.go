@@ -30,6 +30,8 @@ var dictTables = []string{
 	"dzep_t",
 	// 可复用开窗 (r.q): 开窗主档/多语言/设计参数/参数多语言/显现设定
 	"dzca_t", "dzcal_t", "dzcb_t", "dzcbl_t", "dzcc_t",
+	// 系统消息档 (azzi920 维护, cl_err/cl_getmsg 取用): 消息文本/建议处理/作业多语言名称
+	"gzze_t", "gzzal_t",
 }
 
 type syncResult struct {
@@ -41,7 +43,7 @@ type syncResult struct {
 var dbSyncCmd = &cobra.Command{
 	Use:   "sync",
 	Short: "从 ERP 数据库拉取字典数据写入 SQLite",
-	Long: `从 ERP 数据库拉取最新字典数据 (dzea_t/dzeb_t 等 24 张字典表) 写入 SQLite 数据库。
+	Long: `从 ERP 数据库拉取最新字典数据 (24 张字典表 + 系统消息档 gzze_t/gzzal_t) 写入 SQLite 数据库。
 写入目标为 -d/--db 或 TDICT_DB 指向的数据库 (默认 ./erp_data.db)。
 同步前将原数据库备份为 <数据库>.bak；可用 --table 指定同步子集。`,
 	Example: `  tdict db sync

@@ -29,6 +29,8 @@ type Source interface {
 	QueryWinHeaders(id, lang string) ([]WinHeaderRow, error)
 	QueryWinParams(id, lang string) ([]WinParamRow, error)
 	QueryWinCols(id string) ([]WinColRow, error)
+	// msg 系统消息档:gzze_t(azzi920 维护;全语言行)+ gzzal_t 作业名称
+	QueryMsg(code string) ([]MsgRow, error)
 	// Close 释放底层连接(SQLite 文件句柄 / 远程连接与隧道)
 	Close()
 }
