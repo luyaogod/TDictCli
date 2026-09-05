@@ -12,7 +12,7 @@ import (
 var installCmd = &cobra.Command{
 	Use:   "install [dir]",
 	Short: "安装 Claude Code Agent 技能到项目",
-	Long: `将 TDict 的 Claude Code 技能文件 (tdict, erp-code-reader, erp-modify)
+	Long: `将 TDict 的 Claude Code 技能文件 (tdict, tdict-debug, erp-read, erp-modify)
 安装到目标项目的 .claude/skills/ 目录，使 AI Agent 能自动理解并使用本工具。
 不指定目录时安装到当前工作目录。`,
 	Example: `  tdict install
