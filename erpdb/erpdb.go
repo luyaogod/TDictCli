@@ -30,7 +30,7 @@ func Open(ctx context.Context, c dbconfig.Connection) (Connector, error) {
 	case "kingbase":
 		return OpenKingbase(ctx, c)
 	case "oracle":
-		return nil, fmt.Errorf("连接类型 \"oracle\" 暂不支持，计划在后续版本支持 (go-ora)")
+		return OpenOracle(ctx, c)
 	default:
 		return nil, fmt.Errorf("未知的连接类型 \"%s\"", c.Type)
 	}
@@ -91,17 +91,8 @@ func (k *KingbaseConnector) ServerVersion(ctx context.Context) (string, error) {
 // Query executes a read-only SQL statement and returns columns and rows as strings.
 // NULL values are returned as empty strings.
 func (k *KingbaseConnector) Query(ctx context.Context, sql string) ([]string, [][]string, error) {
-	// Basic safety: reject dangerous write operations and multi-statement input
-	upper := strings.ToUpper(strings.TrimSpace(sql))
-	dangerous := []string{"INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "CREATE", "REPLACE",
-		"ATTACH", "DETACH", "PRAGMA", "REINDEX", "VACUUM", "GRANT", "REVOKE"}
-	for _, kw := range dangerous {
-		if strings.HasPrefix(upper, kw) {
-			return nil, nil, fmt.Errorf("写入操作 '%s' 不被允许，仅允许 SELECT 查询", kw)
-		}
-	}
-	if strings.Contains(upper, ";") {
-		return nil, nil, fmt.Errorf("不允许多语句查询 (语句中含分号)，仅允许单条 SELECT 查询")
+	if err := checkReadOnlySQL(sql); err != nil {
+		return nil, nil, err
 	}
 
 	rows, err := k.pool.Query(ctx, sql)
@@ -163,4 +154,20 @@ func validIdent(s string) bool {
 		}
 	}
 	return !(s[0] >= '0' && s[0] <= '9')
+}
+
+// checkReadOnlySQL 拒绝写入类与多语句,只允许单条只读 SELECT。
+func checkReadOnlySQL(sql string) error {
+	upper := strings.ToUpper(strings.TrimSpace(sql))
+	dangerous := []string{"INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "CREATE", "REPLACE",
+		"ATTACH", "DETACH", "PRAGMA", "REINDEX", "VACUUM", "GRANT", "REVOKE"}
+	for _, kw := range dangerous {
+		if strings.HasPrefix(upper, kw) {
+			return fmt.Errorf("写入操作 '%s' 不被允许，仅允许 SELECT 查询", kw)
+		}
+	}
+	if strings.Contains(upper, ";") {
+		return fmt.Errorf("不允许多语句查询 (语句中含分号)，仅允许单条 SELECT 查询")
+	}
+	return nil
 }

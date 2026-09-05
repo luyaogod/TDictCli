@@ -6,6 +6,7 @@ require (
 	github.com/coder/websocket v1.8.15
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/pkg/sftp v1.13.11
+	github.com/sijms/go-ora/v2 v2.9.0
 	github.com/spf13/cobra v1.10.2
 	golang.org/x/crypto v0.55.0
 	golang.org/x/sys v0.47.0
