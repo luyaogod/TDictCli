@@ -170,7 +170,10 @@ var debugExecCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		data, err := dbgAPI("POST", "/api/sessions/"+id+"/raw", map[string]any{"command": args[0]})
+		data, err := dbgAPI("POST", "/api/sessions/"+id+"/raw", map[string]any{
+			"command": args[0],
+			"timeout": dbgTimeout,
+		})
 		if err != nil {
 			return err
 		}
@@ -183,7 +186,9 @@ var debugExecCmd = &cobra.Command{
 		for _, ln := range r.Lines {
 			fmt.Println(ln)
 		}
-		return nil
+		// 执行完成后再取一次快照:若是 step/next/continue 等使程序继续的命令,
+		// 停站后自动回报现场(文件:行/函数/原因),避免 AI 再发一次查询才知道停哪。
+		return dbgReportStopIfStopped(id, args[0])
 	},
 }
 

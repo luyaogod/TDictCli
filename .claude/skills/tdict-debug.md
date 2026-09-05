@@ -72,6 +72,36 @@ tdict debug topent --clear
 - TOPENT 也可以在会话外由配置决定:每个环境的 `db.ent` 就是它的 TOPENT 默认值;
   会话级 override 优先于配置默认,`--clear` 后回到配置默认。
 
+## AI 信息通道(fgldb 原生命令给不了的信息)
+
+原生命令行负责**操作**(exec 透传),以下命令负责**看**:可复取现场、读服务器源码、
+看事件日志、定位函数、解析作业。都依赖 serve,默认自动寻址:
+
+```bash
+# 可复取的停站现场:状态/停站位置/函数/原因/断点数/TOPENT(原生输出是瞬态的)
+tdict debug stop
+
+# 读服务器源码(白名单只读 moduleRoots,不经会话;支持行段,省上下文)
+tdict debug source bsft001_wf.4gl -m asf          # 按模块解析候选路径读取
+tdict debug source --path /u1/topprd/erp/asf/4gl/asf_bsft001_wf.4gl
+tdict debug source bsft001_wf.4gl -m asf --from 4400 --to 4600
+
+# 会话最近事件(谁停在哪/日志/断开),回答"刚才 continue 之后发生了什么"
+tdict debug logs --tail 50
+
+# 定位函数定义到 文件:行(需停站;fgldb info line)
+tdict debug locate b_fill
+
+# 启动前解析作业 → 实体程序/模块(gzzz_t;不建会话),配合 source 读源码
+tdict debug resolve bsft001_wf -m asf
+
+# 中断运行中/卡住的程序(回调试器)
+tdict debug interrupt
+```
+
+- `exec "continue"/"run"/"until"` 等长阻塞命令现在会透传 `--timeout` 给服务端
+  (不再固定 30s),执行完若停站会自动回报 `— 已停站 文件:行 (函数) reason=原因`。
+
 ## 接口报文日志调试
 
 排查接口(wssp/awsp)报文问题时:
