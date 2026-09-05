@@ -14,6 +14,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"tdict/db"
 	"tdict/erpdb"
@@ -407,9 +408,9 @@ ORDER BY CAST(b.dzcb002 AS INTEGER)`
 
 // QueryWinCols 开窗的显现列设置。
 func (l *Live) QueryWinCols(id string) ([]db.WinColRow, error) {
-	sql := `SELECT c.dzcc009, c.dzcc002, c.dzcc003,
-       c.dzcc008, c.dzcc004, c.dzcc005,
-       c.dzcc006, c.dzcc010, c.dzcc007
+	sql := `SELECT COALESCE(c.dzcc009, ''), c.dzcc002, COALESCE(c.dzcc003, ''),
+       COALESCE(c.dzcc008, ''), COALESCE(c.dzcc004, ''), COALESCE(c.dzcc005, ''),
+       COALESCE(c.dzcc006, ''), COALESCE(c.dzcc010, ''), COALESCE(c.dzcc007, '')
 FROM dzcc_t c
 WHERE c.dzcc001 = ` + lit(id) + `
 ORDER BY CAST(c.dzcc002 AS INTEGER)`
@@ -422,6 +423,64 @@ ORDER BY CAST(c.dzcc002 AS INTEGER)`
 		out = append(out, db.WinColRow{Cust: get(r, 0), Seq: get(r, 1), Field: get(r, 2),
 			Alias: get(r, 3), Widget: get(r, 4), IsRet: get(r, 5), CaseConv: get(r, 6),
 			Format: get(r, 7), Label: get(r, 8)})
+	}
+	return out, nil
+}
+
+// ---- msg:系统消息档 gzze_t(azzi920)/作业名称 gzzal_t ----
+
+// QueryMsg 返回指定消息编号的全部语言行(与本地 SQLite 语义一致)。
+func (l *Live) QueryMsg(code string) ([]db.MsgRow, error) {
+	c := lit(code)
+	sql := `SELECT COALESCE(gzze001, ''), COALESCE(gzze002, ''), COALESCE(gzze003, ''),
+       COALESCE(gzze004, ''), COALESCE(gzze005, ''), COALESCE(gzze006, ''),
+       COALESCE(gzze007, ''), COALESCE(gzze008, ''), COALESCE(gzzestus, '')
+FROM gzze_t WHERE gzze001 = ` + c + ` ORDER BY gzze002`
+	rows, err := l.q(sql)
+	if err != nil {
+		return nil, fmt.Errorf("查询消息 %s: %w", code, err)
+	}
+	out := make([]db.MsgRow, 0, len(rows))
+	progs := map[string]bool{}
+	for _, r := range rows {
+		m := db.MsgRow{Code: get(r, 0), Lang: get(r, 1), Text: get(r, 2),
+			Action: get(r, 3), ExecProg: get(r, 4), Detail: get(r, 5),
+			TypeCode: get(r, 6), ForceWin: get(r, 7), Status: get(r, 8)}
+		if m.ExecProg != "" && m.ExecProg != ":EXEPROG" {
+			progs[m.ExecProg] = true
+		}
+		out = append(out, m)
+	}
+	if len(out) == 0 {
+		return out, nil
+	}
+	names, err := l.msgProgNames(progs)
+	if err != nil {
+		names = map[string]string{}
+	}
+	for i := range out {
+		out[i].ProgName = names[out[i].ExecProg+"\x00"+out[i].Lang]
+	}
+	return out, nil
+}
+
+func (l *Live) msgProgNames(progs map[string]bool) (map[string]string, error) {
+	if len(progs) == 0 {
+		return map[string]string{}, nil
+	}
+	ins := make([]string, 0, len(progs))
+	for p := range progs {
+		ins = append(ins, lit(p))
+	}
+	sql := `SELECT gzzal001, COALESCE(gzzal002, ''), COALESCE(gzzal003, '')
+FROM gzzal_t WHERE gzzal001 IN (` + strings.Join(ins, ",") + `)`
+	rows, err := l.q(sql)
+	if err != nil {
+		return nil, fmt.Errorf("查询作业名称: %w", err)
+	}
+	out := map[string]string{}
+	for _, r := range rows {
+		out[get(r, 0)+"\x00"+get(r, 1)] = get(r, 2)
 	}
 	return out, nil
 }

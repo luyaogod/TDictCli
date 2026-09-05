@@ -181,6 +181,29 @@ tdict rq --csv
 
 数据来源 `dzca_t dzcal_t dzcb_t dzcbl_t dzcc_t`；本地库未同步时命令会提示先执行 `tdict db sync`。
 
+### `tdict msg <编号>`
+
+查询**系统消息档**（所有提示/报错消息的记录，由作业 `azzi920` 维护，运行时 `cl_err`/`cl_getmsg` 按编号取用）。当代码/日志里出现消息编号（形如 `std-00006`、`azz-00041`、`lib-xxxxx` 或负整数 SQLCODE `-100`）时，用本命令取文本与建议处理方式。
+
+```bash
+# 查默认语言(zh_CN)的消息
+tdict msg std-00006
+
+# 繁体语言行
+tdict msg azz-00041 --lang zh_TW
+
+# 多编号 / JSON
+tdict msg "std-00006,azz-00041" --json
+
+# 负整数编号(SQLCODE)需用 -- 分隔,避免被当作 flag
+tdict msg -- -263
+
+# 未同步/跨环境时远程直查
+tdict msg aoo-00120 --conn 恒烁正式区
+```
+
+返回：**文本**（`gzze003`）、**建议处理**（`gzze004`）、**建议作业**（`gzze005`，名称取 `gzzal_t`）、**技术细节**（`gzze006`，程式人员用）、**类型**（`gzze007`：0警告/1错误/2资讯）、状态（`gzzestus` Y=启用）。语言策略与源系统一致：精确 `(编号, 语言)` 匹配、无自动回退 —— 默认只显示 `--lang`（zh_CN）行，该编号无此语言时命令会列出可用语言。数据来源 `gzze_t gzzal_t`（已并入 `tdict db sync` 全量表清单）。
+
 ### `tdict install [目录]`
 
 将 TDict 的 Claude Code 技能文件（`tdict`、`erp-code-reader`、`erp-modify`）安装到目标项目的 `.claude/skills/` 目录，使 AI Agent 能自动理解和使用本工具。技能内容内嵌于二进制中。
@@ -195,10 +218,10 @@ tdict install /path/to/project
 
 ### `tdict db sync`
 
-从 ERP 数据库拉取 24 张字典表（`dzea_t dzeal_t dzeb_t dzebl_t dzec_t dzed_t dzee_t dzef_t dzeg_t` + 校验带值 5 张 `dzcd_t dzcdl_t dzce_t dzcel_t dzch_t` + 系统分类码 4 张 `gzca_t gzcal_t gzcb_t gzcbl_t` + 字段规格表 `dzep_t` + 开窗 5 张 `dzca_t dzcal_t dzcb_t dzcbl_t dzcc_t`）写入本地 SQLite。采用临时库 + 原子替换；原库自动备份为 `<db>.bak`。
+从 ERP 数据库拉取 26 张表（9 张基础字典 + 校验带值 5 张 `dzcd_t dzcdl_t dzce_t dzcel_t dzch_t` + 系统分类码 4 张 `gzca_t gzcal_t gzcb_t gzcbl_t` + 字段规格表 `dzep_t` + 开窗 5 张 `dzca_t dzcal_t dzcb_t dzcbl_t dzcc_t` + 系统消息档 2 张 `gzze_t gzzal_t`）写入本地 SQLite。采用临时库 + 原子替换；原库自动备份为 `<db>.bak`。
 
 ```bash
-# 全量同步 24 张表
+# 全量同步 26 张表
 tdict db sync
 
 # 仅同步部分表
