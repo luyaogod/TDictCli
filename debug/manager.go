@@ -522,7 +522,7 @@ func (m *Manager) ReadSourceStandalone(module, file, path string, from, to int) 
 			}
 			d, t, e := readOne(p)
 			if e == nil {
-				data, mt, file = d, t, file
+				data, mt = d, t
 				path = p
 				break
 			}
