@@ -22,13 +22,13 @@ var wsEndpoints = map[string]string{
 	"5": "awsp930", // OpenApi Web service
 }
 
-// WSDefaultURLFor 按接口方式与配置 TNS 名生成默认 URL
+// WSDefaultURLFor 按接口方式与登录区域(→ T100 服务别名)生成默认 URL
 func WSDefaultURLFor(cfg *Config, mode string) string {
 	ep := wsEndpoints[mode]
 	if ep == "" {
 		ep = "awsp920"
 	}
-	return "http://127.0.0.1/w" + cfg.TNSName() + "/ws/r/" + ep
+	return "http://127.0.0.1/w" + zoneTNSName(cfg.Zone) + "/ws/r/" + ep
 }
 
 // WSTestResult 单次执行结果

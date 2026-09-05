@@ -1,6 +1,10 @@
 package debug
 
-import "testing"
+import (
+	"testing"
+
+	"tdict/dbconfig"
+)
 
 // 单一常驻会话:目标身份判定/空闲宿主复用/环境克隆的纯逻辑单测
 // (SSH 登录等依赖真实 T100,不在此覆盖)
@@ -80,15 +84,15 @@ func TestPrepareSessionRejectsActiveRun(t *testing.T) {
 
 func TestTopentForRun(t *testing.T) {
 	c := cfgFor("h1", "36")
-	c.DB = &DBConfig{Ent: "7"}
+	c.Topent = "7"
 	s := fakeIdleSession("s1", "h1", "36")
 	s.cfg = c
 	if got := s.topentForRun(); got != "7" {
-		t.Fatalf("无手动设置时应回退配置 DB.Ent,got %q", got)
+		t.Fatalf("无手动设置时应回退 ssh 环境 topent,got %q", got)
 	}
 	// 文本型 TOPENT(设置页/会话面板均允许)原样透传
 	c2 := cfgFor("h1", "36")
-	c2.DB = &DBConfig{Ent: " txt-9 "}
+	c2.Topent = " txt-9 "
 	s3 := fakeIdleSession("s3", "h1", "36")
 	s3.cfg = c2
 	if got := s3.topentForRun(); got != "txt-9" {
@@ -102,7 +106,7 @@ func TestTopentForRun(t *testing.T) {
 	}
 	s2 := fakeIdleSession("s2", "h1", "36")
 	if got := s2.topentForRun(); got != "" {
-		t.Fatalf("无 DB 且无手动设置应返回空(沿用登录默认),got %q", got)
+		t.Fatalf("无 topent 且无手动设置应返回空(沿用登录默认),got %q", got)
 	}
 	if got := s.TopentOverride(); got != "99" {
 		t.Fatalf("TopentOverride 应返回手动值,got %q", got)
@@ -114,9 +118,11 @@ func TestTopentForRun(t *testing.T) {
 
 func TestCloneEnvAndEnvName(t *testing.T) {
 	c := &Config{
-		SSH: SSHConfig{Host: "top", Port: 22, User: "u"},
-		Envs: []NamedEnv{
-			{Name: "E1", SSHConfig: SSHConfig{Host: "e1h", Port: 22, User: "u1"}, Zone: "35", DB: &DBConfig{Ent: "7"}},
+		SSH:  SSHConfig{Host: "top", Port: 22, User: "u"},
+		Zone: "36",
+		SSHs: []NamedSsh{
+			{Name: "E1", SSHConfig: SSHConfig{Host: "e1h", Port: 22, User: "u1"}, Zone: "35", Topent: "7",
+				DB: &dbconfig.Connection{Type: "oracle", Host: "db1h", Port: 1521, Service: "s1"}},
 			{Name: "E2", SSHConfig: SSHConfig{Host: "e2h", Port: 22, User: "u2"}, Zone: "36"},
 		},
 	}
@@ -129,14 +135,21 @@ func TestCloneEnvAndEnvName(t *testing.T) {
 	if clone.SSH.Host != "e1h" || clone.Zone != "35" || clone.ActiveEnv != "E1" {
 		t.Fatalf("CloneEnv 字段不符: %+v", clone.SSH)
 	}
-	if clone.DB == nil || clone.DB.Ent != "7" {
-		t.Fatal("CloneEnv 应带环境专属 DB 配置")
+	if clone.Topent != "7" {
+		t.Fatalf("CloneEnv 应带环境 TOPENT,got %q", clone.Topent)
+	}
+	if clone.DB == nil || clone.DB.Type != "oracle" || clone.DB.Service != "s1" {
+		t.Fatal("CloneEnv 应带环境内嵌的 db 配置")
 	}
 	if c.SSH.Host != "top" {
 		t.Fatal("CloneEnv 不应改动原配置")
 	}
 	if c.CloneEnv("Nope") != nil {
 		t.Fatal("未命中环境应返回 nil")
+	}
+	clone2 := c.CloneEnv("E2")
+	if clone2 == nil || clone2.DB != nil {
+		t.Fatal("未挂 db 的环境应得到 nil DB")
 	}
 	if got := cfgFor("x", "36").EnvName(); got != "x-36" {
 		t.Fatalf("无 activeEnv 时环境名应为 host-zone,got %q", got)

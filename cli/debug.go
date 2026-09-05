@@ -195,7 +195,7 @@ var debugDBCmd = &cobra.Command{
 并尝试用对应账号连接数据库(密码规则:账号=密码,取自 fglprofile 明文)。
 
   tdict debug db            列出全部企业→账号映射
-  tdict debug db --ent 99   验证企业 99 对应账号的连接(默认企业取 config.json debug.db.ent)
+  tdict debug db --ent 99   验证企业 99 对应账号的连接(默认企业取该 SSH 环境的 topent)
   tdict debug db --ent 99 --json  输出 JSON`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfgPath, err := resolveConfigPath(configPath)
@@ -206,10 +206,10 @@ var debugDBCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		cfg.ApplyActiveEnv() // 生效环境的连接/参数合并到顶层
+		cfg.ApplyActiveEnv() // 生效环境的连接/参数合并到运行时字段
 		ent := dbEnt
 		if ent <= 0 {
-			ent = cfg.DBEnt()
+			ent = cfg.TopentInt()
 		}
 		rep, err := debug.ProbeDB(cfg, ent)
 		if err != nil {
@@ -220,15 +220,18 @@ var debugDBCmd = &cobra.Command{
 		}
 		// 人类可读输出
 		if kdb := rep.Env["database"]; kdb != "" {
-			fmt.Printf("区域: %s   数据库: 人大金仓 %s@127.0.0.1:%s\n", rep.Zone, kdb, rep.Env["port"])
+			fmt.Printf("区域: %s   数据库: 人大金仓 %s@%s:%s\n", rep.Zone, kdb, rep.Env["host"], rep.Env["port"])
 			if ks := rep.Env["ksql"]; ks != "" {
 				fmt.Printf("ksql: %s\n", ks)
 			}
 		} else {
-			fmt.Printf("区域: %s   TNS: %s   Oracle: %s\n",
-				rep.Zone, rep.TNS, rep.Env["oracleHome"])
+			fmt.Printf("区域: %s   Oracle: %s:%s (service %s)\n",
+				rep.Zone, rep.Env["host"], rep.Env["port"], rep.TNS)
 			if sp := rep.Env["sqlplus"]; sp != "" {
 				fmt.Printf("sqlplus: %s\n", sp)
+			}
+			if oh := rep.Env["oracleHome"]; oh != "" {
+				fmt.Printf("ORACLE_HOME: %s\n", oh)
 			}
 		}
 		fmt.Printf("\n企业(TOPENT) → 账号(schema),共 %d 个:\n", len(rep.Mappings))
@@ -241,7 +244,7 @@ var debugDBCmd = &cobra.Command{
 		}
 		if rep.Probe != nil {
 			p := rep.Probe
-			fmt.Printf("\n企业 %d 连接验证: %s/%s@%s\n", p.Ent, p.Account, p.Account, rep.TNS)
+			fmt.Printf("\n企业 %d 连接验证: %s@%s\n", p.Ent, p.Account, rep.TNS)
 			if p.Host != "" {
 				fmt.Printf("  主机: %s:%s  服务名: %s\n", p.Host, p.Port, p.Service)
 			}
@@ -250,7 +253,7 @@ var debugDBCmd = &cobra.Command{
 			} else {
 				fmt.Printf("  结果: 连接失败 ✗  %s\n", p.Error)
 			}
-			fmt.Println("  (密码规则为 fglprofile 明文:账号=密码;若失败说明该账号密码已改,需另行确认)")
+			fmt.Println("  (密码:优先取该连接的账号清单(accounts/主账号),未收录按 账号=密码 惯例;若失败请在 设置-环境-DB 页的账号清单维护密码)")
 		} else {
 			fmt.Println("\n(未指定企业,仅列出映射。用 --ent <企业号> 验证连接)")
 		}

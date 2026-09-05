@@ -27,8 +27,8 @@ func Open(path string) (*DB, error) {
 }
 
 // Close closes the database connection.
-func (d *DB) Close() error {
-	return d.conn.Close()
+func (d *DB) Close() {
+	_ = d.conn.Close()
 }
 
 // TableInfo holds a single field's information from a table dictionary query.

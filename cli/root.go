@@ -17,7 +17,6 @@ var (
 	useJSON    bool
 	useCSV     bool
 	verbose    bool
-	database   *db.DB
 	// skillFS holds the embedded Claude Code skill files (.claude/skills),
 	// provided by main via Execute. Used by `tdict install`.
 	skillFS fs.FS
@@ -28,35 +27,15 @@ var rootCmd = &cobra.Command{
 	Use:   "tdict",
 	Short: "TDict - ERP data dictionary query tool",
 	Long: `TDict 是一个查询 ERP 数据字典的 CLI 工具。
-查询本地 SQLite (erp_data.db) 中的数据字典，并通过 tdict db sync 从 ERP 实时刷新。
+查询数据源(rt/rv/desc/scc/rq)默认是本地 SQLite 镜像 (erp_data.db,由 tdict db sync 同步);
+可用 config.json 顶层 query.source 或 --conn <环境名> 切换为某环境的远程库直查(金仓/Oracle)。
 所有输出使用简体中文 (zh_CN)。`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-		if useOnline {
-			// 在线直查:打开远程 ERP 连接(而非本地 SQLite)
-			return openOnline(cmd.Name())
-		}
-		resolvedPath, err := resolveDBPath(dbPath)
-		if err != nil {
-			return err
-		}
-		if verbose {
-			fmt.Fprintf(os.Stderr, "[tdict] database: %s\n", resolvedPath)
-		}
-
-		database, err = db.Open(resolvedPath)
-		if err != nil {
-			return fmt.Errorf("failed to open database at %s: %w", resolvedPath, err)
-		}
-		return nil
+		// 打开查询数据源:本地 SQLite(--db/TDICT_DB)或远程库(--conn/query.source)
+		return openQuerySource()
 	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		if useOnline {
-			closeOnline()
-			return
-		}
-		if database != nil {
-			database.Close()
-		}
+		closeQuerySource()
 	},
 }
 
@@ -190,9 +169,10 @@ func Execute(skills fs.FS, web fs.FS) {
 	}
 }
 
-// GetDB returns the current database connection.
-func GetDB() *db.DB {
-	return database
+// GetDB returns the current query data source (local SQLite or remote ERP DB).
+// It is set by root's PersistentPreRunE (see source.go).
+func GetDB() db.Source {
+	return dataSrc
 }
 
 // IsJSON returns true if JSON output is requested.

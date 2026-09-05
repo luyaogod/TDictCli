@@ -13,6 +13,9 @@ debug-bps/
 # 数据文件(110MB,可用 tdict db sync 重建)
 erp_data.db
 
+# 本地源码镜像(tdict mirror pull;数百 MB,镜像根若设在仓库内需忽略)
+erp-src/
+
 # 本地配置(含生产 SSH/数据库明文凭据,切勿提交)
 config.json
 

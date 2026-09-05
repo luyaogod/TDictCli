@@ -71,8 +71,8 @@ var specCmd = &cobra.Command{
 func runSpecList(table string) error {
 	rows, err := GetDB().QuerySpecRows(table, specLang)
 	if err != nil {
-		if isNoSuchTable(err) {
-			return fmt.Errorf("本地库尚未包含字段规格数据 (dzep_t)。请先在有数据库的环境执行: tdict db sync")
+		if db.IsMissingTable(err) {
+			return fmt.Errorf("%s", missingHint("字段规格 (dzep_t)"))
 		}
 		return err
 	}
@@ -130,8 +130,8 @@ func specRowCSV(r specRowView) []string {
 func runSpecDetail(table, field string) error {
 	rows, err := GetDB().QuerySpecRows(table, specLang)
 	if err != nil {
-		if isNoSuchTable(err) {
-			return fmt.Errorf("本地库尚未包含字段规格数据 (dzep_t)。请先在有数据库的环境执行: tdict db sync")
+		if db.IsMissingTable(err) {
+			return fmt.Errorf("%s", missingHint("字段规格 (dzep_t)"))
 		}
 		return err
 	}

@@ -14,6 +14,9 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
+
+	"tdict/dbconfig"
+	"tdict/erpdb"
 )
 
 // Server 本地调试服务:REST + WebSocket + Web 前端
@@ -141,6 +144,8 @@ func (s *Server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/settings", s.hSettingsGet)
 	mux.HandleFunc("PUT /api/settings", s.hSettingsPut)
 	mux.HandleFunc("POST /api/dbprobe", s.hDBProbe)
+	mux.HandleFunc("POST /api/dbaccverify", s.hDbAccVerify)
+	mux.HandleFunc("POST /api/conntest", s.hConnTest)
 	mux.HandleFunc("GET /api/ws", s.hWS)
 	mux.HandleFunc("/", s.hStatic)
 }
@@ -1022,6 +1027,30 @@ func (s *Server) hDBProbe(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, out)
 }
 
+// hDbAccVerify 设置页账号清单「验证」:SSH 上服务器以 账号/密码 连库 select 1(只读)
+func (s *Server) hDbAccVerify(w http.ResponseWriter, r *http.Request) {
+	var req DBAccVerifyReq
+	if !readBody(w, r, &req) {
+		return
+	}
+	if req.Host == "" || req.User == "" {
+		fail(w, 400, fmt.Errorf("请先填写 SSH 主机与账号"))
+		return
+	}
+	if req.Account == "" {
+		fail(w, 400, fmt.Errorf("账号不能为空"))
+		return
+	}
+	if req.Type == "" {
+		req.Type = "oracle"
+	}
+	if err := VerifyDBAcct(req); err != nil {
+		writeJSON(w, 200, map[string]any{"ok": false, "error": err.Error()})
+		return
+	}
+	writeJSON(w, 200, map[string]any{"ok": true})
+}
+
 // hSettingsPut 写回设置:仅替换 config.json 顶层 "debug" 键(其它键如 dbconfig 原样保留),
 // 并原位热更新运行中的 s.cfg(Manager 等持有同一指针,立即生效)
 func (s *Server) hSettingsPut(w http.ResponseWriter, r *http.Request) {
@@ -1034,7 +1063,7 @@ func (s *Server) hSettingsPut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	nc.DataDir = s.cfg.DataDir // 运行时注入字段,请求体不带
-	nc.ApplyActiveEnv()        // 生效环境的连接/参数合并到顶层(顶层即生效配置)
+	nc.ApplyActiveEnv() // 生效环境的连接/参数合并到运行时字段
 	nc.fillDefaults()
 
 	raw, err := os.ReadFile(s.cfgPath)
@@ -1063,6 +1092,44 @@ func (s *Server) hSettingsPut(w http.ResponseWriter, r *http.Request) {
 	}
 	*s.cfg = nc // 热生效(Listen 需重启服务才换端口,其余字段即时)
 	writeJSON(w, 200, map[string]any{"ok": true})
+}
+
+// hConnTest 客户端直连测试(设置页 DB 表单「测试连接」):请求体为该 db 的配置
+// (含 accounts),凭据取账号列表首项(与 db ping 同链路 erpdb/live)。
+func (s *Server) hConnTest(w http.ResponseWriter, r *http.Request) {
+	var req dbconfig.Connection
+	if !readBody(w, r, &req) {
+		return
+	}
+	if req.Host == "" {
+		fail(w, 400, fmt.Errorf("请填写主机地址"))
+		return
+	}
+	if len(req.Accounts) == 0 || req.Accounts[0].Account == "" {
+		fail(w, 400, fmt.Errorf("请先在账号列表中添加账号(直连取列表首项)"))
+		return
+	}
+	if req.Type == "" {
+		req.Type = "oracle"
+	}
+	if req.Type != "oracle" && req.Type != "kingbase" {
+		fail(w, 400, fmt.Errorf("类型非法: %s(仅 oracle/kingbase)", req.Type))
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 20*time.Second)
+	defer cancel()
+	conn, err := erpdb.Open(ctx, req)
+	if err != nil {
+		writeJSON(w, 200, map[string]any{"ok": false, "error": err.Error()})
+		return
+	}
+	defer conn.Close()
+	ver, err := conn.ServerVersion(ctx)
+	if err != nil {
+		writeJSON(w, 200, map[string]any{"ok": false, "error": err.Error()})
+		return
+	}
+	writeJSON(w, 200, map[string]any{"ok": true, "version": ver})
 }
 
 // ---------- WebSocket ----------

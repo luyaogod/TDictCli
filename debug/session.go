@@ -570,27 +570,21 @@ func (s *Session) TopentOverride() string {
 	return s.topentOverride
 }
 
-// TopentCfg 配置级企业 TOPENT(设置页该环境 db.ent;未手动设置时运行生效值)
+// TopentCfg 配置级企业 TOPENT(设置页 SSH 页 topent;未手动设置时运行生效值)
 func (s *Session) TopentCfg() string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	if s.cfg.DB != nil {
-		return string(s.cfg.DB.Ent)
-	}
-	return ""
+	return strings.TrimSpace(string(s.cfg.Topent))
 }
 
-// topentForRun 本轮运行生效的 TOPENT:会话内手动设置优先,其次配置企业(ENT),再否则不导出(沿用登录默认)
+// topentForRun 本轮运行生效的 TOPENT:会话内手动设置优先,其次配置企业(TOPENT),再否则不导出(沿用登录默认)
 func (s *Session) topentForRun() string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.topentOverride != "" {
 		return s.topentOverride
 	}
-	if s.cfg.DB != nil {
-		return strings.TrimSpace(string(s.cfg.DB.Ent))
-	}
-	return ""
+	return strings.TrimSpace(string(s.cfg.Topent))
 }
 
 // SetTopent 空闲态重新设置宿主 shell 的 TOPENT(空值 = 清除手动设置,回到配置/登录默认)。

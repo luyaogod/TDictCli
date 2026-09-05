@@ -60,12 +60,6 @@ type WSLogFilter struct {
 // reQBEValue 时间类输入白名单(仅日期时间字符)
 var reQBEValue = regexp.MustCompile(`^[0-9: -]{0,19}$`)
 
-// ListWSLogs 兼容旧签名
-func ListWSLogs(conn *SSHConn, zone, tns, service string, onlyFail bool, limit int) ([]WSLogItem, error) {
-	items, _, err := listWSLogs(conn, &dbRun{zone: zone, tns: tns}, WSLogFilter{Service: service, OnlyFail: onlyFail, PageSize: limit})
-	return items, err
-}
-
 // listWSLogs 查询接口日志列表(Oracle: rowid + OFFSET/FETCH;金仓: ctid + OFFSET/LIMIT)
 func listWSLogs(conn *SSHConn, dbc *dbRun, f WSLogFilter) (items []WSLogItem, hasMore bool, err error) {
 	size := f.PageSize
@@ -104,11 +98,15 @@ func listWSLogs(conn *SSHConn, dbc *dbRun, f WSLogFilter) (items []WSLogItem, ha
 		}
 		wc += fmt.Sprintf(" AND wsfa003 %s '%s'", chk[1], v)
 	}
+	connStr, err := dbc.dbConnStr("ds")
+	if err != nil {
+		return nil, false, err
+	}
 	var out string
-	if dbc.kb != nil {
+	if dbc.conn.Type == "kingbase" {
 		// 金仓:ctid 作行标识;|| 遇 null 归 null,逐列 coalesce
 		sql := fmt.Sprintf(`select wsfa.ctid||'|'||wsfa001||'|'||wsfa002||'|'||coalesce(substr(wsfa003,1,19),'')||'|'||coalesce(wsfa005::text,'')||'|'||coalesce(wsfa006,'')||'|'||coalesce(wsfa012,'')||'|'||coalesce(wsfa007,'')||'|'||coalesce(wsfa008,'')||'|'||coalesce(wsfa014,'')||'|'||coalesce(wsfa016::text,'')||'|'||coalesce(wsfa017::text,'') from wsfa_t wsfa where %s order by wsfa003 desc offset %d limit %d`, wc, (page-1)*size, size+1)
-		out, err = dbc.exec(conn, "ds/ds", "", sql, 40*time.Second)
+		out, err = dbc.exec(conn, connStr, "", sql, 40*time.Second)
 	} else {
 		sql := fmt.Sprintf(`set heading off
 set feedback off
@@ -116,7 +114,7 @@ set trimspool on
 set linesize 32767
 select wsfa.rowid||'|'||wsfa001||'|'||wsfa002||'|'||substr(nvl(wsfa003,''),1,19)||'|'||nvl(wsfa005,'')||'|'||nvl(wsfa006,'')||'|'||nvl(wsfa012,'')||'|'||nvl(wsfa007,'')||'|'||nvl(wsfa008,'')||'|'||nvl(wsfa014,'')||'|'||nvl(wsfa016,'')||'|'||nvl(wsfa017,'')
 from wsfa_t wsfa where %s order by wsfa003 desc offset %d rows fetch first %d rows only;`, wc, (page-1)*size, size+1)
-		out, err = dbc.exec(conn, fmt.Sprintf("ds/ds@%s", dbc.tns), sql, "", 40*time.Second)
+		out, err = dbc.exec(conn, connStr, sql, "", 40*time.Second)
 	}
 	if err != nil {
 		return nil, false, fmt.Errorf("查询 wsfa_t 失败: %w (%s)", err, firstLines(out, 3))
@@ -150,9 +148,13 @@ func WSLogDetail(conn *SSHConn, dbc *dbRun, rowid string) (*WSLogItem, *WSLogCon
 	}
 	var out string
 	var err error
-	if dbc.kb != nil {
+	connStr, err := dbc.dbConnStr("ds")
+	if err != nil {
+		return nil, nil, err
+	}
+	if dbc.conn.Type == "kingbase" {
 		sql := fmt.Sprintf(`select wsfa.ctid||'|'||wsfa001||'|'||wsfa002||'|'||coalesce(substr(wsfa003,1,19),'')||'|'||coalesce(wsfa005::text,'')||'|'||coalesce(wsfa006,'')||'|'||coalesce(wsfa012,'')||'|'||coalesce(wsfa007,'')||'|'||coalesce(wsfa008,'')||'|'||coalesce(wsfa014,'')||'|'||coalesce(wsfa016::text,'')||'|'||coalesce(wsfa017::text,'') from wsfa_t wsfa where ctid='%s'`, rowid)
-		out, err = dbc.exec(conn, "ds/ds", "", sql, 30*time.Second)
+		out, err = dbc.exec(conn, connStr, "", sql, 30*time.Second)
 	} else {
 		sql := fmt.Sprintf(`set heading off
 set feedback off
@@ -162,7 +164,7 @@ set long 300000
 set longchunksize 100000
 select wsfa.rowid||'|'||wsfa001||'|'||wsfa002||'|'||substr(nvl(wsfa003,''),1,19)||'|'||nvl(wsfa005,'')||'|'||nvl(wsfa006,'')||'|'||nvl(wsfa012,'')||'|'||nvl(wsfa007,'')||'|'||nvl(wsfa008,'')||'|'||nvl(wsfa014,'')||'|'||nvl(wsfa016,'')||'|'||nvl(wsfa017,'')
 from wsfa_t wsfa where rowid='%s';`, rowid)
-		out, err = dbc.exec(conn, fmt.Sprintf("ds/ds@%s", dbc.tns), sql, "", 30*time.Second)
+		out, err = dbc.exec(conn, connStr, sql, "", 30*time.Second)
 	}
 	if err != nil {
 		return nil, nil, fmt.Errorf("查询 wsfa_t 失败: %w (%s)", err, firstLines(out, 3))
@@ -211,9 +213,9 @@ from wsfa_t wsfa where rowid='%s';`, rowid)
 	//    金仓 text 列直接 substr,ksql 原样输出)
 	if content.Request == "" || content.Response == "" {
 		var clobOut string
-		if dbc.kb != nil {
-			sql := fmt.Sprintf(`select '<<<REQ>>>' from wsfa_t where ctid='%s' union all select coalesce(substr(wsfa010,1,2000),' ') from wsfa_t where ctid='%1$s' union all select '<<<RSP>>>' from wsfa_t where ctid='%1$s' union all select coalesce(substr(wsfa011,1,2000),' ') from wsfa_t where ctid='%1$s'`, rowid)
-			clobOut, _ = dbc.exec(conn, "ds/ds", "", sql, 60*time.Second)
+		if dbc.conn.Type == "kingbase" {
+			sql := fmt.Sprintf(`select '<<<REQ>>>' from wsfa_t where ctid='%s' union all select coalesce(substr(wsfa010,1,2000),' ') from wsfa_t where ctid='%s' union all select '<<<RSP>>>' from wsfa_t where ctid='%s' union all select coalesce(substr(wsfa011,1,2000),' ') from wsfa_t where ctid='%s'`, rowid, rowid, rowid, rowid)
+			clobOut, _ = dbc.exec(conn, connStr, "", sql, 60*time.Second)
 		} else {
 			clobSQL := fmt.Sprintf(`set heading off
 set feedback off
@@ -226,7 +228,7 @@ select dbms_lob.substr(wsfa010,2000,1) from wsfa_t where rowid='%s' and wsfa010 
 select '<<<RSP>>>' from wsfa_t where rowid='%s';
 select dbms_lob.substr(wsfa011,2000,1) from wsfa_t where rowid='%s' and wsfa011 is not null;`,
 				rowid, rowid, rowid, rowid)
-			clobOut, _ = dbc.exec(conn, fmt.Sprintf("ds/ds@%s", dbc.tns), clobSQL, "", 60*time.Second)
+			clobOut, _ = dbc.exec(conn, connStr, clobSQL, "", 60*time.Second)
 		}
 		sec := ""
 		var reqLines, rspLines []string

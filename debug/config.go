@@ -1,11 +1,20 @@
 package debug
 
+// 服务器环境(SSH)与数据库连接配置。config.json 顶层 "debug" 键。
+// 数据库连接不内嵌在环境中:统一存于顶层 "connections"(dbconfig 包),
+// SSH 环境经 DBConn 按名称引用 —— 调试/服务器侧连库用被引用连接的显式
+// host/port/service(库名)+ 账号清单;客户端直连(ping/--online/sync)用同一份列表。
+// Oracle 全部显式 host:port/service(EZCONNECT),tnsnames/chenv/ORA 环境读取
+// 仅作为「从服务器获取」的辅助手段,不参与运行时连接。
+
 import (
 	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
+
+	"tdict/dbconfig"
 )
 
 // SSHConfig 远程服务器连接配置
@@ -16,17 +25,11 @@ type SSHConfig struct {
 	Password string `json:"password"`
 }
 
-// NamedSSH 命名 SSH 连接(设置页维护的多服务器列表;start --ssh 按名引用)
-type NamedSSH struct {
-	Name string `json:"name"`
-	SSHConfig
-}
-
-// EntValue 企业编号(TOPENT):数字或文本均可,兼容旧配置的 JSON 数字。
-// 数据库探测等需要真实编号的场景用 Int()(非数字返回 false)
+// EntValue 企业编号(TOPENT):数字或文本均可,兼容 JSON 数字。
+// 需真实编号的场景用 Int()(非数字返回 false)
 type EntValue string
 
-// UnmarshalJSON 同时接受 JSON 数字与字符串(旧配置 "ent": 99 / 新文本 "ent": "99x")
+// UnmarshalJSON 同时接受 JSON 数字与字符串
 func (e *EntValue) UnmarshalJSON(b []byte) error {
 	s := strings.TrimSpace(string(b))
 	if s == "null" {
@@ -46,182 +49,61 @@ func (e EntValue) Int() (int, bool) {
 	return n, err == nil
 }
 
-// DBConfig 数据库连接探查配置(config.json debug.db 节,全部可选)
-type DBConfig struct {
-	Type       string   `json:"type"`           // 数据库类型:"oracle"(默认)| "kingbase"(人大金仓,PG 引擎)
-	Ent        EntValue `json:"ent"`            // 默认企业编号(TOPENT);空=不指定;数字或文本均可
-	SQLPlus    string   `json:"sqlplus"`        // oracle: sqlplus 路径,留空自动探测
-	OracleHome string   `json:"oracleHome"`     // oracle: ORACLE_HOME,留空自动探测
-	TNS        string   `json:"tns"`            // oracle: TNS 别名(如 t35prd)/ kingbase: 库名,留空自动发现实例
-	Port       int      `json:"port,omitempty"` // kingbase: 实例端口,0=自动发现(默认 54321)
-}
-
-// NamedDB 命名数据库连接(设置页维护的多数据库列表)
-type NamedDB struct {
-	Name     string `json:"name"`
-	User     string `json:"user,omitempty"`
-	Password string `json:"password,omitempty"`
-	DBConfig
-}
-
-// NamedEnv 服务器环境:SSH 连接 + 该环境专属的启动参数。
-// 一个环境对应一台 T100 服务器(开发/测试/正式),zone/launchArgs/数据库随环境走;
-// 设置页以列表维护,activeEnv 单选生效——生效 = 合并覆盖到顶层字段。
-type NamedEnv struct {
-	Name            string    `json:"name"`
-	SSHConfig                 // 匿名嵌入:host/port/user/password 提升到 env 层
-	Zone            string    `json:"zone,omitempty"`
-	TopDir          string    `json:"topDir,omitempty"`
-	LaunchArgs      string    `json:"launchArgs,omitempty"`
-	WatchdogSeconds int       `json:"watchdogSeconds,omitempty"`
-	DB              *DBConfig `json:"db,omitempty"`     // TNS/企业覆盖(留空按 zone 推导)
-	DBConn          string    `json:"dbConn,omitempty"` // 该环境在线查询默认连接名(引用 top.connections;可省)
+// NamedSsh 服务器/调试环境:SSH 连接 + 登录区域 + 默认企业(TOPENT)。
+// 数据库连接经 DBConn 引用顶层 connections 条目(名称),详情在设置页 DB 页维护。
+type NamedSsh struct {
+	Name            string `json:"name"`
+	SSHConfig                // 匿名嵌入:host/port/user/password 提升到 ssh 层
+	Zone            string `json:"zone,omitempty"` // 登录后区域菜单代码:31开发 35测试 36正式 39PATCH t出货
+	TopDir          string `json:"topDir,omitempty"` // 区域顶级目录覆盖(如 /u1/topprd;留空按 zone 推导)
+	Topent          EntValue `json:"topent,omitempty"` // 默认企业编号(TOPENT);调试会话 export 用
+	LaunchArgs      string              `json:"launchArgs,omitempty"`
+	WatchdogSeconds int                 `json:"watchdogSeconds,omitempty"`
+	DB              *dbconfig.Connection `json:"db,omitempty"` // 该环境的数据库连接(与 SSH 一对一;显式 host/port/service|库名+账号列表)
 }
 
 // DefaultListen 是 serve 未显式配置监听地址时的默认地址。
-// 选用不常用端口(28670),降低与其它开发服务(8000/8080/3000 等)冲突的概率;
-// 若仍被占用,serve 启动时会自动顺延到下一个空闲端口。
 const DefaultListen = "127.0.0.1:28670"
 
 // Config debug 功能配置,存放在 config.json 顶层 "debug" 键。
-// 与 dbconfig 使用同一文件但互不干扰(各取所需键)。
+// 持久化字段 = 全局调试参数 + sshs 列表;SSH/Zone/Topent/DB 为运行时合并结果
+// (ApplyActiveEnv 由活跃 ssh + dbConn 引用生成),不参与持久化。
 type Config struct {
-	SSH             SSHConfig   `json:"ssh"`
-	Zone            string      `json:"zone"`            // 登录后区域菜单代码:31开发 35测试 36正式 39PATCH t出货
-	Listen          string      `json:"listen"`          // HTTP 监听地址
-	LaunchArgs      string      `json:"launchArgs"`      // T100 作业启动参数模板,{prog} 替换为作业名
-	WatchdogSeconds int         `json:"watchdogSeconds"` // 停站停留超时(秒),超时自动 continue;0=禁用
-	ModuleRoots     []string    `json:"moduleRoots"`     // 源码查找根目录
-	FGLServer       string      `json:"fglserver"`       // 留空使用 T100 按 SSH 来源 IP 自动设置
-	TopDir          string      `json:"topDir"`          // 区域顶级目录如 /u1/t35prd;留空按 zone 推导
-	TermWidth       int         `json:"termWidth"`
-	TermHeight      int         `json:"termHeight"`
-	PrintElements   int         `json:"printElements"`       // fgldb 单次 print 的数组元素上限(防大数组刷爆);0=默认 1000
-	PersistBPs      *bool       `json:"persistBreakpoints"`  // 断点持久化开关(nil 视为 true)
-	DataDir         string      `json:"-"`                   // 数据目录(断点持久化等);由 serve 注入 config.json 所在目录,空=禁用
-	DB              *DBConfig   `json:"db,omitempty"`        // 数据库连接探查配置(debug db 命令用)
-	SSHS            []NamedSSH  `json:"sshs,omitempty"`      // (兼容保留)旧多 SSH 列表;新配置用 envs
-	DBS             []NamedDB   `json:"dbs,omitempty"`       // (兼容保留)旧多数据库列表
-	Envs            []NamedEnv  `json:"envs,omitempty"`      // 服务器环境列表(SSH+启动参数,设置页维护)
-	ActiveEnv       string      `json:"activeEnv,omitempty"` // 当前生效的环境名;空=用顶层默认字段
-	Runtime         *RuntimeEnv `json:"-"`                   // 登录后动态获取的 T100 路径(探针/选区回显);nil=用静态配置兜底
+	SSHs            []NamedSsh `json:"sshs,omitempty"`      // 服务器环境列表(设置页 SSH 页维护)
+	ActiveEnv       string     `json:"activeEnv,omitempty"` // 当前生效的 ssh 名;空=取 sshs 首条
+	Listen          string     `json:"listen"`              // HTTP 监听地址
+	LaunchArgs      string     `json:"launchArgs"`          // 作业启动参数默认模板,{prog} 替换为作业名(ssh 可覆盖)
+	WatchdogSeconds int        `json:"watchdogSeconds"`     // 停站停留超时默认(秒);ssh 可覆盖
+	ModuleRoots     []string   `json:"moduleRoots"`         // 源码查找根目录覆盖(留空按区域推导)
+	FGLServer       string     `json:"fglserver"`           // 留空使用 T100 按 SSH 来源 IP 自动设置
+	TermWidth       int        `json:"termWidth"`
+	TermHeight      int        `json:"termHeight"`
+	PrintElements   int        `json:"printElements"`      // fgldb 单次 print 的数组元素上限;0=默认 1000
+	PersistBPs      *bool      `json:"persistBreakpoints"` // 断点持久化开关(nil 视为 true)
+	DataDir         string     `json:"-"`                  // 数据目录(断点持久化等);serve 注入,空=禁用
+
+	// ---- 运行时(合并结果,json:"-" 不持久化) ----
+	SSH      SSHConfig             `json:"-"` // 生效 SSH(activeEnv 合并)
+	Zone     string                `json:"-"` // 生效登录区域
+	TopDir   string                `json:"-"` // 生效区域顶级目录(按 zone 推导;动态获取后由 Runtime 覆盖)
+	Topent   EntValue              `json:"-"` // 生效默认企业(调试会话 export TOPENT)
+	DB       *dbconfig.Connection `json:"-"` // 生效数据库连接(activeEnv 的 ssh.db 深拷贝;nil=该 ssh 未挂库)
+	Runtime  *RuntimeEnv          `json:"-"` // 登录后动态获取的 T100 路径(探针/选区回显);nil=用静态配置兜底
 }
 
-// SSHByName 按名取 SSH 连接:先查旧 sshs 列表,再查 envs(取其 SSH 部分);
-// 空名/未命中返回默认 ssh
-func (c *Config) SSHByName(name string) SSHConfig {
-	if name != "" {
-		for _, s := range c.SSHS {
-			if s.Name == name {
-				if s.Port == 0 {
-					s.Port = 22
-				}
-				return s.SSHConfig
-			}
-		}
-		for _, e := range c.Envs {
-			if e.Name == name {
-				if e.Port == 0 {
-					e.Port = 22
-				}
-				return e.SSHConfig
-			}
-		}
-	}
-	return c.SSH
+// zoneTopDir 区域代码 → T100 顶级目录(默认推导)
+var zoneTopDir = map[string]string{
+	"31": "/u1/t35dev",
+	"35": "/u1/t35tst",
+	"36": "/u1/t35prd",
+	"39": "/u1/t35pth",
+	"t":  "/u1/topprd",
 }
 
-// ApplyActiveEnv 把当前生效环境(activeEnv)的连接与启动参数合并覆盖到顶层字段,
-// 再重推默认值(TopDir/ModuleRoots 等)。顶层字段即「当前生效配置」,
-// manager/hLaunch/CLI 无需感知 envs 的存在;activeEnv 为空或未命中时不做任何事。
-func (c *Config) ApplyActiveEnv() {
-	if c.ActiveEnv == "" {
-		return
-	}
-	for _, e := range c.Envs {
-		if e.Name != c.ActiveEnv {
-			continue
-		}
-		if e.Host != "" {
-			c.SSH = e.SSHConfig
-			if c.SSH.Port == 0 {
-				c.SSH.Port = 22
-			}
-		}
-		if e.Zone != "" {
-			c.Zone = e.Zone
-		}
-		// 换环境 = 换服务器/区域:清动态路径,下次探针/选区回显重新获取
-		c.Runtime = nil
-		if e.LaunchArgs != "" {
-			c.LaunchArgs = e.LaunchArgs
-		}
-		if e.WatchdogSeconds > 0 {
-			c.WatchdogSeconds = e.WatchdogSeconds
-		}
-		if e.DB != nil {
-			db := *e.DB
-			c.DB = &db
-		}
-		c.fillDefaults()
-		return
-	}
-}
-
-// EnvName 会话所属环境名:优先设置页 envs 的 activeEnv,缺省用 host-zone 推导名
-func (c *Config) EnvName() string {
-	if c.ActiveEnv != "" {
-		return c.ActiveEnv
-	}
-	return c.SSH.Host + "-" + c.Zone
-}
-
-// CloneEnv 复制配置并切换到指定环境(name 命中 Envs 之一):应用该环境的
-// SSH/zone/启动参数/看门狗/库配置,用于会话「切换/重启」按目标环境重连;未命中返回 nil。
-func (c *Config) CloneEnv(name string) *Config {
-	if name == "" {
-		return nil
-	}
-	var hit *NamedEnv
-	for i := range c.Envs {
-		if c.Envs[i].Name == name {
-			hit = &c.Envs[i]
-			break
-		}
-	}
-	if hit == nil {
-		return nil
-	}
-	c2 := *c
-	if hit.Host != "" {
-		c2.SSH = hit.SSHConfig
-		if c2.SSH.Port == 0 {
-			c2.SSH.Port = 22
-		}
-	}
-	if hit.Zone != "" {
-		c2.Zone = hit.Zone
-	}
-	c2.ActiveEnv = name
-	c2.Runtime = nil // 环境/服务器变了,动态路径需重新获取
-	if hit.LaunchArgs != "" {
-		c2.LaunchArgs = hit.LaunchArgs
-	}
-	if hit.WatchdogSeconds > 0 {
-		c2.WatchdogSeconds = hit.WatchdogSeconds
-	}
-	if hit.DB != nil {
-		db := *hit.DB
-		c2.DB = &db
-	}
-	c2.fillDefaults()
-	return &c2
-}
-
-// TNSName 返回数据库 TNS 别名(zone 36→t35prd,35→t35tst,31→t35dev,39→t35pth,t→topprd)。
-// 完全自动:按登录区域推导,不接受手填覆盖(T100 环境约定)
-func (c *Config) TNSName() string {
-	switch c.Zone {
+// zoneTNSName 区域代码 → 数据库 TNS 别名推导(31→t35dev,35→t35tst,36→t35prd,
+// 39→t35pth,t→topprd)。仅「从服务器获取」辅助探测用——运行时连接一律显式 host/port/service。
+func zoneTNSName(zone string) string {
+	switch zone {
 	case "31":
 		return "t35dev"
 	case "35":
@@ -235,12 +117,104 @@ func (c *Config) TNSName() string {
 	}
 }
 
-// DBEnt 返回默认企业编号(数据库探测用,须为数字;文本/未配置返回 0=仅列映射)
-func (c *Config) DBEnt() int {
-	if c.DB == nil {
-		return 0
+// applySsh 把某 ssh 环境的连接与启动参数合并到运行时字段(activeEnv 与 CloneEnv 共用)
+func (c *Config) applySsh(e *NamedSsh) {
+	if e.Host != "" {
+		c.SSH = e.SSHConfig
+		if c.SSH.Port == 0 {
+			c.SSH.Port = 22
+		}
 	}
-	n, _ := c.DB.Ent.Int()
+	if e.Zone != "" {
+		c.Zone = e.Zone
+	}
+	if e.TopDir != "" {
+		c.TopDir = e.TopDir
+	}
+	c.Topent = e.Topent
+	// 换环境 = 换服务器/区域:清动态路径,下次探针/选区回显重新获取
+	c.Runtime = nil
+	if e.LaunchArgs != "" {
+		c.LaunchArgs = e.LaunchArgs
+	}
+	if e.WatchdogSeconds > 0 {
+		c.WatchdogSeconds = e.WatchdogSeconds
+	}
+	// 该环境一对一挂载的数据库连接(深拷贝,防共享底层切片)
+	c.DB = nil
+	if e.DB != nil {
+		x := *e.DB
+		x.Accounts = append([]dbconfig.DBAcct(nil), e.DB.Accounts...)
+		c.DB = &x
+	}
+	c.fillDefaults()
+}
+
+// ApplyActiveEnv 把当前生效环境(activeEnv)的 SSH/zone/topent/库引用合并到运行时字段。
+// activeEnv 为空时自动取 sshs 首条;无任何 ssh 时保持空(LoadConfig 已校验不允许)。
+func (c *Config) ApplyActiveEnv() {
+	if c.ActiveEnv == "" && len(c.SSHs) > 0 {
+		c.ActiveEnv = c.SSHs[0].Name
+	}
+	if c.ActiveEnv == "" {
+		return
+	}
+	for i := range c.SSHs {
+		if c.SSHs[i].Name == c.ActiveEnv {
+			c.applySsh(&c.SSHs[i])
+			return
+		}
+	}
+}
+
+// SSHByName 按名取 SSH 连接;空名/未命中返回生效 SSH(合并后的 c.SSH)
+func (c *Config) SSHByName(name string) SSHConfig {
+	if name != "" {
+		for _, s := range c.SSHs {
+			if s.Name == name {
+				if s.Port == 0 {
+					s.Port = 22
+				}
+				return s.SSHConfig
+			}
+		}
+	}
+	return c.SSH
+}
+
+// EnvName 会话所属环境名:优先 activeEnv,缺省用 host-zone 推导名
+func (c *Config) EnvName() string {
+	if c.ActiveEnv != "" {
+		return c.ActiveEnv
+	}
+	return c.SSH.Host + "-" + c.Zone
+}
+
+// CloneEnv 复制配置并切换到指定 ssh 环境(name 命中 SSHs 之一):
+// 用于会话「切换/重启」按目标环境重连;未命中返回 nil。
+func (c *Config) CloneEnv(name string) *Config {
+	if name == "" {
+		return nil
+	}
+	var hit *NamedSsh
+	for i := range c.SSHs {
+		if c.SSHs[i].Name == name {
+			hit = &c.SSHs[i]
+			break
+		}
+	}
+	if hit == nil {
+		return nil
+	}
+	c2 := *c
+	c2.ActiveEnv = name
+	c2.applySsh(hit)
+	return &c2
+}
+
+// TopentInt 返回生效默认企业的数字编号(数据库探测用;文本/未配置返回 0=仅列映射)
+func (c *Config) TopentInt() int {
+	n, _ := c.Topent.Int()
 	return n
 }
 
@@ -249,20 +223,8 @@ func (c *Config) BPsPersisted() bool {
 	return c.DataDir != "" && (c.PersistBPs == nil || *c.PersistBPs)
 }
 
-// zoneTopDir 区域代码 → T100 顶级目录(默认推导)
-var zoneTopDir = map[string]string{
-	"31": "/u1/t35dev",
-	"35": "/u1/t35tst",
-	"36": "/u1/t35prd",
-	"39": "/u1/t35pth",
-	"t":  "/u1/topprd",
-}
-
 func (c *Config) fillDefaults() {
-	if c.Zone == "" {
-		c.Zone = "36"
-	}
-	if c.TopDir == "" {
+	if c.TopDir == "" && c.Zone != "" {
 		c.TopDir = zoneTopDir[c.Zone]
 	}
 	if c.Listen == "" {
@@ -361,7 +323,8 @@ func (c *Config) FGLSOURCEPath(module string) string {
 	return out
 }
 
-// LoadConfig 从 config.json 读取顶层 "debug" 键并填充默认值
+// LoadConfig 从 config.json 读取顶层 "debug" 键并填充默认值;
+// 同时读入同文件顶层 "connections" 快照(供 dbConn 引用解析)。
 func LoadConfig(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -374,13 +337,12 @@ func LoadConfig(path string) (*Config, error) {
 		return nil, fmt.Errorf("解析配置失败: %w", err)
 	}
 	if wrapper.Debug == nil {
-		return nil, fmt.Errorf("config.json 缺少 \"debug\" 配置节,请补充 ssh/zone 等字段")
+		return nil, fmt.Errorf("config.json 缺少 \"debug\" 配置节")
 	}
 	cfg := wrapper.Debug
 	cfg.fillDefaults()
-	// 顶层 ssh 允许为空,前提是 envs 里有可用连接(ApplyActiveEnv 合并后自会填充)
-	if len(cfg.Envs) == 0 && (cfg.SSH.Host == "" || cfg.SSH.User == "") {
-		return nil, fmt.Errorf("debug.ssh.host / debug.ssh.user 未配置")
+	if len(cfg.SSHs) == 0 {
+		return nil, fmt.Errorf("debug.sshs 未配置任何服务器环境(请在设置-环境-SSH 页添加)")
 	}
 	return cfg, nil
 }

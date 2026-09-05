@@ -26,6 +26,10 @@ type Connector interface {
 
 // Open creates a connector for the given connection config by type.
 func Open(ctx context.Context, c dbconfig.Connection) (Connector, error) {
+	// 客户端直连凭据 = 账号列表首项(直连与 TOPENT 无关)
+	if err := c.FillDialCred(); err != nil {
+		return nil, err
+	}
 	switch c.Type {
 	case "kingbase":
 		return OpenKingbase(ctx, c)
@@ -38,7 +42,7 @@ func Open(ctx context.Context, c dbconfig.Connection) (Connector, error) {
 
 // KingbaseConnector connects to a Kingbase (人大金仓) server via the PostgreSQL wire protocol.
 type KingbaseConnector struct {
-	name string
+	addr string
 	typ  string
 	pool *pgxpool.Pool
 }
@@ -63,11 +67,10 @@ func OpenKingbase(ctx context.Context, c dbconfig.Connection) (Connector, error)
 	defer cancel()
 	if err := pool.Ping(pingCtx); err != nil {
 		pool.Close()
-		return nil, fmt.Errorf("连接 Kingbase 失败 (%s, %s:%d/%s): %w",
-			c.Name, c.Host, c.Port, c.Database, err)
+		return nil, fmt.Errorf("连接 Kingbase 失败 (%s): %w", c.Address(), err)
 	}
 
-	return &KingbaseConnector{name: c.Name, typ: c.Type, pool: pool}, nil
+	return &KingbaseConnector{addr: c.Address(), typ: c.Type, pool: pool}, nil
 }
 
 func kingbaseDSN(c dbconfig.Connection) string {
