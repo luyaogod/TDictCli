@@ -10,12 +10,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"time"
 
 	"tdict/dbconfig"
 	"tdict/host"
 	"tdict/live"
+	"tdict/cfgfile"
 
 	"github.com/spf13/cobra"
 )
@@ -229,47 +229,33 @@ func saveDiscoveredConn(c *dbconfig.Connection, envName string) error {
 	if err != nil {
 		return err
 	}
-	raw, err := os.ReadFile(cfgPath)
-	if err != nil {
-		return err
-	}
-	var root map[string]any
-	if err := json.Unmarshal(raw, &root); err != nil || root == nil {
-		return fmt.Errorf("config.json 解析失败")
-	}
-	dbg, _ := root["debug"].(map[string]any)
-	if dbg == nil {
-		return fmt.Errorf("config.json 缺少 debug 配置节")
-	}
-	sshs, _ := dbg["sshs"].([]any)
-	for i := range sshs {
-		m, ok := sshs[i].(map[string]any)
-		if !ok || m["name"] != envName {
-			continue
+	return cfgfile.Edit(cfgPath, nil, func(root map[string]any) error {
+		dbg, err := cfgfile.Debug(root)
+		if err != nil {
+			return err
 		}
-		// 保留账号列表(账号独立维护,探测只更新连接要素)
-		var accounts any
-		if old, ok := m["db"].(map[string]any); ok {
-			accounts = old["accounts"]
+		sshs, _ := dbg["sshs"].([]any)
+		for i := range sshs {
+			m, ok := sshs[i].(map[string]any)
+			if !ok || m["name"] != envName {
+				continue
+			}
+			// 保留账号列表(账号独立维护,探测只更新连接要素)
+			var accounts any
+			if old, ok := m["db"].(map[string]any); ok {
+				accounts = old["accounts"]
+			}
+			nb, _ := json.Marshal(c)
+			var nm map[string]any
+			_ = json.Unmarshal(nb, &nm)
+			if accounts != nil {
+				nm["accounts"] = accounts
+			}
+			m["db"] = nm
+			break
 		}
-		nb, _ := json.Marshal(c)
-		var nm map[string]any
-		_ = json.Unmarshal(nb, &nm)
-		if accounts != nil {
-			nm["accounts"] = accounts
-		}
-		m["db"] = nm
-		break
-	}
-	out, err := json.MarshalIndent(root, "", "  ")
-	if err != nil {
-		return err
-	}
-	tmp := cfgPath + ".tmp"
-	if err := os.WriteFile(tmp, out, 0o644); err != nil {
-		return err
-	}
-	return os.Rename(tmp, cfgPath)
+		return nil
+	})
 }
 
 func init() {

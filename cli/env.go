@@ -7,12 +7,11 @@ package cli
 // (serve 下次保存设置时以其内存态为准)。
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
 
 	"tdict/host"
 	"tdict/output"
+	"tdict/cfgfile"
 
 	"github.com/spf13/cobra"
 )
@@ -132,29 +131,15 @@ func envSetDefault(name string) error {
 		return nil
 	}
 
-	raw, err := os.ReadFile(envCfgPath)
-	if err != nil {
-		return fmt.Errorf("读取配置失败: %w", err)
-	}
-	var root map[string]any
-	if err := json.Unmarshal(raw, &root); err != nil || root == nil {
-		return fmt.Errorf("解析配置失败: %w", err)
-	}
-	dbg, ok := root["debug"].(map[string]any)
-	if !ok || dbg == nil {
-		return fmt.Errorf("config.json 缺少 \"debug\" 配置节")
-	}
-	dbg["activeEnv"] = name
-	out, err := json.MarshalIndent(root, "", "  ")
-	if err != nil {
+	if err := cfgfile.Edit(envCfgPath, nil, func(root map[string]any) error {
+		dbg, err := cfgfile.Debug(root)
+		if err != nil {
+			return err
+		}
+		dbg["activeEnv"] = name
+		return nil
+	}); err != nil {
 		return err
-	}
-	tmp := envCfgPath + ".tmp"
-	if err := os.WriteFile(tmp, out, 0o644); err != nil {
-		return fmt.Errorf("写入配置失败: %w", err)
-	}
-	if err := os.Rename(tmp, envCfgPath); err != nil {
-		return fmt.Errorf("更新配置失败: %w", err)
 	}
 	fmt.Printf("默认环境已切换为: %s(已写入 %s)\n", name, envCfgPath)
 	fmt.Printf("提示: 运行中的 debug serve 不受影响;新调试会话/缺省 db sync、mirror 将使用该环境。\n")
