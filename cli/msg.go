@@ -23,14 +23,14 @@ var msgLang string
 var msgCmd = &cobra.Command{
 	Use:   "msg <编号>[,<编号>...]",
 	Short: "查询系统消息",
-	Long: `查询 T100 系统消息档 (gzze_t,作业 azzi920 维护) — 所有提示/报错消息的记录。
-消息编号形如 std-00001 / azz-00041 / lib-xxxxx / -263(负整数 SQLCODE)。
-返回: 文本 (gzze003)、建议处理方式 (gzze004)、建议执行作业 (gzze005, 名称取
-gzzal_t)、程式人员技术细节 (gzze006)、讯息类型 (gzze007: 0警告/1错误/2资讯)、
-状态。支持逗号分隔多编号。
-
-数据来源: gzze_t gzzal_t,需先执行 tdict db sync 同步(或用 --conn 远程直查)。
-语言: 默认只显示 --lang(缺省 zh_CN)那一行;该编号无此语言时列出可用语言。`,
+	Long: `查询系统消息:所有提示/报错消息的记录。程序报错/日志里出现编号(如
+std-00006)时,查它的完整文本、建议处理方式与技术细节。
+消息编号形如 std-00001 / azz-00041 / lib-xxxxx(类型-流水);负整数为
+SQLCODE(如 -263,查询时需用 -- 分隔:tdict msg -- -263)。
+返回: 文本、建议处理、建议作业(附名称)、技术细节、类型(0=警告 1=错误
+2=资讯)、状态。
+消息按语言各一条:默认只显示 --lang(缺省 zh_CN)那一行;该编号无此语言时
+列出可用语言。支持逗号分隔多编号。`,
 	Example: `  tdict msg std-00006
   tdict msg azz-00041 --lang zh_TW
   tdict msg "std-00006,azz-00041" --json

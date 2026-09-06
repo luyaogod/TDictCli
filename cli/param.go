@@ -31,14 +31,13 @@ type docpObj struct {
 var syspCmd = &cobra.Command{
 	Use:   "sysp <编号>[,<编号>...]",
 	Short: "查询系统参数说明",
-	Long: `查询 T100 系统参数定义 (gzsz_t,作业 azzi990 维护) — 系统/企业/据点级参数
-(不含单据别参数 ooac_t,那是 azzi991/tdict docp 的范围)。
-参数编号形如 A-SYS-0100 / E-CIR-0001 / S-BAS-0028 (<型态码>-<领域3码>-<4位流水>;
-型态码 A=系统级 E=企业级 S=据点级)。
-返回: 名称/说明 (gzszl_t 多语言)、参数群与级别、输入型态 (gzsz003: 1=Y/N 2=整数选项
-3=范围设定 4=字符或SCC 5=日期)、领域、预设值 (gzsz008)、值域 (gzsz009)、SCC 选项、
-校核/开窗引用、异常处理与修改频度等定义;不查运行时当前值(在客户化值表)。
-数据来源: gzsz_t gzszl_t,需先执行 tdict db sync 同步(或用 --conn 远程直查)。`,
+	Long: `查询系统参数说明:系统/企业/据点级参数的定义与用途(不含单据别参数,
+那是 tdict docp 的范围)。
+参数编号 = 型态码 + 领域3码 + 4位流水:A-SYS-0040(A=系统级)、E-CIR-0001
+(E=企业级)、S-BAS-0028(S=据点级)。
+返回: 名称/说明(多语言)、群与级别、型态(1=Y/N 2=整数选项 3=范围设定
+4=字符或SCC 5=日期)、领域、预设值、值域、SCC 选项、校核/开窗引用、
+异常处理、修改频度与状态;参数实际设定值不在查询范围。`,
 	Example: `  tdict sysp A-SYS-0100
   tdict sysp S-BAS-0028 --lang zh_TW
   tdict sysp "A-SYS-0100,E-CIR-0001" --json
@@ -52,12 +51,11 @@ var syspCmd = &cobra.Command{
 var docpCmd = &cobra.Command{
 	Use:   "docp <编号>[,<编号>...]",
 	Short: "查询单据参数说明",
-	Long: `查询 T100 单据别参数定义 (gzsz_t 的 ooac_t 群,作业 azzi991 维护) — 单据参数
-编号形如 D-MFG-0076 / D-BAS-0058 (<型态码 D>-<领域3码>-<4位流水>)。
-返回: 名称/说明 (gzszl_t 多语言)、输入型态/值域/预设值等定义,以及该参数绑定的
-单据性质清单 (gzsy_t: 模块、单据性质、是否已抛转)。参数当前值在各单据别值表
-ooac_t(每单据别一行,由值维护作业 aooi200 维护),不在查询范围。
-数据来源: gzsz_t gzszl_t gzsy_t,需先执行 tdict db sync 同步(或用 --conn 远程直查)。`,
+	Long: `查询单据参数说明:单据别参数(编号 D- 开头,如 D-MFG-0076)的定义与用途,
+并附它适用的单据性质清单(模块 + 单据性质)。
+返回: 名称/说明(多语言)、型态(同 sysp:1=Y/N 2=整数选项 3=范围设定
+4=字符或SCC 5=日期)、领域、预设值、值域、SCC 选项、校核/开窗引用等定义,
+以及单据性质绑定表;参数实际设定值在各单据别的参数值维护作业,不在查询范围。`,
 	Example: `  tdict docp D-MFG-0076
   tdict docp D-BAS-0058 --lang zh_TW
   tdict docp "D-MFG-0076,D-BAS-0058" --json

@@ -67,14 +67,14 @@ type winDetail struct {
 }
 
 var winCmd = &cobra.Command{
-	Use:     "rq [dzca001]",
+	Use:     "rq [开窗码]",
 	Aliases: []string{"win"},
 	Short:   "查询可复用开窗",
-	Long: `查询 ERP 可复用开窗 (r.q) 定义。
-无参数时列出全部开窗，可用 --kw 按识别码/说明过滤；
-指定 dzca001 时显示完整详情: SQL 指令 (dzca003)、外部参数 (dzcb_t)、显现设定 (dzcc_t)。
-开窗由设计器 adzi210 维护、adzp210 生成实体 q_*.4gl, 调用方设置 g_qryparam 后 CALL q_xxx()。
-数据来源: dzca_t dzcal_t dzcb_t dzcbl_t dzcc_t，需先执行 tdict db sync 同步。`,
+	Long: `查询可复用开窗 (r.q):代码里 CALL q_xxx() 弹出的查寻选单定义——带占位符的
+选取 SQL(<field>/<table>/<wc> 标记)、外部参数(arg1~9)与显现/回传列。
+无参数时列出全部开窗(--kw 按说明过滤);指定开窗码显示完整详情:
+SQL 指令(附标签图例)、参数、显现设定。
+开窗码形如 q_apca001。`,
 	Example: `  tdict rq
   tdict rq --kw 料号
   tdict rq q_apca001

@@ -14,9 +14,10 @@ var tableCmd = &cobra.Command{
 	Use:     "rt <table_name>",
 	Aliases: []string{"table"},
 	Short:   "查询数据表字典",
-	Long: `查询一张或多张数据表的完整字典。
-返回内容包含: 表名/表说明、字段定义 (dzeb_t)、键值 (dzed_t)、索引 (dzec_t)。
-使用逗号分隔多个表名。输出使用简体中文 (zh_CN)。`,
+	Long: `查询一张或多张数据表的字典:这张表在系统里做什么(表说明/所属模块/表类型),
+以及字段(中文含义/数据类型/长度/主键/必填)、键值与索引。
+读代码、看 SQL、查界面字段含义时用它。
+支持逗号分隔多个表名;输出简体中文。`,
 	Example: `  tdict rt dzea_t
   tdict rt "dzea_t,dzeb_t,dzed_t"
   tdict rt dzea_t --json

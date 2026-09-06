@@ -44,10 +44,12 @@ type syncResult struct {
 
 var dbSyncCmd = &cobra.Command{
 	Use:   "sync",
-	Short: "从 ERP 数据库拉取字典数据写入 SQLite",
-	Long: `从 ERP 数据库拉取最新字典数据 (24 张字典表 + 系统消息档 gzze_t/gzzal_t) 写入 SQLite 数据库。
-写入目标为 -d/--db 或 TDICT_DB 指向的数据库 (默认 ./erp_data.db)。
-同步前将原数据库备份为 <数据库>.bak；可用 --table 指定同步子集。`,
+	Short: "从 ERP 刷新本地查询数据",
+	Long: `从 ERP 刷新本地查询数据(表字典、校验、分类码、画面规格、开窗、消息、参数等
+全部内容,约 85 万行),查询命令读的就是它。
+写入 -d/--db 或 TDICT_DB 指向的数据库(默认 ./erp_data.db);原库自动备份为 .bak。
+--table 可只刷部分;缺省数据源 = 默认环境(activeEnv,tdict env 查看/切换)的库,
+可用 --conn <环境名> 指定。`,
 	Example: `  tdict db sync
   tdict db sync --table dzea_t,dzeal_t
   tdict db sync --conn 恒烁正式区`,

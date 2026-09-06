@@ -61,12 +61,12 @@ type sccDetail struct {
 }
 
 var sccCmd = &cobra.Command{
-	Use:   "scc [gzca001]",
-	Short: "查询系统分类码 (SCC) ",
-	Long: `查询 ERP 系统分类码 (SCC) 定义。
-无参数时列出全部分类码，可用 --kw 按分类码/名称过滤；
-指定 gzca001 时显示完整详情: 单头 (gzca_t/gzcal_t) 与分类值列表 (gzcb_t/gzcbl_t)。
-数据来源: gzca_t gzcal_t gzcb_t gzcbl_t，需先执行 tdict db sync 同步。`,
+	Use:   "scc [分类码]",
+	Short: "查询系统分类码 (SCC)",
+	Long: `查询系统分类码 (SCC):系统里下拉/选项的"选项字典",一个分类码 = 一组
+「值 → 说明」,画面上的下拉选项就来自这里。
+无参数时列出全部分类码(--kw 按分类码/名称过滤);指定分类码显示详情:单头与分类值列表。
+分类码多为数字(如 4);部分分类码的值带扩展数据列,含义按各分类码自己定义。`,
 	Example: `  tdict scc
   tdict scc --kw 币别
   tdict scc 4
