@@ -64,5 +64,8 @@
   },
   "query": {
     "source": "local"
+  },
+  "bdldoc": {
+    "dir": ""
   }
 }
