@@ -62,7 +62,7 @@ type sccDetail struct {
 
 var sccCmd = &cobra.Command{
 	Use:   "scc [gzca001]",
-	Short: "查询系统分类码 (SCC) 定义",
+	Short: "查询系统分类码 (SCC) ",
 	Long: `查询 ERP 系统分类码 (SCC) 定义。
 无参数时列出全部分类码，可用 --kw 按分类码/名称过滤；
 指定 gzca001 时显示完整详情: 单头 (gzca_t/gzcal_t) 与分类值列表 (gzcb_t/gzcbl_t)。

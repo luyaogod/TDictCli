@@ -22,7 +22,7 @@ var msgLang string
 
 var msgCmd = &cobra.Command{
 	Use:   "msg <编号>[,<编号>...]",
-	Short: "查询系统消息(azzi920/gzze_t:文本、建议处理、技术细节)",
+	Short: "查询系统消息",
 	Long: `查询 T100 系统消息档 (gzze_t,作业 azzi920 维护) — 所有提示/报错消息的记录。
 消息编号形如 std-00001 / azz-00041 / lib-xxxxx / -263(负整数 SQLCODE)。
 返回: 文本 (gzze003)、建议处理方式 (gzze004)、建议执行作业 (gzze005, 名称取

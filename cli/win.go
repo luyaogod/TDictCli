@@ -69,7 +69,7 @@ type winDetail struct {
 var winCmd = &cobra.Command{
 	Use:     "rq [dzca001]",
 	Aliases: []string{"win"},
-	Short:   "查询可复用开窗 (r.q) 定义",
+	Short:   "查询可复用开窗",
 	Long: `查询 ERP 可复用开窗 (r.q) 定义。
 无参数时列出全部开窗，可用 --kw 按识别码/说明过滤；
 指定 dzca001 时显示完整详情: SQL 指令 (dzca003)、外部参数 (dzcb_t)、显现设定 (dzcc_t)。
