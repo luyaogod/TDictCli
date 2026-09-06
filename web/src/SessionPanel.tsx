@@ -65,7 +65,7 @@ export function SessionPanel() {
   // 环境清单来自设置(名称即会话目标);默认环境只影响"尚无会话时的自动建立"
   const load = useCallback(() => {
     void api.settings().then((c: any) => {
-      const names = (c.envs || [])
+      const names = (c.sshs || [])
         .map((e: any) => e.name || `${e.host || ''}-${e.zone || ''}`.replace(/-$/, ''))
         .filter(Boolean)
       setEnvNames(names)
