@@ -169,8 +169,8 @@ var mirrorPullCmd = &cobra.Command{
 <镜像根>/<环境名>/。默认增量:服务器 marker 记录上次基线,只拉变更文件;
 --full 全量重建:本地整目录替换(删除服务器已不存在的残留文件)。
 
-打包根(topDir)解析:环境显式 topDir > 区域静态表 > SSH 登录探测;
-未显式配置且探测失败的环境会报错,请先在设置-环境里补 topDir。`,
+打包根(TOP)按登录区域动态探测获取(T100 路径不允许静态配置);
+探测失败的环境会直接报错(请检查该环境 SSH 登录与 zone 设置)。`,
 	Example: `  tdict mirror pull                     # 默认环境(activeEnv/首条)增量更新
   tdict mirror pull 主机正式区           # 指定环境增量更新
   tdict mirror pull 主机正式区 --full    # 全量重建(首次拉取也走全量)`,

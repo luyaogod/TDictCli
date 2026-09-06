@@ -11,7 +11,7 @@ import (
 // RuntimeEnv 登录后从服务器环境脚本动态获取的 T100 路径(与标准 debug 同源)。
 // T100 无 $TOPDIR 变量:登录区域经站点 profile 的 case 表得到 ZONE 目录名,
 // topenv 用 TOP=/u1/$ZONE 派生全部路径,ERP/COM 由 TOP 派生;模块变量由 topsys 扫描生成。
-// 动态值优先于静态配置(TopDir/ModuleRoots 仅作探针失败兜底)。
+// 动态路径是唯一权威来源:无静态 topDir/moduleRoots 配置,获取失败由调用方报错。
 type RuntimeEnv struct {
 	TOP             string    // /u1/t35tst
 	ERP             string    // $TOP/erp

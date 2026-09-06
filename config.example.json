@@ -8,7 +8,6 @@
         "user": "tiptop",
         "password": "tiptop",
         "zone": "36",
-        "topDir": "",
         "topent": "99",
         "db": {
           "type": "oracle",
@@ -16,8 +15,14 @@
           "port": 1521,
           "service": "t35prd",
           "accounts": [
-            { "account": "dsdemo", "password": "dsdemo" },
-            { "account": "ds", "password": "ds" }
+            {
+              "account": "dsdemo",
+              "password": "dsdemo"
+            },
+            {
+              "account": "ds",
+              "password": "ds"
+            }
           ]
         }
       },
@@ -35,8 +40,14 @@
           "port": 54321,
           "database": "topprd",
           "accounts": [
-            { "account": "dsdata", "password": "dsdata" },
-            { "account": "ds", "password": "ds" }
+            {
+              "account": "dsdata",
+              "password": "dsdata"
+            },
+            {
+              "account": "ds",
+              "password": "ds"
+            }
           ]
         }
       }
@@ -45,7 +56,6 @@
     "listen": "127.0.0.1:28670",
     "launchArgs": "BBDL512840855a 2 12345 'N' {prog}",
     "watchdogSeconds": 1800,
-    "moduleRoots": [],
     "fglserver": "",
     "termWidth": 200,
     "termHeight": 50,

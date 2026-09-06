@@ -46,39 +46,41 @@ func NewManager(cfg *Config) *Manager {
 }
 
 // getRuntimeEnv 取 T100 动态环境:缓存命中直接返回;未命中(或过期)探针一次并缓存。
-// 失败返回 nil,调用方回退静态配置。key 按 服务器+账号+区域 区分(用连接的真实 host,
-// 覆盖/多环境时不受 active 环境影响),换环境互不污染。
-func (m *Manager) getRuntimeEnv(conn *SSHConn, zone string) *RuntimeEnv {
+// 失败返回错误(不缓存),调用方须报错,无静态配置可回退。key 按 服务器+账号+区域 区分
+// (用连接的真实 host,覆盖/多环境时不受 active 环境影响),换环境互不污染。
+func (m *Manager) getRuntimeEnv(conn *SSHConn, zone string) (*RuntimeEnv, error) {
 	key := conn.cfg.Host + "|" + conn.cfg.User + "|" + zone
 	m.envMu.Lock()
 	if c, ok := m.envCache[key]; ok && time.Since(c.at) < 5*time.Minute && c.env.valid() {
 		m.envMu.Unlock()
-		return c.env
+		return c.env, nil
 	}
 	m.envMu.Unlock()
 	env, err := probeTEnv(conn, zone)
 	if err != nil {
-		log.Printf("[tenv] probe zone=%s failed: %v", zone, err)
-		return nil
+		return nil, err
 	}
 	m.envMu.Lock()
 	m.envCache[key] = cachedEnv{env: env, at: time.Now()}
 	m.envMu.Unlock()
-	return env
+	return env, nil
 }
 
-// ensureRuntimeEnv 确保 cfg.Runtime 有动态路径(探针+缓存);失败静默,用静态配置兜底
-func (m *Manager) ensureRuntimeEnv(conn *SSHConn) {
+// ensureRuntimeEnv 确保 cfg.Runtime 有动态路径(探针+缓存);失败返回错误,无静态兜底。
+func (m *Manager) ensureRuntimeEnv(conn *SSHConn) error {
 	if m.cfg.Runtime != nil && m.cfg.Runtime.valid() {
-		return
+		return nil
 	}
 	zone := m.cfg.Zone
 	if zone == "" {
 		zone = "36"
 	}
-	if env := m.getRuntimeEnv(conn, zone); env != nil {
-		m.cfg.Runtime = env
+	env, err := m.getRuntimeEnv(conn, zone)
+	if err != nil {
+		return fmt.Errorf("无法获取环境 %s(zone %s)的 T100 路径: %w", m.cfg.EnvName(), zone, err)
 	}
+	m.cfg.Runtime = env
+	return nil
 }
 
 // Subscribe 订阅事件流(WS 用),返回取消函数
@@ -146,7 +148,9 @@ func (m *Manager) launchWith(cfg *Config, module, prog string) (*Session, error)
 	// 对齐 T100 gendbg:启动前连库把作业编号解析成实体程序+模块+启动引用(gzzz_t JOIN gzza_t),
 	// 源码与 42r 都跟实体程序走;未配置 db/查询失败/未命中 → 会话内按名称文件搜索兜底
 	runProg, launchRef, extra := "", "", ""
-	if mod2, prog2, ref2, extra2 := m.resolveJobWith(cfg, module, prog); prog2 != "" {
+	if mod2, prog2, ref2, extra2, rerr := m.resolveJobWith(cfg, module, prog); rerr != nil {
+		return nil, rerr
+	} else if prog2 != "" {
 		runProg = prog2
 		launchRef, extra = ref2, extra2
 		if module == "" && mod2 != "" {
@@ -212,18 +216,20 @@ func (m *Manager) prepareSession(cfg *Config, module, prog, runProg, launchRef, 
 }
 
 // resolveJob 连库按 gendbg 语义解析作业编号(gzzz_t:gzzz001 → gzzz002 实体程序 + gzzz005 模块)。
-// 返回 (模块, 实体程序);未配置 db/查询失败/未命中 → ("",""),由调用方回退文件搜索。
-func (m *Manager) resolveJob(module, job string) (mod, prog, launchRef, extra string) {
+// 返回 (模块, 实体程序, err):err 仅在 SSH 连接/动态路径探测失败时非 nil;
+// 未配置 db/查询失败/未命中 → ("","","","", nil),由调用方回退文件搜索。
+func (m *Manager) resolveJob(module, job string) (mod, prog, launchRef, extra string, err error) {
 	return m.resolveJobWith(m.cfg, module, job)
 }
 
-func (m *Manager) resolveJobWith(cfg *Config, module, job string) (mod, prog, launchRef, extra string) {
+// resolveJobWith 同 resolveJob,但按传入 cfg(多 SSH/多区域克隆)解析。
+func (m *Manager) resolveJobWith(cfg *Config, module, job string) (mod, prog, launchRef, extra string, err error) {
 	if cfg.DB == nil || !reProgName.MatchString(job) {
-		return "", "", "", ""
+		return "", "", "", "", nil
 	}
 	conn, err := Dial(cfg.SSH)
 	if err != nil {
-		return "", "", "", ""
+		return "", "", "", "", fmt.Errorf("SSH 连接失败: %w", err)
 	}
 	defer conn.Close()
 	zone := cfg.Zone
@@ -232,20 +238,22 @@ func (m *Manager) resolveJobWith(cfg *Config, module, job string) (mod, prog, la
 	}
 	// 动态路径(登录区域 → 环境脚本):按本次启动的区域探针+缓存(覆盖/多环境时不用
 	// 全局 active 区域),结果写入 cfg.Runtime——预会话模块解析/42r 校验直接用真实路径。
-	// 失败静默,后续用静态配置兜底
+	// 失败即报错:T100 路径只来自登录动态获取,无静态配置可回退
 	if cfg.Runtime == nil || !cfg.Runtime.valid() {
-		if env := m.getRuntimeEnv(conn, zone); env != nil {
-			cfg.Runtime = env
+		env, perr := m.getRuntimeEnv(conn, zone)
+		if perr != nil {
+			return "", "", "", "", fmt.Errorf("无法获取环境 %s(zone %s)的 T100 路径: %w", cfg.EnvName(), zone, perr)
 		}
+		cfg.Runtime = env
 	}
 	// 显式连接(SSH 页 dbConn 引用)连库解析作业;失败静默,由调用方回退文件搜索
 	d, err := resolveDBRun(conn, cfg)
 	if err != nil {
-		return "", "", "", ""
+		return "", "", "", "", nil
 	}
 	jr, err := dbResolveJob(conn, d, job)
 	if err != nil || jr.Prog == "" {
-		return "", "", "", ""
+		return "", "", "", "", nil
 	}
 	p := jr.Prog
 	// gendbg 原版语义:gzza004 的 $变量 由选区后 shell 展开为权威 42r 路径(标准/客制都覆盖)
@@ -254,7 +262,7 @@ func (m *Manager) resolveJobWith(cfg *Config, module, job string) (mod, prog, la
 	}
 	launchRef, extra = jr.LaunchRef, jr.Extra
 	if module != "" {
-		return module, p, launchRef, extra // 用户显式指定模块:尊重指定,仅采纳实体程序
+		return module, p, launchRef, extra, nil // 用户显式指定模块:尊重指定,仅采纳实体程序
 	}
 	mod = strings.ToLower(jr.Module)
 	if jr.Module == "" || jr.Module == "-" || !modHas42r(conn, cfg.TopDirActual(), mod, p) {
@@ -265,7 +273,7 @@ func (m *Manager) resolveJobWith(cfg *Config, module, job string) (mod, prog, la
 			mod = ""
 		}
 	}
-	return mod, p, launchRef, extra
+	return mod, p, launchRef, extra, nil
 }
 
 // LaunchReplay 接口日志重放调试:等价 T100 日志内嵌的 `r.dg <作业> '<req>' '<rsp>'`。
@@ -278,7 +286,9 @@ func (m *Manager) LaunchReplay(item *WSLogItem, content *WSLogContent) (*Session
 		return nil, fmt.Errorf("该日志没有关联作业编号(wsfa012 为空),无法重放")
 	}
 	module, runProg, launchRef, extra := "", "", "", ""
-	if mod2, prog2, ref2, extra2 := m.resolveJob("", job); prog2 != "" {
+	if mod2, prog2, ref2, extra2, rerr := m.resolveJob("", job); rerr != nil {
+		return nil, rerr
+	} else if prog2 != "" {
 		module, runProg, launchRef, extra = mod2, prog2, ref2, extra2
 	}
 	conn, err := Dial(m.cfg.SSH)
@@ -408,8 +418,10 @@ func (m *Manager) SourcePreview(module, prog string) (*SourceFile, error) {
 		return nil, fmt.Errorf("SSH 连接失败: %w", err)
 	}
 	defer conn.Close()
-	// 动态路径(登录区域 → 环境脚本):探针+缓存,失败静默用静态配置兜底
-	m.ensureRuntimeEnv(conn)
+	// 动态路径(登录区域 → 环境脚本):探针+缓存;失败即报错(无静态配置可回退)
+	if err := m.ensureRuntimeEnv(conn); err != nil {
+		return nil, err
+	}
 	cl, err := conn.SFTP()
 	if err != nil {
 		return nil, err
@@ -437,7 +449,7 @@ func (m *Manager) SourcePreview(module, prog string) (*SourceFile, error) {
 	return nil, fmt.Errorf("源码未找到(%s): %w", dvmFile, lastErr)
 }
 
-// ---------- 会话外只读能力(AI/CLI 信息通道;不经会话,独立短连接,白名单限 moduleRoots) ----------
+// ---------- 会话外只读能力(AI/CLI 信息通道;不经会话,独立短连接,白名单限登录区源码目录) ----------
 
 // SourceResult 会话外源码读取结果(带行段裁剪,避免大文件整读灌满 AI 上下文)。
 type SourceResult struct {
@@ -450,8 +462,8 @@ type SourceResult struct {
 // maxSourceFileBytes 会话外读取的文件大小上限(源码一般远小于此)。
 const maxSourceFileBytes = 4 << 20
 
-// ReadSourceStandalone 用独立短连接读取 moduleRoots 内的源码文件。
-//   - path 非空:直接按路径读(白名单校验 moduleRoots 前缀);
+// ReadSourceStandalone 用独立短连接读取登录区源码目录(动态 ERP/COM)内的源码文件。
+//   - path 非空:直接按路径读(白名单校验源码目录前缀);
 //   - path 为空:file(如 asf_bsft001_wf.4gl)按 sourceCandidatePaths 候选解析,module 可空(仅查公共目录);
 //   - from/to(1-based):返回行段(from<=0 从头,to<=0 到底),行文本超长截断防注入超长行。
 //
@@ -465,7 +477,10 @@ func (m *Manager) ReadSourceStandalone(module, file, path string, from, to int) 
 		return nil, fmt.Errorf("SSH 连接失败: %w", err)
 	}
 	defer conn.Close()
-	m.ensureRuntimeEnv(conn)
+	// 动态路径(登录区域 → 环境脚本):探针+缓存;失败即报错(无静态配置可回退)
+	if err := m.ensureRuntimeEnv(conn); err != nil {
+		return nil, err
+	}
 	cl, err := conn.SFTP()
 	if err != nil {
 		return nil, fmt.Errorf("打开 SFTP 失败: %w", err)
@@ -486,7 +501,7 @@ func (m *Manager) ReadSourceStandalone(module, file, path string, from, to int) 
 		return data, mt, err
 	}
 
-	// 路径白名单:必须在 moduleRoots 之内
+	// 路径白名单:必须在登录区源码目录之内
 	inRoots := func(p string) bool {
 		for _, root := range roots {
 			if strings.HasPrefix(p, root+"/") {
@@ -502,7 +517,7 @@ func (m *Manager) ReadSourceStandalone(module, file, path string, from, to int) 
 	)
 	if path != "" {
 		if !inRoots(path) {
-			return nil, fmt.Errorf("路径不在 moduleRoots 内: %s", path)
+			return nil, fmt.Errorf("路径不在登录区源码目录内: %s", path)
 		}
 		data, mt, err = readOne(path)
 		if err != nil {
@@ -582,8 +597,12 @@ func (m *Manager) ResolveJob(module, prog string) *JobInfo {
 		out.Note = "作业名非标准标识符,跳过库解析"
 		return out
 	}
-	// resolveJobWith 内部含 连库→gzzz_t→42r 校验,失败时返回空串(不抛)
-	mod, run, ref, extra := m.resolveJobWith(m.cfg, module, prog)
+	// resolveJobWith 内部含 连库→gzzz_t→42r 校验;动态路径/连接失败(err)或解析失败(空串)都提示
+	mod, run, ref, extra, rerr := m.resolveJobWith(m.cfg, module, prog)
+	if rerr != nil {
+		out.Note = "无法获取该环境 T100 路径: " + rerr.Error()
+		return out
+	}
 	if run == "" {
 		out.Note = "未能按 gzzz_t 解析(连库失败或未命中);将按作业名直接启动"
 		return out

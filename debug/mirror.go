@@ -57,9 +57,6 @@ func MirrorPull(e *NamedSsh, mirrorDir string, full bool) (*MirrorStats, error) 
 	if err != nil {
 		return nil, err
 	}
-	if top == "" {
-		return nil, fmt.Errorf("环境 %q 无法确定服务器顶级目录(topDir 未配置且区域 %q 探测失败)", e.Name, e.Zone)
-	}
 	st.TopDir = top
 
 	tag := mirrorTagRe.ReplaceAllString(e.Name, "")
@@ -124,21 +121,15 @@ func logfMirror(format string, args ...any) {
 	fmt.Fprintf(os.Stderr, "[mirror] "+format+"\n", args...)
 }
 
-// mirrorTopDir 确定打包根:显式 topDir > 区域静态表 > SSH 登录探测(Runtime.TOP)。
-// 恒烁 zone "1"/"2" 等不在静态表内且未显式配置时必须探测,失败不兜底。
+// mirrorTopDir 确定打包根:仅 SSH 登录探测(Runtime.TOP)——T100 路径无静态配置,
+// 一律按登录区域动态获取;探测失败即报错。
 func mirrorTopDir(conn *SSHConn, e *NamedSsh) (string, error) {
-	if e.TopDir != "" {
-		return strings.TrimSuffix(e.TopDir, "/"), nil
-	}
-	if td := zoneTopDir[e.Zone]; td != "" {
-		return td, nil
-	}
 	if conn == nil || e.Zone == "" {
-		return "", nil
+		return "", fmt.Errorf("环境 %q 缺少登录区域(zone),无法探测 T100 目录", e.Name)
 	}
 	env, err := probeTEnv(conn, e.Zone)
 	if err != nil {
-		return "", fmt.Errorf("登录探测区域 %q 的 T100 目录失败(环境未配置 topDir): %w", e.Zone, err)
+		return "", fmt.Errorf("环境 %s(zone %s)登录探测 T100 目录失败: %w", e.Name, e.Zone, err)
 	}
 	return strings.TrimSuffix(env.TOP, "/"), nil
 }
