@@ -98,14 +98,14 @@ func numField(v any) int {
 // debugSourceCmd 读服务器源码:GET /api/source-file(会话外白名单只读,支持行段)
 var debugSourceCmd = &cobra.Command{
 	Use:   "source [DVM文件]",
-	Short: "读取服务器源码(moduleRoots 白名单只读,可指定行段)",
+	Short: "读取服务器源码(登录区源码目录白名单只读,可指定行段)",
 	Long: `经 serve 独立短连接读取服务器上的 4GL 源码(不经会话、不执行任何命令,
-仅白名单只读 moduleRoots 目录;文件不存在/越界都有明确报错)。
+仅白名单只读登录区源码目录(ERP/COM);文件不存在/越界都有明确报错)。
 
 参数:
-  文件名       如 asf_bsft001_wf.4gl(按 moduleRoots 候选路径解析)
+  文件名       如 asf_bsft001_wf.4gl(按登录区源码目录候选路径解析)
   --module     模块目录名(帮助定位;可省,仅在公共目录搜索)
-  --path       绝对路径(必须在 moduleRoots 内,跳过文件名解析)
+  --path       绝对路径(必须在登录区源码目录内,跳过文件名解析)
   --from/--to  只返回 1-based 行段(默认全文;大文件建议限行省上下文)
 
 用途:AI 推理需要看函数体/调用链全文时,用它读源码,而不必依赖 list 的 10 行窗口。`,
@@ -373,7 +373,7 @@ func dbgReportStopIfStopped(id, cmd string) error {
 
 func init() {
 	debugSourceCmd.Flags().StringVarP(&dbgSourceModule, "module", "m", "", "模块目录名(帮助定位源码)")
-	debugSourceCmd.Flags().StringVar(&dbgSourcePath, "path", "", "绝对路径读取(须在 moduleRoots 内)")
+	debugSourceCmd.Flags().StringVar(&dbgSourcePath, "path", "", "绝对路径读取(须在登录区源码目录内)")
 	debugSourceCmd.Flags().IntVar(&dbgSourceFrom, "from", 0, "返回起始行(1-based;0=文件头)")
 	debugSourceCmd.Flags().IntVar(&dbgSourceTo, "to", 0, "返回结束行(1-based;0=文件尾)")
 	debugLogsCmd.Flags().IntVarP(&dbgLogsTail, "tail", "n", 0, "返回最近 N 条(默认 30)")

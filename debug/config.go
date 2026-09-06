@@ -51,11 +51,11 @@ func (e EntValue) Int() (int, bool) {
 
 // NamedSsh 服务器/调试环境:SSH 连接 + 登录区域 + 默认企业(TOPENT)。
 // 数据库连接经 DBConn 引用顶层 connections 条目(名称),详情在设置页 DB 页维护。
+// T100 路径(topDir/moduleRoots)不允许静态配置:登录后按 zone 动态获取,失败即报错。
 type NamedSsh struct {
 	Name            string `json:"name"`
 	SSHConfig                // 匿名嵌入:host/port/user/password 提升到 ssh 层
 	Zone            string `json:"zone,omitempty"` // 登录后区域菜单代码:31开发 35测试 36正式 39PATCH t出货
-	TopDir          string `json:"topDir,omitempty"` // 区域顶级目录覆盖(如 /u1/topprd;留空按 zone 推导)
 	Topent          EntValue `json:"topent,omitempty"` // 默认企业编号(TOPENT);调试会话 export 用
 	LaunchArgs      string              `json:"launchArgs,omitempty"`
 	WatchdogSeconds int                 `json:"watchdogSeconds,omitempty"`
@@ -74,7 +74,6 @@ type Config struct {
 	Listen          string     `json:"listen"`              // HTTP 监听地址
 	LaunchArgs      string     `json:"launchArgs"`          // 作业启动参数默认模板,{prog} 替换为作业名(ssh 可覆盖)
 	WatchdogSeconds int        `json:"watchdogSeconds"`     // 停站停留超时默认(秒);ssh 可覆盖
-	ModuleRoots     []string   `json:"moduleRoots"`         // 源码查找根目录覆盖(留空按区域推导)
 	FGLServer       string     `json:"fglserver"`           // 留空使用 T100 按 SSH 来源 IP 自动设置
 	TermWidth       int        `json:"termWidth"`
 	TermHeight      int        `json:"termHeight"`
@@ -85,19 +84,9 @@ type Config struct {
 	// ---- 运行时(合并结果,json:"-" 不持久化) ----
 	SSH      SSHConfig             `json:"-"` // 生效 SSH(activeEnv 合并)
 	Zone     string                `json:"-"` // 生效登录区域
-	TopDir   string                `json:"-"` // 生效区域顶级目录(按 zone 推导;动态获取后由 Runtime 覆盖)
 	Topent   EntValue              `json:"-"` // 生效默认企业(调试会话 export TOPENT)
 	DB       *dbconfig.Connection `json:"-"` // 生效数据库连接(activeEnv 的 ssh.db 深拷贝;nil=该 ssh 未挂库)
-	Runtime  *RuntimeEnv          `json:"-"` // 登录后动态获取的 T100 路径(探针/选区回显);nil=用静态配置兜底
-}
-
-// zoneTopDir 区域代码 → T100 顶级目录(默认推导)
-var zoneTopDir = map[string]string{
-	"31": "/u1/t35dev",
-	"35": "/u1/t35tst",
-	"36": "/u1/t35prd",
-	"39": "/u1/t35pth",
-	"t":  "/u1/topprd",
+	Runtime  *RuntimeEnv          `json:"-"` // 登录后动态获取的 T100 路径(探针/选区回显);nil=尚未获取,需登录探测
 }
 
 // zoneTNSName 区域代码 → 数据库 TNS 别名推导(31→t35dev,35→t35tst,36→t35prd,
@@ -128,11 +117,8 @@ func (c *Config) applySsh(e *NamedSsh) {
 	if e.Zone != "" {
 		c.Zone = e.Zone
 	}
-	if e.TopDir != "" {
-		c.TopDir = e.TopDir
-	}
 	c.Topent = e.Topent
-	// 换环境 = 换服务器/区域:清动态路径,下次探针/选区回显重新获取
+	// 换环境 = 换服务器/区域:清动态路径,登录后重新获取
 	c.Runtime = nil
 	if e.LaunchArgs != "" {
 		c.LaunchArgs = e.LaunchArgs
@@ -224,9 +210,6 @@ func (c *Config) BPsPersisted() bool {
 }
 
 func (c *Config) fillDefaults() {
-	if c.TopDir == "" && c.Zone != "" {
-		c.TopDir = zoneTopDir[c.Zone]
-	}
 	if c.Listen == "" {
 		c.Listen = DefaultListen
 	}
@@ -235,10 +218,6 @@ func (c *Config) fillDefaults() {
 	}
 	if c.WatchdogSeconds == 0 {
 		c.WatchdogSeconds = 180
-	}
-	if len(c.ModuleRoots) == 0 && c.TopDir != "" {
-		// com/wss 是 WebService 程序(wssp* / awsp*)的专用模块目录
-		c.ModuleRoots = []string{c.TopDir + "/erp", c.TopDir + "/com", c.TopDir + "/com/wss"}
 	}
 	if c.TermWidth == 0 {
 		c.TermWidth = 200
@@ -254,38 +233,35 @@ func (c *Config) fillDefaults() {
 	}
 }
 
-// TopDirActual 返回生效的区域顶级目录:动态获取(登录后 TOP)优先,静态配置兜底
+// TopDirActual 返回登录后动态获取的区域顶级目录(TOP)。
+// 未获取(Runtime 为 nil)时返回空串——调用方须先确保动态环境已获取,不得回退静态路径。
 func (c *Config) TopDirActual() string {
-	if c.Runtime != nil && c.Runtime.TOP != "" {
+	if c.Runtime != nil {
 		return c.Runtime.TOP
 	}
-	return c.TopDir
+	return ""
 }
 
-// ModuleRootsActual 返回生效的源码查找根目录:动态获取(ERP/COM)优先,静态配置兜底
+// ModuleRootsActual 返回登录后动态获取的源码查找根目录(ERP/COM/wss)。
+// 未获取时返回 nil——调用方须先确保动态环境已获取,不得回退静态路径。
 func (c *Config) ModuleRootsActual() []string {
 	if c.Runtime != nil && c.Runtime.ERP != "" {
 		// com/wss 是 WebService 程序(wssp* / awsp*)的专用模块目录
 		return []string{c.Runtime.ERP, c.Runtime.COM, c.Runtime.COM + "/wss"}
 	}
-	return c.ModuleRoots
+	return nil
 }
 
 // Top 返回区域顶级目录(去尾斜杠)
 func (c *Config) Top() string { return c.TopDirActual() }
 
 // CloneWithZone 复制配置并覆盖区域(启动参数 --zone 用):
-// 连带推导 TopDir 与 ModuleRoots,其余字段原样共享
+// 区域变了,登录后的动态路径需重新获取(Runtime 置空),不做任何静态推导。
 func (c *Config) CloneWithZone(zone string) *Config {
 	c2 := *c
 	if zone != "" && zone != c.Zone {
 		c2.Zone = zone
 		c2.Runtime = nil // 区域变了,动态路径需重新获取
-		if td := zoneTopDir[zone]; td != "" {
-			c2.TopDir = td
-			// com/wss 是 WebService 程序的专用模块目录(与 fillDefaults 同规则)
-			c2.ModuleRoots = []string{td + "/erp", td + "/com", td + "/com/wss"}
-		}
 	}
 	return &c2
 }

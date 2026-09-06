@@ -26,7 +26,6 @@ interface SshItem {
   user: string
   password: string
   zone: string
-  topDir: string
   topent: string
   db: SshDb | null
 }
@@ -44,7 +43,7 @@ const input = 'h-7 text-xs'
 const cell = 'h-7 w-full min-w-0 text-xs'
 
 const blankDb = (): SshDb => ({ type: 'oracle', host: '', port: 1521, service: '', database: '', accounts: [] })
-const blankSsh = (): SshItem => ({ name: '', host: '', port: 22, user: '', password: '', zone: '36', topDir: '', topent: '', db: null })
+const blankSsh = (): SshItem => ({ name: '', host: '', port: 22, user: '', password: '', zone: '36', topent: '', db: null })
 
 export function SettingsView() {
   const theme = useStore((s) => s.theme)
@@ -78,7 +77,7 @@ export function SettingsView() {
         const d = e.db
         return {
           name: e.name || '', host: e.host || '', port: e.port || 22, user: e.user || '', password: e.password || '',
-          zone: e.zone || '', topDir: e.topDir || '', topent: e.topent != null ? String(e.topent) : '',
+          zone: e.zone || '', topent: e.topent != null ? String(e.topent) : '',
           db: d ? {
             type: d.type || 'oracle', host: d.host || '', port: d.port || 0,
             service: d.service || '', database: d.database || '',
@@ -116,7 +115,6 @@ export function SettingsView() {
             name: sshName(x), host: x.host, port: x.port || 22, user: x.user, password: x.password,
           }
           if (x.zone.trim()) o.zone = x.zone.trim()
-          if (x.topDir.trim()) o.topDir = x.topDir.trim()
           if (x.topent.trim()) o.topent = x.topent.trim()
           if (x.db) {
             const db: Record<string, any> = { type: x.db.type || 'oracle', host: x.db.host.trim(), port: x.db.port || 0 }
@@ -369,7 +367,6 @@ export function SettingsView() {
                           </button>
                         </div>
                       </Field>
-                      <Field label="区域顶级目录(留空按区域推导)" className="col-span-2"><Input className={cell} placeholder="如 /u1/topprd" value={cur.topDir} onChange={(e) => patchSsh(selSsh, { topDir: e.target.value.trim() })} /></Field>
                       <Field label="TOPENT(默认企业;调试会话 export,数字或文本)" className="col-span-2"><Input className={cell} value={cur.topent} onChange={(e) => patchSsh(selSsh, { topent: e.target.value })} /></Field>
                       <p className="col-span-2 text-muted-foreground">
                         调试会话按该服务器登录(区域/TOPENT)。该环境的数据库连接在「数据库」Tab 维护(一对一)。

@@ -317,7 +317,7 @@ func (s *Session) launchInner(ctx context.Context) error {
 	}
 
 	if !s.booted {
-		// 预登录解析(动态探针/静态兜底路径);失败不中断——登录后真实环境再重试一次
+		// 预登录解析(探针缓存动态路径,可能尚不可用);失败不中断——登录后真实环境再试
 		if s.Module == "" {
 			if mod, err := s.resolveModule(launchProg); err == nil {
 				s.setResolvedModule(launchProg, mod)
@@ -328,8 +328,8 @@ func (s *Session) launchInner(ctx context.Context) error {
 		if err := s.bootHost(ctx); err != nil {
 			return err
 		}
-		// 登录后补一次模块解析:选区后的 TOP/ERP/COM 最权威,预登录探测/静态兜底
-		// 不可靠(如区域与服务器菜单映射不一致)时在这里用真实环境纠正
+		// 登录后补一次模块解析:选区后的 TOP/ERP/COM 最权威,预登录探测不可靠时
+		// (如区域与服务器菜单映射不一致)在这里用真实环境纠正
 		if s.Module == "" && s.cfg.Runtime != nil && s.cfg.Runtime.valid() {
 			if mod, err := s.resolveModule(launchProg); err == nil {
 				s.setResolvedModule(launchProg, mod)
@@ -395,9 +395,10 @@ func (s *Session) bootHost(ctx context.Context) error {
 	}
 	s.markShellReady()
 	// 2.5 回读登录后的权威 T100 路径(选区后环境变量,与标准 debug 同源)。
-	// 覆盖静态/探针值,后续源码搜索/启动目录/ReadPath 白名单全部用它
+	// T100 路径只来自登录动态获取:回读失败即登录失败,无静态配置可回退
 	if err := s.readRuntimeEnv(); err != nil {
-		s.emitEvent(Event{Type: "log", Text: "T100 环境回读失败,用配置路径兜底: " + err.Error()})
+		return fmt.Errorf("登录 %s(环境 %s,zone %s)后回读 T100 路径失败: %w",
+			s.cfg.SSH.Host, s.envName, s.cfg.Zone, err)
 	}
 	s.mu.Lock()
 	s.booted = true
@@ -679,7 +680,7 @@ func (s *Session) entryStopInfo() *StopInfo {
 
 // readRuntimeEnv 在选区后的 shell 里回显关键 T100 环境变量并写入 cfg.Runtime。
 // 选区后是真实登录环境(与标准 debug 完全同源),是路径的最权威来源;
-// 失败时调用方回退静态配置(探针/zoneTopDir)。
+// 失败由调用方(bootHost)作为登录失败报错——T100 路径无静态配置可回退。
 func (s *Session) readRuntimeEnv() error {
 	probe := `echo TDICT_BEGIN; echo TDICT_TOP=$TOP; echo TDICT_ERP=$ERP; echo TDICT_COM=$COM; echo TDICT_FGLDIR=$FGLDIR; echo TDICT_FGLRESOURCEPATH=$FGLRESOURCEPATH; echo TDICT_END`
 	if err := s.pty.Write(probe + "\r"); err != nil {
@@ -719,7 +720,7 @@ func (s *Session) readRuntimeEnv() error {
 	}
 }
 
-// fglsourcePathOf 按实际启动目录拼源码搜索路径(公共库仍在 TopDir/com 下)
+// fglsourcePathOf 按实际启动目录拼源码搜索路径(公共库仍在 TOP/com 下,TOP 为登录动态获取)
 func (s *Session) fglsourcePathOf(dir string) string {
 	top := s.cfg.TopDirActual()
 	dirs := []string{
@@ -739,7 +740,7 @@ func (s *Session) fglsourcePathOf(dir string) string {
 	return out
 }
 
-// resolveModule 按程序名在 moduleRoots 各模块的 42r 目录中搜索 <prog>.42r:
+// resolveModule 按程序名在登录区源码目录各模块的 42r 目录中搜索 <prog>.42r:
 // 唯一命中 → 返回模块;标准/客制(ain/cin)并存 → 选客制(转客制后原版从 c** 目录启动);
 // 其余多命中 → 报出候选;无命中 → 报错
 func (s *Session) resolveModule(prog string) (string, error) {
@@ -749,10 +750,9 @@ func (s *Session) resolveModule(prog string) (string, error) {
 	found := searchModule42r(s.conn, s.cfg.ModuleRootsActual(), prog)
 	switch {
 	case len(found) == 0:
-		// 动态环境未解析时,模块查找走的是静态兜底路径(可能与该区域真实路径不一致),
-		// 给用户明确提示,避免把区域配置问题误判成"作业不存在"
+		// 防御:会话登录(bootHost)已保证动态环境解析成功;此处仅兜底提示
 		if s.cfg.Runtime == nil || !s.cfg.Runtime.valid() {
-			return "", fmt.Errorf("在各模块 42r 目录中未找到作业 %s(请检查作业名);且登录区域环境未动态解析(模块路径可能不准确,请核对设置中的登录区域)", prog)
+			return "", fmt.Errorf("会话缺少登录后动态解析的 T100 路径(环境 %s,zone %s),无法定位作业 %s;请重启会话后重试", s.envName, s.cfg.Zone, prog)
 		}
 		return "", fmt.Errorf("在各模块 42r 目录中未找到作业 %s(请检查作业名)", prog)
 	case len(found) > 1:
@@ -2031,7 +2031,7 @@ func (s *Session) ResolveSource(dvmFile, module string) (*SourceFile, error) {
 	return nil, fmt.Errorf("源码未找到(%s): %w", dvmFile, lastErr)
 }
 
-// ReadPath 读取任意路径(限制在配置的 moduleRoots 内,防止越权读文件)
+// ReadPath 读取任意路径(限制在登录区源码目录内,防止越权读文件)
 func (s *Session) ReadPath(path string) (*SourceFile, error) {
 	ok := false
 	for _, root := range s.cfg.ModuleRootsActual() {
@@ -2041,7 +2041,7 @@ func (s *Session) ReadPath(path string) (*SourceFile, error) {
 		}
 	}
 	if !ok {
-		return nil, fmt.Errorf("路径不在 moduleRoots 内: %s", path)
+		return nil, fmt.Errorf("路径不在登录区源码目录内: %s", path)
 	}
 	data, mt, err := s.ReadFile(path)
 	if err != nil {

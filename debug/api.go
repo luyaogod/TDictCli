@@ -182,14 +182,18 @@ func (s *Server) sessOf(w http.ResponseWriter, r *http.Request) *Session {
 // ---------- 会话 ----------
 
 func (s *Server) hStatus(w http.ResponseWriter, r *http.Request) {
-	writeJSON(w, 200, map[string]any{
+	m := map[string]any{
 		"server":   "tdict-debug",
 		"ssh":      s.cfg.SSH.Host,
 		"zone":     s.cfg.Zone,
-		"topDir":   s.cfg.TopDirActual(),
 		"listen":   s.cfg.Listen,
 		"watchdog": s.cfg.WatchdogSeconds,
-	})
+	}
+	// topDir 只在登录动态获取后才有意义(未登录无静态值);无会话/未探测时省略
+	if top := s.cfg.TopDirActual(); top != "" {
+		m["topDir"] = top
+	}
+	writeJSON(w, 200, m)
 }
 
 // hEvents 最近会话事件(tail):GET /api/events?tail=N,供 AI/CLI 观察"发生了什么"。
@@ -199,7 +203,7 @@ func (s *Server) hEvents(w http.ResponseWriter, r *http.Request) {
 }
 
 // hSourceFile 会话外白名单源码读取:GET /api/source-file?module=&file=&path=&from=&to=
-// (AI 信息通道;独立短连接,不经会话,路径限制在 moduleRoots)
+// (AI 信息通道;独立短连接,不经会话,路径限制在登录区源码目录)
 func (s *Server) hSourceFile(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	from, _ := strconv.Atoi(q.Get("from"))
