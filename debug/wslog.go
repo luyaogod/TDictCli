@@ -9,6 +9,7 @@ package debug
 // 重放调试 = 日志里内嵌的 `r.dg <作业> '<req>' '<rsp>'`:报文文件作 argv 重跑服务程序。
 
 import (
+	"tdict/host"
 	"fmt"
 	"regexp"
 	"strings"
@@ -61,7 +62,7 @@ type WSLogFilter struct {
 var reQBEValue = regexp.MustCompile(`^[0-9: -]{0,19}$`)
 
 // listWSLogs 查询接口日志列表(Oracle: rowid + OFFSET/FETCH;金仓: ctid + OFFSET/LIMIT)
-func listWSLogs(conn *SSHConn, dbc *dbRun, f WSLogFilter) (items []WSLogItem, hasMore bool, err error) {
+func listWSLogs(conn *host.SSHConn, dbc *dbRun, f WSLogFilter) (items []WSLogItem, hasMore bool, err error) {
 	size := f.PageSize
 	if size <= 0 || size > 500 {
 		size = 200
@@ -117,12 +118,12 @@ from wsfa_t wsfa where %s order by wsfa003 desc offset %d rows fetch first %d ro
 		out, err = dbc.exec(conn, connStr, sql, "", 40*time.Second)
 	}
 	if err != nil {
-		return nil, false, fmt.Errorf("查询 wsfa_t 失败: %w (%s)", err, firstLines(out, 3))
+		return nil, false, fmt.Errorf("查询 wsfa_t 失败: %w (%s)", err, host.FirstLines(out, 3))
 	}
 	var all []WSLogItem
 	for _, ln := range strings.Split(out, "\n") {
 		if strings.Contains(ln, "ORA-") {
-			return nil, false, fmt.Errorf("wsfa_t 查询出错: %s", firstLines(ln, 2))
+			return nil, false, fmt.Errorf("wsfa_t 查询出错: %s", host.FirstLines(ln, 2))
 		}
 		m := reWSLogRow.FindStringSubmatch(strings.TrimRight(ln, " \r"))
 		if m == nil {
@@ -142,7 +143,7 @@ from wsfa_t wsfa where %s order by wsfa003 desc offset %d rows fetch first %d ro
 }
 
 // WSLogDetail 取单条日志:列表字段 + 报文内容(CLOB 优先,文件回退)
-func WSLogDetail(conn *SSHConn, dbc *dbRun, rowid string) (*WSLogItem, *WSLogContent, error) {
+func WSLogDetail(conn *host.SSHConn, dbc *dbRun, rowid string) (*WSLogItem, *WSLogContent, error) {
 	if !reRowid.MatchString(rowid) {
 		return nil, nil, fmt.Errorf("rowid 格式非法")
 	}
@@ -167,12 +168,12 @@ from wsfa_t wsfa where rowid='%s';`, rowid)
 		out, err = dbc.exec(conn, connStr, sql, "", 30*time.Second)
 	}
 	if err != nil {
-		return nil, nil, fmt.Errorf("查询 wsfa_t 失败: %w (%s)", err, firstLines(out, 3))
+		return nil, nil, fmt.Errorf("查询 wsfa_t 失败: %w (%s)", err, host.FirstLines(out, 3))
 	}
 	var item *WSLogItem
 	for _, ln := range strings.Split(out, "\n") {
 		if strings.Contains(ln, "ORA-") {
-			return nil, nil, fmt.Errorf("wsfa_t 查询出错: %s", firstLines(ln, 2))
+			return nil, nil, fmt.Errorf("wsfa_t 查询出错: %s", host.FirstLines(ln, 2))
 		}
 		if m := reWSLogRow.FindStringSubmatch(strings.TrimRight(ln, " \r")); m != nil {
 			item = &WSLogItem{
@@ -269,7 +270,7 @@ select dbms_lob.substr(wsfa011,2000,1) from wsfa_t where rowid='%s' and wsfa011 
 
 // WriteReplayFiles 报文文件不存在时,把 CLOB 内容写到服务器临时文件供重放。
 // 返回可用的 (reqPath, rspPath, error);路径来自日志记录或新生成的临时文件。
-func WriteReplayFiles(conn *SSHConn, item *WSLogItem, content *WSLogContent) (reqPath, rspPath string, err error) {
+func WriteReplayFiles(conn *host.SSHConn, item *WSLogItem, content *WSLogContent) (reqPath, rspPath string, err error) {
 	sftp, err := conn.SFTP()
 	if err != nil {
 		return "", "", err

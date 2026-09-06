@@ -20,7 +20,7 @@ import (
 
 	"tdict/db"
 	"tdict/dbconfig"
-	"tdict/debug"
+	"tdict/host"
 	"tdict/live"
 )
 
@@ -96,7 +96,7 @@ func openRemoteSource(target string) error {
 	if err != nil {
 		return err
 	}
-	cfg, err := debug.LoadConfig(path)
+	cfg, err := host.LoadHosts(path)
 	if err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func openRemoteSource(target string) error {
 }
 
 // envDBByName 在 debug.sshs 中按环境名取该环境 db 的深拷贝。
-func envDBByName(cfg *debug.Config, name string) (*dbconfig.Connection, error) {
+func envDBByName(cfg *host.Hosts, name string) (*dbconfig.Connection, error) {
 	for i := range cfg.SSHs {
 		e := &cfg.SSHs[i]
 		if e.Name != name {

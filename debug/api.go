@@ -16,6 +16,7 @@ import (
 	"github.com/coder/websocket"
 
 	"tdict/dbconfig"
+	"tdict/host"
 	"tdict/erpdb"
 )
 
@@ -866,7 +867,7 @@ func (s *Server) hWSTest(w http.ResponseWriter, r *http.Request) {
 	if req.URL == "" {
 		req.URL = WSDefaultURLFor(s.cfg, req.Mode)
 	}
-	conn, err := Dial(s.cfg.SSH)
+	conn, err := host.Dial(s.cfg.SSH)
 	if err != nil {
 		fail(w, 500, fmt.Errorf("SSH 连接失败: %w", err))
 		return
@@ -895,7 +896,7 @@ func (s *Server) hWSLogs(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	page, _ := strconv.Atoi(q.Get("page"))
 	pageSize, _ := strconv.Atoi(q.Get("pageSize"))
-	conn, err := Dial(s.cfg.SSH)
+	conn, err := host.Dial(s.cfg.SSH)
 	if err != nil {
 		fail(w, 500, fmt.Errorf("SSH 连接失败: %w", err))
 		return
@@ -924,7 +925,7 @@ func (s *Server) hWSLogs(w http.ResponseWriter, r *http.Request) {
 // hWSLogContent GET /api/wslogs/content?rowid=
 func (s *Server) hWSLogContent(w http.ResponseWriter, r *http.Request) {
 	rowid := r.URL.Query().Get("rowid")
-	conn, err := Dial(s.cfg.SSH)
+	conn, err := host.Dial(s.cfg.SSH)
 	if err != nil {
 		fail(w, 500, fmt.Errorf("SSH 连接失败: %w", err))
 		return
@@ -951,7 +952,7 @@ func (s *Server) hWSLogDebug(w http.ResponseWriter, r *http.Request) {
 	if !readBody(w, r, &req) {
 		return
 	}
-	conn, err := Dial(s.cfg.SSH)
+	conn, err := host.Dial(s.cfg.SSH)
 	if err != nil {
 		fail(w, 500, fmt.Errorf("SSH 连接失败: %w", err))
 		return
@@ -1012,7 +1013,7 @@ func (s *Server) hSettingsGet(w http.ResponseWriter, r *http.Request) {
 
 // hDBProbe 设置页「自动获取数据库配置」:SSH 上服务器探测连接要素(只读)
 func (s *Server) hDBProbe(w http.ResponseWriter, r *http.Request) {
-	var req DBProbeReq
+	var req host.DBProbeReq
 	if !readBody(w, r, &req) {
 		return
 	}
@@ -1023,7 +1024,7 @@ func (s *Server) hDBProbe(w http.ResponseWriter, r *http.Request) {
 	if req.Type == "" {
 		req.Type = "oracle"
 	}
-	out, err := ProbeDBConfig(req)
+	out, err := host.ProbeDBConfig(req)
 	if err != nil {
 		fail(w, 502, err)
 		return
@@ -1033,7 +1034,7 @@ func (s *Server) hDBProbe(w http.ResponseWriter, r *http.Request) {
 
 // hDbAccVerify 设置页账号清单「验证」:SSH 上服务器以 账号/密码 连库 select 1(只读)
 func (s *Server) hDbAccVerify(w http.ResponseWriter, r *http.Request) {
-	var req DBAccVerifyReq
+	var req host.DBAccVerifyReq
 	if !readBody(w, r, &req) {
 		return
 	}
@@ -1048,7 +1049,7 @@ func (s *Server) hDbAccVerify(w http.ResponseWriter, r *http.Request) {
 	if req.Type == "" {
 		req.Type = "oracle"
 	}
-	if err := VerifyDBAcct(req); err != nil {
+	if err := host.VerifyDBAcct(req); err != nil {
 		writeJSON(w, 200, map[string]any{"ok": false, "error": err.Error()})
 		return
 	}

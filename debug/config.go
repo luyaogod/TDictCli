@@ -1,113 +1,48 @@
 package debug
 
-// 服务器环境(SSH)与数据库连接配置。config.json 顶层 "debug" 键。
-// 数据库连接不内嵌在环境中:统一存于顶层 "connections"(dbconfig 包),
-// SSH 环境经 DBConn 按名称引用 —— 调试/服务器侧连库用被引用连接的显式
-// host/port/service(库名)+ 账号清单;客户端直连(ping/--online/sync)用同一份列表。
-// Oracle 全部显式 host:port/service(EZCONNECT),tnsnames/chenv/ORA 环境读取
-// 仅作为「从服务器获取」的辅助手段,不参与运行时连接。
+// 服务器环境(SSH)与调试配置。config.json 顶层 "debug" 键。
+// 环境模型/连接/登录动态路径探测由 tdict/host 共享包承载(CLI 命令同样依赖它),
+// 本包 Config 在 host 类型之上追加 debug 专属参数与运行时合并结果。
+// T100 路径(topDir/moduleRoots)不允许静态配置:登录后按 zone 动态获取,失败即报错。
 
 import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strconv"
-	"strings"
 
 	"tdict/dbconfig"
+	"tdict/host"
 )
-
-// SSHConfig 远程服务器连接配置
-type SSHConfig struct {
-	Host     string `json:"host"`
-	Port     int    `json:"port"`
-	User     string `json:"user"`
-	Password string `json:"password"`
-}
-
-// EntValue 企业编号(TOPENT):数字或文本均可,兼容 JSON 数字。
-// 需真实编号的场景用 Int()(非数字返回 false)
-type EntValue string
-
-// UnmarshalJSON 同时接受 JSON 数字与字符串
-func (e *EntValue) UnmarshalJSON(b []byte) error {
-	s := strings.TrimSpace(string(b))
-	if s == "null" {
-		*e = ""
-		return nil
-	}
-	*e = EntValue(strings.Trim(s, `"`))
-	return nil
-}
-
-// MarshalJSON 统一序列化为字符串
-func (e EntValue) MarshalJSON() ([]byte, error) { return json.Marshal(string(e)) }
-
-// Int 解析为数字(供数据库探测按企业编号匹配;非数字内容返回 false)
-func (e EntValue) Int() (int, bool) {
-	n, err := strconv.Atoi(strings.TrimSpace(string(e)))
-	return n, err == nil
-}
-
-// NamedSsh 服务器/调试环境:SSH 连接 + 登录区域 + 默认企业(TOPENT)。
-// 数据库连接经 DBConn 引用顶层 connections 条目(名称),详情在设置页 DB 页维护。
-// T100 路径(topDir/moduleRoots)不允许静态配置:登录后按 zone 动态获取,失败即报错。
-type NamedSsh struct {
-	Name            string `json:"name"`
-	SSHConfig                // 匿名嵌入:host/port/user/password 提升到 ssh 层
-	Zone            string `json:"zone,omitempty"` // 登录后区域菜单代码:31开发 35测试 36正式 39PATCH t出货
-	Topent          EntValue `json:"topent,omitempty"` // 默认企业编号(TOPENT);调试会话 export 用
-	LaunchArgs      string              `json:"launchArgs,omitempty"`
-	WatchdogSeconds int                 `json:"watchdogSeconds,omitempty"`
-	DB              *dbconfig.Connection `json:"db,omitempty"` // 该环境的数据库连接(与 SSH 一对一;显式 host/port/service|库名+账号列表)
-}
 
 // DefaultListen 是 serve 未显式配置监听地址时的默认地址。
 const DefaultListen = "127.0.0.1:28670"
 
 // Config debug 功能配置,存放在 config.json 顶层 "debug" 键。
-// 持久化字段 = 全局调试参数 + sshs 列表;SSH/Zone/Topent/DB 为运行时合并结果
+// 持久化字段 = 全局调试参数 + sshs 列表;SSH/Zone/Topent/DB/Runtime 为运行时合并结果
 // (ApplyActiveEnv 由活跃 ssh + dbConn 引用生成),不参与持久化。
 type Config struct {
-	SSHs            []NamedSsh `json:"sshs,omitempty"`      // 服务器环境列表(设置页 SSH 页维护)
-	ActiveEnv       string     `json:"activeEnv,omitempty"` // 当前生效的 ssh 名;空=取 sshs 首条
-	Listen          string     `json:"listen"`              // HTTP 监听地址
-	LaunchArgs      string     `json:"launchArgs"`          // 作业启动参数默认模板,{prog} 替换为作业名(ssh 可覆盖)
-	WatchdogSeconds int        `json:"watchdogSeconds"`     // 停站停留超时默认(秒);ssh 可覆盖
-	FGLServer       string     `json:"fglserver"`           // 留空使用 T100 按 SSH 来源 IP 自动设置
-	TermWidth       int        `json:"termWidth"`
-	TermHeight      int        `json:"termHeight"`
-	PrintElements   int        `json:"printElements"`      // fgldb 单次 print 的数组元素上限;0=默认 1000
-	PersistBPs      *bool      `json:"persistBreakpoints"` // 断点持久化开关(nil 视为 true)
-	DataDir         string     `json:"-"`                  // 数据目录(断点持久化等);serve 注入,空=禁用
+	SSHs            []host.NamedSsh `json:"sshs,omitempty"`      // 服务器环境列表(设置页 SSH 页维护)
+	ActiveEnv       string          `json:"activeEnv,omitempty"` // 当前生效的 ssh 名;空=取 sshs 首条
+	Listen          string          `json:"listen"`              // HTTP 监听地址
+	LaunchArgs      string          `json:"launchArgs"`          // 作业启动参数默认模板,{prog} 替换为作业名(ssh 可覆盖)
+	WatchdogSeconds int             `json:"watchdogSeconds"`     // 停站停留超时默认(秒);ssh 可覆盖
+	FGLServer       string          `json:"fglserver"`           // 留空使用 T100 按 SSH 来源 IP 自动设置
+	TermWidth       int             `json:"termWidth"`
+	TermHeight      int             `json:"termHeight"`
+	PrintElements   int             `json:"printElements"`      // fgldb 单次 print 的数组元素上限;0=默认 1000
+	PersistBPs      *bool           `json:"persistBreakpoints"` // 断点持久化开关(nil 视为 true)
+	DataDir         string          `json:"-"`                  // 数据目录(断点持久化等);serve 注入,空=禁用
 
 	// ---- 运行时(合并结果,json:"-" 不持久化) ----
-	SSH      SSHConfig             `json:"-"` // 生效 SSH(activeEnv 合并)
-	Zone     string                `json:"-"` // 生效登录区域
-	Topent   EntValue              `json:"-"` // 生效默认企业(调试会话 export TOPENT)
-	DB       *dbconfig.Connection `json:"-"` // 生效数据库连接(activeEnv 的 ssh.db 深拷贝;nil=该 ssh 未挂库)
-	Runtime  *RuntimeEnv          `json:"-"` // 登录后动态获取的 T100 路径(探针/选区回显);nil=尚未获取,需登录探测
-}
-
-// zoneTNSName 区域代码 → 数据库 TNS 别名推导(31→t35dev,35→t35tst,36→t35prd,
-// 39→t35pth,t→topprd)。仅「从服务器获取」辅助探测用——运行时连接一律显式 host/port/service。
-func zoneTNSName(zone string) string {
-	switch zone {
-	case "31":
-		return "t35dev"
-	case "35":
-		return "t35tst"
-	case "39":
-		return "t35pth"
-	case "t":
-		return "topprd"
-	default:
-		return "t35prd"
-	}
+	SSH     host.SSHConfig    `json:"-"` // 生效 SSH(activeEnv 合并)
+	Zone    string            `json:"-"` // 生效登录区域
+	Topent  host.EntValue     `json:"-"` // 生效默认企业(调试会话 export TOPENT)
+	DB      *dbconfig.Connection `json:"-"` // 生效数据库连接(activeEnv 的 ssh.db 深拷贝;nil=该 ssh 未挂库)
+	Runtime *host.RuntimeEnv  `json:"-"` // 登录后动态获取的 T100 路径(探针/选区回显);nil=尚未获取,需登录探测
 }
 
 // applySsh 把某 ssh 环境的连接与启动参数合并到运行时字段(activeEnv 与 CloneEnv 共用)
-func (c *Config) applySsh(e *NamedSsh) {
+func (c *Config) applySsh(e *host.NamedSsh) {
 	if e.Host != "" {
 		c.SSH = e.SSHConfig
 		if c.SSH.Port == 0 {
@@ -154,7 +89,7 @@ func (c *Config) ApplyActiveEnv() {
 }
 
 // SSHByName 按名取 SSH 连接;空名/未命中返回生效 SSH(合并后的 c.SSH)
-func (c *Config) SSHByName(name string) SSHConfig {
+func (c *Config) SSHByName(name string) host.SSHConfig {
 	if name != "" {
 		for _, s := range c.SSHs {
 			if s.Name == name {
@@ -182,7 +117,7 @@ func (c *Config) CloneEnv(name string) *Config {
 	if name == "" {
 		return nil
 	}
-	var hit *NamedSsh
+	var hit *host.NamedSsh
 	for i := range c.SSHs {
 		if c.SSHs[i].Name == name {
 			hit = &c.SSHs[i]
@@ -322,6 +257,3 @@ func LoadConfig(path string) (*Config, error) {
 	}
 	return cfg, nil
 }
-
-// Addr 返回 SSH 地址 host:port
-func (c *SSHConfig) Addr() string { return c.Host + ":" + strconv.Itoa(c.Port) }

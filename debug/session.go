@@ -1,6 +1,7 @@
 package debug
 
 import (
+	"tdict/host"
 	"context"
 	"errors"
 	"fmt"
@@ -181,8 +182,8 @@ type Session struct {
 	ArgsOverride string // 启动参数覆盖(接口日志重放调试:报文文件对);空 = 用 LaunchArgs 模板
 
 	cfg  *Config
-	conn *SSHConn
-	pty  *PTYSession
+	conn *host.SSHConn
+	pty  *host.PTYSession
 
 	mu       sync.Mutex
 	state    State
@@ -222,7 +223,7 @@ type Session struct {
 // cfg 做一份快照:会话跨多轮调试存在,设置热更新不应改变其连接目标与启动参数
 // (启动一轮时 Manager 会按最新生效配置重刷,见 SetRun)。
 func NewSession(cfg *Config, module, prog, runProg, launchRef, extraArgs string, emit func(Event)) (*Session, error) {
-	conn, err := Dial(cfg.SSH)
+	conn, err := host.Dial(cfg.SSH)
 	if err != nil {
 		return nil, fmt.Errorf("SSH 连接失败: %w", err)
 	}
@@ -308,7 +309,7 @@ func (s *Session) launchInner(ctx context.Context) error {
 	var resolveErr error
 
 	// 模块解析:已有动态路径(复用宿主登录环境/探测缓存)先试;登录后再用权威环境补一次
-	if s.Module == "" && s.cfg.Runtime != nil && s.cfg.Runtime.valid() {
+	if s.Module == "" && s.cfg.Runtime != nil && s.cfg.Runtime.Valid() {
 		if mod, err := s.resolveModule(launchProg); err == nil {
 			s.setResolvedModule(launchProg, mod)
 		} else {
@@ -330,7 +331,7 @@ func (s *Session) launchInner(ctx context.Context) error {
 		}
 		// 登录后补一次模块解析:选区后的 TOP/ERP/COM 最权威,预登录探测不可靠时
 		// (如区域与服务器菜单映射不一致)在这里用真实环境纠正
-		if s.Module == "" && s.cfg.Runtime != nil && s.cfg.Runtime.valid() {
+		if s.Module == "" && s.cfg.Runtime != nil && s.cfg.Runtime.Valid() {
 			if mod, err := s.resolveModule(launchProg); err == nil {
 				s.setResolvedModule(launchProg, mod)
 			} else {
@@ -385,12 +386,12 @@ func (s *Session) beginRun() {
 func (s *Session) bootHost(ctx context.Context) error {
 	// 1. 等区域菜单
 	// 菜单格式两种:109 那台 `(*)Exit`,金仓这台 `*)Exit`(无左括号)
-	if err := s.waitRegexp(reLoginMenu, 25*time.Second, "区域菜单"); err != nil {
+	if err := s.waitRegexp(host.ReLoginMenu, 25*time.Second, "区域菜单"); err != nil {
 		return err
 	}
 	s.pty.Write(s.cfg.Zone + "\r")
 	// 2. 等 shell 提示符
-	if err := s.waitRegexp(reShellPrompt, 25*time.Second, "shell 提示符"); err != nil {
+	if err := s.waitRegexp(host.ReShellPrompt, 25*time.Second, "shell 提示符"); err != nil {
 		return err
 	}
 	s.markShellReady()
@@ -421,15 +422,15 @@ func (s *Session) ensureShellForRun() error {
 	for {
 		select {
 		case ln := <-s.lines:
-			if reShellPrompt.MatchString(ln) {
+			if host.ReShellPrompt.MatchString(ln) {
 				s.markShellReady()
 				return nil
 			}
-			if isBarePrompt(ln) {
+			if host.IsBarePrompt(ln) {
 				if err := s.pty.Write("quit\r"); err != nil {
 					return err
 				}
-				if err := s.waitRegexp(reShellPrompt, 20*time.Second, "shell 提示符(退出残留调试器)"); err != nil {
+				if err := s.waitRegexp(host.ReShellPrompt, 20*time.Second, "shell 提示符(退出残留调试器)"); err != nil {
 					return err
 				}
 				s.markShellReady()
@@ -463,7 +464,7 @@ func (s *Session) startRun(ctx context.Context, launchProg string) error {
 		setup += "export TOPENT='" + strings.ReplaceAll(ent, "'", "") + "'\r\n"
 	}
 	s.pty.Write(setup)
-	if err := s.waitRegexp(reShellPrompt, 15*time.Second, "shell 提示符(cd)"); err != nil {
+	if err := s.waitRegexp(host.ReShellPrompt, 15*time.Second, "shell 提示符(cd)"); err != nil {
 		return err
 	}
 	// 4. 启动调试(launchProg 为 gzzz_t 解析出的实体程序;{prog} 仍传作业编号,与 gendbg 一致;
@@ -686,14 +687,14 @@ func (s *Session) readRuntimeEnv() error {
 	if err := s.pty.Write(probe + "\r"); err != nil {
 		return err
 	}
-	env := &RuntimeEnv{}
+	env := &host.RuntimeEnv{}
 	deadline := time.After(10 * time.Second)
 	for {
 		select {
 		case ln := <-s.lines:
 			ln = strings.TrimSpace(ln)
 			if ln == "TDICT_END" {
-				if !env.valid() {
+				if !env.Valid() {
 					return fmt.Errorf("未回显到 TOP/ERP(环境脚本未设置 $TOP?)")
 				}
 				s.mu.Lock()
@@ -751,7 +752,7 @@ func (s *Session) resolveModule(prog string) (string, error) {
 	switch {
 	case len(found) == 0:
 		// 防御:会话登录(bootHost)已保证动态环境解析成功;此处仅兜底提示
-		if s.cfg.Runtime == nil || !s.cfg.Runtime.valid() {
+		if s.cfg.Runtime == nil || !s.cfg.Runtime.Valid() {
 			return "", fmt.Errorf("会话缺少登录后动态解析的 T100 路径(环境 %s,zone %s),无法定位作业 %s;请重启会话后重试", s.envName, s.cfg.Zone, prog)
 		}
 		return "", fmt.Errorf("在各模块 42r 目录中未找到作业 %s(请检查作业名)", prog)
@@ -773,7 +774,7 @@ func (s *Session) resolveModule(prog string) (string, error) {
 
 // searchModule42r 在各模块根的 42r 目录中按 <prog>.42r 搜索,返回去重后的模块列表
 // (模块根直挂的 42r 记为 "";ls 部分 glob 未命中返回非零退出码,不能当作失败,只按输出解析)
-func searchModule42r(conn *SSHConn, roots []string, prog string) []string {
+func searchModule42r(conn *host.SSHConn, roots []string, prog string) []string {
 	if !reProgName.MatchString(prog) {
 		return nil
 	}
@@ -809,7 +810,7 @@ func searchModule42r(conn *SSHConn, roots []string, prog string) []string {
 }
 
 // modHas42r 校验 <topDir>/erp/<mod>/42r/<prog>.42r 是否存在
-func modHas42r(conn *SSHConn, topDir, mod, prog string) bool {
+func modHas42r(conn *host.SSHConn, topDir, mod, prog string) bool {
 	if mod == "" || !reProgName.MatchString(mod) || !reProgName.MatchString(prog) {
 		return false
 	}
@@ -1191,7 +1192,7 @@ func (s *Session) Locals() ([]VarItem, error) {
 	}
 	var out []VarItem
 	for _, ln := range r.Lines {
-		if isBarePrompt(ln) {
+		if host.IsBarePrompt(ln) {
 			continue
 		}
 		if m := reLocalVar.FindStringSubmatch(ln); m != nil {
@@ -1221,7 +1222,7 @@ func (s *Session) Globals(limit int) ([]VarDecl, int, error) {
 	}
 	var out []VarDecl
 	for _, ln := range r.Lines {
-		if strings.TrimSpace(ln) == "" || isBarePrompt(ln) || ln == "info variables" {
+		if strings.TrimSpace(ln) == "" || host.IsBarePrompt(ln) || ln == "info variables" {
 			continue // 空行/提示符/PTY 命令回显行
 		}
 		if m := reGlobalDecl.FindStringSubmatch(ln); m != nil {
@@ -1249,7 +1250,7 @@ func (s *Session) Sources() ([]string, error) {
 	seen := map[string]bool{}
 	for _, ln := range r.Lines {
 		ln = strings.TrimSpace(ln)
-		if ln == "" || isBarePrompt(ln) {
+		if ln == "" || host.IsBarePrompt(ln) {
 			continue
 		}
 		if strings.HasSuffix(ln, ":") && strings.Contains(ln, "Source files") {
@@ -1542,7 +1543,7 @@ func (s *Session) Raw(cmd string, timeout time.Duration) ([]string, error) {
 
 func (s *Session) pump() {
 	defer close(s.done)
-	pr := &LineParser{}
+	pr := &host.LineParser{}
 	buf := make([]byte, 8192)
 	for {
 		n, err := s.pty.Read(buf)
@@ -1553,7 +1554,7 @@ func (s *Session) pump() {
 			// 提示符后面没有换行:半行若已是提示符形态,立即出行
 			// (PS1 与 (fgldb) 都是"无换行"输出,否则永远等不到)
 			if partial := pr.PartialStr(); partial != "" {
-				if isBarePrompt(partial) || reShellPrompt.MatchString(partial) {
+				if host.IsBarePrompt(partial) || host.ReShellPrompt.MatchString(partial) {
 					s.onLine(pr.FlushPartial())
 				}
 			}
@@ -1641,7 +1642,7 @@ func (s *Session) onLine(ln string) {
 
 	// ---- 停站块收口:裸提示符 ----
 	if collect != nil {
-		if isBarePrompt(ln) {
+		if host.IsBarePrompt(ln) {
 			// 中断块没有位置头:从箭头行补行号(文件名协议未给,由 where/前端兜底)
 			if collect.reason == "interrupt" && collect.file == "" && collect.line == 0 {
 				for _, sl := range collect.source {
@@ -1704,7 +1705,7 @@ func (s *Session) onLine(ln string) {
 				pending.valueOn = true
 				pending.value.Reset()
 				pending.writeValue(m[2])
-			} else if pending.valueOn && !isBarePrompt(ln) {
+			} else if pending.valueOn && !host.IsBarePrompt(ln) {
 				pending.writeValue("\n" + ln)
 			}
 		case "break":
@@ -1724,12 +1725,12 @@ func (s *Session) onLine(ln string) {
 		}
 
 		// 完成条件
-		if reShellPrompt.MatchString(ln) {
+		if host.ReShellPrompt.MatchString(ln) {
 			// fgldb 已退出回到 shell(quit 后)
 			s.completePending(&execResult{Cmd: pending.cmd, SawShell: true, Err: pending.errText})
 			return
 		}
-		if isBarePrompt(ln) && pending.mode == waitPrompt {
+		if host.IsBarePrompt(ln) && pending.mode == waitPrompt {
 			s.completePending(&execResult{
 				Cmd: pending.cmd, Lines: pending.lines,
 				Frames: pending.frames, Value: pending.value.String(), BPs: pending.bps,
@@ -1744,12 +1745,12 @@ func (s *Session) onLine(ln string) {
 			return
 		}
 		// waitQuiet:出现任意实质输出即认为已接受(异步停站由泵兜底)
-		if pending.mode == waitQuiet && len(pending.lines) > 0 && !isBarePrompt(ln) && !strings.HasPrefix(ln, "(fgldb)") {
+		if pending.mode == waitQuiet && len(pending.lines) > 0 && !host.IsBarePrompt(ln) && !strings.HasPrefix(ln, "(fgldb)") {
 			s.completePending(&execResult{Cmd: pending.cmd, Lines: pending.lines})
 			s.setState(StateRunning)
 			return
 		}
-		if isBarePrompt(ln) && pending.mode == waitQuiet {
+		if host.IsBarePrompt(ln) && pending.mode == waitQuiet {
 			// run 失败/立即停站:回到 stopped
 			s.completePending(&execResult{Cmd: pending.cmd, Lines: pending.lines})
 			s.setState(StateStopped)
@@ -1764,7 +1765,7 @@ func (s *Session) onLine(ln string) {
 	// fglrun 未随程序退出)不在 idle 期补 quit——统一交给下次启动的
 	// ensureShellForRun 清理,避免与启动流程重复发 quit
 	if state == StateIdle {
-		if reShellPrompt.MatchString(ln) {
+		if host.ReShellPrompt.MatchString(ln) {
 			s.markShellReady()
 		}
 		return // idle 期其它输出(退出回显等)直接忽略
@@ -1779,13 +1780,13 @@ func (s *Session) onLine(ln string) {
 		s.setState(StateRunning)
 		return
 	}
-	if isBarePrompt(ln) && state == StateRunning {
+	if host.IsBarePrompt(ln) && state == StateRunning {
 		// 程序停下但没有可识别的停站头(罕见)——保守置为 stopped
 		s.setState(StateStopped)
 		s.startWatchdog()
 		return
 	}
-	if reShellPrompt.MatchString(ln) && state == StateRunning {
+	if host.ReShellPrompt.MatchString(ln) && state == StateRunning {
 		// 程序运行中看到 shell 提示符 = 程序已退出回到 shell
 		s.markShellReady()
 		s.enterIdle("程序已退出,会话保留")
@@ -1893,7 +1894,7 @@ func (s *Session) waitBarePrompt(timeout time.Duration, what string) error {
 	for {
 		select {
 		case ln := <-s.lines:
-			if isBarePrompt(ln) {
+			if host.IsBarePrompt(ln) {
 				return nil
 			}
 		case <-deadline:

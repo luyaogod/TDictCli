@@ -1,10 +1,9 @@
-package debug
+package host
 
 import (
 	"fmt"
 	"io"
 	"log"
-	"strconv"
 	"sync"
 	"time"
 
@@ -126,6 +125,9 @@ func (c *SSHConn) Output(cmd string, timeout time.Duration) (string, error) {
 // Close 关闭连接
 func (c *SSHConn) Close() error { return c.cli.Close() }
 
+// Cfg 返回本连接的目标配置(供外部判断连接归属)
+func (c *SSHConn) Cfg() SSHConfig { return c.cfg }
+
 // PTYSession 交互式终端会话
 type PTYSession struct {
 	sess   *ssh.Session
@@ -147,6 +149,3 @@ func (p *PTYSession) Close() {
 	p.stdin.Close()
 	p.sess.Close()
 }
-
-// itoa 小工具
-func itoa(i int) string { return strconv.Itoa(i) }

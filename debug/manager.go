@@ -1,6 +1,7 @@
 package debug
 
 import (
+	"tdict/host"
 	"fmt"
 	"io"
 	"log"
@@ -32,7 +33,7 @@ type Manager struct {
 const maxBufferedEvents = 4000
 
 type cachedEnv struct {
-	env *RuntimeEnv
+	env *host.RuntimeEnv
 	at  time.Time
 }
 
@@ -48,15 +49,16 @@ func NewManager(cfg *Config) *Manager {
 // getRuntimeEnv 取 T100 动态环境:缓存命中直接返回;未命中(或过期)探针一次并缓存。
 // 失败返回错误(不缓存),调用方须报错,无静态配置可回退。key 按 服务器+账号+区域 区分
 // (用连接的真实 host,覆盖/多环境时不受 active 环境影响),换环境互不污染。
-func (m *Manager) getRuntimeEnv(conn *SSHConn, zone string) (*RuntimeEnv, error) {
-	key := conn.cfg.Host + "|" + conn.cfg.User + "|" + zone
+func (m *Manager) getRuntimeEnv(conn *host.SSHConn, zone string) (*host.RuntimeEnv, error) {
+	cc := conn.Cfg()
+	key := cc.Host + "|" + cc.User + "|" + zone
 	m.envMu.Lock()
-	if c, ok := m.envCache[key]; ok && time.Since(c.at) < 5*time.Minute && c.env.valid() {
+	if c, ok := m.envCache[key]; ok && time.Since(c.at) < 5*time.Minute && c.env.Valid() {
 		m.envMu.Unlock()
 		return c.env, nil
 	}
 	m.envMu.Unlock()
-	env, err := probeTEnv(conn, zone)
+	env, err := host.ProbeTEnv(conn, zone)
 	if err != nil {
 		return nil, err
 	}
@@ -67,8 +69,8 @@ func (m *Manager) getRuntimeEnv(conn *SSHConn, zone string) (*RuntimeEnv, error)
 }
 
 // ensureRuntimeEnv 确保 cfg.Runtime 有动态路径(探针+缓存);失败返回错误,无静态兜底。
-func (m *Manager) ensureRuntimeEnv(conn *SSHConn) error {
-	if m.cfg.Runtime != nil && m.cfg.Runtime.valid() {
+func (m *Manager) ensureRuntimeEnv(conn *host.SSHConn) error {
+	if m.cfg.Runtime != nil && m.cfg.Runtime.Valid() {
 		return nil
 	}
 	zone := m.cfg.Zone
@@ -227,7 +229,7 @@ func (m *Manager) resolveJobWith(cfg *Config, module, job string) (mod, prog, la
 	if cfg.DB == nil || !reProgName.MatchString(job) {
 		return "", "", "", "", nil
 	}
-	conn, err := Dial(cfg.SSH)
+	conn, err := host.Dial(cfg.SSH)
 	if err != nil {
 		return "", "", "", "", fmt.Errorf("SSH 连接失败: %w", err)
 	}
@@ -239,7 +241,7 @@ func (m *Manager) resolveJobWith(cfg *Config, module, job string) (mod, prog, la
 	// 动态路径(登录区域 → 环境脚本):按本次启动的区域探针+缓存(覆盖/多环境时不用
 	// 全局 active 区域),结果写入 cfg.Runtime——预会话模块解析/42r 校验直接用真实路径。
 	// 失败即报错:T100 路径只来自登录动态获取,无静态配置可回退
-	if cfg.Runtime == nil || !cfg.Runtime.valid() {
+	if cfg.Runtime == nil || !cfg.Runtime.Valid() {
 		env, perr := m.getRuntimeEnv(conn, zone)
 		if perr != nil {
 			return "", "", "", "", fmt.Errorf("无法获取环境 %s(zone %s)的 T100 路径: %w", cfg.EnvName(), zone, perr)
@@ -291,7 +293,7 @@ func (m *Manager) LaunchReplay(item *WSLogItem, content *WSLogContent) (*Session
 	} else if prog2 != "" {
 		module, runProg, launchRef, extra = mod2, prog2, ref2, extra2
 	}
-	conn, err := Dial(m.cfg.SSH)
+	conn, err := host.Dial(m.cfg.SSH)
 	if err != nil {
 		return nil, fmt.Errorf("SSH 连接失败: %w", err)
 	}
@@ -413,7 +415,7 @@ func (m *Manager) SourcePreview(module, prog string) (*SourceFile, error) {
 	if module == "" {
 		return nil, fmt.Errorf("module 为空,跳过源码预取")
 	}
-	conn, err := Dial(m.cfg.SSH)
+	conn, err := host.Dial(m.cfg.SSH)
 	if err != nil {
 		return nil, fmt.Errorf("SSH 连接失败: %w", err)
 	}
@@ -472,7 +474,7 @@ func (m *Manager) ReadSourceStandalone(module, file, path string, from, to int) 
 	if path == "" && file == "" {
 		return nil, fmt.Errorf("需要 file 或 path 参数")
 	}
-	conn, err := Dial(m.cfg.SSH)
+	conn, err := host.Dial(m.cfg.SSH)
 	if err != nil {
 		return nil, fmt.Errorf("SSH 连接失败: %w", err)
 	}
