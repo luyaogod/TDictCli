@@ -173,6 +173,20 @@ dzea_pk  U   dzea001
 | `-d <路径>` | 本地数据库路径（默认 erp_data.db） |
 | `--config <路径>` | 配置文件路径（默认 config.json） |
 
+## BDL 语言参考文档
+
+数据字典回答"这张表/字段/校验/消息是什么";**语言语法问题**(BDL 语句、内置函数、
+fgldb 调试器命令等)查项目内 BDL 语言参考文档:
+
+```bash
+tdict bdldoc dir    # 输出文档目录(第一行即路径;未设置则先执行 tdict bdldoc dir <目录>)
+```
+
+默认在仓库 `docs/bdl/`(Genero BDL 官方文档 markdown,无图片,约 5,200 篇):
+`08_language-basics`/`09_advanced-features`(语言基础/进阶)、`10_sql-support`(SQL 支持)、
+`15_library-reference`(内置函数/库)、`13_programming-tools`(fgldb 等工具)。读 .4gl 代码、
+解释语法结构、调试器命令不确定时,先在该目录检索再回答。
+
 ## 输出中的类型码
 
 `tdict rt` 输出的 **表类型**（每张表在系统里的角色）：

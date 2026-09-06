@@ -67,13 +67,13 @@ tdict debug topent
 # 设置会话级 TOPENT(仅会话空闲时;下一轮调试启动采用;值不限数字/文本)
 tdict debug topent 99
 
-# 清除会话级 override(回退到该环境 db.ent 的配置默认)
+# 清除会话级 override(回退到该环境 topent 的配置默认)
 tdict debug topent --clear
 ```
 
 - `env`/`topent` 都依赖运行中的 `tdict debug serve`,默认自动发现其地址。
 - `env <名称>` 会把目标环境设为默认并结束当前调试重连过去,切换前请确认无重要调试进行。
-- TOPENT 也可以在会话外由配置决定:每个环境的 `db.ent` 就是它的 TOPENT 默认值;
+- TOPENT 也可以在会话外由配置决定:每个环境 `debug.sshs[].topent` 就是它的 TOPENT 默认值;
   会话级 override 优先于配置默认,`--clear` 后回到配置默认。
 
 ## AI 信息通道(fgldb 原生命令给不了的信息)
@@ -85,7 +85,7 @@ tdict debug topent --clear
 # 可复取的停站现场:状态/停站位置/函数/原因/断点数/TOPENT(原生输出是瞬态的)
 tdict debug stop
 
-# 读服务器源码(白名单只读 moduleRoots,不经会话;支持行段,省上下文)
+# 读服务器源码(白名单只读登录区源码目录,不经会话;支持行段,省上下文)
 tdict debug source bsft001_wf.4gl -m asf          # 按模块解析候选路径读取
 tdict debug source --path /u1/topprd/erp/asf/4gl/asf_bsft001_wf.4gl
 tdict debug source bsft001_wf.4gl -m asf --from 4400 --to 4600
@@ -181,8 +181,9 @@ tdict debug wsdebug <rowid>
 
 ## 原生 fgldb 参考(Genero BDL User Guide 6.00 节选)
 
-> 来源:D:\T100\4gl文档\BDL-Markdown\13_programming-tools\
-> `2520-fgldb.md`(fgldb 工具页)与 `2586-debugger-commands.md`(Debugger commands 清单)。
+> 来源:项目内 BDL 语言参考文档 `docs/bdl/`(路径可用 `tdict bdldoc dir` 查看/设置,
+> 本技能来源时指向)下的 `13_programming-tools/2520-fgldb.md`(fgldb 工具页)与
+> `2586-debugger-commands.md`(Debugger commands 清单)。
 > `tdict debug exec "<命令>"` 等价于在原生 `(fgldb)` 提示符下逐条输入,输出为原生文本。
 
 ### fgldb — interface program for remote debugging

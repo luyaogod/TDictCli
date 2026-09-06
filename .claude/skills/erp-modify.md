@@ -94,3 +94,4 @@ section 标记为 `readonly="Y"` 的区段（如 `other_dialog`、`other_functio
 
 - 解读 ERP 源代码（表名/字段命名规范）：参见 [erp-read.md](erp-read.md)
 - 查询数据字典（表/字段中文含义）：参见 [tdict.md](tdict.md)
+- BDL 语言语法/内置函数参考：项目内 `docs/bdl`(路径用 `tdict bdldoc dir` 查/设)
