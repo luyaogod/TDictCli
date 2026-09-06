@@ -14,13 +14,13 @@ import (
 	"os"
 	"path/filepath"
 
-	"tdict/debug"
+	"tdict/host"
 
 	"github.com/spf13/cobra"
 )
 
 var (
-	mirrorCfg     *debug.Config
+	mirrorCfg     *host.Hosts
 	mirrorCfgPath string
 	mirrorFull    bool
 )
@@ -44,7 +44,7 @@ var mirrorCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		cfg, err := debug.LoadConfig(path)
+		cfg, err := host.LoadHosts(path)
 		if err != nil {
 			return err
 		}
@@ -111,20 +111,12 @@ func writeMirrorDir(dir string) error {
 }
 
 // mirrorEnv 按名(参数 > activeEnv > 首条)解析环境。
-func mirrorEnv(name string) (*debug.NamedSsh, error) {
-	target := name
-	if target == "" {
-		target = mirrorCfg.ActiveEnv
+func mirrorEnv(name string) (*host.NamedSsh, error) {
+	e := mirrorCfg.ByName(name)
+	if e == nil {
+		return nil, fmt.Errorf("未找到环境 %q(可用: tdict env 查看环境名)", name)
 	}
-	if target == "" && len(mirrorCfg.SSHs) > 0 {
-		target = mirrorCfg.SSHs[0].Name
-	}
-	for i := range mirrorCfg.SSHs {
-		if mirrorCfg.SSHs[i].Name == target {
-			return &mirrorCfg.SSHs[i], nil
-		}
-	}
-	return nil, fmt.Errorf("未找到环境 %q(可用: tdict debug env 查看环境名)", target)
+	return e, nil
 }
 
 // ---- mirror dir ----
@@ -193,7 +185,7 @@ var mirrorPullCmd = &cobra.Command{
 			mode = "全量"
 		}
 		fmt.Printf("正在拉取 %s 源码镜像(%s): %s -> %s\n", e.Name, mode, e.Host, filepath.Join(dir, e.Name))
-		st, err := debug.MirrorPull(e, dir, mirrorFull)
+		st, err := host.MirrorPull(e, dir, mirrorFull)
 		if err != nil {
 			return err
 		}

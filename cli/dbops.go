@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"tdict/dbconfig"
-	"tdict/debug"
+	"tdict/host"
 	"tdict/live"
 
 	"github.com/spf13/cobra"
@@ -124,9 +124,9 @@ var dbDiscoverCmd = &cobra.Command{
 		if typ == "" {
 			typ = "oracle"
 		}
-		req := debug.DBProbeReq{Host: ssh.Host, Port: ssh.Port, User: ssh.User,
+		req := host.DBProbeReq{Host: ssh.Host, Port: ssh.Port, User: ssh.User,
 			Password: ssh.Password, Zone: zone, Type: typ}
-		out, err := debug.ProbeDBConfig(req)
+		out, err := host.ProbeDBConfig(req)
 		if err != nil {
 			return err
 		}
@@ -168,14 +168,14 @@ func firstLine(s string) string {
 }
 
 // discoverSSHFromEnv 从 debug.sshs 找到匹配环境并返回 SSH+zone。
-func discoverSSHFromEnv(name string) (debug.SSHConfig, string, string, error) {
+func discoverSSHFromEnv(name string) (host.SSHConfig, string, string, error) {
 	cfgPath, err := resolveConfigPath(configPath)
 	if err != nil {
-		return debug.SSHConfig{}, "", "", err
+		return host.SSHConfig{}, "", "", err
 	}
-	cfg, err := debug.LoadConfig(cfgPath)
+	cfg, err := host.LoadHosts(cfgPath)
 	if err != nil {
-		return debug.SSHConfig{}, "", "", err
+		return host.SSHConfig{}, "", "", err
 	}
 	if name == "" {
 		name = cfg.ActiveEnv
@@ -193,14 +193,14 @@ func discoverSSHFromEnv(name string) (debug.SSHConfig, string, string, error) {
 				return s, e.Zone, e.Name, nil
 			}
 		}
-		return debug.SSHConfig{}, "", "", fmt.Errorf("未找到环境 %q(可 tdict debug env 查看)", name)
+		return host.SSHConfig{}, "", "", fmt.Errorf("未找到环境 %q(可 tdict env 查看)", name)
 	}
-	return debug.SSHConfig{}, "", "", fmt.Errorf("debug.sshs 未配置服务器环境")
+	return host.SSHConfig{}, "", "", fmt.Errorf("debug.sshs 未配置服务器环境")
 }
 
 // candidateConn 由探测结果构造连接要素(type/host/port/service|库名);
 // 账号列表不在此生成(独立维护,保存时保留原列表)。
-func candidateConn(out *debug.DBProbeOut) *dbconfig.Connection {
+func candidateConn(out *host.DBProbeOut) *dbconfig.Connection {
 	c := &dbconfig.Connection{Type: out.Type}
 	if out.Type == "kingbase" {
 		c.Host = discoverHost

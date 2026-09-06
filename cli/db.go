@@ -5,13 +5,13 @@ import (
 	"os"
 
 	"tdict/dbconfig"
-	"tdict/debug"
+	"tdict/host"
 
 	"github.com/spf13/cobra"
 )
 
 var (
-	dbCfg *debug.Config
+	dbCfg *host.Hosts
 )
 
 // dbCmd 管理 ERP 数据库连接(每个 SSH 环境一对一挂载的 db)与同步/在线查询。
@@ -35,7 +35,7 @@ ping (验证连接可达) / discover (SSH 自动发现连接要素并写入环�
 		if verbose {
 			fmt.Fprintf(os.Stderr, "[tdict] 配置文件: %s\n", path)
 		}
-		cfg, err := debug.LoadConfig(path)
+		cfg, err := host.LoadHosts(path)
 		if err != nil {
 			return err
 		}

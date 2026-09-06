@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"tdict/host"
 )
 
 // WS_ENDPOINTS 接口方式 → 服务端点(与 awsq990 的 wsfc001 映射一致)
@@ -28,7 +30,7 @@ func WSDefaultURLFor(cfg *Config, mode string) string {
 	if ep == "" {
 		ep = "awsp920"
 	}
-	return "http://127.0.0.1/w" + zoneTNSName(cfg.Zone) + "/ws/r/" + ep
+	return "http://127.0.0.1/w" + host.ZoneTNSName(cfg.Zone) + "/ws/r/" + ep
 }
 
 // WSTestResult 单次执行结果
@@ -41,7 +43,7 @@ type WSTestResult struct {
 
 // WSTest 执行一次接口调用:报文落服务器临时文件后 curl POST。
 // soap=true 时带 SOAPAction:"" 头(与 awsq990_req_test 一致)。
-func WSTest(conn *SSHConn, url, body string, soap bool, timeoutSec int) (*WSTestResult, error) {
+func WSTest(conn *host.SSHConn, url, body string, soap bool, timeoutSec int) (*WSTestResult, error) {
 	if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
 		return nil, fmt.Errorf("URL 必须以 http:// 或 https:// 开头")
 	}

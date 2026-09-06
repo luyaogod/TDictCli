@@ -1,4 +1,4 @@
-package debug
+package host
 
 // 本地源码镜像引擎:把某环境(T100 服务器)的 4gl/4fd 源码拉到本地镜像目录。
 //
@@ -127,7 +127,7 @@ func mirrorTopDir(conn *SSHConn, e *NamedSsh) (string, error) {
 	if conn == nil || e.Zone == "" {
 		return "", fmt.Errorf("环境 %q 缺少登录区域(zone),无法探测 T100 目录", e.Name)
 	}
-	env, err := probeTEnv(conn, e.Zone)
+	env, err := ProbeTEnv(conn, e.Zone)
 	if err != nil {
 		return "", fmt.Errorf("环境 %s(zone %s)登录探测 T100 目录失败: %w", e.Name, e.Zone, err)
 	}

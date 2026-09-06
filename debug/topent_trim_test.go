@@ -1,6 +1,7 @@
 package debug
 
 import (
+	"tdict/host"
 	"encoding/json"
 	"testing"
 )
@@ -20,10 +21,10 @@ func TestTopentTrimSemantics(t *testing.T) {
 	}
 }
 
-// EntValue JSON 兼容:旧配置数字 / 新文本 / null 均可解析;序列化统一为字符串
+// host.EntValue JSON 兼容:旧配置数字 / 新文本 / null 均可解析;序列化统一为字符串
 func TestEntValueJSON(t *testing.T) {
 	var c struct {
-		Ent EntValue `json:"ent"`
+		Ent host.EntValue `json:"ent"`
 	}
 	if err := json.Unmarshal([]byte(`{"ent": 99}`), &c); err != nil {
 		t.Fatalf("数字 JSON 应可解析: %v", err)
@@ -47,10 +48,10 @@ func TestEntValueJSON(t *testing.T) {
 	if string(out) != `{"ent":""}` {
 		t.Fatalf("序列化应为字符串: %s", out)
 	}
-	if n, ok := EntValue("42").Int(); !ok || n != 42 {
+	if n, ok := host.EntValue("42").Int(); !ok || n != 42 {
 		t.Fatalf("Int() 应解析数字")
 	}
-	if _, ok := EntValue("txt").Int(); ok {
+	if _, ok := host.EntValue("txt").Int(); ok {
 		t.Fatalf("非数字 Int() 应返回 false")
 	}
 }

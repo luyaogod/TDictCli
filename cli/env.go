@@ -11,14 +11,14 @@ import (
 	"fmt"
 	"os"
 
-	"tdict/debug"
+	"tdict/host"
 	"tdict/output"
 
 	"github.com/spf13/cobra"
 )
 
 var (
-	envCfg     *debug.Config
+	envCfg     *host.Hosts
 	envCfgPath string
 )
 
@@ -39,7 +39,7 @@ var envCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		cfg, err := debug.LoadConfig(path)
+		cfg, err := host.LoadHosts(path)
 		if err != nil {
 			return err
 		}

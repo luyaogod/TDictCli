@@ -4,14 +4,15 @@ import (
 	"testing"
 
 	"tdict/dbconfig"
+	"tdict/host"
 )
 
 // 单一常驻会话:目标身份判定/空闲宿主复用/环境克隆的纯逻辑单测
 // (SSH 登录等依赖真实 T100,不在此覆盖)
 
-func cfgFor(host, zone string) *Config {
+func cfgFor(h, zone string) *Config {
 	c := &Config{}
-	c.SSH = SSHConfig{Host: host, Port: 22, User: "u"}
+	c.SSH = host.SSHConfig{Host: h, Port: 22, User: "u"}
 	c.Zone = zone
 	c.fillDefaults()
 	return c
@@ -117,14 +118,19 @@ func TestTopentForRun(t *testing.T) {
 }
 
 func TestCloneEnvAndEnvName(t *testing.T) {
+	e1 := host.NamedSsh{Name: "E1", Zone: "35", Topent: "7"}
+	e1.Host = "e1h"
+	e1.Port = 22
+	e1.User = "u1"
+	e1.DB = &dbconfig.Connection{Type: "oracle", Host: "db1h", Port: 1521, Service: "s1"}
+	e2 := host.NamedSsh{Name: "E2", Zone: "36"}
+	e2.Host = "e2h"
+	e2.Port = 22
+	e2.User = "u2"
 	c := &Config{
-		SSH:  SSHConfig{Host: "top", Port: 22, User: "u"},
+		SSH:  host.SSHConfig{Host: "top", Port: 22, User: "u"},
 		Zone: "36",
-		SSHs: []NamedSsh{
-			{Name: "E1", SSHConfig: SSHConfig{Host: "e1h", Port: 22, User: "u1"}, Zone: "35", Topent: "7",
-				DB: &dbconfig.Connection{Type: "oracle", Host: "db1h", Port: 1521, Service: "s1"}},
-			{Name: "E2", SSHConfig: SSHConfig{Host: "e2h", Port: 22, User: "u2"}, Zone: "36"},
-		},
+		SSHs: []host.NamedSsh{e1, e2},
 	}
 	c.fillDefaults()
 

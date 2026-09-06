@@ -2,15 +2,12 @@ package debug
 
 import (
 	"regexp"
-	"strings"
 )
 
-// ---------- 协议锚点正则(全部来自 172.16.1.09 真机实测输出) ----------
+// ---------- fgldb 协议锚点正则(全部来自 172.16.1.09 真机实测输出) ----------
+// 终端共享件(LineParser/提示符判定/ANSI 剥离)已迁 tdict/host 包。
 
 var (
-	// ANSI 转义:CSI 序列 + 单字符转义(= > 等 keypad 模式)
-	ansiRe = regexp.MustCompile("\x1b\\[[0-9;?]*[a-zA-Z]|\x1b[=>]")
-
 	// 断点命中:`Breakpoint 1, asf_bsft001_wf.bsft001_wf_construct() at asf_bsft001_wf.4gl:4452`
 	reBreakHit = regexp.MustCompile(`^Breakpoint (\d+), (.+?) at (.+?):(\d+)\s*$`)
 	// 人工中断(SIGINT 后;终端 ^C 回显可能与字样合并为一行,用子串匹配)
@@ -19,10 +16,6 @@ var (
 	reStopHeader = regexp.MustCompile(`^([A-Za-z_][\w.]*)\(\) at (.+?):(\d+)\s*$`)
 	// 调用栈帧:`#0 asf_bsft001_wf.bsft001_wf_construct() at asf_bsft001_wf.4gl:4452`
 	reFrame = regexp.MustCompile(`^#(\d+)\s+(.+?)\s+at\s+(.+?):(\d+)\s*$`)
-	// (fgldb) 提示符:裸提示符(后随 ANSI 残留 = 或 >),命令回显行不算
-	rePrompt = regexp.MustCompile(`^\(fgldb\)\s*[=>]?\s*$`)
-	// shell 提示符:`<t35prd:/u1/t35prd> `
-	reShellPrompt = regexp.MustCompile(`<[A-Za-z0-9_.@-]+:[^>]*>\s*$`)
 	// 断点设置成功:`Breakpoint 1 at 0x00000000: file asf_bsft001_wf.4gl, line 4452.`
 	reBPSet = regexp.MustCompile(`^Breakpoint (\d+) at \S+: file (.+), line (\d+)\.`)
 	// print 结果:`$1 = "CNJ-ICC-250800000012"`(记录/数组为多行)
@@ -73,67 +66,4 @@ func matchFdbErr(ln string) string {
 		}
 	}
 	return ""
-}
-
-// isBarePrompt 判断是否为裸 (fgldb) 提示符(命令回显行不算)
-func isBarePrompt(ln string) bool { return rePrompt.MatchString(ln) }
-
-// StripANSI 剥离转义序列与残留控制字符(保留 \t)
-func StripANSI(s string) string {
-	s = ansiRe.ReplaceAllString(s, "")
-	return strings.Map(func(r rune) rune {
-		if r < 0x20 && r != '\t' {
-			return -1
-		}
-		return r
-	}, s)
-}
-
-// LineParser 把 PTY 字节流组装成完整行(处理跨包断行;\r 视为行结束)
-type LineParser struct {
-	cur strings.Builder
-}
-
-// Feed 喂入原始字节,返回已完成的行(已剥离 ANSI/控制字符,已 trim 尾部 \r)
-func (p *LineParser) Feed(data []byte) []string {
-	var out []string
-	for _, b := range data {
-		switch b {
-		case '\n':
-			out = append(out, p.flush())
-		case '\r':
-			// \r\n 或单独 \r 都视为行结束
-			out = append(out, p.flush())
-		default:
-			p.cur.WriteByte(b)
-		}
-	}
-	return out
-}
-
-// PartialStr 返回当前未完成半行的内容(不出行)
-func (p *LineParser) PartialStr() string {
-	if p.cur.Len() == 0 {
-		return ""
-	}
-	return StripANSI(p.cur.String())
-}
-
-// FlushPartial 强制出行半行(用于提示符检测:提示符后面没有换行)
-func (p *LineParser) FlushPartial() string {
-	if p.cur.Len() == 0 {
-		return ""
-	}
-	return p.flush()
-}
-
-// Rest 返回未完成的半行(供会话结束时输出)
-func (p *LineParser) Rest() string {
-	return p.FlushPartial()
-}
-
-func (p *LineParser) flush() string {
-	s := StripANSI(p.cur.String())
-	p.cur.Reset()
-	return strings.TrimRight(s, " ")
 }

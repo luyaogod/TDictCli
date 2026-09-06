@@ -1,4 +1,4 @@
-package debug
+package host
 
 import (
 	"fmt"
@@ -21,25 +21,21 @@ type RuntimeEnv struct {
 	FetchedAt       time.Time // 获取时间(缓存 TTL 判定)
 }
 
-// valid 动态环境是否可用
-func (e *RuntimeEnv) valid() bool { return e != nil && e.TOP != "" && e.ERP != "" }
+// Valid 动态环境是否可用
+func (e *RuntimeEnv) Valid() bool { return e != nil && e.TOP != "" && e.ERP != "" }
 
 var reTEnvKV = regexp.MustCompile(`^(TDICT_TOP|TDICT_ERP|TDICT_COM|TDICT_FGLDIR|TDICT_FGLRESOURCEPATH)=(\S*)\s*$`)
 
 // reZone 区域代码白名单(31/35/36/39/t/36k/1 等):允许数字/字母/下划线/连字符,防注入
 var reZone = regexp.MustCompile(`^[A-Za-z0-9_-]{1,16}$`)
 
-// reLoginMenu T100 登录区域菜单提示(两种站点格式:109 那台 `(*)Exit`,金仓这台 `*)Exit`)。
-// 探针与会话登录共用:出现即表示菜单就绪,可以敲入区域选项号。
-var reLoginMenu = regexp.MustCompile(`\(\*\)?\s*Exit|\*\)\s*Exit`)
-
-// probeTEnv 探测登录区域对应的 T100 环境变量。
+// ProbeTEnv 探测登录区域对应的 T100 环境变量。
 // 配置 zone 是「登录菜单选项号」(如恒烁 1/2/3/4、109 31/35/36/39),不是 ZONE 变量字符串;
 // 因此优先「真实登录」式探测:开 PTY 等登录菜单,敲入选项号,由登录脚本完成
 // 选项号→ZONE 字符串 的映射后回读 TOP/ERP/COM——与会话登录完全同源,各站点菜单自动适配。
 // 登录式失败(无菜单/菜单拒绝)回退旧版 chenv 链脚本(选项号直接当 ZONE,仅适用于
 // 菜单码与 ZONE 值重合的站点)。
-func probeTEnv(conn *SSHConn, zone string) (*RuntimeEnv, error) {
+func ProbeTEnv(conn *SSHConn, zone string) (*RuntimeEnv, error) {
 	if !reZone.MatchString(zone) {
 		return nil, fmt.Errorf("区域代码非法: %q", zone)
 	}
@@ -61,7 +57,7 @@ func probeTEnvLogin(conn *SSHConn, zone string) (*RuntimeEnv, error) {
 	done := make(chan struct{})
 	defer close(done)
 	defer pty.Close()
-	// 输出泵:与 Session.pump 同款——LineParser 按行/半行出行,提示符后面没有换行,
+	// 输出泵:LineParser 按行/半行出行,提示符后面没有换行,
 	// 半行已是提示符形态就立即出行(PS1 与 (fgldb) 都是"无换行"输出,否则永远等不到)
 	lineCh := make(chan string, 256)
 	go func() {
@@ -84,7 +80,7 @@ func probeTEnvLogin(conn *SSHConn, zone string) (*RuntimeEnv, error) {
 					}
 				}
 				if partial := pr.PartialStr(); partial != "" {
-					if isBarePrompt(partial) || reShellPrompt.MatchString(partial) {
+					if IsBarePrompt(partial) || ReShellPrompt.MatchString(partial) {
 						select {
 						case lineCh <- pr.FlushPartial():
 						case <-done:
@@ -115,7 +111,7 @@ func probeTEnvLogin(conn *SSHConn, zone string) (*RuntimeEnv, error) {
 		}
 	}
 	// 1. 登录区域菜单
-	if err := waitFor(reLoginMenu, 12*time.Second, "区域菜单"); err != nil {
+	if err := waitFor(ReLoginMenu, 12*time.Second, "区域菜单"); err != nil {
 		return nil, err
 	}
 	// 2. 敲入区域选项号(菜单码 → ZONE 字符串由登录脚本映射,与手工登录一致)
@@ -125,7 +121,7 @@ func probeTEnvLogin(conn *SSHConn, zone string) (*RuntimeEnv, error) {
 		return nil, err
 	}
 	// 3. 等 shell 提示符(选项号非法时登录脚本 *)exit,连接关闭会快速失败)
-	if err := waitFor(reShellPrompt, 15*time.Second, "shell 提示符"); err != nil {
+	if err := waitFor(ReShellPrompt, 15*time.Second, "shell 提示符"); err != nil {
 		return nil, err
 	}
 	// 4. 回显环境变量
@@ -143,7 +139,7 @@ func probeTEnvLogin(conn *SSHConn, zone string) (*RuntimeEnv, error) {
 			}
 			ln = strings.TrimSpace(ln)
 			if ln == "TDICT_END" {
-				if !env.valid() {
+				if !env.Valid() {
 					return nil, fmt.Errorf("回显未包含 TOP/ERP(区域 %s 环境脚本未加载?)", zone)
 				}
 				env.FetchedAt = time.Now()
@@ -223,7 +219,7 @@ func probeTEnvScript(conn *SSHConn, zone string) (*RuntimeEnv, error) {
 			}
 		}
 	}
-	if !env.valid() {
+	if !env.Valid() {
 		return nil, fmt.Errorf("未探测到 T100 环境变量(TOP 为空,区域 %s 环境脚本未加载?)", zone)
 	}
 	return env, nil
