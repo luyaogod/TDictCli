@@ -51,8 +51,10 @@ var specCmd = &cobra.Command{
 	Use:     "desc <table_name> [field_name]",
 	Aliases: []string{"spec"},
 	Short:   "查询数据库字段对应的前端规格",
-	Long: `查询字段规格表 (dzep_t) — 画面设计器生成画面时的参考配置。
-指定表名列出该表全部字段规格；再指定字段名显示单字段完整规格。`,
+	Long: `查询字段的画面规格:每个字段在画面上用什么控件(输入框/下拉/日期…)、
+下拉取哪个系统分类码、显示格式/宽度、必填、默认值、开窗与校验引用等
+(画面设计器按它生成画面)。
+指定表名列出该表全部字段规格;再指定字段名显示单字段完整规格。`,
 	Example: `  tdict desc oobd_t
   tdict desc oobd_t oobd002
   tdict desc oobd_t --json

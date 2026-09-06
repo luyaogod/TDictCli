@@ -60,13 +60,15 @@ type checkDetail struct {
 }
 
 var checkCmd = &cobra.Command{
-	Use:     "rv [dzcd001]",
+	Use:     "rv [识别码]",
 	Aliases: []string{"check"},
 	Short:   "查询校验带值定义",
-	Long: `查询 ERP 校验带值 (r.v) 定义。
-无参数时列出全部校验定义，可用 --kw 按识别码/说明过滤；
-指定 dzcd001 时显示完整详情: 校验 SQL 指令 (dzcd003)、外部参数 (dzce_t)、判断条件 (dzch_t)。
-数据来源: dzcd_t dzcdl_t dzce_t dzcel_t dzch_t，需先执行 tdict db sync 同步。`,
+	Long: `查询字段校验规则 (r.v):系统保存数据前的检查是可复用的校验模板,每条校验一个
+识别码,含要执行的校验 SQL(SQL 内用 <field>、arg1~9、:TODAY 等占位符,运行时代入)、
+外部参数与判断条件。
+无参数时列出全部校验定义(--kw 按识别码/说明过滤);指定识别码显示完整详情:
+校验 SQL 原文(附标签图例)、参数、判断条件与错误讯息。
+识别码形如 v_ooba002_07。`,
 	Example: `  tdict rv
   tdict rv --kw 料号
   tdict rv v_ooba002_07
