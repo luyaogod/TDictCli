@@ -50,11 +50,9 @@ type specTable struct {
 var specCmd = &cobra.Command{
 	Use:     "desc <table_name> [field_name]",
 	Aliases: []string{"spec"},
-	Short:   "查询字段规格 (dzep_t)",
+	Short:   "查询数据库字段对应的前端规格",
 	Long: `查询字段规格表 (dzep_t) — 画面设计器生成画面时的参考配置。
-指定表名列出该表全部字段规格；再指定字段名显示单字段完整规格。
-包含: 控件类型 (dzep010)、SCC码 (dzep011, 下拉数据源)、必填、格式、默认值、开窗、校验带值等。
-数据来源: dzep_t + dzeb_t/dzebl_t (字段名/说明) + dzea_t/dzeal_t (表说明)。`,
+指定表名列出该表全部字段规格；再指定字段名显示单字段完整规格。`,
 	Example: `  tdict desc oobd_t
   tdict desc oobd_t oobd002
   tdict desc oobd_t --json

@@ -13,7 +13,7 @@ import (
 var tableCmd = &cobra.Command{
 	Use:     "rt <table_name>",
 	Aliases: []string{"table"},
-	Short:   "查询数据表字典（表名、字段、键值、索引）",
+	Short:   "查询数据表字典",
 	Long: `查询一张或多张数据表的完整字典。
 返回内容包含: 表名/表说明、字段定义 (dzeb_t)、键值 (dzed_t)、索引 (dzec_t)。
 使用逗号分隔多个表名。输出使用简体中文 (zh_CN)。`,

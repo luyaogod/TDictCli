@@ -24,7 +24,7 @@ var (
 
 var envCmd = &cobra.Command{
 	Use:   "env [<环境名>]",
-	Short: "查看/设置默认环境(直接读写 config.json,无需 serve)",
+	Short: "查看/设置默认环境",
 	Long: `列出 config.json 中全部 SSH 环境与当前默认(activeEnv),或直接把默认环境写入配置。
 无参数 = 列出全部环境(带 * 为当前默认);带环境名 = 设为默认并持久化(校验名称存在)。
 本命令离线执行(同 mirror/db 组,只读改 config.json),不依赖 debug serve;

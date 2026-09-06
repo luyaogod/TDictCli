@@ -31,7 +31,7 @@ var (
 // debugCmd 覆盖 PersistentPreRunE:debug 功能不需要本地 SQLite
 var debugCmd = &cobra.Command{
 	Use:   "debug",
-	Short: "AI 人机协同调试 T100 作业(fgldb 协议驱动)",
+	Short: "调试T100作业",
 	Long: `通过 SSH 在 T100 服务器上驱动 fglrun -d 的 (fgldb) 文本调试协议,
 提供本地 Web 调试界面与命令行控制端(tdict debug start/exec/...),实现
 "人操作 GDC 界面 + AI 借助命令行检查分析"的人机协同调试。

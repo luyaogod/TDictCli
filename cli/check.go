@@ -62,7 +62,7 @@ type checkDetail struct {
 var checkCmd = &cobra.Command{
 	Use:     "rv [dzcd001]",
 	Aliases: []string{"check"},
-	Short:   "查询校验带值定义 (dzcd001)",
+	Short:   "查询校验带值定义",
 	Long: `查询 ERP 校验带值 (r.v) 定义。
 无参数时列出全部校验定义，可用 --kw 按识别码/说明过滤；
 指定 dzcd001 时显示完整详情: 校验 SQL 指令 (dzcd003)、外部参数 (dzce_t)、判断条件 (dzch_t)。

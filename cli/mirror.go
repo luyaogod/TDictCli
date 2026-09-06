@@ -239,7 +239,6 @@ var mirrorPathCmd = &cobra.Command{
 			fmt.Printf("(该环境尚未拉取;先执行 tdict mirror pull %s)\n", e.Name)
 			return nil
 		}
-		fmt.Printf("(已镜像;可执行 tdict mirror pull %s 更新)\n", e.Name)
 		return nil
 	},
 }

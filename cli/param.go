@@ -30,7 +30,7 @@ type docpObj struct {
 
 var syspCmd = &cobra.Command{
 	Use:   "sysp <编号>[,<编号>...]",
-	Short: "查询系统参数说明 (azzi990/gzsz_t: A/E/S 级参数定义)",
+	Short: "查询系统参数说明",
 	Long: `查询 T100 系统参数定义 (gzsz_t,作业 azzi990 维护) — 系统/企业/据点级参数
 (不含单据别参数 ooac_t,那是 azzi991/tdict docp 的范围)。
 参数编号形如 A-SYS-0100 / E-CIR-0001 / S-BAS-0028 (<型态码>-<领域3码>-<4位流水>;
@@ -51,7 +51,7 @@ var syspCmd = &cobra.Command{
 
 var docpCmd = &cobra.Command{
 	Use:   "docp <编号>[,<编号>...]",
-	Short: "查询单据参数说明 (azzi991/gzsz_t: D 级单据别参数 + 单据性质)",
+	Short: "查询单据参数说明",
 	Long: `查询 T100 单据别参数定义 (gzsz_t 的 ooac_t 群,作业 azzi991 维护) — 单据参数
 编号形如 D-MFG-0076 / D-BAS-0058 (<型态码 D>-<领域3码>-<4位流水>)。
 返回: 名称/说明 (gzszl_t 多语言)、输入型态/值域/预设值等定义,以及该参数绑定的
