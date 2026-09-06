@@ -1,0 +1,16 @@
+toc topics: 5196, pages converted: 5186
+orphans: 0
+images copied: 260, missing: 0
+errors: 0
+near-empty pages: 2
+  fgl-topics/c_gws_oauthapi_helper_examples.html
+  fgl-topics/c_gws_XML_attributes_043.html
+md files: 5187
+broken md links: 0
+broken image links: 0
+files with leftover block-level html: 5
+  11_user-interface\2383-web-component-html-layout.md
+  11_user-interface\2392-html-document-and-javascript-for-the-gicapi-object.md
+  11_user-interface\2411-example-1-calling-a-javascript-function.md
+  16_web-services\4745-upload-file-and-data-request.md
+  18_genero-web-applications\5154-index-tpl-html-file.md

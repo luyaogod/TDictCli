@@ -1,0 +1,5202 @@
+# Genero Business Development Language User Guide 6.00
+
+> Converted to Markdown from the official Four Js WebHelp edition.
+Each topic is one `.md` file with YAML front matter (`title`, `source`,
+`breadcrumb`). The tree below follows the official table of contents.
+
+- [Genero BDL User Guide](01_genero-bdl-user-guide/0001-genero-bdl-user-guide.md) — Manual organization at a glance.
+- [What's new in 6.00](02_what-s-new-in-6-00/0002-what-s-new-in-6-00.md) — Features added in 6.00 releases of the Genero Business Development Language.
+- [General](03_general/0003-general.md) — These topics provide an introduction to the Genero Business Development Language
+  - [Documentation conventions](03_general/0004-documentation-conventions.md) — Learn about documentation conventions regarding syntax, warnings and code examples.
+    - [Syntax diagrams](03_general/0005-syntax-diagrams.md) — A syntax diagram describes the context-free, abstract grammar of a product function.
+    - [Warnings, notes and tips](03_general/0006-warnings-notes-and-tips.md) — Documentation notes focus on a technical fact you must be aware of.
+    - [Code examples](03_general/0007-code-examples.md) — Code examples contain code that can be copied as-is.
+  - [Searching the documentation](03_general/0008-searching-the-documentation.md) — Tips to find what you are looking for in the documentation.
+  - [General terms used in this documentation](03_general/0009-general-terms-used-in-this-documentation.md) — This documentation uses general terms that must be clarified for a good understanding.
+  - [Other source of information](03_general/0010-other-source-of-information.md) — FourJs Development Tools provides other channels related to Genero BDL
+  - [Introduction to Genero BDL programming](03_general/0011-introduction-to-genero-bdl-programming.md) — Understand the basics about programming, compiling and deploying an application.
+    - [Overview of Genero BDL](03_general/0012-overview-of-genero-bdl.md) — Genero Business Development Language (BDL) is a program language designed to write an interactive database application.
+      - [Separation of business logic and user interface](03_general/0013-separation-of-business-logic-and-user-interface.md) — Genero BDL separates business logic and the user interface to provide maximum flexibility.
+      - [Portability - write once, deploy anywhere](03_general/0014-portability-write-once-deploy-anywhere.md) — Genero application can be deployed for different kinds of display devices, operating systems and database servers, by using the same source code.
+    - [Genero BDL concepts](03_general/0015-genero-bdl-concepts.md) — This section describes basic Genero language concepts.
+      - [Genero programs](03_general/0016-genero-programs.md) — Genero Business Development Language (BDL) is a programming language based on simple and readable syntax.
+      - [Integrated SQL support](03_general/0017-integrated-sql-support.md) — A set of SQL statements are part of the language syntax and can be used directly in the source code, as a normal procedural instruction.
+      - [XML support](03_general/0018-xml-support.md) — The language provides XML support through different classes, depending on your needs.
+      - [The user interface](03_general/0019-the-user-interface.md) — The Genero user interface technology is based on the sharing of an abstract representation between the runtime system and the front-end.
+      - [Language library](03_general/0020-language-library.md) — Several utility packages are provided to ease programming in different domains.
+      - [Windows and forms](03_general/0021-windows-and-forms.md) — Programs manipulate window and form objects to define display areas controlled by interactive statements.
+      - [Interactive instructions](03_general/0022-interactive-instructions.md) — Control application forms with interactive instructions that perform field input and action handling.
+      - [Responding to user actions](03_general/0023-responding-to-user-actions.md) — Clicking a form button or pressing a key triggers actions that can invoke the execution of program of code called action handlers. Form elements that can trigger actions are called action views.
+      - [Producing reports](03_general/0024-producing-reports.md) — The language allows you to implement reports easily, producing different sort of output formats.
+      - [Internationalization](03_general/0025-internationalization.md) — The language supports single-byte and multibyte internationalization.
+      - [Web services support](03_general/0026-web-services-support.md) — Implement Web services servers and clients with the Genero Web Services (GWS) library.
+      - [Extending the language](03_general/0027-extending-the-language.md) — You can extend the language using C or Java.
+      - [Programming tools](03_general/0028-programming-tools.md) — Genero BDL includes several programming tools in addition to compilers.
+      - [Compiling application sources](03_general/0029-compiling-application-sources.md) — You need to compile the source files in order to run the application.
+      - [Deploying application files](03_general/0030-deploying-application-files.md) — To deploy an application, you must deploy all of the required runtime and resource files. Many (but not all) of these files are compiled from the source files.
+- [Installation](04_installation/0031-installation.md) — This chapter contains installation and setup instructions.
+  - [Resources for upgrades](04_installation/0032-resources-for-upgrades.md) — Version-specific upgrade guides describe potential compatibility issues with new product releases.
+  - [Software requirements](04_installation/0033-software-requirements.md) — Before installing, ensure that your system meets the minimum system requirements and additional software.
+    - [Supported operating systems](04_installation/0034-supported-operating-systems.md) — Details of the supported operating systems for the Genero Business Development Language.
+    - [System packages](04_installation/0035-system-packages.md) — Some Genero BDL features need specific operating system packages.
+    - [Database client software](04_installation/0036-database-client-software.md) — To connect to a database server, the database client software must be installed on the system where you run the Genero BDL programs.
+    - [C compiler for C extensions](04_installation/0037-c-compiler-for-c-extensions.md) — Ensure you have a C compiler and linker to compile your C-Extensions.
+    - [Java runtime environment for FGL](04_installation/0038-java-runtime-environment-for-fgl.md) — Software requirements when using the Java Interface
+    - [IPv6 support with Genero](04_installation/0039-ipv6-support-with-genero.md) — Network interface configuration for IPv6 support
+  - [Platform specific notes](04_installation/0040-platform-specific-notes.md) — These notes provide operating system specific information to use Genero BDL on the platform.
+    - [IBM® AIX® platform notes](04_installation/0041-ibm-aix-platform-notes.md)
+    - [Apple® macOS® platform notes](04_installation/0042-apple-macos-platform-notes.md)
+    - [Microsoft™ Windows® platform notes](04_installation/0043-microsoft-windows-platform-notes.md)
+    - [SUSE® Linux Enterprise platform notes](04_installation/0044-suse-linux-enterprise-platform-notes.md)
+    - [Debian / Ubuntu Linux platform notes](04_installation/0045-debian-ubuntu-linux-platform-notes.md)
+    - [RHEL® / CentOS® / Rocky Linux® / Oracle Linux® platform notes](04_installation/0046-rhel-centos-rocky-linux-oracle-linux-platform-notes.md)
+    - [Web Services platform specific notes](04_installation/0047-web-services-platform-specific-notes.md)
+  - [Installing Genero BDL](04_installation/0048-installing-genero-bdl.md) — This section provides Genero BDL installation instructions.
+  - [Upgrading Genero BDL](04_installation/0049-upgrading-genero-bdl.md) — Genero BDL upgrading requires several steps to consider.
+  - [Install Genero Mobile for Android™](04_installation/0050-install-genero-mobile-for-android.md) — To build and package Genero Mobile for Android™ (GMA) applications, you must first install GMA.
+  - [Install Genero Mobile for iOS (single version)](04_installation/0051-install-genero-mobile-for-ios-single-version.md) — To build and package Genero Mobile for iOS (GMI) applications, you must first install GMI. This topic explains how to install a unique GMI version/package into FGLDIR.
+  - [Install Genero Mobile for iOS (multiple versions)](04_installation/0052-install-genero-mobile-for-ios-multiple-versions.md) — To build and package Genero Mobile for iOS (GMI) applications, you must first install GMI. This topic explains how to install multiple GMI versions/packages in parallel into different GMIDIR directories.
+  - [Install Genero Web Application](04_installation/0053-install-genero-web-application.md) — To build and package Genero Web applications, you must first install Genero Web Application (GWA).
+- [Upgrading](05_upgrading/0054-upgrading.md) — These topics talk about what steps you need to take to upgrade to the next release of Genero Business Development Language, and allows you to identify which features were added for a specific version.
+  - [New features of Genero BDL](05_upgrading/0055-new-features-of-genero-bdl.md) — These topics provide an look back at the new features introduced with each release of the Genero Business Development Language.
+    - [BDL 6.00 new features](05_upgrading/0056-bdl-6-00-new-features.md) — Features added in 6.00 releases of the Genero Business Development Language.
+    - [BDL 5.01 new features](05_upgrading/0057-bdl-5-01-new-features.md) — Features added in 5.01 releases of the Genero Business Development Language.
+    - [BDL 5.00 new features](05_upgrading/0058-bdl-5-00-new-features.md) — Features added in 5.00 releases of the Genero Business Development Language.
+    - [BDL 4.01 new features](05_upgrading/0059-bdl-4-01-new-features.md) — Features added in 4.01 releases of the Genero Business Development Language.
+    - [BDL 4.00 new features](05_upgrading/0060-bdl-4-00-new-features.md) — Features added in 4.00 releases of the Genero Business Development Language.
+    - [BDL 3.21 new features](05_upgrading/0061-bdl-3-21-new-features.md) — Features added in 3.21 releases of the Genero Business Development Language.
+    - [BDL 3.20 new features](05_upgrading/0062-bdl-3-20-new-features.md) — Features added in 3.20 releases of the Genero Business Development Language.
+    - [BDL 3.10 new features](05_upgrading/0063-bdl-3-10-new-features.md) — Features added in 3.10 releases of the Genero Business Development Language.
+    - [BDL 3.00 new features](05_upgrading/0064-bdl-3-00-new-features.md) — Features added in 3.00 releases of the Genero Business Development Language.
+    - [BDL 2.51 new features](05_upgrading/0065-bdl-2-51-new-features.md) — Features added in 2.51 releases of the Genero Business Development Language.
+    - [BDL 2.50 new features](05_upgrading/0066-bdl-2-50-new-features.md) — Features added in 2.50 releases of the Genero Business Development Language.
+    - [BDL 2.41 new features](05_upgrading/0067-bdl-2-41-new-features.md) — Features added in 2.41 releases of the Genero Business Development Language.
+    - [BDL 2.40 new features](05_upgrading/0068-bdl-2-40-new-features.md) — Features added in 2.40 releases of the Genero Business Development Language.
+    - [BDL 2.32 new features](05_upgrading/0069-bdl-2-32-new-features.md) — Features added in 2.32 releases of the Genero Business Development Language.
+    - [BDL 2.30 new features](05_upgrading/0070-bdl-2-30-new-features.md) — Features added in 2.30 releases of the Genero Business Development Language.
+    - [BDL 2.21 new features](05_upgrading/0071-bdl-2-21-new-features.md) — Features added in 2.21 releases of the Genero Business Development Language.
+    - [BDL 2.20 new features](05_upgrading/0072-bdl-2-20-new-features.md) — Features added in 2.20 releases of the Genero Business Development Language.
+    - [BDL 2.11 new features](05_upgrading/0073-bdl-2-11-new-features.md) — Features added in 2.11 releases of the Genero Business Development Language.
+    - [BDL 2.10 new features](05_upgrading/0074-bdl-2-10-new-features.md) — Features added in 2.10 releases of the Genero Business Development Language.
+    - [BDL 2.02 new features](05_upgrading/0075-bdl-2-02-new-features.md) — Features added in 2.02 releases of the Genero Business Development Language.
+    - [BDL 2.01 new features](05_upgrading/0076-bdl-2-01-new-features.md) — Features added in 2.01 releases of the Genero Business Development Language.
+    - [BDL 2.00 new features](05_upgrading/0077-bdl-2-00-new-features.md) — Features added in 2.00 releases of the Genero Business Development Language.
+    - [BDL 1.33 new features](05_upgrading/0078-bdl-1-33-new-features.md) — Features added in 1.33 releases of the Genero Business Development Language.
+    - [BDL 1.32 new features](05_upgrading/0079-bdl-1-32-new-features.md) — Features added in 1.32 release of the Genero Business Development Language.
+    - [BDL 1.31 new features](05_upgrading/0080-bdl-1-31-new-features.md) — Features added in 1.31 release of the Genero Business Development Language.
+    - [BDL 1.30 new features](05_upgrading/0081-bdl-1-30-new-features.md) — Features added in 1.30 releases of the Genero Business Development Language.
+    - [BDL 1.20 new features](05_upgrading/0082-bdl-1-20-new-features.md) — Features added in 1.20 releases of the Genero Business Development Language.
+    - [BDL 1.10 new features](05_upgrading/0083-bdl-1-10-new-features.md) — Features added in 1.10 releases of the Genero Business Development Language.
+  - [Upgrade Guides for Genero BDL](05_upgrading/0084-upgrade-guides-for-genero-bdl.md) — Provides information about product changes to be considered when migrating to a new version.
+    - [General BDL upgrade guide](05_upgrading/0085-general-bdl-upgrade-guide.md) — These topics describe general considerations when upgrading to a new version of Genero BDL.
+      - [Version number meaning](05_upgrading/0086-version-number-meaning.md) — A product version number identifies a specific release of the software product.
+      - [P-Code compatibility](05_upgrading/0087-p-code-compatibility.md) — P-Code incompatibility (within .42m files) may be introduced from version to version.
+      - [VM and front-end compatibility](05_upgrading/0088-vm-and-front-end-compatibility.md) — Always combine Genero Virtual Machine with the latest compatible Front-End.
+    - [BDL 6.00 upgrade guide](05_upgrading/0089-bdl-6-00-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 6.00.
+      - [Licensing tools requirements](05_upgrading/0090-licensing-tools-requirements.md) — Genero BDL V6.00 must be used with FLM V7.
+      - [Core language changes](05_upgrading/0091-core-language-changes.md) — Modifications to consider regarding the core language features and syntax.
+      - [Web Services changes](05_upgrading/0092-web-services-changes.md) — There are changes in support of web services in Genero 6.00.
+      - [Database drivers changes](05_upgrading/0093-database-drivers-changes.md) — New and desupported database drivers.
+      - [Presentation styles changes](05_upgrading/0094-presentation-styles-changes.md) — Modifications to consider when using presentation styles.
+      - [Front calls changes](05_upgrading/0095-front-calls-changes.md) — Modifications to consider when using front calls.
+      - [Web components changes](05_upgrading/0096-web-components-changes.md) — Modifications to consider when using web components.
+      - [Genero Mobile for Android™ (GMA) 6.00 changes](05_upgrading/0097-genero-mobile-for-android-gma-6-00-changes.md) — Modifications to consider when using the Genero Mobile for Android™.
+      - [Genero Mobile for iOS (GMI) 6.00 changes](05_upgrading/0098-genero-mobile-for-ios-gmi-6-00-changes.md) — Modifications to consider when using Genero Mobile for iOS.
+      - [Genero for Web Applications (GWA) 6.00 changes](05_upgrading/0099-genero-for-web-applications-gwa-6-00-changes.md) — Modifications to consider when using Genero for Web Applications.
+      - [Command tools changes](05_upgrading/0100-command-tools-changes.md) — Modifications to consider regarding command line tools.
+    - [BDL 5.01 upgrade guide](05_upgrading/0101-bdl-5-01-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 5.01.
+      - [Licensing tools requirements](05_upgrading/0102-licensing-tools-requirements.md) — Genero BDL V5.01 can be used with FLM V6 or V7.
+      - [Web Services changes](05_upgrading/0103-web-services-changes.md) — There are changes in support of web services in Genero 5.01.
+      - [Database drivers changes](05_upgrading/0104-database-drivers-changes.md) — New and desupported database drivers.
+      - [Presentation styles changes](05_upgrading/0105-presentation-styles-changes.md) — Modifications to consider when using presentation styles.
+      - [Front calls changes](05_upgrading/0106-front-calls-changes.md) — Modifications to consider when using front calls.
+      - [Web components changes](05_upgrading/0107-web-components-changes.md) — Modifications to consider when using web components.
+      - [Genero Mobile for Android™ (GMA) 5.01 changes](05_upgrading/0108-genero-mobile-for-android-gma-5-01-changes.md) — Consider these modifications when you use Genero Mobile for Android™.
+      - [Genero Mobile for iOS (GMI) 5.01 changes](05_upgrading/0109-genero-mobile-for-ios-gmi-5-01-changes.md) — Modifications to consider when using Genero Mobile for iOS.
+      - [Genero for Web Applications (GWA) 5.01 changes](05_upgrading/0110-genero-for-web-applications-gwa-5-01-changes.md) — Modifications to consider when using Genero for Web Applications.
+      - [Command tools changes](05_upgrading/0111-command-tools-changes.md) — Modifications to consider regarding command line tools.
+    - [BDL 5.00 upgrade guide](05_upgrading/0112-bdl-5-00-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 5.00.
+      - [Licensing tools requirements](05_upgrading/0113-licensing-tools-requirements.md) — Genero BDL V5.00 can be used with FLM V6 or V7.
+      - [Web Services changes](05_upgrading/0114-web-services-changes.md) — There are changes in support of web services in Genero 5.00.
+      - [Database drivers changes](05_upgrading/0115-database-drivers-changes.md) — New and desupported database drivers.
+      - [Presentation styles changes](05_upgrading/0116-presentation-styles-changes.md) — Modifications to consider when using presentation styles.
+      - [Front calls changes](05_upgrading/0117-front-calls-changes.md) — Modifications to consider when using front calls.
+      - [Web components changes](05_upgrading/0118-web-components-changes.md) — Modifications to consider when using web components.
+      - [Genero Mobile for Android™ (GMA) 5.00 changes](05_upgrading/0119-genero-mobile-for-android-gma-5-00-changes.md) — Modifications to consider when using the Genero Mobile for Android™.
+      - [Genero Mobile for iOS (GMI) 5.00 changes](05_upgrading/0120-genero-mobile-for-ios-gmi-5-00-changes.md) — Modifications to consider when using Genero Mobile for iOS.
+      - [Command tools changes](05_upgrading/0121-command-tools-changes.md) — Modifications to consider regarding command line tools.
+      - [ORACLE® BOOLEAN type](05_upgrading/0122-oracle-boolean-type.md) — Support for native Oracle SQL BOOLEAN type.
+    - [BDL 4.01 upgrade guide](05_upgrading/0123-bdl-4-01-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 4.01.
+      - [Licensing tools requirements](05_upgrading/0124-licensing-tools-requirements.md) — Genero BDL V4.01 can be used with FLM V6 or V7.
+      - [Web Services changes](05_upgrading/0125-web-services-changes.md) — There are changes in support of web services in Genero 4.01.
+      - [Database drivers changes](05_upgrading/0126-database-drivers-changes.md) — New and desupported database drivers.
+      - [Presentation styles changes](05_upgrading/0127-presentation-styles-changes.md) — Modifications to consider when using presentation styles.
+      - [Front calls changes](05_upgrading/0128-front-calls-changes.md) — Modifications to consider when using front calls.
+      - [Web components changes](05_upgrading/0129-web-components-changes.md) — Modifications to consider when using web components.
+      - [Genero Mobile for Android™ (GMA) 4.01 changes](05_upgrading/0130-genero-mobile-for-android-gma-4-01-changes.md) — Modifications to consider when using the Genero Mobile for Android™.
+      - [Genero Mobile for iOS (GMI) 4.01 changes](05_upgrading/0131-genero-mobile-for-ios-gmi-4-01-changes.md) — Modifications to consider when using Genero Mobile for iOS.
+    - [BDL 4.00 upgrade guide](05_upgrading/0132-bdl-4-00-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 4.00.
+      - [Licensing tools requirements](05_upgrading/0133-licensing-tools-requirements.md) — Genero BDL V4.00 can be used with FLM V6 or V7.
+      - [Universal Rendering as standard](05_upgrading/0134-universal-rendering-as-standard.md) — All front-ends (GDC, GAS, GMA, GMI) use now the GBC as rendering engine.
+      - [Removal of Windows Container Interface (WCI)](05_upgrading/0135-removal-of-windows-container-interface-wci.md) — The WCI is no longer supported.
+      - [Removal of parallel dialogs / splitviews](05_upgrading/0136-removal-of-parallel-dialogs-splitviews.md) — Parallel dialog and splitview features for mobile are no longer supported.
+      - [Web Services changes](05_upgrading/0137-web-services-changes.md) — There are changes in support of web services in Genero 4.00.
+      - [Genero Mobile for Android™ (GMA) 4.00 changes](05_upgrading/0138-genero-mobile-for-android-gma-4-00-changes.md) — Modifications to consider when using the Genero Mobile for Android™.
+      - [Genero Mobile for iOS (GMI) 4.00 changes](05_upgrading/0139-genero-mobile-for-ios-gmi-4-00-changes.md) — Modifications to consider when using Genero Mobile for iOS.
+      - [Mixed definitions](05_upgrading/0140-mixed-definitions.md) — Definition of functions, variables, constants and types can be mixed.
+      - [Record usage enhancements](05_upgrading/0141-record-usage-enhancements.md) — The .* notation for records in function calls and returns is discouraged.
+      - [Method chaining enhancements](05_upgrading/0142-method-chaining-enhancements.md) — Values returned from functions can be used to chain with method calls.
+      - [Presentation styles changes](05_upgrading/0143-presentation-styles-changes.md) — Modifications to consider when using presentation styles.
+      - [Front calls changes](05_upgrading/0144-front-calls-changes.md) — Modifications to consider when using front calls.
+      - [Web components changes](05_upgrading/0145-web-components-changes.md) — Modifications to consider when using web components.
+      - [Database drivers changes](05_upgrading/0146-database-drivers-changes.md) — New and desupported database drivers.
+      - [ORACLE® INTERVAL types](05_upgrading/0147-oracle-interval-types.md) — Better support for all kind of FGL INTERVAL types data storage with native ORACLE INTERVAL types.
+      - [SQL Server UTF-8 support](05_upgrading/0148-sql-server-utf-8-support.md) — Support for UTF-8 collation in CHAR/VARCHAR columns with SQL Server 2019.
+      - [Removal of AUI protocol compression](05_upgrading/0149-removal-of-aui-protocol-compression.md) — The AUI protocol compression is desupported.
+      - [Command tools changes](05_upgrading/0150-command-tools-changes.md) — Modifications to consider regarding command line tools.
+      - [FGLWRTUMASK removal](05_upgrading/0151-fglwrtumask-removal.md) — The FGLWRTUMASK environment variable is no longer supported.
+      - [DISPLAY ARRAY stops if container is hidden](05_upgrading/0152-display-array-stops-if-container-is-hidden.md) — The DISPLAY ARRAY dialog will now stop, if there is no record list container visible.
+    - [BDL 3.21 upgrade guide](05_upgrading/0153-bdl-3-21-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 3.21.
+      - [Licensing tools requirements](05_upgrading/0154-licensing-tools-requirements.md) — Genero BDL V3.21 can be used with FLM V6 or V7.
+      - [Web Services changes](05_upgrading/0155-web-services-changes.md) — There are changes in support of web services in Genero 3.21.
+      - [Database drivers changes](05_upgrading/0156-database-drivers-changes.md) — New and desupported database drivers.
+    - [BDL 3.20 upgrade guide](05_upgrading/0157-bdl-3-20-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 3.20.
+      - [Web Services changes](05_upgrading/0158-web-services-changes.md) — There are changes in support of web services in Genero 3.20.
+      - [Genero Mobile for Android™ (GMA) 1.40 changes](05_upgrading/0159-genero-mobile-for-android-gma-1-40-changes.md) — Modifications to consider when using the Genero Mobile for Android™.
+      - [Genero Mobile for iOS (GMI) 1.40 changes](05_upgrading/0160-genero-mobile-for-ios-gmi-1-40-changes.md) — Modifications to consider when using Genero Mobile for iOS.
+      - [Presentation styles changes](05_upgrading/0161-presentation-styles-changes.md) — Modifications to consider when using presentation styles.
+      - [Front calls changes](05_upgrading/0162-front-calls-changes.md) — Modifications to consider when using front calls.
+      - [Web components changes](05_upgrading/0163-web-components-changes.md) — Modifications to consider when using web components.
+      - [Database drivers changes](05_upgrading/0164-database-drivers-changes.md) — New and desupported database drivers.
+      - [DATETIME SQL type mappings](05_upgrading/0165-datetime-sql-type-mappings.md) — For some databases, the type mapping for DATETIME HOUR TO MINUTE has changed.
+      - [FreeTDS 1.00 for SQL Server](05_upgrading/0166-freetds-1-00-for-sql-server.md) — Genero 3.20 requires FreeTDS version 1.00+ to connect to SQL Server.
+      - [SQL Server drivers performance](05_upgrading/0167-sql-server-drivers-performance.md) — SQL Server ODI drivers based on FreeTDS, Easysoft and MS ODBC have been reviewed to achieve better execution times.
+      - [Performances with SQL interruption](05_upgrading/0168-performances-with-sql-interruption.md) — With some database drivers, performances can be impacted when using OPTIONS SQL INTERRUPT ON.
+      - [PostgreSQL 12 notes](05_upgrading/0169-postgresql-12-notes.md) — This topics contains notes about PostgreSQL 12 changes that affect Genero applications.
+      - [Sharing GLOBALS with C Extensions](05_upgrading/0170-sharing-globals-with-c-extensions.md) — Sharing of global variables with a C Extension is no longer supported.
+      - [Dynamic array assignment with .* notation](05_upgrading/0171-dynamic-array-assignment-with-notation.md) — The .* notation to assign dynamic arrays is discouraged.
+      - [Record copy without .* notation](05_upgrading/0172-record-copy-without-notation.md) — The .* notation to assign records is discouraged.
+      - [Circular dependency with IMPORT FGL](05_upgrading/0173-circular-dependency-with-import-fgl.md) — The compiler allows that two modules reference each other with IMPORT FGL.
+      - [Case insensitive names with UI methods](05_upgrading/0174-case-insensitive-names-with-ui-methods.md) — Methods of built-in classes using user interface object names are now case insensitive.
+      - [FLOAT/SMALLFLOAT to string conversion](05_upgrading/0175-float-smallfloat-to-string-conversion.md) — New FGLPROFILE entry fglrun.floatToCharScale2 for FLOAT/SMALLFLOAT types.
+      - [ORACLE rowid in sqlca.sqlerrm](05_upgrading/0176-oracle-rowid-in-sqlca-sqlerrm.md) — With ORACLE, the rowid of the last affected row is available in sqlca.sqlerrm.
+      - [Command tools changes](05_upgrading/0177-command-tools-changes.md) — Modifications to consider regarding command line tools.
+    - [BDL 3.10 upgrade guide](05_upgrading/0178-bdl-3-10-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 3.10.
+      - [Web Services changes](05_upgrading/0179-web-services-changes.md) — There are changes in support of web services in Genero 3.10.
+      - [Genero Mobile for Android™ (GMA) 1.30 changes](05_upgrading/0180-genero-mobile-for-android-gma-1-30-changes.md) — Modifications to consider when using the Genero Mobile for Android™.
+      - [Genero Mobile for iOS (GMI) 1.30 changes](05_upgrading/0181-genero-mobile-for-ios-gmi-1-30-changes.md) — Modifications to consider when using Genero Mobile for iOS.
+      - [C Extension changes](05_upgrading/0182-c-extension-changes.md) — Modifications to consider when using C Extensions
+      - [Java Inteface changes](05_upgrading/0183-java-inteface-changes.md) — There are changes in support of Java in Genero 3.10.
+      - [Presentation styles changes](05_upgrading/0184-presentation-styles-changes.md) — Modifications to consider when using presentation styles.
+      - [Front calls changes](05_upgrading/0185-front-calls-changes.md) — Modifications to consider when using front calls.
+      - [Web components changes](05_upgrading/0186-web-components-changes.md) — Modifications to consider when using web components.
+      - [Database drivers changes](05_upgrading/0187-database-drivers-changes.md) — New and desupported database drivers.
+      - [(GDC) Local Actions](05_upgrading/0188-gdc-local-actions.md) — The concept of "Local Actions" is now deprecated.
+      - [Microsoft ODBC Driver for SQL Server](05_upgrading/0189-microsoft-odbc-driver-for-sql-server.md) — Support for Microsoft® ODBC Driver for SQL Server
+      - [Unique TABINDEXes in a form](05_upgrading/0190-unique-tabindexes-in-a-form.md) — The TABINDEX values must be unique in a given form file.
+      - [Optional SCREEN RECORD size for lists](05_upgrading/0191-optional-screen-record-size-for-lists.md) — A SCREEN RECORD definition can omit the number of rows of the corresponding list container.
+      - [Type checking with fglcomp compiler](05_upgrading/0192-type-checking-with-fglcomp-compiler.md) — The fglcomp compiler is more strict regarding type checking.
+      - [Oracle DB Proxy Authentication](05_upgrading/0193-oracle-db-proxy-authentication.md) — Specifying a proxy user when connecting to Oracle® DB.
+      - [Temp table emulation with Oracle DB](05_upgrading/0194-temp-table-emulation-with-oracle-db.md) — Controlling the Oracle® schema and the tablespace for tables created by Informix® temporary table emulation.
+      - [Oracle® MySQL 5.7 and 8.0 support](05_upgrading/0195-oracle-mysql-5-7-and-8-0-support.md) — Support for Oracle® MySQL version 5.7 and 8.0
+      - [fglhint_* in SQL comments](05_upgrading/0196-fglhint-in-sql-comments.md) — Using SQL comment hints to control statement execution.
+      - [SCROLLGRID content is checked by fglform](05_upgrading/0197-scrollgrid-content-is-checked-by-fglform.md) — When using a SCROLLGRID, fglform compiler checks that it does not hold other list containers.
+      - [Default resource file search path](05_upgrading/0198-default-resource-file-search-path.md) — Search rules for program resource files have been enhanced in 3.10.
+      - [Using os.Path.pathType() on Windows](05_upgrading/0199-using-os-path-pathtype-on-windows.md) — How to identify absolute file paths on Windows®, whether using a drive letter or not.
+      - [New localStorage frontcalls](05_upgrading/0200-new-localstorage-frontcalls.md) — New localStorage frontcalls replace GAS specific session.setVar and session.getVar calls.
+      - [Wide Char mode of SNC driver](05_upgrading/0201-wide-char-mode-of-snc-driver.md) — The snc.widechar FGLPROFILE entry defaults to the right setting for the current application locale.
+      - [MariaDB 10.2 support](05_upgrading/0202-mariadb-10-2-support.md) — The new ODI driver dbmmdb_10_2 is provided to connect to MariaDB 10.2.
+      - [Program stop error message box](05_upgrading/0203-program-stop-error-message-box.md) — In GUI mode, runtime errors stopping the program are now displayed to the end user.
+      - [BUTTONEDIT and ON ACTION INFIELD](05_upgrading/0204-buttonedit-and-on-action-infield.md) — With ON ACTION INFIELD, a BUTTONEDIT action is now always considered as a field-qualified action.
+      - [File search with command line tools](05_upgrading/0205-file-search-with-command-line-tools.md) — Filename extensions are kept by command line tools.
+    - [BDL 3.00 upgrade guide](05_upgrading/0206-bdl-3-00-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 3.00.
+      - [Web Services changes](05_upgrading/0207-web-services-changes.md) — There are changes in support of web services in Genero 3.00.
+      - [Form definitions for mobile applications](05_upgrading/0208-form-definitions-for-mobile-applications.md) — Genero version 3 supports grid and stack-based layout for mobile applications.
+      - [Database drivers changes](05_upgrading/0209-database-drivers-changes.md) — Desupported database drivers.
+      - [Oracle DB NUMBER type](05_upgrading/0210-oracle-db-number-type.md) — The NUMBER/FLOAT Oracle® data type can now be extracted by fgldbsch to create .sch files.
+      - [Oracle DB scroll cursor emulation removal](05_upgrading/0211-oracle-db-scroll-cursor-emulation-removal.md) — The scroll cursor emulation has been removed in the Oracle® DB driver.
+      - [MySQL VARCHAR size limit](05_upgrading/0212-mysql-varchar-size-limit.md) — MySQL 5 VARCHAR columns can be used to store VARCHAR(N>255) values.
+      - [MySQL DATETIME fractional seconds](05_upgrading/0213-mysql-datetime-fractional-seconds.md) — MySQL 5.6.4 TIME and DATETIME types support fractions of seconds that can be used to store DATETIME HOUR TO FRACTION(N) or DATETIME YEAR TO FRACTION(N).
+      - [PostgreSQL DATETIME type mapping change](05_upgrading/0214-postgresql-datetime-type-mapping-change.md) — Conversion of DATETIME type with fractional seconds to PostgreSQL TIME(N)/TIMESTAMP(N) was invalid and has been reviewed.
+      - [MariaDB support](05_upgrading/0215-mariadb-support.md) — The MariaDB database is now supported by Genero 3.00.
+      - [FreeTDS driver supports SQL Server 2008, 2012, 2014](05_upgrading/0216-freetds-driver-supports-sql-server-2008-2012-2014.md) — The FreeTDS driver can now be used for SQL Server versions > 2005.
+      - [FGL_GETVERSION() built-in function](05_upgrading/0217-fgl-getversion-built-in-function.md) — The FGL_GETVERSION() function now returns the product version number (for example: 3.00.00).
+      - [Built-in front-end icons desupport](05_upgrading/0218-built-in-front-end-icons-desupport.md) — Image resources included in front-ends are desupported with Genero 3.00.
+      - [Presentation styles changes](05_upgrading/0219-presentation-styles-changes.md) — Deprecated and renamed presentation style attributes.
+      - [Front calls changes](05_upgrading/0220-front-calls-changes.md) — Describes changes applied to front calls.
+      - [SERIAL emulation with SQL Server](05_upgrading/0221-serial-emulation-with-sql-server.md) — The SERIAL and BIGSERIAL types can be emulated with triggers and sequences when using SQL Server 2012 and higher.
+      - [Improved compilation time](05_upgrading/0222-improved-compilation-time.md) — The fglcomp and fglform compilers have been reviewed to achieve faster compilation.
+      - [Preprocessor changes](05_upgrading/0223-preprocessor-changes.md) — Several bugs have been fixed in the preprocessor, that can now result in a compilation error.
+      - [Current system time in UTC](05_upgrading/0224-current-system-time-in-utc.md) — Use the util.Datetime.getCurrentAsUTC() method to get the current system date/time in UTC.
+      - [Structured ARRAYs in list dialogs](05_upgrading/0225-structured-arrays-in-list-dialogs.md) — ARRAYs with sub-records can be used in list dialogs, to simplify array definition based on database tables, requiring additional information at runtime.
+    - [BDL 2.51 upgrade guide](05_upgrading/0226-bdl-2-51-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 2.51.
+      - [Database drivers changes](05_upgrading/0227-database-drivers-changes.md) — Desupported database drivers.
+      - [New database driver name specification](05_upgrading/0228-new-database-driver-name-specification.md) — Allows database driver specification without target database version information.
+      - [The FIELD form item type and .val schema file](05_upgrading/0229-the-field-form-item-type-and-val-schema-file.md) — Form files using the FIELD item type and/or .val attribute definitions must be reviewed.
+      - [TRY/CATCH and ERROR LOG](05_upgrading/0230-try-catch-and-error-log.md) — Errors are no longer logged when raised in a TRY/CATCH block.
+      - [DATETIME types with SQLite](05_upgrading/0231-datetime-types-with-sqlite.md) — Better support for Informix® DATETIME types emulation within SQLite.
+      - [Desupport of C-Extension API functions](05_upgrading/0232-desupport-of-c-extension-api-functions.md) — BIGINT and BOOLEAN stack functions and C API functions for C-Extensions are no longer supported.
+    - [BDL 2.50 upgrade guide](05_upgrading/0233-bdl-2-50-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 2.50.
+      - [Web Services changes](05_upgrading/0234-web-services-changes.md) — There are changes in support of web services in Genero 2.50.
+      - [Database drivers changes](05_upgrading/0235-database-drivers-changes.md) — Desupported database drivers.
+      - [TEXT/BYTE support with FTM/ESM database drivers](05_upgrading/0236-text-byte-support-with-ftm-esm-database-drivers.md) — FTM and ESM database drivers TEXT/BYTE type mapping has changed.
+      - [Presentation styles changes](05_upgrading/0237-presentation-styles-changes.md) — Deprecated and renamed presentation style attributes.
+      - [Floating point to string conversion](05_upgrading/0238-floating-point-to-string-conversion.md) — The default formatting of a DECIMAL(P), SMALLFLOAT and FLOAT adapts to the significant digits of the value.
+      - [Implicit creation of certificates for HTTPS](05_upgrading/0239-implicit-creation-of-certificates-for-https.md) — Certificates for HTTPS are now created implicitly when nothing is specified in FGLPROFILE.
+      - [PostgreSQL schema extraction needs namespace](05_upgrading/0240-postgresql-schema-extraction-needs-namespace.md) — To extract a database schema from PostgreSQL, the fgldbsch tool now requires db namespace specification.
+      - [Client stubs managing multipart changes](05_upgrading/0241-client-stubs-managing-multipart-changes.md) — You must update client programs that call client stubs managing multipart.
+    - [BDL 2.41 upgrade guide](05_upgrading/0242-bdl-2-41-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 2.41.
+    - [BDL 2.40 upgrade guide](05_upgrading/0243-bdl-2-40-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 2.40.
+      - [Web Services changes](05_upgrading/0244-web-services-changes.md) — There are changes in support of web services in Genero 2.40.
+      - [Database drivers changes](05_upgrading/0245-database-drivers-changes.md) — Desupported database drivers.
+      - [Program size option removal (fglrun -s)](05_upgrading/0246-program-size-option-removal-fglrun-s.md) — The -s option of fglrun is no longer available.
+      - [Informix® SERIAL emulation with SQL Server](05_upgrading/0247-informix-serial-emulation-with-sql-server.md) — SERIAL type emulation has been enhanced for SQL Server.
+      - [SIZEPOLICY attribute removal for containers](05_upgrading/0248-sizepolicy-attribute-removal-for-containers.md) — The SIZEPOLICY attribute is no longer available for layout containers like TABLE / GRID.
+      - [The LVARCHAR type in IBM® Informix® databases](05_upgrading/0249-the-lvarchar-type-in-ibm-informix-databases.md) — Native LVARCHAR type of Informix is now mapped by default to a large VARCHAR in schema file.
+      - [Right-trim collation for character types in SQLite](05_upgrading/0250-right-trim-collation-for-character-types-in-sqlite.md) — CHAR and VARCHAR columns in SQLite need to be defined with a TRIM collation to ignore trailing spaces in comparisons.
+      - [Message files support now 4-bytes integer message numbers](05_upgrading/0251-message-files-support-now-4-bytes-integer-message-numbers.md) — 2-byte .msg message number limitation was removed.
+      - [MySQL client library version change in MySQL 5.5.11](05_upgrading/0252-mysql-client-library-version-change-in-mysql-5-5-11.md) — Shared library version number of the MySQL client library must match the library used to link the ODI driver.
+      - [New compiler warning to avoid action shadowing](05_upgrading/0253-new-compiler-warning-to-avoid-action-shadowing.md) — Prevent the same action name at different levels of ON ACTION handlers in a dialog.
+      - [Runtime error raised when report dimensions are invalid](05_upgrading/0254-runtime-error-raised-when-report-dimensions-are-invalid.md) — Report page length checking error -4375 might occur at compile time or runtime.
+      - [Linker checks all referenced functions](05_upgrading/0255-linker-checks-all-referenced-functions.md) — The linker checks definition of all functions referenced in all modules provided in the link command.
+    - [BDL 2.32 upgrade guide](05_upgrading/0256-bdl-2-32-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 2.32.
+      - [Front-end protocol compression disabled](05_upgrading/0257-front-end-protocol-compression-disabled.md) — GUI communication does not require protocol compression on LAN networks.
+      - [SQLite driver no longer needs libiconv on Windows®](05_upgrading/0258-sqlite-driver-no-longer-needs-libiconv-on-windows.md) — UTF-8 string data storage in SQLite requires conversion when the application is not UTF-8.
+      - [Need for Informix® CSDK to compile C extensions](05_upgrading/0259-need-for-informix-csdk-to-compile-c-extensions.md) — Compiling C Extensions requires now the Informix CSDK.
+      - [FESQLC tool removal](05_upgrading/0260-fesqlc-tool-removal.md) — The ESQL/C compiler (fesql) has been removed from the Genero BDL product.
+    - [BDL 2.30 upgrade guide](05_upgrading/0261-bdl-2-30-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 2.30.
+      - [GUI server auto start](05_upgrading/0262-gui-server-auto-start.md) — FGLSERVER defaults the server defined by wsmap settings, when starting GUI server
+      - [Form compiler is more strict](05_upgrading/0263-form-compiler-is-more-strict.md) — The .per grammar parser has been reviewed to deny invalid code.
+      - [ORACLE and INTERVAL columns](05_upgrading/0264-oracle-and-interval-columns.md) — INTERVAL storage bug fix needs a review of existing databases in production.
+      - [DIALOG.setCurrentRow() changes row selection flags](05_upgrading/0265-dialog-setcurrentrow-changes-row-selection-flags.md) — Row selection flags are reset by a call to setCurrentRow().
+      - [Schema extractor needs table owner](05_upgrading/0266-schema-extractor-needs-table-owner.md) — The fgldbsch schema extractor requires a -ow option to distinguish different database users/shemas.
+      - [Windows™ installation for all users only](05_upgrading/0267-windows-installation-for-all-users-only.md) — Installation on Windows platforms is for all users.
+      - [MenuAction close no longer created by default](05_upgrading/0268-menuaction-close-no-longer-created-by-default.md) — The close action is no longer created by default in MENU dialog.
+      - [Emulated scrollable cursor temp files in DBTEMP](05_upgrading/0269-emulated-scrollable-cursor-temp-files-in-dbtemp.md) — Directory of scrollable cursor data storage can be defined with DBTEMP.
+      - [Modifying tree view data during dialog execution](05_upgrading/0270-modifying-tree-view-data-during-dialog-execution.md) — Use ui.Dialog methods to insert/append/delete treeview nodes.
+      - [Presentation styles changes](05_upgrading/0271-presentation-styles-changes.md) — Modifications to consider when using presentation styles.
+    - [BDL 2.21 upgrade guide](05_upgrading/0272-bdl-2-21-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 2.21.
+      - [Web Services changes](05_upgrading/0273-web-services-changes.md) — There are changes in support of web services in Genero 2.21.
+      - [PostgreSQL 8.4 and INTERVAL type](05_upgrading/0274-postgresql-8-4-and-interval-type.md) — The dbmpgs84x database driver requires your database schema use the INTERVAL type, rather than a CHAR(50) type.
+      - [fglcomp --build-rdd compiles the module](05_upgrading/0275-fglcomp-build-rdd-compiles-the-module.md) — fglcomp --build-rdd now creates both the .42m and .rdd files.
+      - [Unique and primary key constraint violation](05_upgrading/0276-unique-and-primary-key-constraint-violation.md) — Unique and primary key constraint violations mostly return error -268. However, error -269 may be checked too.
+      - [IMPORT with list of C-Extensions](05_upgrading/0277-import-with-list-of-c-extensions.md) — The IMPORT instruction for C extensions denies a comma-separated syntax.
+      - [Initializing dynamic arrays to null](05_upgrading/0278-initializing-dynamic-arrays-to-null.md) — The INITIALIZE TO NULL instruction clears the dynamic array.
+      - [Strict screen record definition for tables](05_upgrading/0279-strict-screen-record-definition-for-tables.md) — The fglform compiler of version 2.21.00 now makes a strict checking of the fields used in the screen record definition for table containers.
+    - [BDL 2.20 upgrade guide](05_upgrading/0280-bdl-2-20-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 2.20.
+      - [Web Services changes](05_upgrading/0281-web-services-changes.md) — There are changes in support of web services in Genero 2.20.
+      - [Sort is now possible during INPUT ARRAY](05_upgrading/0282-sort-is-now-possible-during-input-array.md) — Built-in sort is available in INPUT ARRAY.
+      - [Cell attributes and buffered mode](05_upgrading/0283-cell-attributes-and-buffered-mode.md) — Must use the UNBUFFERED mode when setting cell attributes.
+      - [Field methods are more strict](05_upgrading/0284-field-methods-are-more-strict.md) — Dialog class methods are more strict regarding form field names.
+      - [Strict variable identification in SQL statements](05_upgrading/0285-strict-variable-identification-in-sql-statements.md) — Program variable identification in static SQL statements is more strict in version 2.20 than older versions.
+      - [SQL Warnings with non-Informix databases](05_upgrading/0286-sql-warnings-with-non-informix-databases.md) — SQL Warnings are now propagated for all database drivers, and can set the sqlca.sqlawarn, SQLSTATE and SQLERRMESSAGE registers.
+      - [SERIALREG table for 64-bit serial emulation](05_upgrading/0287-serialreg-table-for-64-bit-serial-emulation.md) — You must alter the SERIALREG table to do serial emulation on a BIGINT column.
+      - [Extracting the database schema with fgldbsch](05_upgrading/0288-extracting-the-database-schema-with-fgldbsch.md) — The fgldbsch database schema extraction tool has been updated to map native database types to newly-added types.
+      - [Database driver internal error changed from -768 to -6319](05_upgrading/0289-database-driver-internal-error-changed-from-768-to-6319.md) — The internal error raised was changed to avoid conflicts with an IBM® Informix® SQL error code.
+      - [Searching for image files on the application server](05_upgrading/0290-searching-for-image-files-on-the-application-server.md) — For security reasons, the image file transfer mechanism has been slightly modified in version 2.20.
+      - [Strict action identification in dialog methods](05_upgrading/0291-strict-action-identification-in-dialog-methods.md) — Actions referenced in methods of the dialog class must exist in the current dialog, or an error is raised.
+      - [Strict field identification in dialog methods](05_upgrading/0292-strict-field-identification-in-dialog-methods.md) — Fields referenced in methods of the dialog class must exist in the current dialog, or an error is raised.
+      - [Form compiler checking invalid layout definition](05_upgrading/0293-form-compiler-checking-invalid-layout-definition.md) — It is better to identify form layout mistakes when the form is compiled, rather than at runtime.
+      - [Database schema compatibility](05_upgrading/0294-database-schema-compatibility.md) — fgldbsch extracts specific type for BOOLEAN.
+      - [Predefined actions get automatically disabled depending on the context](05_upgrading/0295-predefined-actions-get-automatically-disabled-depending-on-t.md) — Dialogs will automatically disable some predefined actions, if it makes no sense to trigger the action in the current context.
+      - [BEFORE ROW no longer executed when array is empty](05_upgrading/0296-before-row-no-longer-executed-when-array-is-empty.md) — In order to trigger the BEFORE ROW block when entering an array, the array must not be empty.
+      - [Controlling INPUT ARRAY temporary row creation](05_upgrading/0297-controlling-input-array-temporary-row-creation.md) — Down move after last row in INPUT ARRAY creates a new temporary row.
+    - [BDL 2.11 upgrade guide](05_upgrading/0298-bdl-2-11-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 2.11.
+      - [Writing timestamp information in p-code modules](05_upgrading/0299-writing-timestamp-information-in-p-code-modules.md) — A compilation timestamp is no longer automatically written to p-code files, when the source code is not modified.
+    - [BDL 2.10 upgrade guide](05_upgrading/0300-bdl-2-10-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 2.10.
+      - [XML declaration added automatically](05_upgrading/0301-xml-declaration-added-automatically.md) — The XML declaration is added automatically when writing XML files.
+      - [Using SQL Server 2008 date/time types](05_upgrading/0302-using-sql-server-2008-date-time-types.md) — SQL Server 2008 introduces new SQL type to store date/time information.
+    - [BDL 2.02 upgrade guide](05_upgrading/0303-bdl-2-02-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 2.02.
+      - [Automatic HBox/VBox](05_upgrading/0304-automatic-hbox-vbox.md) — fglform adds automatically HBox/VBox elements when needed.
+    - [BDL 2.01 upgrade guide](05_upgrading/0305-bdl-2-01-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 2.01.
+    - [BDL 2.00 upgrade guide](05_upgrading/0306-bdl-2-00-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 2.00.
+      - [Web Services changes](05_upgrading/0307-web-services-changes.md) — There are changes in support of Web services in Genero 2.00.
+      - [Runner creation is no longer needed](05_upgrading/0308-runner-creation-is-no-longer-needed.md) — Starting with version 2.00, you no longer need to recompile/build a runner.
+      - [Desupported Informix® client environments](05_upgrading/0309-desupported-informix-client-environments.md) — Upgrade IBM® Informix® Client Software Development Kit (CSDK) to the most recent version.
+      - [Database drivers changes](05_upgrading/0310-database-drivers-changes.md) — Desupported database drivers.
+      - [fglmkrtm tool removed](05_upgrading/0311-fglmkrtm-tool-removed.md) — The fglmkrtm tool has been removed, as database drivers are loaded dynamically.
+      - [fglinstall tool removed](05_upgrading/0312-fglinstall-tool-removed.md) — The fglinstall tool has been removed from the distribution.
+      - [Linking the utility functions library](05_upgrading/0313-linking-the-utility-functions-library.md) — All utility functions are in the libfgl4js.42x library, up until 2.21.
+      - [Dynamic C extensions](05_upgrading/0314-dynamic-c-extensions.md) — Dynamic C extensions are automatically loaded with IMPORT instructions.
+      - [WANTCOLUMNSANCHORED is desupported](05_upgrading/0315-wantcolumnsanchored-is-desupported.md) — Use UNMOVABLECOLUMNS to specify that table columns cannot be moved around by the user.
+      - [PIXELWIDTH / PIXELHEIGHT are deprecated](05_upgrading/0316-pixelwidth-pixelheight-are-deprecated.md) — Use the WIDTH and HEIGHT attributes to specify the size of an image.
+      - [Prefetch parameters with Oracle](05_upgrading/0317-prefetch-parameters-with-oracle.md) — Prefetch parameters allow an application to automatically fetch rows from the Oracle® database when opening a cursor.
+      - [Preprocessor directive syntax changed](05_upgrading/0318-preprocessor-directive-syntax-changed.md) — The preprocessor directives use an ampersand character (&) instead of a hash (#) character.
+      - [Static SQL cache is removed](05_upgrading/0319-static-sql-cache-is-removed.md) — The Static SQL Cache has been removed.
+      - [SQL directive set removed](05_upgrading/0320-sql-directive-set-removed.md) — The SQL directive set specification has been removed.
+      - [Connection database schema specification](05_upgrading/0321-connection-database-schema-specification.md) — Changes with FGLPROFILE entries to define the database schema at runtime.
+      - [Schema extraction tool changes](05_upgrading/0322-schema-extraction-tool-changes.md) — The fgldbsch schema extractor is recommended, and has been enhanced.
+      - [Connection parameters in FGLPROFILE when using Informix®](05_upgrading/0323-connection-parameters-in-fglprofile-when-using-informix.md) — The dbi.database.* connection parameters defined in FGLPROFILE are used by the Informix® driver
+      - [Inconsistent USING clauses](05_upgrading/0324-inconsistent-using-clauses.md) — Having data types changing at each execute is no longer supported.
+      - [Usage of RUN IN FORM MODE](05_upgrading/0325-usage-of-run-in-form-mode.md) — RUN ... IN LINE MODE is recommended to run interactive applications.
+      - [TTY and COLOR WHERE attribute](05_upgrading/0326-tty-and-color-where-attribute.md) — All types of fields now allow TTY attributes and the conditional COLOR WHERE attribute.
+    - [BDL 1.33 upgrade guide](05_upgrading/0327-bdl-1-33-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 1.33.
+      - [Database drivers changes](05_upgrading/0328-database-drivers-changes.md) — Desupported database drivers.
+    - [BDL 1.32 upgrade guide](05_upgrading/0329-bdl-1-32-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 1.32.
+    - [BDL 1.31 upgrade guide](05_upgrading/0330-bdl-1-31-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 1.31.
+    - [BDL 1.30 upgrade guide](05_upgrading/0331-bdl-1-30-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 1.30.
+      - [Action and field activation](05_upgrading/0332-action-and-field-activation.md) — Dialog methods can be used to control action and field activation.
+      - [Using HBox tags in forms](05_upgrading/0333-using-hbox-tags-in-forms.md) — HBox tags can be used to stack form items horizontally.
+      - [Width of ButtonEdit/DateEdit/ComboBox](05_upgrading/0334-width-of-buttonedit-dateedit-combobox.md) — When using BUTTONEDIT/COMBOBOX/DATEEDIT fields, it is recommended that you account for the width of the widget button in addition to the input area.
+      - [Form fields default sample](05_upgrading/0335-form-fields-default-sample.md) — An algorithm is used to compute the field width when no SAMPLE attribute is specified.
+      - [Size policy for ComboBoxes](05_upgrading/0336-size-policy-for-comboboxes.md) — You can use the SIZEPOLICY attribute for a COMBOBOX.
+      - [Action defaults at form level](05_upgrading/0337-action-defaults-at-form-level.md) — You can define action defaults in forms.
+      - [Compiled string files (.42s)](05_upgrading/0338-compiled-string-files-42s.md) — The file extension of compiled string files is new .42s.
+    - [BDL 1.20 upgrade guide](05_upgrading/0339-bdl-1-20-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 1.20.
+    - [BDL 1.10 upgrade guide](05_upgrading/0340-bdl-1-10-upgrade-guide.md) — These topics describe product changes you must be aware of when upgrading to version 1.10.
+  - [Migrating from IBM® Informix® 4GL to Genero BDL](05_upgrading/0341-migrating-from-ibm-informix-4gl-to-genero-bdl.md) — Product differences you must be aware of (and plan for) when migrating from IBM® Informix® 4GL to Genero Business Development Language.
+    - [Installation and setup topics](05_upgrading/0342-installation-and-setup-topics.md) — When migrating from I4GL to Genero BDL, review the differences between the installation and setup of the two products. Reviewing the differences allows you to plan and prepare for a smooth migration.
+      - [Using C extensions](05_upgrading/0343-using-c-extensions.md) — When migrating to Genero BDL, you must provide your C-Extensions as shared libraries.
+      - [Localization support in Genero](05_upgrading/0344-localization-support-in-genero.md) — I4GL and Genero BDL use different libraries and environment variables in support of localization.
+      - [Database schema extractor](05_upgrading/0345-database-schema-extractor.md) — Before compiling .4gl or .per files, you must extract the database schema with the fgldbsch tool.
+      - [Compiling 4GL to C](05_upgrading/0346-compiling-4gl-to-c.md) — Genero's use of a p-code architecture removes restrictions on which platforms you use to develop your application.
+    - [User interface topics](05_upgrading/0347-user-interface-topics.md) — When migrating from I4GL to Genero BDL, review the differences between how windows and form content is rendered between the two products. Reviewing the differences allows you to plan and prepare for a smooth migration.
+      - [Smooth migration with traditional UI mode](05_upgrading/0348-smooth-migration-with-traditional-ui-mode.md) — IBM® Informix® 4GL (I4GL) and Genero Business Development Language (BDL) handle windows and form content rendering differently.
+      - [Review application ergonomics](05_upgrading/0349-review-application-ergonomics.md) — Genero BDL no longer limits programs to executing a single interactive instruction, and provides additional GUI concepts such as drag-and-drop and tree views.
+      - [Terminal screen display handling](05_upgrading/0350-terminal-screen-display-handling.md) — Compared to I4GL, Genero BDL uses an optimized and specific design to handle terminal display, that introduces some differences.
+      - [Refreshing the user interface](05_upgrading/0351-refreshing-the-user-interface.md) — Genero BDL only refreshes the user interface when the runtime waits for user interaction. In certain scenarios, this can result in information displayed in an I4GL application not being displayed when running as a Genero BDL application.
+      - [SCREEN versus LAYOUT section](05_upgrading/0352-screen-versus-layout-section.md) — When writing new programs for GUI applications, it is recommended that you use a LAYOUT section instead of SCREEN. However, the SCREEN section is still supported to be used to design TUI mode forms.
+      - [MENU rendering and behavior](05_upgrading/0353-menu-rendering-and-behavior.md) — This topic describes differences between I4GL and FGL MENU instruction in TUI mode.
+      - [Migrating screen arrays to tables](05_upgrading/0354-migrating-screen-arrays-to-tables.md) — Tables in Genero BDL display using a real table widget, providing a more robust display and interaction than the I4GL screen array.
+      - [ON KEY / COMMAND vs ON ACTION](05_upgrading/0355-on-key-command-vs-on-action.md) — IBM® Informix® 4GL applications use the ON KEY and COMMAND [KEY] clauses to handle user actions.
+      - [TTY attributes alternatives](05_upgrading/0356-tty-attributes-alternatives.md) — IBM® Informix® 4GL programs use TTY attributes based on terminal capabilities, for colors and text intensity or effects.
+      - [Moving screen array rows with SCROLL](05_upgrading/0357-moving-screen-array-rows-with-scroll.md) — IBM® Informix® 4GL programs can use the SCROLL instruction to move screen array rows up and down, by preserving the TTY attributes.
+      - [The default SCREEN window](05_upgrading/0358-the-default-screen-window.md) — When the first interactive instruction is reached in a Genero BDL program, a default window named SCREEN is created.
+      - [Specifying WINDOW position and size](05_upgrading/0359-specifying-window-position-and-size.md) — With Genero BDL in GUI mode, window position and sizes are ignored; in TUI mode, window position and sizes are respected.
+      - [Right justified field labels](05_upgrading/0360-right-justified-field-labels.md) — I4GL forms that specify right-justified labels should be reviewed for update to LABEL form items.
+      - [Reduce multiple text screens](05_upgrading/0361-reduce-multiple-text-screens.md) — Moving beyond the 80x25 dimensions of a display may require a review of your dumb-terminal-oriented programs.
+      - [Positions of repeated form field tags](05_upgrading/0362-positions-of-repeated-form-field-tags.md) — The Genero Abstract User Interface definition (AUI tree) does not support misaligned repeating form field tags.
+      - [Subscripted form fields](05_upgrading/0363-subscripted-form-fields.md) — Subscripted form fields must be located and redefined when moving to Genero BDL.
+      - [WORDWRAP field attribute](05_upgrading/0364-wordwrap-field-attribute.md) — Use a TEXTEDIT field to replace repeated multi-line input fields.
+      - [Ignored form definition attributes](05_upgrading/0365-ignored-form-definition-attributes.md) — Field attributes inherited from the Informix® SQL PERFORM syntax should be reviewed for necessity and handling.
+      - [INPUT ARRAY behavior](05_upgrading/0366-input-array-behavior.md) — This topic describes INPUT ARRAY differences between I4GL and Genero BDL.
+      - [SCREEN RECORD fields specification](05_upgrading/0367-screen-record-fields-specification.md) — Genero BDL requires a comma separator in the field list of a screen record definition.
+      - [BEFORE/AFTER FIELD field prefix](05_upgrading/0368-before-after-field-field-prefix.md) — Recent I4GL versions deny the specification of a screen-record prefix in BEFORE FIELD and AFTER FIELD clauses, Genero BDL allows this for backward compatibility.
+      - [Form field input differences](05_upgrading/0369-form-field-input-differences.md) — This topic describes differences in field input between I4GL and Genero BDL.
+      - [Mixing COLOR and REVERSE attributes](05_upgrading/0370-mixing-color-and-reverse-attributes.md) — I4GL ignores the COLOR attribute when REVERSE is used, while Genero BDL mixes both attributes.
+      - [PROMPT rendering and behavior](05_upgrading/0371-prompt-rendering-and-behavior.md) — This topic describes differences between I4GL and FGL PROMPT instruction in TUI mode.
+      - [fgl_lastkey() function](05_upgrading/0372-fgl-lastkey-function.md) — In a given context and for a given key press, FGL fgl_lastkey() API does not return the same key numbers than I4GL fgl_lastkey().
+    - [4GL programming topics](05_upgrading/0373-4gl-programming-topics.md) — When migrating from I4GL to Genero BDL, review the programming differences between the two products. Reviewing the differences allows you to plan and prepare for a smooth migration.
+      - [Form specification file syntax](05_upgrading/0374-form-specification-file-syntax.md) — This topic describes syntax differences between I4GL and FGL in .per form specification file.
+      - [Dynamic arrays](05_upgrading/0375-dynamic-arrays.md) — Support for dynamic arrays differs between I4GL and Genero BDL.
+      - [Debugger command syntax](05_upgrading/0376-debugger-command-syntax.md) — While I4GL and Genero BDL both provide a program debugger, the commands used and how it is used can differ.
+      - [GLOBALS variables usage](05_upgrading/0377-globals-variables-usage.md) — This topic describes differences between I4GL and FGL regading global variables definitions and usage.
+      - [Strict function signature checking](05_upgrading/0378-strict-function-signature-checking.md) — With Genero BDL, a function's signature is detected at link time.
+      - [STRING versus CHAR/VARCHAR](05_upgrading/0379-string-versus-char-varchar.md) — Genero BDL supports the STRING data type in addition to CHAR and VARCHAR. While the STRING data type is useful in certain situations, there are times when you should use CHAR or VARCHAR instead.
+      - [Review user-made C routines](05_upgrading/0380-review-user-made-c-routines.md) — Genero BDL provides libraries which may replace some of the C routines required by I4GL applications.
+      - [Web Services support](05_upgrading/0381-web-services-support.md) — Both I4GL and Genero BDL support Web services, albeit with different implementations.
+      - [File I/O statements and APIs](05_upgrading/0382-file-i-o-statements-and-apis.md) — Both I4GL and Genero BDL support accessing files on operating systems. The base.Channel built-in class supported by Genero BDL can also open streams to subprocesses and sockets.
+      - [SQL cursor management](05_upgrading/0383-sql-cursor-management.md) — This topic describes differences between I4GL and Genero BDL in SQL cursor management.
+      - [arg_val() returns NULL if no argument](05_upgrading/0384-arg-val-returns-null-if-no-argument.md) — If the index passed to the function references an argument that does not exist, the arg_val() function must be handled differently between I4GL and Genero BDL.
+      - [Checking function parameters/returns](05_upgrading/0385-checking-function-parameters-returns.md) — With Genero BDL, a parameter count mismatch is detected at link time.
+      - [Using variable subscripts in SQL](05_upgrading/0386-using-variable-subscripts-in-sql.md) — Use of subscript operations on host variables in static SQL statements is not supported by Genero BDL.
+      - [MONEY type and CLIENT_LOCALE](05_upgrading/0387-money-type-and-client-locale.md) — I4GL adapts the scale of MONEY / MONEY(p) types from the client locale setting, Genero BDL always uses the same default scale.
+      - [Variable assignment in function calls](05_upgrading/0388-variable-assignment-in-function-calls.md) — Genero BDL behaves differently to I4GL when variables are changed in expressions evaluated in function parameters.
+      - [REPORT syntax and behavior](05_upgrading/0389-report-syntax-and-behavior.md) — This topic describes differences between I4GL and Genero BDL in the report engine.
+      - [String to numeric type conversions](05_upgrading/0390-string-to-numeric-type-conversions.md) — This topic describes differences between I4GL and FGL in string to numeric type conversions.
+      - [Status variable handling](05_upgrading/0391-status-variable-handling.md) — I4GL and Genero BDL support the status variable differently.
+      - [Creating multi-byte chars with ASCII](05_upgrading/0392-creating-multi-byte-chars-with-ascii.md) — I4GL allows to create multi-byte characters with the ASCII operator. This is not supported by Genero BDL.
+      - [CONSTRUCT and Informix ANSI database](05_upgrading/0393-construct-and-informix-ansi-database.md) — I4GL CONSTRUCT generates the ANSI-mode SQL table owner in the WHERE clause, while Genero BDL does not.
+      - [Writing expression errors in log file](05_upgrading/0394-writing-expression-errors-in-log-file.md) — I4GL writes expression errors in the log file defined by startlog(), while FGL does not.
+      - [LOAD and UNLOAD instrutions](05_upgrading/0395-load-and-unload-instrutions.md) — This topic describes differences between I4GL and FGL with the LOAD and UNLOAD instructions.
+      - [Command line tools](05_upgrading/0396-command-line-tools.md) — I4GL and FGL provide different compiler commands with different options.
+      - [Overlaping error numbers in ranges](05_upgrading/0397-overlaping-error-numbers-in-ranges.md) — Genero BDL uses error numbers in a range of Informix SQL errors.
+      - [Fetching numbers into CHAR/VARCHAR](05_upgrading/0398-fetching-numbers-into-char-varchar.md) — I4GL and FGL format numbers in a different way when fetching direcly MONEY, DECIMAL column values into CHAR/VARCHAR variables.
+  - [Migrating from Four Js BDS to Genero BDL](05_upgrading/0399-migrating-from-four-js-bds-to-genero-bdl.md) — Product changes you must be aware of (and pland for) when migrating from Four Js BDS 3.xx to the most recent Genero Business Development Language version.
+    - [Installation and setup topics](05_upgrading/0400-installation-and-setup-topics.md) — When migrating from Four Js BDS to Genero BDL, review the differences between the installation and setup of the two products. Reviewing the differences allows you to plan and prepare for a smooth migration.
+      - [License controller](05_upgrading/0401-license-controller.md) — The licensing tool differs between Four Js BDS and Genero BDL.
+      - [Runner linking is no longer needed](05_upgrading/0402-runner-linking-is-no-longer-needed.md) — With Four Js Business Development Suite (BDS), you need to create the fglrun binary with the fglmkrun tool, by specifying the type of the database driver and C extensions libraries to be linked with the runtime system. Since Genero Business Development Language version 2.00, you no longer need need to link the runtime system.
+      - [Localization support](05_upgrading/0403-localization-support.md) — Four Js BDS and Genero BDL use different libraries and environment variables in support of localization.
+      - [Database schema extractor](05_upgrading/0404-database-schema-extractor.md) — Before compiling .4gl or .per files with Four Js Business Development Suite (BDS) or with Genero Business Development Language (BDS), you need to extract the database schema as a .sch file. However, the extraction tools differ.
+      - [C-Code compilation is desupported](05_upgrading/0405-c-code-compilation-is-desupported.md) — The compiler of Genero Business Development Language does not support C-Code generation.
+      - [Desupported environment variables](05_upgrading/0406-desupported-environment-variables.md) — The Four Js Business Development Suite (BDS) environment variables no longer supported (or replaced) in Genero Business Development Language.
+      - [Desupported FGLPROFILE entries](05_upgrading/0407-desupported-fglprofile-entries.md) — Identify the Four Js BDS FGLPROFILE configuration entries that are no longer supported, and the Genero BDL equivalent (where relevant).
+    - [User interface topics](05_upgrading/0408-user-interface-topics.md) — When migrating from Four Js BDS to Genero BDL, review the differences between how windows and form content is rendered between the two products. Reviewing the differences allows you to plan and prepare for a smooth migration.
+      - [Smooth migration with traditional UI mode](05_upgrading/0409-smooth-migration-with-traditional-ui-mode.md) — Four Js BDS and Genero Business Development Language (BDL) handle windows and form content rendering differently.
+      - [Front-end compatibility](05_upgrading/0410-front-end-compatibility.md) — With Genero BDL, you must use one of the Genero front-ends
+      - [FGLGUI is 1 by default](05_upgrading/0411-fglgui-is-1-by-default.md) — The default mode differs between Four Js BDS and Genero BDL.
+      - [FGLPROFILE: GUI configuration](05_upgrading/0412-fglprofile-gui-configuration.md) — Identify the Four Js BDS FGLPROFILE GUI configuration entries that are no longer supported, and the Genero BDL equivalent (where relevant).
+      - [Key labels versus action defaults](05_upgrading/0413-key-labels-versus-action-defaults.md) — Genero BDL introduces the ON ACTION block to define actions. While the ON KEY block is still supported, it comes with limitations.
+      - [Migrating form field WIDGET="type"](05_upgrading/0414-migrating-form-field-widget-type.md) — BDS fields using the WIDGET attribute must be replaced by Genero BDL form item types.
+      - [SCREEN versus LAYOUT section](05_upgrading/0415-screen-versus-layout-section.md) — When writing new programs for GUI applications, it is recommended that you use a LAYOUT section instead of SCREEN. However, the SCREEN section is still supported to be used to design TUI mode forms.
+      - [Migrating screen arrays to tables](05_upgrading/0416-migrating-screen-arrays-to-tables.md) — A TABLE container in Genero BDL displays using a real table widget, providing a more robust display and interaction than a screen array, while the SCROLLGRID container renders a list of records in separated field cells, providing a replacement for screen arrays using the OPTIONS="-nolist"
+      - [Review TUI specific features](05_upgrading/0417-review-tui-specific-features.md) — Some programs use the TUI mode and often exploit all the display possibilities of the language for dumb terminals. These programs should be reviewed when redesigning the application for GUI mode.
+      - [The default SCREEN window](05_upgrading/0418-the-default-screen-window.md) — When the first interactive instruction is reached in a Genero BDL program, a default window named SCREEN is created.
+      - [Specifying WINDOW position and size](05_upgrading/0419-specifying-window-position-and-size.md) — With Genero BDL in GUI mode, window position and sizes are ignored; in TUI mode, window position and sizes are respected.
+      - [Front-end configuration tools](05_upgrading/0420-front-end-configuration-tools.md) — With Genero BDL, use presentation styles instead of front-end specific configuration tools to define widget aspects such as color, borders, fonts, and more.
+      - [Function key mapping](05_upgrading/0421-function-key-mapping.md) — When migrating to Genero BDL, special care must be taken for programs that uses function keys greater than F12.
+      - [Activating form items with DISPLAY](05_upgrading/0422-activating-form-items-with-display.md) — The methods for enabling or disabling fields and actions differs between Four Js BDS and Genero BDL.
+      - [Defining keys for WIDGET fields](05_upgrading/0423-defining-keys-for-widget-fields.md) — The method for binding a keyboard function or control key differ between Four Js BDS and Genero BDL.
+      - [BEFORE DISPLAY / BEFORE ROW execution order](05_upgrading/0424-before-display-before-row-execution-order.md) — Genero BDL scenarios define whether the BEFORE DISPLAY or BEFORE ROW block is executed first.
+    - [4GL Programming topics](05_upgrading/0425-4gl-programming-topics.md) — When migrating from Four Js BDS to Genero BDL, review the programming differences between the two products. Reviewing the differences allows you to plan and prepare for a smooth migration.
+      - [FGLPROFILE: VM configuration](05_upgrading/0426-fglprofile-vm-configuration.md) — Identify the Four Js BDS FGLPROFILE virtual machine configuration entries that are no longer supported, and the Genero BDL equivalent (where relevant).
+      - [The fgl_init4gl() function](05_upgrading/0427-the-fgl-init4gl-function.md) — The fgl_init4js() function has no effect in Genero BDL.
+      - [Static versus Dynamic Arrays](05_upgrading/0428-static-versus-dynamic-arrays.md) — Support for dynamic arrays in Genero BDL may result in a need for some redesigns in your application.
+      - [Debugger syntax changed](05_upgrading/0429-debugger-syntax-changed.md) — While Four Js BDS and Genero BDL both provide a program debugger, the commands used and how it is used can differ.
+      - [fgl_system() function](05_upgrading/0430-fgl-system-function.md) — With Genero BDL, the fgl_system() function no longer raises a terminal window by default, but some front-ends offer a workaround.
+      - [The Channel:: methods](05_upgrading/0431-the-channel-methods.md) — Review your code and replace Channel:: calls with the new base.Channel API.
+      - [The Dialog:: methods](05_upgrading/0432-the-dialog-methods.md) — Review your code and replace Dialog:: calls with the new ui.Dialog API.
+      - [STRING versus CHAR/VARCHAR](05_upgrading/0433-string-versus-char-varchar.md) — Genero BDL supports the STRING data type in addition to CHAR and VARCHAR. While the STRING data type is useful in certain situations, there are times when you should use CHAR or VARCHAR instead.
+      - [Review user-made C routines](05_upgrading/0434-review-user-made-c-routines.md) — Genero BDL provides libraries which may replace some of the C routines required by I4GL applications.
+      - [Variable identification in SQL statements](05_upgrading/0435-variable-identification-in-sql-statements.md) — Program variable identification in static SQL statements is more strict in version 2.20 than older versions.
+      - [Default action of WHENEVER ANY ERROR](05_upgrading/0436-default-action-of-whenever-any-error.md) — By default, the WHENEVER ANY ERROR action is to CONTINUE the program flow.
+      - [Database driver features](05_upgrading/0437-database-driver-features.md) — Some ODI features are no longer supported in Genero BDL.
+- [Licensing](06_licensing/0438-licensing.md) — The topics in this section give you the information you need to install and manage the license of your Genero Business Development Language product.
+  - [Steps to BDL license installation](06_licensing/0439-steps-to-bdl-license-installation.md) — Preparing to license involves evaluating your options based on what licensing tool (GUI or command line) is available to you, and whether you can validate the installed license with Four Js over the internet. Choose the option that is right for you.
+    - [BDL Licenser (internet)](06_licensing/0440-bdl-licenser-internet.md) — You can license a Genero Business Development Language (BDL) product using the Genero licensing graphical interface.
+    - [BDL Licenser (no internet)](06_licensing/0441-bdl-licenser-no-internet.md) — Without internet access, you register the license with Four Js from another machine via the internet, or by phone. Then use the user interface to license your Genero Business Development Language (BDL) product.
+    - [fglWrt command (internet)](06_licensing/0442-fglwrt-command-internet.md) — You can license a Genero Business Development Language (BDL) product using the command line tool, fglWrt.
+    - [fglWrt command (no internet)](06_licensing/0443-fglwrt-command-no-internet.md) — Without internet access, you register the license with Four Js from another machine via the internet, or by phone. Then use the fglWrt command line tool to license your Genero Business Development Language (BDL) product.
+  - [Manage Genero BDL local license](06_licensing/0444-manage-genero-bdl-local-license.md) — Refer to the topics in this section to quickly become familiar with how to perform license management tasks.
+    - [Displaying environment and statistics](06_licensing/0445-displaying-environment-and-statistics.md) — When the Four Js License Manager is used for licensing, it works with the license controller locally to access information. The topics in this section describe license controller options that apply to the use of the FLM.
+      - [Display environment information](06_licensing/0446-display-environment-information.md) — Use this procedure to display information about the environment of your machine where the license is installed.
+      - [Check Four Js License Manager (FLM) is started](06_licensing/0447-check-four-js-license-manager-flm-is-started.md) — Follow this procedure to check if the FLM is started.
+      - [Display Statistics](06_licensing/0448-display-statistics.md) — Use this procedure to display statistical information on the use of a specific license on a machine when a License Manager is used for license control.
+      - [Display CPUs (cores) information](06_licensing/0449-display-cpus-cores-information.md) — Use this procedure on the application server where the Genero runtime is installed, to determine the exact number of CPUs (cores/threads) for CPU licensing.
+    - [Get license information](06_licensing/0450-get-license-information.md) — Get details of the status of the license of your Genero product. For example, get the expiry date of your maintenance contract or subscription, or the installation number for license registration, and so on.
+      - [License details reference](06_licensing/0451-license-details-reference.md) — A reference to license details.
+      - [Using fglWrt](06_licensing/0452-using-fglwrt.md) — Get details of the status of the license of your Genero product.
+      - [Using BDL licenser](06_licensing/0453-using-bdl-licenser.md) — Get details about your Genero Business Development Language (BDL) license using the Genero licensing graphical interface.
+    - [Uninstall license](06_licensing/0454-uninstall-license.md) — You may need to uninstall a license if you are making some hardware or software changes.
+      - [Uninstall using BDL licenser](06_licensing/0455-uninstall-using-bdl-licenser.md) — Use the Genero licensing graphical interface to uninstall your Genero BDL product license.
+      - [Uninstall using fglWrt](06_licensing/0456-uninstall-using-fglwrt.md) — Use the fglWrt -d command to uninstall your Genero BDL product license.
+    - [The FGLDIR/lock directory](06_licensing/0457-the-fgldir-lock-directory.md) — When using a local license, the license controller uses the FGLDIR/lock directory to store information (number of active users). A user running a BDL program must have access rights to this directory. Permissions can be restricted to specific users with FGLWRTUMASK.
+    - [License an upgraded installation](06_licensing/0458-license-an-upgraded-installation.md) — There are some considerations for licensing when upgrading an existing Genero installation to a newer version.
+    - [Managing the active users](06_licensing/0459-managing-the-active-users.md) — The license controller maintains a register of active users of licenses. The topics in this section describe ways you can manage license users.
+      - [Client information](06_licensing/0460-client-information.md) — The client sends information when connecting to the DVM, which helps to identify the client for a session.
+      - [Display registered active users](06_licensing/0461-display-registered-active-users.md) — Use this procedure to display the registered active user list of the current license.
+      - [Check registered users list](06_licensing/0462-check-registered-users-list.md) — After a system crash or an abnormal termination of an application, use this procedure to force a check of the registered users list on the current machine.
+      - [Clean registered users list](06_licensing/0463-clean-registered-users-list.md) — Generally, you never need to clean the registered users list on a host, but if, for example, a DVM crashes and the associated unreleased licenses would not be recovered otherwise, use this procedure to clear the list.
+      - [Display the process Id List](06_licensing/0464-display-the-process-id-list.md) — Use this procedure to display the current list of processes on your machine.
+      - [Drop session](06_licensing/0465-drop-session.md) — Use this procedure to drop a session referenced by a specified process id on a host.
+  - [Register license](06_licensing/0466-register-license.md) — To validate your license, you must register it on the Four Js website. You can access the website from any machine or smart phone.
+  - [Troubleshooting license registration](06_licensing/0467-troubleshooting-license-registration.md) — When registering your license on the Four Js website you may get an error message. More than likely you need to request a new activation key.
+  - [Get maintenance/subscription key](06_licensing/0468-get-maintenance-subscription-key.md) — You get the maintenance/subscription key from the Four Js website to ensure you have a valid key to install or update your product's license.
+  - [Steps to activate temporary BDL license](06_licensing/0469-steps-to-activate-temporary-bdl-license.md) — You register the license with Four Js to finalize your product's license installation. To complete licensing, select the option (with or without internet) that is right for you and match it with the procedure to follow.
+    - [Activate license using GUI (internet)](06_licensing/0470-activate-license-using-gui-internet.md) — If a Genero Business Development Language (BDL) license has been installed, you can activate it using the Genero licensing graphical interface. The license is registered with Four Js via the internet and the installation and maintenance/subscription key is installed.
+    - [Activate license using GUI (no internet)](06_licensing/0471-activate-license-using-gui-no-internet.md) — Without internet access, you register the license with Four Js from another machine via the internet, or by phone. Then activate your license using the user interface.
+    - [Activate license with fglWrt (internet)](06_licensing/0472-activate-license-with-fglwrt-internet.md) — If a Genero Business Development Language (BDL) license has been installed, you can activate it using the command fglWrt -k auto. The license is registered with Four Js via the internet and the installation and maintenance/subscription key is installed.
+    - [Activate license with fglWrt (no internet)](06_licensing/0473-activate-license-with-fglwrt-no-internet.md) — Without internet access, you register the license with Four Js from another machine via the internet, or by phone. Then activate your BDL license using the fglWrt command line tool.
+  - [Steps to apply maintenance/subscription key (BDL)](06_licensing/0474-steps-to-apply-maintenance-subscription-key-bdl.md) — You apply a maintenance/subscription key when you are installing a license for a product and thereafter when you renew your maintenance contract or your subscription license.
+    - [Apply maintenance/subscription key using GUI (internet)](06_licensing/0475-apply-maintenance-subscription-key-using-gui-internet.md) — Use the Genero licensing graphical interface to install or update your maintenance/subscription key.
+    - [Apply maintenance/subscription key using GUI (no internet)](06_licensing/0476-apply-maintenance-subscription-key-using-gui-no-internet.md) — Without internet access, you register the license with Four Js from another machine via the internet, or by phone. Then use the Genero licensing graphical interface to install or update the maintenance/subscription key of your product.
+    - [Apply maintenance/subscription key with fglWrt (internet)](06_licensing/0477-apply-maintenance-subscription-key-with-fglwrt-internet.md) — You can install or update the maintenance/subscription key of your BDL product using the command fglWrt -m auto.
+    - [Apply maintenance/subscription key with fglWrt (no internet)](06_licensing/0478-apply-maintenance-subscription-key-with-fglwrt-no-internet.md) — Without internet access, you register the license with Four Js from another machine via the internet, or by phone. Then use the fglWrt command line tool to install or update the maintenance/subscription key of your product.
+  - [License BDL in a container](06_licensing/0479-license-bdl-in-a-container.md) — License a Genero Business Development Language (BDL) product in a container using the fglWrt command-line tool. Container licenses do not require activation.
+  - [License Genero BDL using FLM](06_licensing/0480-license-genero-bdl-using-flm.md) — License your Genero Business Development Language (BDL) installation using a license manager on the network.
+  - [Data collection and processing notices](06_licensing/0481-data-collection-and-processing-notices.md) — Summary of data processing for license activation, validation, and monitoring, including compliance with privacy and data protection laws.
+- [Configuration](07_configuration/0482-configuration.md) — These topics cover configuration options of the Genero Business Development Language.
+  - [The FGLPROFILE file(s)](07_configuration/0483-the-fglprofile-file-s.md) — FGLPROFILE environment variable defines Genero BDL configuration files
+    - [Understanding FGLPROFILE](07_configuration/0484-understanding-fglprofile.md) — The runtime system uses one or more configuration files in which you can define options and parameters to change the behavior of the programs.
+    - [Syntax of FGLPROFILE entries](07_configuration/0485-syntax-of-fglprofile-entries.md) — The syntax of FGLPROFILE entries is in the key = value form.
+    - [FGLPROFILE entries for core language](07_configuration/0486-fglprofile-entries-for-core-language.md) — This is a summary of FGLPROFILE entries supported by the core BDL.
+    - [FGLPROFILE files selection](07_configuration/0487-fglprofile-files-selection.md) — When multiple FGLPROFILE files can be selected, the runtime system applies an order of precedence.
+    - [FGLPROFILE encoding](07_configuration/0488-fglprofile-encoding.md) — The encoding of the FGLPROFILE files must match the runtime system locale.
+    - [The default FGLPROFILE](07_configuration/0489-the-default-fglprofile.md) — The Genero BDL package ships a default FGLPROFILE file as $FGLDIR/etc/fglprofile.
+    - [FGLPROFILE for mobile apps](07_configuration/0490-fglprofile-for-mobile-apps.md) — The name of the FGLPROFILE file matters for mobile applications.
+    - [Reading FGLPROFILE entries](07_configuration/0491-reading-fglprofile-entries.md) — Entries of FGLPROFILE files can be read by program.
+  - [Environment variables](07_configuration/0492-environment-variables.md) — Genero BDL related environment variables.
+    - [Setting environment variables on UNIX™](07_configuration/0493-setting-environment-variables-on-unix.md)
+    - [Setting environment variables on Windows™](07_configuration/0494-setting-environment-variables-on-windows.md)
+    - [Setting environment variables in FGLPROFILE (mobile)](07_configuration/0495-setting-environment-variables-in-fglprofile-mobile.md)
+    - [Operating system environment variables](07_configuration/0496-operating-system-environment-variables.md) — Describes some well-known system environment variables that are used by Genero software components.
+      - [LC_ALL (or LANG)](07_configuration/0497-lc-all-or-lang.md) — Defines the current application locale on UNIX™ platforms.
+      - [LD_LIBRARY_PATH](07_configuration/0498-ld-library-path.md) — Defines a list of paths to find shared libraries on UNIX™ platforms.
+      - [PATH](07_configuration/0499-path.md) — Defines the list of paths to find executable files.
+      - [TERM](07_configuration/0500-term.md) — Defines the type of terminal on UNIX™ platforms.
+      - [TERMCAP](07_configuration/0501-termcap.md) — Defines the termcap terminal capabilities database on UNIX™ platforms.
+      - [TERMINFO](07_configuration/0502-terminfo.md) — Defines the terminal capabilities database.
+      - [TMPDIR, TMP, TEMP](07_configuration/0503-tmpdir-tmp-temp.md) — Defines the directory for temporary files.
+      - [TZ](07_configuration/0504-tz.md) — Defines the timezone for date/time values handling.
+    - [Database client environment variables](07_configuration/0505-database-client-environment-variables.md)
+    - [Genero environment variables](07_configuration/0506-genero-environment-variables.md)
+      - [DBCENTURY](07_configuration/0507-dbcentury.md) — Specifies the expansion for the century in DATE and DATETIME values.
+      - [DBDATE](07_configuration/0508-dbdate.md) — Defines the default display and input format for DATE values.
+      - [DBDELIMITER](07_configuration/0509-dbdelimiter.md) — Defines the value separator for unload data files.
+      - [DBEDIT](07_configuration/0510-dbedit.md) — Defines the editor program for TEXT fields in TUI mode.
+      - [DBFORMAT](07_configuration/0511-dbformat.md) — Defines the characters to be used for the currency symbol, decimal and thousands separators for numeric values.
+      - [DBMONEY](07_configuration/0512-dbmoney.md) — Defines the characters to be used for the currency symbol and decimal separator for numeric values, when DBFORMAT is not defined.
+      - [DBPATH](07_configuration/0513-dbpath.md) — Defines a list of paths for Genero program resource files.
+      - [DBPRINT](07_configuration/0514-dbprint.md) — Defines the print device to be used by reports.
+      - [DBSCREENDUMP](07_configuration/0515-dbscreendump.md) — Defines the output filename for text screen shots.
+      - [DBSCREENOUT](07_configuration/0516-dbscreenout.md) — Defines the output filename for text screen shots.
+      - [DBTEMP](07_configuration/0517-dbtemp.md) — Defines the directory for temporary files.
+      - [FGL_LENGTH_SEMANTICS](07_configuration/0518-fgl-length-semantics.md) — Defines the length semantics to be used in programs.
+      - [FGLAPPDIR](07_configuration/0519-fglappdir.md) — Contains the path to the application directory when executing on a mobile device.
+      - [FGLAPPSERVER](07_configuration/0520-fglappserver.md) — Defines the listening TCP port of the Web service in development context.
+      - [FGLCOV](07_configuration/0521-fglcov.md) — Enables code coverage data collection.
+      - [FGLDBPATH](07_configuration/0522-fgldbpath.md) — Defines a list of paths to database schema files for compilers.
+      - [FGLDIR](07_configuration/0523-fgldir.md) — Defines the installation directory of Genero Business Development Language.
+      - [FGLGBCDIR](07_configuration/0524-fglgbcdir.md) — Defines the GBC component to be used in GUI direct mode.
+      - [FGLGUI](07_configuration/0525-fglgui.md) — Defines the user interface mode to be used by the program.
+      - [FGLGUIDEBUG](07_configuration/0526-fglguidebug.md) — Defines the debug level in GUI mode.
+      - [FGLIMAGEPATH](07_configuration/0527-fglimagepath.md) — Defines a list of paths and filenames for image resources.
+      - [FGLLDPATH](07_configuration/0528-fglldpath.md) — Defines a list of paths to find program modules.
+      - [FGLLICENSE](07_configuration/0529-fgllicense.md) — The FGLLICENSE environment variable identifies the configuration file (or files) for the fglWrt license controller.
+      - [FGLPROFILE](07_configuration/0530-fglprofile.md) — Defines the configuration files to be used by the runtime system.
+      - [FGLRESOURCEPATH](07_configuration/0531-fglresourcepath.md) — Defines a list of paths for program resource files.
+      - [FGLSERVER](07_configuration/0532-fglserver.md) — Defines the graphical front-end for the application.
+      - [FGLSOURCEPATH](07_configuration/0533-fglsourcepath.md) — Defines a list of paths to program source files.
+      - [FGLSQLDEBUG](07_configuration/0534-fglsqldebug.md) — Defines the debug level for tracing SQL instructions.
+      - [FGLTRACE_FUNCTIONS](07_configuration/0535-fgltrace-functions.md) — Defines the list of functions to be followed by the program execution trace.
+      - [FGLTRACE_EXCLUDE](07_configuration/0536-fgltrace-exclude.md) — Defines the list of functions to be excluded from the program execution trace.
+      - [FGLWSDEBUG](07_configuration/0537-fglwsdebug.md) — The FGLWSDEBUG environment variable enables web services library debugging.
+      - [GMIDIR](07_configuration/0538-gmidir.md) — Defines the installation directory of Genero Mobile for iOS.
+      - [INFORMIXTERM](07_configuration/0539-informixterm.md) — Defines terminal control library to be used.
+      - [VSCODE_FGLDA_IPCPATH](07_configuration/0540-vscode-fglda-ipcpath.md) — Defines the communication channel for the FGL debugger in VS Code.
+  - [Front-end connection](07_configuration/0541-front-end-connection.md) — To execute a Genero program with a graphical user interface, you need to specify the front-end (i.e. the graphical server) to the runtime system.
+  - [Database server connections](07_configuration/0542-database-server-connections.md) — Before running a Genero program using a database, you must configure the connection parameters to access the database server.
+- [Language basics](08_language-basics/0543-language-basics.md) — These topics cover the basics for the Genero Business Development Language (BDL)
+  - [Syntax features](08_language-basics/0544-syntax-features.md) — Genero BDL is an English-like programming language, easy to write and read.
+    - [Lettercase insensitivity](08_language-basics/0545-lettercase-insensitivity.md) — Genero BDL is case insensitive (with some exceptions).
+    - [Whitespace separators](08_language-basics/0546-whitespace-separators.md) — Whitespace characters are used to separate language elements.
+    - [String delimiters](08_language-basics/0547-string-delimiters.md) — String literals need to be delimited by specific characters.
+    - [Escape symbol](08_language-basics/0548-escape-symbol.md) — Backslash ( \ ) is the escape character of Genero BDL.
+    - [Statement terminator](08_language-basics/0549-statement-terminator.md) — The semicolon ( ; ) is optional statement terminator in Genero BDL.
+    - [Source comments](08_language-basics/0550-source-comments.md) — The --, # and { } characters can be used to add source comments.
+    - [Identifiers](08_language-basics/0551-identifiers.md) — A Genero BDL identifier is a sequence of characters used to identify a program entity.
+    - [Preprocessor directives](08_language-basics/0552-preprocessor-directives.md) — Preprocessor directives can be used in Genero BDL sources.
+  - [Primitive Data types](08_language-basics/0553-primitive-data-types.md) — Selecting the correct data type assists you in the input, storage, and display of your data.
+    - [BIGINT](08_language-basics/0554-bigint.md) — The BIGINT data type is used for storing very large whole numbers.
+    - [BYTE](08_language-basics/0555-byte.md) — The BYTE data type stores any type of binary data, such as images or sounds.
+    - [BOOLEAN](08_language-basics/0556-boolean.md) — The BOOLEAN data type stores a logical value, TRUE or FALSE.
+    - [CHAR(size)](08_language-basics/0557-char-size.md) — The CHAR data type is a fixed-length character string data type.
+    - [DATE](08_language-basics/0558-date.md) — The DATE data type stores calendar dates with a Year/Month/Day representation.
+    - [DATETIME qual1 TO qual2](08_language-basics/0559-datetime-qual1-to-qual2.md) — The DATETIME data type stores date and time data with time units from the year to fractions of a second.
+    - [DECIMAL(p,s)](08_language-basics/0560-decimal-p-s.md) — The DECIMAL data type is provided to handle large numeric values with exact decimal storage.
+    - [FLOAT](08_language-basics/0561-float.md) — The FLOAT data type stores values as double-precision floating-point binary numbers with up to 16 significant digits.
+    - [INTEGER](08_language-basics/0562-integer.md) — The INTEGER data type is used for storing large whole numbers.
+    - [INTERVAL qual1 TO qual2](08_language-basics/0563-interval-qual1-to-qual2.md) — The INTERVAL data type stores spans of time as Year/Month or Day/Hour/Minute/Second/Fraction units.
+    - [MONEY(p,s)](08_language-basics/0564-money-p-s.md) — The MONEY data type is provided to store currency amounts with exact decimal storage.
+    - [SMALLFLOAT](08_language-basics/0565-smallfloat.md) — The SMALLFLOAT data type stores values as single-precision floating-point binary numbers with up to 8 significant digits.
+    - [SMALLINT](08_language-basics/0566-smallint.md) — The SMALLINT data type is used for storing small whole numbers.
+    - [STRING](08_language-basics/0567-string.md) — The STRING data type is a variable-length, dynamically allocated character string data type, without limitation.
+    - [TINYINT](08_language-basics/0568-tinyint.md) — The TINYINT data type is used for storing very small whole numbers.
+    - [TEXT](08_language-basics/0569-text.md) — The TEXT data type stores large text data.
+    - [VARCHAR(size)](08_language-basics/0570-varchar-size.md) — The VARCHAR data type is a variable-length character string data type, with a maximum size.
+  - [Predefined constants](08_language-basics/0571-predefined-constants.md) — The language defines a set of global constants that can be used in the programs.
+    - [NULL](08_language-basics/0572-null.md) — The NULL constant defines a non-value.
+    - [TRUE](08_language-basics/0573-true.md) — TRUE is a predefined constant to be used in boolean expressions.
+    - [FALSE](08_language-basics/0574-false.md) — FALSE is a predefined constant to be used in boolean expressions.
+    - [NOTFOUND](08_language-basics/0575-notfound.md) — NOTFOUND is a predefined constant used to check if an SQL statement returns rows.
+  - [Type conversions](08_language-basics/0576-type-conversions.md) — Explains primitive data type conversion rules of the language.
+    - [When does type conversion occur?](08_language-basics/0577-when-does-type-conversion-occur.md) — In Genero BDL, primitive data type conversion is implicit when possible.
+    - [Data type conversion reference](08_language-basics/0578-data-type-conversion-reference.md) — This topic lists type conversion rules for all data types.
+    - [Handling type conversion errors](08_language-basics/0579-handling-type-conversion-errors.md) — Runtime errors can be handled on type conversion failures.
+  - [Formatting data](08_language-basics/0580-formatting-data.md) — Explains data to string conversion options of the language.
+    - [Formatting numeric values](08_language-basics/0581-formatting-numeric-values.md) — Numeric values must be formatted when converted to strings.
+    - [Formatting DATE values](08_language-basics/0582-formatting-date-values.md) — Date values must be formatted when converted to strings.
+    - [Formatting DATETIME values](08_language-basics/0583-formatting-datetime-values.md) — Date-time values must be formatted when converted to strings.
+    - [Formatting INTERVAL values](08_language-basics/0584-formatting-interval-values.md) — Interval values must be formatted when converted to strings.
+  - [Literals](08_language-basics/0585-literals.md) — Describes the syntax of literals (constant values) to be used in sources.
+    - [Integer literals](08_language-basics/0586-integer-literals.md) — Integer literals define a whole number in an expression.
+    - [Numeric literals](08_language-basics/0587-numeric-literals.md) — Numeric literals define values with a decimal part in an expression.
+    - [Text literals](08_language-basics/0588-text-literals.md) — Text literals define a character string in an expression.
+    - [MDY(m,d,y) literals](08_language-basics/0589-mdy-m-d-y-literals.md) — MDY() literals define a DATE literal in an expression.
+    - [Datetime literals](08_language-basics/0590-datetime-literals.md) — Datetime literals define date/time value in an expression.
+    - [Interval literals](08_language-basics/0591-interval-literals.md) — Interval literals define an interval value in an expression.
+  - [Expressions](08_language-basics/0592-expressions.md) — Shows the possible expressions supported in the language.
+    - [Understanding expressions](08_language-basics/0593-understanding-expressions.md) — This is an introduction to language expressions.
+    - [Boolean expressions](08_language-basics/0594-boolean-expressions.md) — This section covers boolean expression evaluation rules.
+    - [Integer expressions](08_language-basics/0595-integer-expressions.md) — This section covers integer expression evaluation rules.
+    - [Numeric expressions](08_language-basics/0596-numeric-expressions.md) — This section covers numeric expression evaluation rules.
+    - [String expressions](08_language-basics/0597-string-expressions.md) — This section covers string expression evaluation rules.
+    - [Date expressions](08_language-basics/0598-date-expressions.md) — This section covers date expression evaluation rules.
+    - [Datetime expressions](08_language-basics/0599-datetime-expressions.md) — This section covers date-time expression evaluation rules.
+    - [Interval expressions](08_language-basics/0600-interval-expressions.md) — This section covers interval expression evaluation rules.
+  - [Operators](08_language-basics/0601-operators.md) — Operators are basic syntax elements that appear in expressions.
+    - [Order of precedence](08_language-basics/0602-order-of-precedence.md) — The order of precedence defines in which order the elements of an expression are evaluated.
+    - [Operator usage context](08_language-basics/0603-operator-usage-context.md) — Some operators are specific to a context.
+    - [List of expression elements](08_language-basics/0604-list-of-expression-elements.md) — This topic is the reference for language expressions.
+      - [Comparison operators](08_language-basics/0605-comparison-operators.md) — Comparison operators allow you to compare two values, to include the greater than, less than and equal to functions.
+        - [IS NULL](08_language-basics/0606-is-null.md) — The IS NULL operator checks for NULL values.
+        - [LIKE](08_language-basics/0607-like.md) — The LIKE operator returns TRUE if a string matches a given mask.
+        - [MATCHES](08_language-basics/0608-matches.md) — The MATCHES operator returns TRUE if a string matches a given mask.
+        - [Equal to (== or =)](08_language-basics/0609-equal-to-or.md) — The == operator checks for equality of two expressions or for two record variables. A single = can be used as alias for ==.
+        - [Different from (!= or <>)](08_language-basics/0610-different-from-or.md) — The != operator checks for non-equality of two expressions or for two record variables. The <> can be used as alias for !=.
+        - [Lower (<)](08_language-basics/0611-lower.md) — The < operator is provided to test whether a value or expression is lower than another.
+        - [Lower or equal (<=)](08_language-basics/0612-lower-or-equal.md) — The <= operator is provided to test whether a value or expression is lower than or equal to another.
+        - [Greater (>)](08_language-basics/0613-greater.md) — The > operator is provided to test whether a value or expression is greater than another.
+        - [Greater or equal (>=)](08_language-basics/0614-greater-or-equal.md) — The >= operator is provided to test whether a value or expression is greater than or equal to another.
+        - [NVL() [function]](08_language-basics/0615-nvl-function.md) — The NVL() operator returns the second parameter if the first argument evaluates to NULL.
+        - [IIF() [function]](08_language-basics/0616-iif-function.md) — The IIF() returns the second or third parameter depending on the boolean expression given as first argument.
+        - [IN()](08_language-basics/0617-in.md) — The IN() operator compares an expression to a list of values.
+      - [Boolean operators](08_language-basics/0618-boolean-operators.md) — Boolean operators include NOT, AND and OR.
+        - [NOT](08_language-basics/0619-not.md) — The NOT operator performs a logical negation to invert a boolean expression.
+        - [AND](08_language-basics/0620-and.md) — The AND operator is the logical intersection operator.
+        - [OR](08_language-basics/0621-or.md) — The OR operator is the logical union operator.
+      - [Arithmetic operators](08_language-basics/0622-arithmetic-operators.md) — Arithmetic operators allow you to complete numeric operations, such as addition and subtraction.
+        - [Addition (+)](08_language-basics/0623-addition.md) — The + operator adds a number to another.
+        - [Subtraction (-)](08_language-basics/0624-subtraction.md) — The - operator subtracts a number from another.
+        - [Multiplication (*)](08_language-basics/0625-multiplication.md) — The * operator multiplies a number with another.
+        - [Division (/)](08_language-basics/0626-division.md) — The / operator divides a number by another.
+        - [Exponentiation (**)](08_language-basics/0627-exponentiation.md) — The ** operator calculates an exponentiation.
+        - [MOD](08_language-basics/0628-mod.md) — The MOD operator calculates the modulus.
+      - [Character string operators](08_language-basics/0629-character-string-operators.md) — Character string operators allow you to work with and manipulate character strings.
+        - [ASCII](08_language-basics/0630-ascii.md) — The ASCII operator produces a character from its ordinal value.
+        - [COLUMN](08_language-basics/0631-column.md) — The COLUMN operator generates blanks.
+        - [Concatenate (||)](08_language-basics/0632-concatenate.md) — The || operator makes a string concatenation.
+        - [Substring ([s,e])](08_language-basics/0633-substring-s-e.md) — The [] (square brackets) operator extracts a substring from a variable.
+        - [USING](08_language-basics/0634-using.md) — The USING operator converts date and numeric values to a string based on a formatting mask.
+        - [CLIPPED](08_language-basics/0635-clipped.md) — The CLIPPED operator removes trailing blank spaces (ASCII 32) of a string expression.
+        - [ORD() [function]](08_language-basics/0636-ord-function.md) — The ORD() operator returns the code point of a character in the current locale.
+        - [SPACES](08_language-basics/0637-spaces.md) — The SPACES operator returns a character string with blanks.
+        - [LSTR() [function]](08_language-basics/0638-lstr-function.md) — The LSTR() operator returns a localized string.
+        - [SFMT() [function]](08_language-basics/0639-sfmt-function.md) — The SFMT() operator replaces place holders in a string with values.
+      - [Associative syntax operators](08_language-basics/0640-associative-syntax-operators.md) — Associative syntax operators allow you to group together objects.
+        - [Parentheses: ()](08_language-basics/0641-parentheses.md) — Parentheses ( () ) force the evaluation of an expression before other operators.
+        - [Membership (object.member)](08_language-basics/0642-membership-object-member.md) — Separator for object members.
+        - [Variable parameter list: [ ]](08_language-basics/0643-variable-parameter-list.md) — Variable parameter list delimiters.
+      - [SQL related operators](08_language-basics/0644-sql-related-operators.md) — SQL related operators allow you to retrieve the SQL state and the SQL error message.
+        - [SQLSTATE [variable]](08_language-basics/0645-sqlstate-variable.md) — The SQLSTATE predefined variable returns the code corresponding to the last SQL error.
+        - [SQLERRMESSAGE [variable]](08_language-basics/0646-sqlerrmessage-variable.md) — The SQLERRMESSAGE predefined variable holds the error message corresponding to the last SQL error.
+      - [Data type operators](08_language-basics/0647-data-type-operators.md) — Data type operators allow you cast a data type or create an instance of a data type.
+        - [CAST() [function]](08_language-basics/0648-cast-function.md) — The CAST operator converts a Java object to the user-defined type or Java class specified.
+        - [INSTANCEOF](08_language-basics/0649-instanceof.md) — The INSTANCEOF checks the class of an object.
+      - [Assignment operators](08_language-basics/0650-assignment-operators.md) — An assignment operator allows you to assign a variable with an expression.
+        - [Assignment (:=)](08_language-basics/0651-assignment.md) — The := operator assigns a variable with an expression and returns the result.
+        - [Addition Assignment (+=) [LET]](08_language-basics/0652-addition-assignment-let.md) — The += operator used after the LET keyword, assigns a variable by adding the current variable value to a numeric expression.
+        - [Subtraction Assignment (-=) [LET]](08_language-basics/0653-subtraction-assignment-let.md) — The -= operator used after the LET keyword, assigns a variable by subtracting the current variable value to a numeric expression.
+        - [Multiplication Assignment (*=) [LET]](08_language-basics/0654-multiplication-assignment-let.md) — The *= operator used after the LET keyword, assigns a variable by multiplying the current variable value to a numeric expression.
+        - [Division Assignment (/=) [LET]](08_language-basics/0655-division-assignment-let.md) — The /= operator used after the LET keyword, assigns a variable by dividing the current variable value by a numeric expression.
+        - [Concatenation Assignment (||=) [LET]](08_language-basics/0656-concatenation-assignment-let.md) — The ||= operator used after the LET keyword, assigns a variable by concatenating the current variable value to an expression.
+        - [Append Assignment (,=) [LET]](08_language-basics/0657-append-assignment-let.md) — The ,= operator used after the LET keyword, assigns a variable by concatenating the current variable value with the formatted version of an expression.
+      - [Date and time operators](08_language-basics/0658-date-and-time-operators.md) — Date and time operators allow you to work with date and time values.
+        - [CURRENT [function]](08_language-basics/0659-current-function.md) — The CURRENT function operator returns the current system date and time.
+        - [EXTEND() [function]](08_language-basics/0660-extend-function.md) — The EXTEND() operator adjusts a date time value depending on the qualifier.
+        - [DATE [()] [function]](08_language-basics/0661-date-function.md) — The DATE() operator converts an expression to a DATE value.
+        - [TIME() [function]](08_language-basics/0662-time-function.md) — The TIME() operator returns a time part of the date time expression.
+        - [TODAY [function]](08_language-basics/0663-today-function.md) — The TODAY operator returns the current calendar date.
+        - [YEAR() [function]](08_language-basics/0664-year-function.md) — The YEAR() operator extracts the year of a date time expression.
+        - [MONTH() [function]](08_language-basics/0665-month-function.md) — The MONTH() operator extracts the month of a date time expression.
+        - [DAY() [function]](08_language-basics/0666-day-function.md) — The DAY() operator extracts the day of the month of a date time expression.
+        - [WEEKDAY() [function]](08_language-basics/0667-weekday-function.md) — The WEEKDAY() operator extracts the day of the week of a date time expression.
+        - [MDY() [function]](08_language-basics/0668-mdy-function.md) — The MDY() operator creates a DATE from month, day and year units.
+        - [UNITS](08_language-basics/0669-units.md) — The UNITS operator converts an integer to an interval.
+      - [Dialog handling operators](08_language-basics/0670-dialog-handling-operators.md) — Dialog handling operators allow you to handle variables in a DIALOG statement.
+        - [GET_FLDBUF() [function]](08_language-basics/0671-get-fldbuf-function.md) — The GET_FLDBUF() operator returns as character strings the current values of the specified fields.
+        - [INFIELD() [function]](08_language-basics/0672-infield-function.md) — The INFIELD() operator checks for the current screen field.
+        - [FIELD_TOUCHED() [function]](08_language-basics/0673-field-touched-function.md) — The FIELD_TOUCHED() operator checks if fields were modified during the dialog execution.
+  - [Flow control](08_language-basics/0674-flow-control.md) — Definition of language elements and instructions that control the flow of a program.
+    - [CALL](08_language-basics/0675-call.md) — The CALL instruction invokes a specified function or method.
+    - [RETURN](08_language-basics/0676-return.md) — The RETURN instruction gives the control of execution back to the caller, optionally returning values on the stack.
+    - [CASE](08_language-basics/0677-case.md) — The CASE instruction specifies statement blocks that must be executed conditionally.
+    - [CONTINUE block-name](08_language-basics/0678-continue-block-name.md) — The CONTINUE block-name instruction resumes execution of a loop or dialog statement.
+    - [EXIT block-name](08_language-basics/0679-exit-block-name.md) — The EXIT block instruction transfers control out of the current program block.
+    - [FOR](08_language-basics/0680-for.md) — The FOR instruction executes a statement block a specified number of times.
+    - [GOTO](08_language-basics/0681-goto.md) — The GOTO instruction transfers program control to a labeled line within the same program block.
+    - [IF](08_language-basics/0682-if.md) — The IF instruction executes a group of statements conditionally.
+    - [LABEL](08_language-basics/0683-label.md) — The LABEL instruction declares a jump point that can be reached by a GOTO or WHENEVER … GOTO.
+    - [SLEEP](08_language-basics/0684-sleep.md) — The SLEEP instruction causes the program to pause for the specified number of seconds.
+    - [WHILE](08_language-basics/0685-while.md) — The WHILE statement executes a block of statements until the specified condition becomes false.
+  - [Variables](08_language-basics/0686-variables.md) — Explains how to define program variables.
+    - [Understanding variables](08_language-basics/0687-understanding-variables.md) — This is an introduction to variables.
+    - [DEFINE](08_language-basics/0688-define.md) — The DEFINE instruction declares a program variable with a given type.
+    - [VAR](08_language-basics/0689-var.md) — The VAR instruction declares a program variable within a code block.
+    - [Primitive type specification](08_language-basics/0690-primitive-type-specification.md) — Type definitions using a primitive data type define a primitive type.
+    - [Variable initializers](08_language-basics/0691-variable-initializers.md) — Variables can be initialized in their definition.
+    - [Attributes on variable definitions](08_language-basics/0692-attributes-on-variable-definitions.md) — Variables can be defined with meta-data information.
+    - [Declaration context](08_language-basics/0693-declaration-context.md) — A variable can be declared in different contexts, which defines its visibility.
+    - [Structured variables](08_language-basics/0694-structured-variables.md) — Variables can be declared with a composite data type, based on simple data types.
+    - [Database column types](08_language-basics/0695-database-column-types.md) — Simple variables and record structures can be defined from database columns types.
+    - [User defined types](08_language-basics/0696-user-defined-types.md) — User defined types help to centralize the definition of complex structured data types.
+    - [Variable default values](08_language-basics/0697-variable-default-values.md) — Variables get a default value when defined.
+    - [INITIALIZE](08_language-basics/0698-initialize.md) — The INITIALIZE instruction initializes program variables with NULL or default values.
+    - [LOCATE (for TEXT/BYTE)](08_language-basics/0699-locate-for-text-byte.md) — The LOCATE statement specifies where to store data of TEXT and BYTE variables.
+    - [FREE (for TEXT/BYTE)](08_language-basics/0700-free-for-text-byte.md) — The FREE statement releases resources allocated to the specified variable.
+    - [LET](08_language-basics/0701-let.md) — The LET statement assigns values to variables.
+    - [VALIDATE](08_language-basics/0702-validate.md) — The VALIDATE instructions checks a variable value based on database schema validation rules.
+    - [Examples](08_language-basics/0703-examples.md) — Variable definition usage examples.
+      - [Example 1: Local function variables](08_language-basics/0704-example-1-local-function-variables.md)
+      - [Example 2: PRIVATE module variables](08_language-basics/0705-example-2-private-module-variables.md)
+      - [Example 3: PUBLIC module variables](08_language-basics/0706-example-3-public-module-variables.md)
+      - [Example 4: Global variables](08_language-basics/0707-example-4-global-variables.md)
+      - [Example 5: Type attributes](08_language-basics/0708-example-5-type-attributes.md)
+      - [Example 6: Code block variables](08_language-basics/0709-example-6-code-block-variables.md)
+  - [Constants](08_language-basics/0710-constants.md) — The definition of constants allows to centralize common static values.
+    - [Understanding constants](08_language-basics/0711-understanding-constants.md) — This is an introduction to constant definition.
+    - [CONSTANT](08_language-basics/0712-constant.md) — The CONSTANT instruction defines a program constant.
+    - [Examples](08_language-basics/0713-examples.md) — CONSTANT usage examples.
+      - [Example 1: Defining and using constants](08_language-basics/0714-example-1-defining-and-using-constants.md) — This example shows how to define constants.
+  - [Records](08_language-basics/0715-records.md) — Records allow structured program variables definitions.
+    - [Understanding records](08_language-basics/0716-understanding-records.md) — This is an introduction to records.
+    - [RECORD](08_language-basics/0717-record.md) — The RECORD keyword defines a structured type or variable.
+    - [Attributes on record definitions](08_language-basics/0718-attributes-on-record-definitions.md) — Records can be defined with attributes, to complete the type description.
+    - [Record initializers](08_language-basics/0719-record-initializers.md) — Records can be initialized in their definition.
+    - [Accessing record members](08_language-basics/0720-accessing-record-members.md) — Record members are accessed with the dot notation.
+    - [Copying records](08_language-basics/0721-copying-records.md) — Records can be assigned to each other with the = operator.
+    - [Comparing records](08_language-basics/0722-comparing-records.md) — Records can be compared with the == comparison operator and the .* notation.
+    - [Records and functions](08_language-basics/0723-records-and-functions.md) — Records can be passed as function parameters, and can be returned from functions.
+    - [THRU/THROUGH](08_language-basics/0724-thru-through.md) — The THRU keyword can be used to specify a set of members of a record.
+    - [Examples](08_language-basics/0725-examples.md) — RECORD usage examples.
+      - [Example 1: Defining a record with explicit member types](08_language-basics/0726-example-1-defining-a-record-with-explicit-member-types.md) — This example shows a simple record definition with built-in types.
+      - [Example 2: Defining a record with a database table structure](08_language-basics/0727-example-2-defining-a-record-with-a-database-table-structure.md) — This example shows how to define a record with members using the same types as database columns.
+      - [Example 3: Assigning an comparing records](08_language-basics/0728-example-3-assigning-an-comparing-records.md) — This example shows how to use records with comparison and assignment operators.
+  - [Arrays](08_language-basics/0729-arrays.md) — Arrays (static or dynamic) allow you to handle an ordered collection of elements.
+    - [Understanding arrays](08_language-basics/0730-understanding-arrays.md) — This is an introduction to arrays.
+    - [ARRAY](08_language-basics/0731-array.md) — An array defines a vector variable with a list of elements.
+    - [Static arrays](08_language-basics/0732-static-arrays.md) — Static arrays have a predefined and limited size.
+      - [Controlling out of bound in static arrays](08_language-basics/0733-controlling-out-of-bound-in-static-arrays.md)
+    - [Dynamic arrays](08_language-basics/0734-dynamic-arrays.md)
+    - [Array initializers](08_language-basics/0735-array-initializers.md) — Arrays can be initialized in their definition.
+    - [Attributes on array definitions](08_language-basics/0736-attributes-on-array-definitions.md) — Arrays can be defined with attributes, to complete the type description.
+    - [Array methods](08_language-basics/0737-array-methods.md) — Native BDL arrays and Java arrays can be used to invoke built-in methods.
+    - [Copying and assigning arrays](08_language-basics/0738-copying-and-assigning-arrays.md) — Arrays can be fully copied or assigned by reference.
+    - [Examples](08_language-basics/0739-examples.md) — Array usage examples.
+      - [Example 1: Using static and dynamic arrays](08_language-basics/0740-example-1-using-static-and-dynamic-arrays.md) — This example illustrates the syntax difference of static and dynamic arrays.
+      - [Example 2: Filling a dynamic array with rows](08_language-basics/0741-example-2-filling-a-dynamic-array-with-rows.md) — This example shows how to fetch database rows into a dynamic array.
+  - [Dictionaries](08_language-basics/0742-dictionaries.md) — A dictionary holds an unordered collection of elements accessed by a key.
+    - [Understanding dictionaries](08_language-basics/0743-understanding-dictionaries.md) — This is an introduction to dictionaries.
+    - [DICTIONARY](08_language-basics/0744-dictionary.md) — A dictionary defines an associative array (hash-map) of elements.
+    - [Dictionary initializers](08_language-basics/0745-dictionary-initializers.md) — Dictionaries can be initialized in their definition.
+    - [Attributes on dictionary definitions](08_language-basics/0746-attributes-on-dictionary-definitions.md) — Dictionaries can be defined with attributes, to complete the type description.
+    - [Dictionary in action](08_language-basics/0747-dictionary-in-action.md)
+    - [Dictionary methods](08_language-basics/0748-dictionary-methods.md) — Dictionary variables can be used to invoke built-in methods.
+    - [Examples](08_language-basics/0749-examples.md) — Dictionary usage examples.
+      - [Example 1: Simple DICTIONARY usage](08_language-basics/0750-example-1-simple-dictionary-usage.md) — Fill a DICTIONARY and show existing elements.
+  - [Types](08_language-basics/0751-types.md) — Types can be defined by the programmer to centralize the definition of complex/structured variables.
+    - [Understanding type definition](08_language-basics/0752-understanding-type-definition.md) — This is an introduction to types.
+    - [TYPE](08_language-basics/0753-type.md) — Types define a synonym for a base or structured data type.
+    - [Using types in programs](08_language-basics/0754-using-types-in-programs.md) — Define a type as a synonym for an existing data type, or as a shortcut for records and array structures.
+    - [Anonymous types](08_language-basics/0755-anonymous-types.md) — Anonymous types are created from DEFINE instructions.
+    - [Type attributes](08_language-basics/0756-type-attributes.md) — Types can be defined with meta-data information.
+    - [Examples](08_language-basics/0757-examples.md) — TYPE (user types) usage examples.
+      - [Example 1: User type with a record structure](08_language-basics/0758-example-1-user-type-with-a-record-structure.md)
+      - [Example 2: User type defined in a module](08_language-basics/0759-example-2-user-type-defined-in-a-module.md)
+      - [Example 3: User type for function reference](08_language-basics/0760-example-3-user-type-for-function-reference.md)
+  - [Functions](08_language-basics/0761-functions.md) — Describes user defined functions.
+    - [Understanding functions](08_language-basics/0762-understanding-functions.md) — This is an introduction to functions.
+    - [FUNCTION definitions](08_language-basics/0763-function-definitions.md) — A FUNCTION definition defines a named procedure with a set of statements.
+    - [Scope of a function](08_language-basics/0764-scope-of-a-function.md) — A functions can be isolated to control its visibility to other modules.
+    - [Local symbol definition](08_language-basics/0765-local-symbol-definition.md) — Symbols defined inside a function body are only visible to the function.
+    - [Calling functions](08_language-basics/0766-calling-functions.md) — Functions can be invoked, to execute the code they define.
+    - [Function parameters](08_language-basics/0767-function-parameters.md) — Functions can take parameters, to specialize their behavior.
+    - [Returning values](08_language-basics/0768-returning-values.md) — A function can return values with the RETURN instruction.
+    - [Function attributes](08_language-basics/0769-function-attributes.md) — Function attributes can be used to add definition information about the function, its parameters and its return values.
+    - [Function references](08_language-basics/0770-function-references.md) — Function can be referenced and invoked dynamically in a CALL instruction, or in an expression.
+    - [FUNCTION func-spec](08_language-basics/0771-function-func-spec.md) — The FUNCTION keyword provides the reference to the specified function.
+    - [Methods](08_language-basics/0772-methods.md) — A function declared with a receiver type defines a method for this type.
+    - [Examples](08_language-basics/0773-examples.md) — Function definition examples.
+      - [Example 1: Function fetching customer number](08_language-basics/0774-example-1-function-fetching-customer-number.md)
+      - [Example 2: Private function definition](08_language-basics/0775-example-2-private-function-definition.md)
+      - [Example 3: Using function references](08_language-basics/0776-example-3-using-function-references.md)
+      - [Example 4: Defining methods](08_language-basics/0777-example-4-defining-methods.md)
+  - [Interfaces](08_language-basics/0778-interfaces.md) — An interface groups a set of methods acting on a user-defined type.
+    - [Understanding interfaces](08_language-basics/0779-understanding-interfaces.md) — This is an introduction to interfaces.
+    - [INTERFACE](08_language-basics/0780-interface.md) — An interface is defined by a list of methods for a type.
+    - [INTERFACE usage](08_language-basics/0781-interface-usage.md)
+    - [Examples](08_language-basics/0782-examples.md) — Interface usage examples.
+      - [Example 1: Simple INTERFACE usage](08_language-basics/0783-example-1-simple-interface-usage.md) — Defines an INTERFACE to handle shape objects.
+- [Advanced features](09_advanced-features/0784-advanced-features.md) — These topics cover advanced features of the Genero Business Development Language
+  - [Program structure](09_advanced-features/0785-program-structure.md) — Explains the organization of a BDL program.
+    - [Modules and packages](09_advanced-features/0786-modules-and-packages.md) — Programs sources can be organized in packages of modules.
+    - [Workflow of a program](09_advanced-features/0787-workflow-of-a-program.md) — The Genero BDL language is a procedural programming language.
+    - [Content of a .4gl module](09_advanced-features/0788-content-of-a-4gl-module.md) — A module defines a set of program elements.
+    - [The MAIN block / function](09_advanced-features/0789-the-main-block-function.md) — The MAIN block is the starting point of the program.
+    - [Module overriding](09_advanced-features/0790-module-overriding.md) — It is possible to providing different versions of a given .42m module to implement hook functions.
+  - [Database schema](09_advanced-features/0791-database-schema.md) — Defines database table structures with column type information to be reused in program variable definitions.
+    - [Understanding database schemas](09_advanced-features/0792-understanding-database-schemas.md) — Database schemas hold the definition of the database tables and columns.
+    - [SCHEMA](09_advanced-features/0793-schema.md) — Defines the database schema files to be used for compilation.
+    - [Structure of database schema files](09_advanced-features/0794-structure-of-database-schema-files.md) — A database schema is composed by three files (.sch, .val, .att)
+      - [Column Definition File (.sch)](09_advanced-features/0795-column-definition-file-sch.md) — The .sch database schema file contains the data types of database table columns.
+      - [Column Validation File (.val)](09_advanced-features/0796-column-validation-file-val.md) — The .val database schema file holds functional and display attributes of database table columns.
+      - [Column Video Attributes File (.att)](09_advanced-features/0797-column-video-attributes-file-att.md) — The .att database schema file contains the default video attributes of database table columns.
+    - [Database schema extractor options](09_advanced-features/0798-database-schema-extractor-options.md) — The fgldbsch tool extracts the schema description for an existing database.
+      - [Specifying the database source](09_advanced-features/0799-specifying-the-database-source.md)
+      - [Specifying the database driver](09_advanced-features/0800-specifying-the-database-driver.md)
+      - [Passing database user login and password](09_advanced-features/0801-passing-database-user-login-and-password.md)
+      - [Data type conversion control](09_advanced-features/0802-data-type-conversion-control.md)
+      - [Skip unsupported table definitions](09_advanced-features/0803-skip-unsupported-table-definitions.md)
+      - [Specifying the table schema/owner](09_advanced-features/0804-specifying-the-table-schema-owner.md) — Providing the database schema of SQL tables is mandatory when extracting a schema from some databases.
+      - [Force extraction of system tables](09_advanced-features/0805-force-extraction-of-system-tables.md)
+      - [Specifying the output filename](09_advanced-features/0806-specifying-the-output-filename.md)
+      - [Extracting definition of a single table](09_advanced-features/0807-extracting-definition-of-a-single-table.md)
+      - [Controlling the character case](09_advanced-features/0808-controlling-the-character-case.md)
+      - [Using the verbose mode](09_advanced-features/0809-using-the-verbose-mode.md)
+      - [IBM® Informix® synonym tables](09_advanced-features/0810-ibm-informix-synonym-tables.md)
+      - [IBM® Informix® shadow columns](09_advanced-features/0811-ibm-informix-shadow-columns.md)
+      - [Running schema extractor in old mode](09_advanced-features/0812-running-schema-extractor-in-old-mode.md)
+  - [Importing modules](09_advanced-features/0813-importing-modules.md) — Use the IMPORT ... instruction to import BDL, C or Java external modules in the current module.
+    - [Importing FGL modules](09_advanced-features/0814-importing-fgl-modules.md) — FGL modules can be organized by using the IMPORT FGL and PACKAGE instructions.
+      - [IMPORT FGL](09_advanced-features/0815-import-fgl.md) — The IMPORT FGL instruction imports module symbols.
+      - [PACKAGE](09_advanced-features/0816-package.md) — Defines the package the module belongs to.
+      - [Building projects with IMPORT FGL](09_advanced-features/0817-building-projects-with-import-fgl.md) — Use IMPORT FGL instead of linking.
+      - [Organizing modules in packages](09_advanced-features/0818-organizing-modules-in-packages.md) — Modules to be imported can be grouped in packages.
+      - [Auto-compilation of imported modules](09_advanced-features/0819-auto-compilation-of-imported-modules.md) — Imported local and package modules are compiled automatically if needed.
+      - [Circular module references](09_advanced-features/0820-circular-module-references.md) — Circular references between imported modules are allowed.
+      - [Identifying modules to be imported](09_advanced-features/0821-identifying-modules-to-be-imported.md) — Use the --print-missing-imports and --print-imports options to identify missing IMPORT FGL instructions.
+      - [Scope of module symbols (PRIVATE/PUBLIC)](09_advanced-features/0822-scope-of-module-symbols-private-public.md) — The PRIVATE/PUBLIC modifiers can be used to hide / publish symbols to other modules.
+      - [Using [package.]module prefix](09_advanced-features/0823-using-package-module-prefix.md) — Resolve symbol name conflicts with module prefix.
+      - [Defining aliases for imported modules](09_advanced-features/0824-defining-aliases-for-imported-modules.md) — Use aliases when package path or module names are too long.
+      - [Mixing IMPORT FGL and .42r linking](09_advanced-features/0825-mixing-import-fgl-and-42r-linking.md) — Traditional linking is still supported for backward compatibility, and can be mixed with IMPORT FGL method.
+    - [IMPORT JAVA](09_advanced-features/0826-import-java.md) — The IMPORT JAVA instruction imports Java module elements.
+    - [IMPORT (C-Extension)](09_advanced-features/0827-import-c-extension.md) — The IMPORT instruction imports c extension module elements to be used by the current module.
+  - [Program execution](09_advanced-features/0828-program-execution.md) — This section describes program execution and language instructions related to program execution.
+    - [Executing programs](09_advanced-features/0829-executing-programs.md) — There are different ways to execute compiled programs, depending on the configuration and the development or production context.
+    - [RUN](09_advanced-features/0830-run.md) — The RUN instruction executes the command passed as argument.
+    - [EXIT PROGRAM](09_advanced-features/0831-exit-program.md) — The EXIT PROGRAM instruction terminates the execution of the program.
+    - [BREAKPOINT](09_advanced-features/0832-breakpoint.md) — The BREAKPOINT instruction sets a program breakpoint when running in debug mode.
+  - [Runtime stack](09_advanced-features/0833-runtime-stack.md) — The runtime stack is used to pass/return values to/from functions.
+    - [Passing simple typed values as parameter](09_advanced-features/0834-passing-simple-typed-values-as-parameter.md)
+    - [Passing records as parameter](09_advanced-features/0835-passing-records-as-parameter.md)
+    - [Passing static arrays as parameter](09_advanced-features/0836-passing-static-arrays-as-parameter.md)
+    - [Passing dynamic arrays as parameter](09_advanced-features/0837-passing-dynamic-arrays-as-parameter.md)
+    - [Passing dictionaries as parameter](09_advanced-features/0838-passing-dictionaries-as-parameter.md)
+    - [Passing objects as parameter](09_advanced-features/0839-passing-objects-as-parameter.md)
+    - [Passing TEXT/BYTE values as parameter](09_advanced-features/0840-passing-text-byte-values-as-parameter.md)
+    - [Returning simple typed values from functions](09_advanced-features/0841-returning-simple-typed-values-from-functions.md)
+    - [Returning records from functions](09_advanced-features/0842-returning-records-from-functions.md)
+    - [Returning dynamic arrays from functions](09_advanced-features/0843-returning-dynamic-arrays-from-functions.md)
+    - [Returning dictionaries from functions](09_advanced-features/0844-returning-dictionaries-from-functions.md)
+    - [Returning TEXT/BYTE values from functions](09_advanced-features/0845-returning-text-byte-values-from-functions.md)
+    - [Implicit data type conversion on the stack](09_advanced-features/0846-implicit-data-type-conversion-on-the-stack.md)
+    - [Various type specification](09_advanced-features/0847-various-type-specification.md) — Some Genero APIs use variant types for parameters or returns.
+  - [Exceptions](09_advanced-features/0848-exceptions.md) — Describes exception (error) handling in the programs.
+    - [Understanding exceptions](09_advanced-features/0849-understanding-exceptions.md) — Exceptions are abnormal runtime events that can be trapped for control.
+    - [WHENEVER directive](09_advanced-features/0850-whenever-directive.md) — Use the WHENEVER directive to define how exceptions must be handled for the rest of the module.
+      - [Exception classes](09_advanced-features/0851-exception-classes.md) — Exception classes define the kind of issues that can occur at runtime.
+      - [Exception actions](09_advanced-features/0852-exception-actions.md) — Exception actions define the type of action to be taken when an exception occurs.
+    - [TRY - CATCH block](09_advanced-features/0853-try-catch-block.md) — Use TRY / CATCH blocks to trap runtime exceptions in a delimited code block.
+    - [Tracing exceptions](09_advanced-features/0854-tracing-exceptions.md) — Exception can be logged in a file when using the STARTLOG() function.
+    - [Default exception handling](09_advanced-features/0855-default-exception-handling.md) — Default exception handling must be adapted to your programming pattern.
+    - [Non-trappable errors](09_advanced-features/0856-non-trappable-errors.md) — Non-trappable errors are fatal errors that generally prevent further program execution.
+    - [Examples](09_advanced-features/0857-examples.md) — WHENEVER and TRY/CATCH usage examples.
+      - [Example 1: Defining an error handler function](09_advanced-features/0858-example-1-defining-an-error-handler-function.md)
+      - [Example 2: SQL error handling with WHENEVER](09_advanced-features/0859-example-2-sql-error-handling-with-whenever.md)
+      - [Example 3: Typical TRY / CATCH block](09_advanced-features/0860-example-3-typical-try-catch-block.md)
+      - [Example 4: TRY / CATCH in conjunction with WHENEVER](09_advanced-features/0861-example-4-try-catch-in-conjunction-with-whenever.md)
+      - [Example 5: Propagate errors to caller with RAISE](09_advanced-features/0862-example-5-propagate-errors-to-caller-with-raise.md)
+  - [Localization](09_advanced-features/0863-localization.md) — Localization support allows you to implement programs that follow specific language and cultural rules.
+    - [Application locale](09_advanced-features/0864-application-locale.md) — The application locale defines the language and codeset for your application.
+      - [Understanding locale settings](09_advanced-features/0865-understanding-locale-settings.md) — This is an introduction to application locale definition.
+      - [Quickstart guide for locale settings](09_advanced-features/0866-quickstart-guide-for-locale-settings.md) — This is a quick step-by-step guide to properly configure locale settings for your Genero application.
+      - [Locale and character set basics](09_advanced-features/0867-locale-and-character-set-basics.md) — This section is an introduction to locale and character set basics.
+        - [Why do I need to care about the locale and character set?](09_advanced-features/0868-why-do-i-need-to-care-about-the-locale-and-character-set.md)
+        - [Characters, code points, character sets, glyphs and fonts](09_advanced-features/0869-characters-code-points-character-sets-glyphs-and-fonts.md)
+        - [The ASCII character set](09_advanced-features/0870-the-ascii-character-set.md)
+        - [Single-byte character sets (SBCS)](09_advanced-features/0871-single-byte-character-sets-sbcs.md)
+        - [Double-byte character sets (DBCS)](09_advanced-features/0872-double-byte-character-sets-dbcs.md)
+        - [Multibyte character sets (MBCS)](09_advanced-features/0873-multibyte-character-sets-mbcs.md)
+        - [Character size unit and length semantics](09_advanced-features/0874-character-size-unit-and-length-semantics.md)
+        - [The UNICODE Standard](09_advanced-features/0875-the-unicode-standard.md)
+        - [When do I need a UNICODE character set?](09_advanced-features/0876-when-do-i-need-a-unicode-character-set.md)
+        - [What is the standard for UNICODE encoding?](09_advanced-features/0877-what-is-the-standard-for-unicode-encoding.md)
+        - [What is my current character set?](09_advanced-features/0878-what-is-my-current-character-set.md)
+      - [Defining the application locale](09_advanced-features/0879-defining-the-application-locale.md) — This section describes the settings defining the application locale, changing the behavior of the compilers and runtime system.
+        - [Language and character set settings](09_advanced-features/0880-language-and-character-set-settings.md)
+        - [Length semantics settings](09_advanced-features/0881-length-semantics-settings.md)
+        - [Collation ordering settings](09_advanced-features/0882-collation-ordering-settings.md)
+        - [Numeric and currency locale settings](09_advanced-features/0883-numeric-and-currency-locale-settings.md)
+        - [Date and time locale settings](09_advanced-features/0884-date-and-time-locale-settings.md)
+      - [Database client settings](09_advanced-features/0885-database-client-settings.md) — This section describes the settings defining the locale for the database client.
+      - [Front-end locale configuration](09_advanced-features/0886-front-end-locale-configuration.md) — The host operating system on the front-end workstation must be able to handle the character set and fonts.
+      - [Locale matters when writing programs](09_advanced-features/0887-locale-matters-when-writing-programs.md) — The language locale used when writing source code defines the runtime locale, except when developing in ASCII.
+      - [Runtime system messages](09_advanced-features/0888-runtime-system-messages.md) — This section describes how to translate default English runtime system message files in a different language.
+      - [Using the charmap.alias file](09_advanced-features/0889-using-the-charmap-alias-file.md) — The charmap.alias file can be used to map a system specific locale to a standard IANA locale.
+      - [Date, numeric and monetary formats](09_advanced-features/0890-date-numeric-and-monetary-formats.md) — This section describes how Genero BDL handles date, time, numeric and monetary formats.
+      - [Using the Ming Guo date format](09_advanced-features/0891-using-the-ming-guo-date-format.md) — Genero BDL can be configured to use the The Ming Guo calendar.
+      - [User's preferred language](09_advanced-features/0892-user-s-preferred-language.md) — An application can get the user's preferred language and territory as configured on the front-end platform.
+      - [Right-to-left languages support](09_advanced-features/0893-right-to-left-languages-support.md) — Genero supports right-to-left languages, such as Arabic and Hebrew.
+      - [Troubleshooting locale issues](09_advanced-features/0894-troubleshooting-locale-issues.md) — This section describes common issues related to language locale definition.
+        - [Locale settings (LANG) corrupted on Microsoft™ platforms](09_advanced-features/0895-locale-settings-lang-corrupted-on-microsoft-platforms.md)
+        - [A form is displayed with invalid characters](09_advanced-features/0896-a-form-is-displayed-with-invalid-characters.md)
+        - [Checking the locale configuration on UNIX™ platforms](09_advanced-features/0897-checking-the-locale-configuration-on-unix-platforms.md)
+        - [Verifying if the locale is properly supported by the runtime system](09_advanced-features/0898-verifying-if-the-locale-is-properly-supported-by-the-runtime.md)
+        - [How to retrieve the list of available locales on the system](09_advanced-features/0899-how-to-retrieve-the-list-of-available-locales-on-the-system.md)
+        - [How to retrieve the list of available codesets on the system](09_advanced-features/0900-how-to-retrieve-the-list-of-available-codesets-on-the-system.md)
+    - [Localized strings](09_advanced-features/0901-localized-strings.md) — Localized strings provide a means of writing applications in which the text of strings can be customized on site.
+      - [Steps for application internationalization](09_advanced-features/0902-steps-for-application-internationalization.md) — Follow these steps to internationalize your application.
+      - [Creating source string files](09_advanced-features/0903-creating-source-string-files.md) — A source string file contains localized string definitions for a given language (or localization context).
+      - [Localized strings in program sources](09_advanced-features/0904-localized-strings-in-program-sources.md) — How to specify a localized string in .4gl and .per sources?
+      - [Localized strings in XML resource files](09_advanced-features/0905-localized-strings-in-xml-resource-files.md) — In XML resource files, localized string specification must follow the XML syntax and therefore must be defined as an XML node.
+      - [Extracting strings from sources](09_advanced-features/0906-extracting-strings-from-sources.md) — Localized strings can be easily extracted from .4gl and .per source files.
+      - [Organizing string resources](09_advanced-features/0907-organizing-string-resources.md) — Good practice in use of localized strings.
+      - [Compiling string resource files (.str)](09_advanced-features/0908-compiling-string-resource-files-str.md) — The .str source string files must be compiled to .42s binary files, in order to be loaded by the runtime system.
+      - [Loading localized strings at runtime](09_advanced-features/0909-loading-localized-strings-at-runtime.md) — Understand the rules for using localized strings at runtime.
+      - [Predefined application strings](09_advanced-features/0910-predefined-application-strings.md) — The runtime system may need to display text to the user.
+      - [Best practices for localized strings](09_advanced-features/0911-best-practices-for-localized-strings.md) — This section describes good practices to localize your application messages.
+      - [Example](09_advanced-features/0912-example.md) — Here is an example using localized strings.
+  - [Globals](09_advanced-features/0913-globals.md) — Global variables can be shared among all modules of a program.
+    - [Understanding global blocks](09_advanced-features/0914-understanding-global-blocks.md) — Global symbols can be defined with the GLOBALS instruction
+    - [GLOBALS](09_advanced-features/0915-globals.md) — The GLOBALS / END GLOBALS block and the GLOBALS instruction.
+    - [Rules for globals usage](09_advanced-features/0916-rules-for-globals-usage.md) — Follow the rules described in this topic in order to use globals properly.
+    - [Database schema in globals](09_advanced-features/0917-database-schema-in-globals.md) — Globals files can define the database schema to be used by the compiler to resolve DEFINE ... LIKE statements.
+    - [Content of a globals file](09_advanced-features/0918-content-of-a-globals-file.md) — A globals file contains a GLOBALS ... END GLOBALS block.
+    - [Examples](09_advanced-features/0919-examples.md) — Globals usage examples.
+      - [Example 1: Multiple GLOBALS file](09_advanced-features/0920-example-1-multiple-globals-file.md)
+  - [Configuration options](09_advanced-features/0921-configuration-options.md) — Compiler and runtime system can be controlled with several configuration settings.
+    - [OPTIONS (Compilation)](09_advanced-features/0922-options-compilation.md) — OPTIONS outside program blocks defines semantics of the language for the compiler.
+      - [Controlling semantics of AND / OR operators](09_advanced-features/0923-controlling-semantics-of-and-or-operators.md) — The OPTIONS SHORT CIRCUIT defines the semantics of AND/OR operators.
+    - [OPTIONS (Runtime)](09_advanced-features/0924-options-runtime.md) — The OPTIONS instruction inside program blocks controls program behavior at runtime.
+      - [Defining the position of reserved lines](09_advanced-features/0925-defining-the-position-of-reserved-lines.md) — The OPTIONS element LINE defines position of dedicated screen lines.
+      - [Defining default TTY attributes](09_advanced-features/0926-defining-default-tty-attributes.md) — The OPTIONS {INPUT|DISPLAY} ATTRIBUTES defines default TTY attributes for dialogs and display statements.
+      - [Defining the field input loop](09_advanced-features/0927-defining-the-field-input-loop.md) — The OPTIONS INPUT [NO] WRAP instructions defines field wrapping in dialogs.
+      - [Defining field tabbing order method](09_advanced-features/0928-defining-field-tabbing-order-method.md)
+      - [Application termination](09_advanced-features/0929-application-termination.md) — The OPTIONS TERMINATE SIGNAL defines a callback function in case of SIGTERM signal.
+      - [Front-end termination](09_advanced-features/0930-front-end-termination.md) — The OPTIONS CLOSE APPLICATION instruction defines the callback function in case of front-end termination.
+      - [Defining the message file](09_advanced-features/0931-defining-the-message-file.md) — The OPTIONS HELP FILE instruction defines the name of the message file.
+      - [Defining control keys](09_advanced-features/0932-defining-control-keys.md) — The OPTIONS logical-key KEY physical-key instruction defines physical keys for logical keys (TUI mode).
+      - [Setting default screen modes for sub-programs](09_advanced-features/0933-setting-default-screen-modes-for-sub-programs.md) — The OPTIONS RUN IN instruction defines the TTY mode to run sub-programs.
+      - [Enabling/disabling SQL interruption](09_advanced-features/0934-enabling-disabling-sql-interruption.md) — The OPTIONS SQL INTERRUPT instruction enables or disables SQL statement interruption.
+    - [Runtime configuration in FGLPROFILE](09_advanced-features/0935-runtime-configuration-in-fglprofile.md) — The behavior of the runtime system can be controlled with FGLPROFILE configuration parameters.
+      - [Responding to CTRL_LOGOFF_EVENT](09_advanced-features/0936-responding-to-ctrl-logoff-event.md) — FGLPROFILE fglrun.ignoreLogoffEvent controls program behavior in case of logoff events on Windows™ platforms.
+    - [DEFER INTERRUPT / QUIT](09_advanced-features/0937-defer-interrupt-quit.md) — The DEFER instruction defines the program behavior when interrupt or quit signals are received.
+  - [Program registers](09_advanced-features/0938-program-registers.md) — Predefined global registers can be used in programs to detect errors, signals and events.
+    - [status](09_advanced-features/0939-status.md) — status is a predefined variable that contains the execution status of the last instruction.
+    - [int_flag](09_advanced-features/0940-int-flag.md) — int_flag is a predefined variable set to TRUE when an interruption event is detected or when a cancel action is fired in a singular dialog.
+    - [quit_flag](09_advanced-features/0941-quit-flag.md) — quit_flag is a predefined variable set to TRUE when a quit signal is detected.
+  - [OOP support](09_advanced-features/0942-oop-support.md) — Describes Object Oriented Programming basics in the language.
+    - [Understanding classes and objects](09_advanced-features/0943-understanding-classes-and-objects.md) — The Genero language supports basic Object Oriented Programming (OOP) concepts.
+    - [DEFINE ... package.class](09_advanced-features/0944-define-package-class.md) — Object reference variables allow to manipulate class instances.
+    - [Distinguish class and object methods](09_advanced-features/0945-distinguish-class-and-object-methods.md) — Class methods can be invoked from the class, while object methods can only be invoked from the variable referencing the object.
+    - [Working with objects](09_advanced-features/0946-working-with-objects.md) — This topic describes basic object usage in Genero BDL.
+    - [What class packages exist?](09_advanced-features/0947-what-class-packages-exist.md) — A set of utility packages including useful classes are part of the distribution.
+  - [XML support](09_advanced-features/0948-xml-support.md) — Introduces to DOM and SAX standards and describes the XML utility classes built-in the language.
+    - [DOM and SAX standards](09_advanced-features/0949-dom-and-sax-standards.md) — DOM and SAX are both programming interfaces that can work with XML.
+    - [DOM and SAX built-in classes](09_advanced-features/0950-dom-and-sax-built-in-classes.md) — The DOM and SAX APIs both contain a set of built-in classes.
+    - [Limitations of XML built-in classes](09_advanced-features/0951-limitations-of-xml-built-in-classes.md) — Built-in XML classes have some limitations you must be aware of.
+    - [Exception handling with XML classes](09_advanced-features/0952-exception-handling-with-xml-classes.md) — Errors can occur while using XML built-in classes.
+    - [Controlling the UI with XML classes](09_advanced-features/0953-controlling-the-ui-with-xml-classes.md) — The User Interface of a Genero application can be manipulated with the build-in XML API.
+  - [JSON support](09_advanced-features/0954-json-support.md) — Genero BDL supports JSON data manipulation.
+    - [What is JSON?](09_advanced-features/0955-what-is-json.md) — JSON (JavaScript Object Notation) is a well known lightweight data-interchange format for JavaScript.
+    - [JSON utility classes](09_advanced-features/0956-json-utility-classes.md) — Genero BDL provides utility classes to manipulate JSON formatted data.
+    - [BDL/JSON conversion basics](09_advanced-features/0957-bdl-json-conversion-basics.md) — When the data structures and member names match, Genero BDL variables can be converted from/to JSON data with the util.JSON* utility classes.
+    - [BDL names and JSON element names](09_advanced-features/0958-bdl-names-and-json-element-names.md) — To identify elements, JSON standards use different format as Genero BDL variable names.
+    - [NULLs and empty structures](09_advanced-features/0959-nulls-and-empty-structures.md) — Unlike Genero BDL, JSON distinguishes NULL, empty and undefined elements.
+    - [BDL to JSON type conversion rules](09_advanced-features/0960-bdl-to-json-type-conversion-rules.md) — Specific type conversion rules apply when converting a BDL variable to JSON.
+    - [JSON to BDL type conversion rules](09_advanced-features/0961-json-to-bdl-type-conversion-rules.md) — Specific type conversion rules apply when parsing a JSON string to fill a BDL variable.
+  - [Front calls](09_advanced-features/0962-front-calls.md) — Front call functions execute on the platform where the front-end is installed.
+    - [Understanding front calls](09_advanced-features/0963-understanding-front-calls.md) — Front calls execute a native function on the front-end platform.
+    - [ui.Interface.frontCall](09_advanced-features/0964-ui-interface-frontcall.md) — ui.Interface.frontCall performs a function call to the current front-end.
+    - [User-defined front calls](09_advanced-features/0965-user-defined-front-calls.md) — Extend the Genero language possibilities by implementing your own front-end functions.
+  - [Optimization](09_advanced-features/0966-optimization.md) — Programming tips and tricks to make your programs run faster.
+    - [Runtime system basics](09_advanced-features/0967-runtime-system-basics.md) — This section contains topics about Genero BDL runtime system basic concepts.
+      - [Dynamic module loading](09_advanced-features/0968-dynamic-module-loading.md)
+      - [Elements shared by multiple programs](09_advanced-features/0969-elements-shared-by-multiple-programs.md)
+      - [Elements shared by multiple modules](09_advanced-features/0970-elements-shared-by-multiple-modules.md)
+      - [Objects private to a program](09_advanced-features/0971-objects-private-to-a-program.md)
+    - [Optimize your programs](09_advanced-features/0972-optimize-your-programs.md) — This section contains programming tips to optimize the execution of your application.
+      - [Finding program bottlenecks](09_advanced-features/0973-finding-program-bottlenecks.md)
+      - [Optimizing SQL statements](09_advanced-features/0974-optimizing-sql-statements.md)
+      - [Passing CHAR parameters to functions](09_advanced-features/0975-passing-char-parameters-to-functions.md)
+      - [Manipulating character strings](09_advanced-features/0976-manipulating-character-strings.md)
+      - [Passing records by reference](09_advanced-features/0977-passing-records-by-reference.md)
+      - [Compiler removes unused variables](09_advanced-features/0978-compiler-removes-unused-variables.md)
+      - [Saving memory by splitting modules](09_advanced-features/0979-saving-memory-by-splitting-modules.md)
+      - [Saving memory by using STRING variables](09_advanced-features/0980-saving-memory-by-using-string-variables.md)
+      - [Saving memory by using dynamic arrays](09_advanced-features/0981-saving-memory-by-using-dynamic-arrays.md)
+  - [Reflection](09_advanced-features/0982-reflection.md) — This section gives a brief description of the Genero BDL reflection API.
+- [SQL support](10_sql-support/0983-sql-support.md) — These topics cover SQL support in the Genero Business Development Language.
+  - [SQL programming](10_sql-support/0984-sql-programming.md) — Covers topics about interacting with a database server using SQL.
+    - [SQL basics](10_sql-support/0985-sql-basics.md) — This section contains fundamental information to know about SQL programming with Genero BDL.
+      - [Database and application locales](10_sql-support/0986-database-and-application-locales.md) — Choose the right locale for your database and application programs.
+      - [SQL execution diagnostics](10_sql-support/0987-sql-execution-diagnostics.md) — If an SQL statement execution fails, error description can be found in the sqlca.sqlcode, SQLSTATE, status and SQLERRMESSAGE predefined registers.
+      - [The sqlca diagnostic record](10_sql-support/0988-the-sqlca-diagnostic-record.md) — The sqlca variable is a predefined record containing SQL statement execution information.
+      - [SQL error identification](10_sql-support/0989-sql-error-identification.md) — Identify SQL exceptions in your programs with sqlca.sqlcode.
+      - [Cursors and connections](10_sql-support/0990-cursors-and-connections.md) — How to use database cursors across connections?
+      - [Concurrent data access](10_sql-support/0991-concurrent-data-access.md) — Understanding concurrent data access and data consistency.
+      - [Database transactions](10_sql-support/0992-database-transactions.md) — Database transactions define a set of SQL instructions to be executed as a whole, or rolled back as a whole.
+      - [Using SQL interruption](10_sql-support/0993-using-sql-interruption.md) — Interrupt long running SQL queries, or interrupt queries waiting for locked data.
+      - [Implicit database connection](10_sql-support/0994-implicit-database-connection.md) — An implicit database connection is made with the DATABASE instruction used before MAIN; use SCHEMA to avoid the implicit connection.
+      - [Debugging SQL statements](10_sql-support/0995-debugging-sql-statements.md) — The runtime system can display debug information for SQL statements executed by the program.
+      - [The database utility library](10_sql-support/0996-the-database-utility-library.md) — The fgldbutl.4gl library provides several database-related utility functions.
+    - [SQL security](10_sql-support/0997-sql-security.md) — It is important to consider security aspects when programming with SQL.
+      - [Authenticating DB users](10_sql-support/0998-authenticating-db-users.md) — Understanding how users are authenticated to the database server.
+      - [Avoiding SQL injection](10_sql-support/0999-avoiding-sql-injection.md) — Prevent SQL injection attacks in your programs.
+    - [SQL portability](10_sql-support/1000-sql-portability.md) — Writing portable SQL is mandatory, to support different kind of database servers.
+      - [Database entities](10_sql-support/1001-database-entities.md) — The database entity concept across different database engines.
+      - [Database users and security](10_sql-support/1002-database-users-and-security.md) — Properly identifying database users allows to use database security and audit features.
+      - [Creating a database from programs](10_sql-support/1003-creating-a-database-from-programs.md) — Creating a database from within a program requires special consideration.
+      - [Handling nested transactions](10_sql-support/1004-handling-nested-transactions.md) — You can manage nested transactions in different parts of a program.
+      - [Transaction blocks across connections](10_sql-support/1005-transaction-blocks-across-connections.md) — Transaction blocks manage transactions when connected to several database servers.
+      - [Transaction savepoints](10_sql-support/1006-transaction-savepoints.md) — Using transaction savepoints with different database engines.
+      - [Data definition statements](10_sql-support/1007-data-definition-statements.md) — It is recommended to avoid use of DDL in programs.
+      - [Using portable data types](10_sql-support/1008-using-portable-data-types.md) — Only a limited set of data types are really portable across several database engines.
+      - [The NULL value](10_sql-support/1009-the-null-value.md) — Several considerations need to be taken regarding SQL columns allowing NULL values.
+      - [The BOOLEAN data type](10_sql-support/1010-the-boolean-data-type.md) — SQL implementation of the BOOLEAN data type varies on the database type.
+      - [Data manipulation statements](10_sql-support/1011-data-manipulation-statements.md) — Make sure that SQL statement syntaxes are supported by all target database engines.
+      - [CHAR and VARCHAR types](10_sql-support/1012-char-and-varchar-types.md) — Using the CHAR and VARCHAR data types with different databases.
+        - [Byte or Character Length semantics?](10_sql-support/1013-byte-or-character-length-semantics.md) — Length Semantics defines the unit used to express the length of a character string, the position of a given character, and the size of a character data type.
+        - [SQL character type for Unicode/UTF-8](10_sql-support/1014-sql-character-type-for-unicode-utf-8.md) — This section explains database server specifics regarding Unicode / UTF-8 support with character string SQL types.
+        - [Size limits for CHAR/VARCHAR columns](10_sql-support/1015-size-limits-for-char-varchar-columns.md) — Each database brand defines its own limits for CHAR/VARCHAR SQL types.
+        - [Empty strings and NULLs](10_sql-support/1016-empty-strings-and-nulls.md) — Depending on the context, an empty string ( '' ) can be considered as NULL or NOT NULL.
+        - [Trailing blanks in CHAR/VARCHAR](10_sql-support/1017-trailing-blanks-in-char-varchar.md) — How to cope with trailing blanks in CHAR(N) and VARCHAR(N) SQL columns and program variables?
+        - [What should you do?](10_sql-support/1018-what-should-you-do.md) — This section contains facts and tips to consider regarding character data types and locale settings.
+      - [INTERVAL data types](10_sql-support/1019-interval-data-types.md) — Not all database brands support a native SQL type to store time duration.
+      - [The UNITS operator](10_sql-support/1020-the-units-operator.md) — The UNITS SQL operator is specific to Informix SQL and needs to be considered.
+      - [Scrollable cursors](10_sql-support/1021-scrollable-cursors.md) — How scrollable cursors can be supported on different databases.
+      - [Optimistic locking](10_sql-support/1022-optimistic-locking.md) — Implementing optimistic locking to handle access concurrently to the same database records.
+      - [Auto-incremented columns (serials)](10_sql-support/1023-auto-incremented-columns-serials.md) — How to implement automatic record keys.
+        - [Solution 1: Use database specific serial generators](10_sql-support/1024-solution-1-use-database-specific-serial-generators.md)
+        - [Solution 2: Generate serial numbers from your own sequence table](10_sql-support/1025-solution-2-generate-serial-numbers-from-your-own-sequence-ta.md)
+        - [Solution 3: Use native SEQUENCE database objects](10_sql-support/1026-solution-3-use-native-sequence-database-objects.md)
+      - [IBM® Informix® SQL ANSI Mode](10_sql-support/1027-ibm-informix-sql-ansi-mode.md) — Understanding the impact of the SQL ANSI mode of IBM® Informix®.
+      - [Positioned UPDATE/DELETE](10_sql-support/1028-positioned-update-delete.md) — Using positioned updates/deletes with named database cursors.
+      - [Cursors WITH HOLD](10_sql-support/1029-cursors-with-hold.md) — Programming WITH HOLD cursors using SELECT with and without FOR UPDATE clause.
+      - [Insert cursors](10_sql-support/1030-insert-cursors.md) — Using insert cursors with non-Informix databases.
+      - [String literals in SQL statements](10_sql-support/1031-string-literals-in-sql-statements.md) — Single quotes is the standard for delimiting string literals in SQL.
+      - [String concatenation operators in SQL](10_sql-support/1032-string-concatenation-operators-in-sql.md) — The || operator is the standard to concatenate strings.
+      - [Date/time literals in SQL statements](10_sql-support/1033-date-time-literals-in-sql-statements.md) — Good practices for date and time handling in SQL.
+      - [Naming database objects](10_sql-support/1034-naming-database-objects.md)
+        - [SQL identifiers syntax](10_sql-support/1035-sql-identifiers-syntax.md) — Database object naming conventions are different for each database engine.
+        - [SQL identifiers case-sensitivity](10_sql-support/1036-sql-identifiers-case-sensitivity.md) — Handling case-sensitivity with different database engines.
+        - [SQL identifiers size](10_sql-support/1037-sql-identifiers-size.md) — Avoid using long database object names.
+      - [LOAD and UNLOAD instructions](10_sql-support/1038-load-and-unload-instructions.md) — The LOAD and UNLOAD instructions can produce different data formats depending on the database server type.
+      - [Temporary tables](10_sql-support/1039-temporary-tables.md) — Syntax for temporary table creation is not unique across all database engines.
+      - [Outer joins](10_sql-support/1040-outer-joins.md) — Use standard ISO outer join syntax instead of the old IBM® Informix® OUTER() syntax.
+      - [Substring expressions](10_sql-support/1041-substring-expressions.md) — Handle substrings expressions with different database engines.
+      - [Using ROWID columns](10_sql-support/1042-using-rowid-columns.md) — Automatic ROWID columns is not a common database feature.
+      - [MATCHES and LIKE operators](10_sql-support/1043-matches-and-like-operators.md) — Use the standard LIKE operator instead of the MATCHES operator.
+      - [GROUP BY clause](10_sql-support/1044-group-by-clause.md)
+      - [The LENGTH() function in SQL](10_sql-support/1045-the-length-function-in-sql.md) — The semantics of the LENGTH() SQL function differs according to the database engine.
+      - [Large OBjects (LOBs) data types](10_sql-support/1046-large-objects-lobs-data-types.md) — Use TEXT and BYTE FGL types to store database character and binary large objects.
+      - [Stored procedures](10_sql-support/1047-stored-procedures.md) — Executing stored procedures with different database engine types.
+        - [Specifying input and output parameters](10_sql-support/1048-specifying-input-and-output-parameters.md)
+        - [Stored procedures returning a result set](10_sql-support/1049-stored-procedures-returning-a-result-set.md)
+        - [Calling stored procedures with supported databases](10_sql-support/1050-calling-stored-procedures-with-supported-databases.md)
+      - [Row limiting clause (SELECT)](10_sql-support/1051-row-limiting-clause-select.md) — How to use the right clause to limit the number of rows produced by a SELECT statement?
+    - [SQL performance](10_sql-support/1052-sql-performance.md) — Execution time can be greatly improved, when using SQL instructions in the right way.
+      - [Performance with dynamic SQL](10_sql-support/1053-performance-with-dynamic-sql.md) — Comparing static SQL statements and dynamc SQL statements used in a loop.
+      - [Performance with transactions](10_sql-support/1054-performance-with-transactions.md) — Commit database changes by blocks of transaction speeds performance with some database servers.
+      - [Avoiding long transactions](10_sql-support/1055-avoiding-long-transactions.md) — Long transactions consume resources and decrease concurrent data access.
+      - [Declaring prepared statements](10_sql-support/1056-declaring-prepared-statements.md) — Optimize prepared cursor statements by using the FROM clause of DECLARE CURSOR.
+      - [Saving SQL resources](10_sql-support/1057-saving-sql-resources.md) — SQL cursors and prepared statement consume resources that should be freed when useless.
+      - [Optimizing scrollable cursors](10_sql-support/1058-optimizing-scrollable-cursors.md) — A programming pattern to get fresh data from scrollable cursors.
+  - [Database connections](10_sql-support/1059-database-connections.md) — Explains how to manage database connections in a program.
+    - [Understanding database connections](10_sql-support/1060-understanding-database-connections.md) — This is an introduction to database connections.
+    - [Opening a database connection](10_sql-support/1061-opening-a-database-connection.md) — A database connection identifies the SQL database server and the database entity the program connects to, in order to execute SQL statements.
+    - [Database client environment](10_sql-support/1062-database-client-environment.md) — To connect to a database server, Genero BDL programs use vendor's database client software.
+      - [IBM® Informix® Dynamic Server](10_sql-support/1063-ibm-informix-dynamic-server.md)
+      - [Oracle® MySQL](10_sql-support/1064-oracle-mysql.md)
+      - [MariaDB](10_sql-support/1065-mariadb.md)
+      - [Oracle database](10_sql-support/1066-oracle-database.md)
+      - [PostgreSQL](10_sql-support/1067-postgresql.md)
+      - [Microsoft™ SQL Server](10_sql-support/1068-microsoft-sql-server.md)
+      - [SQLite](10_sql-support/1069-sqlite.md)
+      - [Dameng](10_sql-support/1070-dameng.md)
+    - [Connection parameters](10_sql-support/1071-connection-parameters.md) — This section describes the different parameters which need to be specified in order to connect to a database.
+      - [Database source specification (source)](10_sql-support/1072-database-source-specification-source.md)
+      - [Database driver specification (driver)](10_sql-support/1073-database-driver-specification-driver.md)
+      - [Default database driver](10_sql-support/1074-default-database-driver.md)
+      - [User name and password (username/password)](10_sql-support/1075-user-name-and-password-username-password.md)
+    - [Connection parameters in database specification](10_sql-support/1076-connection-parameters-in-database-specification.md) — Connection parameters can be provided in the database specification string passed to the DATABASE and CONNECT TO instructions.
+    - [Direct database specification method](10_sql-support/1077-direct-database-specification-method.md) — Genero BDL applies direct database source specification when no FGLPROFILE entry corresponds to the database name used in programs.
+    - [Indirect database specification method](10_sql-support/1078-indirect-database-specification-method.md) — Genero BDL allows to define database connection parameters in FGLPROFILE, that can be referenced by a single identifier in programs.
+    - [IBM® Informix® emulation parameters in FGLPROFILE](10_sql-support/1079-ibm-informix-emulation-parameters-in-fglprofile.md) — Emulation of Informix® specific SQL features can be controlled with FGLPROFILE entries.
+    - [Database type specific parameters in FGLPROFILE](10_sql-support/1080-database-type-specific-parameters-in-fglprofile.md) — Specific connection parameters can be configured with FGLPROFILE entries.
+      - [Oracle DB specific FGLPROFILE parameters](10_sql-support/1081-oracle-db-specific-fglprofile-parameters.md)
+      - [Oracle® MySQL specific FGLPROFILE parameters](10_sql-support/1082-oracle-mysql-specific-fglprofile-parameters.md)
+      - [MariaDB specific FGLPROFILE parameters](10_sql-support/1083-mariadb-specific-fglprofile-parameters.md)
+      - [PostgreSQL specific FGLPROFILE parameters](10_sql-support/1084-postgresql-specific-fglprofile-parameters.md)
+      - [SQL Server (MS ODBC) specific FGLPROFILE parameters](10_sql-support/1085-sql-server-ms-odbc-specific-fglprofile-parameters.md)
+      - [SQL Server (FreeTDS driver) specific FGLPROFILE parameters](10_sql-support/1086-sql-server-freetds-driver-specific-fglprofile-parameters.md)
+      - [SQL Server (Easysoft driver) specific FGLPROFILE parameters](10_sql-support/1087-sql-server-easysoft-driver-specific-fglprofile-parameters.md)
+      - [Dameng® specific FGLPROFILE parameters](10_sql-support/1088-dameng-specific-fglprofile-parameters.md)
+    - [SQL connection identifier](10_sql-support/1089-sql-connection-identifier.md) — Database client programs can be identified by name with some database server types.
+    - [Database user authentication](10_sql-support/1090-database-user-authentication.md) — Different database user authentication methods exist.
+      - [Specifying a user name and password with CONNECT](10_sql-support/1091-specifying-a-user-name-and-password-with-connect.md)
+      - [Specifying a user name and password with DATABASE](10_sql-support/1092-specifying-a-user-name-and-password-with-database.md)
+      - [User authentication callback function](10_sql-support/1093-user-authentication-callback-function.md)
+      - [Order of precedence for database user specification](10_sql-support/1094-order-of-precedence-for-database-user-specification.md)
+    - [Unique session mode connection instructions](10_sql-support/1095-unique-session-mode-connection-instructions.md) — Opening and closing a database for a unique session.
+      - [DATABASE](10_sql-support/1096-database.md) — Opens a new database connection in unique-session mode.
+      - [CLOSE DATABASE](10_sql-support/1097-close-database.md) — Closes the current database connection created by a DATABASE instruction.
+    - [Multi-session mode connection instructions](10_sql-support/1098-multi-session-mode-connection-instructions.md) — Opening and closing a database for a unique session.
+      - [CONNECT TO](10_sql-support/1099-connect-to.md) — Opens a new database session in multi-session mode.
+      - [SET CONNECTION](10_sql-support/1100-set-connection.md) — Selects the current session when in multi-session mode.
+      - [SET SESSION AUTHORIZATION](10_sql-support/1101-set-session-authorization.md) — Select the user under which database operations are performed in the current connection.
+      - [DISCONNECT](10_sql-support/1102-disconnect.md) — Terminates database sessions when in multi-session mode.
+    - [Miscellaneous SQL statements](10_sql-support/1103-miscellaneous-sql-statements.md) — These are particular SQL statements supported in the static SQL syntax.
+      - [SET EXPLAIN](10_sql-support/1104-set-explain.md) — Turns on/off SQL report of the optimizer plan.
+      - [UPDATE STATISTICS](10_sql-support/1105-update-statistics.md) — Updates the statistics for all or for the specified table in the database.
+  - [Database transactions](10_sql-support/1106-database-transactions.md) — Database transaction concepts and handling.
+    - [Understanding database transactions](10_sql-support/1107-understanding-database-transactions.md) — This is an introduction to database transactions.
+    - [BEGIN WORK](10_sql-support/1108-begin-work.md) — Starts a database transaction in the current connection.
+    - [SAVEPOINT](10_sql-support/1109-savepoint.md) — Defines or resets the position of a rollback point in the current transaction.
+    - [COMMIT WORK](10_sql-support/1110-commit-work.md) — Validates and terminates a database transaction in the current connection.
+    - [ROLLBACK WORK](10_sql-support/1111-rollback-work.md) — Cancels and terminates a database transaction in the current connection.
+    - [RELEASE SAVEPOINT](10_sql-support/1112-release-savepoint.md) — Destroys the specified savepoint in the current transaction.
+    - [SET ISOLATION](10_sql-support/1113-set-isolation.md) — Defines the transaction isolation level for the current connection.
+    - [SET LOCK MODE](10_sql-support/1114-set-lock-mode.md) — Defines the behavior of the program that tries to access a locked row or table.
+  - [Static SQL statements](10_sql-support/1115-static-sql-statements.md) — Describes static SQL statements supported in the language.
+    - [Understanding static SQL statements](10_sql-support/1116-understanding-static-sql-statements.md) — This is an introduction to static SQL statements.
+    - [Using program variables in static SQL](10_sql-support/1117-using-program-variables-in-static-sql.md) — Static SQL syntax supports the usage of program variables as SQL parameters.
+    - [Table and column names in static SQL](10_sql-support/1118-table-and-column-names-in-static-sql.md) — How are SQL object names and keywords converted in static SQL?
+    - [SQL texts generated by the compiler](10_sql-support/1119-sql-texts-generated-by-the-compiler.md) — The Genero BDL compiler provides an option to extract static SQL statements from .4gl sources.
+    - [INSERT](10_sql-support/1120-insert.md) — Creates a new row in a database table.
+    - [UPDATE](10_sql-support/1121-update.md) — Modifies rows of a database table.
+    - [DELETE](10_sql-support/1122-delete.md) — Removes rows from a database table.
+    - [SELECT](10_sql-support/1123-select.md) — Produces a result set from a query on database tables.
+    - [SQL ... END SQL](10_sql-support/1124-sql-end-sql.md) — Performs an SQL that is not part of the static SQL syntax.
+    - [CREATE SEQUENCE](10_sql-support/1125-create-sequence.md) — Creates a new sequence object in the database.
+    - [ALTER SEQUENCE](10_sql-support/1126-alter-sequence.md) — Modifies the definition of an existing sequence in the database.
+    - [DROP SEQUENCE](10_sql-support/1127-drop-sequence.md) — Drops a sequence object from the database.
+    - [CREATE TABLE](10_sql-support/1128-create-table.md) — Creates a new table object in the database.
+    - [ALTER TABLE](10_sql-support/1129-alter-table.md) — Modifies the definition of an existing table in the database.
+    - [DROP TABLE](10_sql-support/1130-drop-table.md) — Drops a table object from the database.
+    - [CREATE INDEX](10_sql-support/1131-create-index.md) — Creates a new index object in the database.
+    - [ALTER INDEX](10_sql-support/1132-alter-index.md) — Modifies the definition of an existing index in the database.
+    - [DROP INDEX](10_sql-support/1133-drop-index.md) — Drops an index object from the database.
+    - [CREATE VIEW](10_sql-support/1134-create-view.md) — Creates a new view object in the database.
+    - [DROP VIEW](10_sql-support/1135-drop-view.md) — Drops a view object from the database.
+    - [CREATE SYNONYM](10_sql-support/1136-create-synonym.md) — Creates a new synonym object in the database.
+    - [DROP SYNONYM](10_sql-support/1137-drop-synonym.md) — Drops a synonym object from the database.
+    - [RECOVER TABLE](10_sql-support/1138-recover-table.md) — Restores a database table.
+    - [RENAME](10_sql-support/1139-rename.md) — Renames an object in the database.
+  - [Dynamic SQL management](10_sql-support/1140-dynamic-sql-management.md) — Explains how to execute and manage SQL statements at runtime.
+    - [Understanding dynamic SQL](10_sql-support/1141-understanding-dynamic-sql.md) — This is an introduction to dynamic SQL programming.
+    - [PREPARE (SQL statement)](10_sql-support/1142-prepare-sql-statement.md) — Prepares an SQL statement for execution.
+    - [EXECUTE (SQL statement)](10_sql-support/1143-execute-sql-statement.md) — This instruction runs an SQL statement previously prepared.
+    - [FREE (SQL statement)](10_sql-support/1144-free-sql-statement.md) — Releases the resources allocated to a prepared statement.
+    - [EXECUTE IMMEDIATE](10_sql-support/1145-execute-immediate.md) — Performs a simple SQL execution without SQL parameters or result set.
+    - [The base.SQLHandle built-in class](10_sql-support/1146-the-base-sqlhandle-built-in-class.md) — Handle SQL queries with a 3GL API.
+    - [fglhint_* SQL comments](10_sql-support/1147-fglhint-sql-comments.md) — Using special SQL comment hints to control statement execution.
+  - [Result set processing](10_sql-support/1148-result-set-processing.md) — Shows how to fetch rows from a database query.
+    - [Understanding database result sets](10_sql-support/1149-understanding-database-result-sets.md) — This is an introduction to database result sets.
+    - [DECLARE (result set cursor)](10_sql-support/1150-declare-result-set-cursor.md) — Associates a database cursor with an SQL statement producing a result set.
+    - [OPEN (result set cursor)](10_sql-support/1151-open-result-set-cursor.md) — Executes the SQL statement with result set associated with the specified database cursor
+    - [FETCH (result set cursor)](10_sql-support/1152-fetch-result-set-cursor.md) — Moves a cursor to a new row in the corresponding result set and retrieves the row values into fetch buffers.
+    - [CLOSE (result set cursor)](10_sql-support/1153-close-result-set-cursor.md) — Closes a database cursor and frees resources allocated on the database server for the result set.
+    - [FREE (result set cursor)](10_sql-support/1154-free-result-set-cursor.md) — Releases SQL cursor resources allocated by the DECLARE instruction.
+    - [FOREACH (result set cursor)](10_sql-support/1155-foreach-result-set-cursor.md) — Processes a series of data rows returned from a database cursor.
+  - [Positioned updates/deletes](10_sql-support/1156-positioned-updates-deletes.md) — Describes row modification based on a FOR UPDATE cursor.
+    - [Understanding positioned update or delete](10_sql-support/1157-understanding-positioned-update-or-delete.md) — This is an introduction to SQL positionned UPDATE/DELETE.
+    - [DECLARE (SELECT … FOR UPDATE)](10_sql-support/1158-declare-select-for-update.md) — Associate a database cursor with a SELECT statement to perform positioned updates and deletes
+    - [UPDATE … WHERE CURRENT OF](10_sql-support/1159-update-where-current-of.md) — Updates the current row in a result set of a database cursor declared for update.
+    - [DELETE … WHERE CURRENT OF](10_sql-support/1160-delete-where-current-of.md) — Deletes the current row in a result set of a database cursor declared for update.
+    - [Examples](10_sql-support/1161-examples.md) — WHERE CURRENT OF usage examples.
+      - [Example 1: Positioned UPDATE statement](10_sql-support/1162-example-1-positioned-update-statement.md)
+  - [SQL insert cursors](10_sql-support/1163-sql-insert-cursors.md) — Explains how to insert a log of rows into a table efficiently.
+    - [Understanding SQL insert cursors](10_sql-support/1164-understanding-sql-insert-cursors.md) — This is an introduction to SQL insert cursors.
+    - [DECLARE (insert cursor)](10_sql-support/1165-declare-insert-cursor.md) — The DECLARE with an INSERT instruction defines an insert cursor.
+    - [OPEN (insert cursor)](10_sql-support/1166-open-insert-cursor.md) — Initializes an insert cursor.
+    - [PUT (insert cursor)](10_sql-support/1167-put-insert-cursor.md) — Adds a new row to the insert cursor buffer.
+    - [FLUSH (insert cursor)](10_sql-support/1168-flush-insert-cursor.md) — Flushes the buffer of an insert cursor.
+    - [CLOSE (insert cursor)](10_sql-support/1169-close-insert-cursor.md) — Flushes and closes an insert cursor.
+    - [FREE (insert cursor)](10_sql-support/1170-free-insert-cursor.md) — Releases resources allocated for an insert cursor.
+    - [Examples](10_sql-support/1171-examples.md) — Insert cursor usage examples.
+      - [Example 1: Insert Cursor declared with a Static INSERT](10_sql-support/1172-example-1-insert-cursor-declared-with-a-static-insert.md)
+      - [Example 2: Insert Cursor declared with an SQL text](10_sql-support/1173-example-2-insert-cursor-declared-with-an-sql-text.md)
+      - [Example 3: Insert Cursor declared with 'hold' option](10_sql-support/1174-example-3-insert-cursor-declared-with-hold-option.md)
+  - [SQL LOAD and UNLOAD](10_sql-support/1175-sql-load-and-unload.md) — Describes the instructions to export/import information from/to a database.
+    - [LOAD](10_sql-support/1176-load.md) — Inserts data from a file into an existing database table.
+    - [UNLOAD](10_sql-support/1177-unload.md) — Copies data from the database tables into a file.
+  - [SQL database guides](10_sql-support/1178-sql-database-guides.md) — This section includes the SQL guides for various supported database servers.
+    - [IBM® Informix®](10_sql-support/1179-ibm-informix.md)
+      - [Purpose of the Informix® SQL guide](10_sql-support/1180-purpose-of-the-informix-sql-guide.md)
+      - [Installation (Runtime Configuration)](10_sql-support/1181-installation-runtime-configuration.md) — ODI adaptation guide Installation topics.
+        - [Supported IBM® Informix® server and CSDK versions](10_sql-support/1182-supported-ibm-informix-server-and-csdk-versions.md)
+        - [Install IBM® Informix® and create a database - database configuration/design tasks](10_sql-support/1183-install-ibm-informix-and-create-a-database-database-configur.md)
+        - [Prepare the runtime environment - connecting to the database](10_sql-support/1184-prepare-the-runtime-environment-connecting-to-the-database.md)
+      - [Fully supported IBM® Informix® SQL features](10_sql-support/1185-fully-supported-ibm-informix-sql-features.md) — Fully supported IBM® Informix® SQL features.
+        - [What are the supported IBM® Informix® SQL features?](10_sql-support/1186-what-are-the-supported-ibm-informix-sql-features.md)
+        - [Concurrency management](10_sql-support/1187-concurrency-management.md)
+        - [Using UTF-8 in IBM® Informix® databases](10_sql-support/1188-using-utf-8-in-ibm-informix-databases.md)
+        - [Stored procedure calls](10_sql-support/1189-stored-procedure-calls.md)
+          - [Stored functions returning values](10_sql-support/1190-stored-functions-returning-values.md)
+          - [Stored functions defined with output parameters](10_sql-support/1191-stored-functions-defined-with-output-parameters.md)
+          - [Stored functions returning a result set](10_sql-support/1192-stored-functions-returning-a-result-set.md)
+      - [Partially supported IBM® Informix® SQL features](10_sql-support/1193-partially-supported-ibm-informix-sql-features.md) — Partially supported IBM® Informix® SQL features.
+        - [The BIGSERIAL / SERIAL8 data types](10_sql-support/1194-the-bigserial-serial8-data-types.md)
+        - [The NCHAR / NVARCHAR data types](10_sql-support/1195-the-nchar-nvarchar-data-types.md)
+        - [The LVARCHAR data type](10_sql-support/1196-the-lvarchar-data-type.md)
+        - [DISTINCT data types](10_sql-support/1197-distinct-data-types.md)
+        - [Stored Procedures](10_sql-support/1198-stored-procedures.md)
+        - [Database Triggers](10_sql-support/1199-database-triggers.md)
+        - [Optimizer directives](10_sql-support/1200-optimizer-directives.md)
+        - [XML publishing support](10_sql-support/1201-xml-publishing-support.md)
+        - [DataBlade® modules](10_sql-support/1202-datablade-modules.md)
+        - [Specific CREATE INDEX clauses](10_sql-support/1203-specific-create-index-clauses.md)
+        - [Other SQL instructions](10_sql-support/1204-other-sql-instructions.md)
+      - [Unsupported IBM® Informix® SQL features](10_sql-support/1205-unsupported-ibm-informix-sql-features.md) — Unsupported IBM® Informix® SQL features.
+        - [CLOB and BLOB data types](10_sql-support/1206-clob-and-blob-data-types.md)
+        - [The LIST data type](10_sql-support/1207-the-list-data-type.md)
+        - [The MULTISET data type](10_sql-support/1208-the-multiset-data-type.md)
+        - [The SET data type](10_sql-support/1209-the-set-data-type.md)
+        - [The ROW data types](10_sql-support/1210-the-row-data-types.md)
+        - [OPAQUE data types](10_sql-support/1211-opaque-data-types.md)
+        - [The :: cast operator](10_sql-support/1212-the-cast-operator.md)
+        - [Table inheritance](10_sql-support/1213-table-inheritance.md)
+    - [Dameng® database server](10_sql-support/1214-dameng-database-server.md)
+      - [Purpose of the Dameng® SQL guide](10_sql-support/1215-purpose-of-the-dameng-sql-guide.md)
+      - [Installation (Runtime Configuration)](10_sql-support/1216-installation-runtime-configuration.md) — related installation topics.
+        - [Install Dameng® and create a database - database configuration/design tasks](10_sql-support/1217-install-dameng-and-create-a-database-database-configuration.md)
+        - [Prepare the runtime environment - connecting to the database](10_sql-support/1218-prepare-the-runtime-environment-connecting-to-the-database.md)
+      - [Database concepts](10_sql-support/1219-database-concepts.md) — Dameng® related database concept topics.
+        - [Database concepts](10_sql-support/1220-database-concepts.md)
+        - [Concurrency management](10_sql-support/1221-concurrency-management.md)
+        - [Transactions handling](10_sql-support/1222-transactions-handling.md)
+        - [Database users](10_sql-support/1223-database-users.md)
+        - [Setting privileges](10_sql-support/1224-setting-privileges.md)
+      - [Data dictionary](10_sql-support/1225-data-dictionary.md) — Dameng® related data dictionary topics.
+        - [SQL types mapping: Dameng®](10_sql-support/1226-sql-types-mapping-dameng.md)
+        - [BOOLEAN data type](10_sql-support/1227-boolean-data-type.md)
+        - [CHAR and VARCHAR data types](10_sql-support/1228-char-and-varchar-data-types.md)
+        - [Numeric data types](10_sql-support/1229-numeric-data-types.md)
+        - [DATE and DATETIME data types](10_sql-support/1230-date-and-datetime-data-types.md)
+        - [INTERVAL data type](10_sql-support/1231-interval-data-type.md)
+        - [SERIAL and BIGSERIAL data types](10_sql-support/1232-serial-and-bigserial-data-types.md)
+        - [ROWID columns](10_sql-support/1233-rowid-columns.md)
+        - [TEXT and BYTE (LOB) types](10_sql-support/1234-text-and-byte-lob-types.md)
+        - [SQL table definition](10_sql-support/1235-sql-table-definition.md)
+        - [Name resolution of SQL objects](10_sql-support/1236-name-resolution-of-sql-objects.md)
+      - [Data manipulation](10_sql-support/1237-data-manipulation.md) — Dameng® related data manipulation topics.
+        - [Reserved words](10_sql-support/1238-reserved-words.md)
+        - [Outer joins](10_sql-support/1239-outer-joins.md)
+        - [Transactions handling](10_sql-support/1240-transactions-handling.md)
+        - [Temporary tables](10_sql-support/1241-temporary-tables.md)
+        - [Substrings in SQL](10_sql-support/1242-substrings-in-sql.md)
+        - [String delimiters](10_sql-support/1243-string-delimiters.md)
+        - [Single row SELECT](10_sql-support/1244-single-row-select.md)
+        - [MATCHES and LIKE](10_sql-support/1245-matches-and-like.md)
+        - [The LENGTH() function](10_sql-support/1246-the-length-function.md)
+        - [Row limiting clause](10_sql-support/1247-row-limiting-clause.md)
+      - [BDL programming](10_sql-support/1248-bdl-programming.md) — Dameng® related programming topics.
+        - [INSERT cursors](10_sql-support/1249-insert-cursors.md)
+        - [Cursors WITH HOLD](10_sql-support/1250-cursors-with-hold.md)
+        - [SELECT … FOR UPDATE](10_sql-support/1251-select-for-update.md)
+        - [UPDATE/DELETE … WHERE CURRENT OF](10_sql-support/1252-update-delete-where-current-of.md)
+        - [LOAD and UNLOAD](10_sql-support/1253-load-and-unload.md)
+        - [SQL Interruption](10_sql-support/1254-sql-interruption.md)
+        - [Scrollable cursors](10_sql-support/1255-scrollable-cursors.md)
+    - [Microsoft™ SQL Server](10_sql-support/1256-microsoft-sql-server.md)
+      - [Purpose of the Microsoft™ SQL Server SQL guide](10_sql-support/1257-purpose-of-the-microsoft-sql-server-sql-guide.md)
+      - [Installation (Runtime Configuration)](10_sql-support/1258-installation-runtime-configuration.md) — Microsoft™ SQL Server related installation topics.
+        - [Install Microsoft™ SQL Server and create a database - database configuration/design tasks](10_sql-support/1259-install-microsoft-sql-server-and-create-a-database-database.md)
+        - [Prepare the runtime environment - connecting to the database](10_sql-support/1260-prepare-the-runtime-environment-connecting-to-the-database.md)
+          - [Microsoft ODBC for SQL Server](10_sql-support/1261-microsoft-odbc-for-sql-server.md)
+          - [Easysoft ODBC for SQL Server](10_sql-support/1262-easysoft-odbc-for-sql-server.md)
+          - [FreeTDS ODBC for SQL Server](10_sql-support/1263-freetds-odbc-for-sql-server.md)
+      - [Database concepts](10_sql-support/1264-database-concepts.md) — Microsoft™ SQL Server related database concepts topics.
+        - [Database concepts](10_sql-support/1265-database-concepts.md)
+        - [Concurrency management](10_sql-support/1266-concurrency-management.md)
+        - [Transactions handling](10_sql-support/1267-transactions-handling.md)
+        - [Database users](10_sql-support/1268-database-users.md)
+        - [Setting privileges](10_sql-support/1269-setting-privileges.md)
+      - [Data dictionary](10_sql-support/1270-data-dictionary.md) — Microsoft™ SQL Server related data dictionary topics.
+        - [SQL types mapping: SQL Server](10_sql-support/1271-sql-types-mapping-sql-server.md)
+        - [BOOLEAN data type](10_sql-support/1272-boolean-data-type.md)
+        - [CHAR and VARCHAR data types](10_sql-support/1273-char-and-varchar-data-types.md)
+        - [Numeric data types](10_sql-support/1274-numeric-data-types.md)
+        - [DATE and DATETIME data types](10_sql-support/1275-date-and-datetime-data-types.md)
+        - [INTERVAL data type](10_sql-support/1276-interval-data-type.md)
+        - [SERIAL and BIGSERIAL data types](10_sql-support/1277-serial-and-bigserial-data-types.md)
+        - [SQL Server UNIQUEIDENTIFIER data type](10_sql-support/1278-sql-server-uniqueidentifier-data-type.md)
+        - [SQL Server ROWVERSION data type](10_sql-support/1279-sql-server-rowversion-data-type.md)
+        - [ROWID columns](10_sql-support/1280-rowid-columns.md)
+        - [Case sensitivity](10_sql-support/1281-case-sensitivity.md)
+        - [TEXT and BYTE (LOB) types](10_sql-support/1282-text-and-byte-lob-types.md)
+        - [SQL table definition](10_sql-support/1283-sql-table-definition.md)
+        - [Name resolution of SQL objects](10_sql-support/1284-name-resolution-of-sql-objects.md)
+        - [SQL Server JSON data type](10_sql-support/1285-sql-server-json-data-type.md)
+        - [SQL Server VECTOR data type](10_sql-support/1286-sql-server-vector-data-type.md)
+      - [Data manipulation](10_sql-support/1287-data-manipulation.md) — Microsoft™ SQL Server related data manipulation topics.
+        - [Reserved words](10_sql-support/1288-reserved-words.md)
+        - [Outer joins](10_sql-support/1289-outer-joins.md)
+        - [Transactions handling](10_sql-support/1290-transactions-handling.md)
+        - [Temporary tables](10_sql-support/1291-temporary-tables.md)
+        - [Substrings in SQL](10_sql-support/1292-substrings-in-sql.md)
+        - [String delimiters](10_sql-support/1293-string-delimiters.md)
+        - [Single row SELECT](10_sql-support/1294-single-row-select.md)
+        - [MATCHES and LIKE](10_sql-support/1295-matches-and-like.md)
+        - [The LENGTH() function](10_sql-support/1296-the-length-function.md)
+        - [Row limiting clause](10_sql-support/1297-row-limiting-clause.md)
+        - [String concatenation operator](10_sql-support/1298-string-concatenation-operator.md)
+      - [BDL programming](10_sql-support/1299-bdl-programming.md) — Microsoft™ SQL Server related programming topics.
+        - [SQL errors on PREPARE](10_sql-support/1300-sql-errors-on-prepare.md)
+        - [INSERT cursors](10_sql-support/1301-insert-cursors.md)
+        - [Cursors WITH HOLD](10_sql-support/1302-cursors-with-hold.md)
+        - [SELECT … FOR UPDATE](10_sql-support/1303-select-for-update.md)
+        - [UPDATE/DELETE … WHERE CURRENT OF](10_sql-support/1304-update-delete-where-current-of.md)
+        - [LOAD and UNLOAD](10_sql-support/1305-load-and-unload.md)
+        - [SQL Interruption](10_sql-support/1306-sql-interruption.md)
+        - [Scrollable cursors](10_sql-support/1307-scrollable-cursors.md)
+        - [Stored procedure calls](10_sql-support/1308-stored-procedure-calls.md)
+          - [Stored procedures with output parameters](10_sql-support/1309-stored-procedures-with-output-parameters.md)
+          - [Stored procedures with result set](10_sql-support/1310-stored-procedures-with-result-set.md)
+          - [Stored procedures returning a cursor as output parameter](10_sql-support/1311-stored-procedures-returning-a-cursor-as-output-parameter.md)
+          - [Stored procedures with return code](10_sql-support/1312-stored-procedures-with-return-code.md)
+          - [Stored procedures with output parameters, return code and result set](10_sql-support/1313-stored-procedures-with-output-parameters-return-code-and-res.md)
+    - [Oracle® MySQL / MariaDB](10_sql-support/1314-oracle-mysql-mariadb.md)
+      - [Purpose of the Oracle® MySQL / MariaDB SQL guide](10_sql-support/1315-purpose-of-the-oracle-mysql-mariadb-sql-guide.md)
+      - [Installation (Runtime Configuration)](10_sql-support/1316-installation-runtime-configuration.md) — Oracle® MySQL related installation topics.
+        - [Install Oracle® MySQL/MariaDB and create a database - database configuration/design tasks](10_sql-support/1317-install-oracle-mysql-mariadb-and-create-a-database-database.md)
+        - [Prepare the runtime environment - connecting to the database](10_sql-support/1318-prepare-the-runtime-environment-connecting-to-the-database.md)
+      - [Database concepts](10_sql-support/1319-database-concepts.md) — Oracle® MySQL related database concepts topics.
+        - [Database concepts](10_sql-support/1320-database-concepts.md)
+        - [Concurrency management](10_sql-support/1321-concurrency-management.md)
+        - [Transactions handling](10_sql-support/1322-transactions-handling.md)
+        - [Database users](10_sql-support/1323-database-users.md)
+      - [Data dictionary](10_sql-support/1324-data-dictionary.md) — Oracle® MySQL related data dictionary topics.
+        - [SQL types mapping: Oracle® MySQL](10_sql-support/1325-sql-types-mapping-oracle-mysql.md)
+        - [BOOLEAN data type](10_sql-support/1326-boolean-data-type.md)
+        - [CHAR and VARCHAR data types](10_sql-support/1327-char-and-varchar-data-types.md)
+        - [Numeric data types](10_sql-support/1328-numeric-data-types.md)
+        - [DATE and DATETIME data types](10_sql-support/1329-date-and-datetime-data-types.md)
+        - [INTERVAL data type](10_sql-support/1330-interval-data-type.md)
+        - [SERIAL and BIGSERIAL data type](10_sql-support/1331-serial-and-bigserial-data-type.md)
+        - [ROWID columns](10_sql-support/1332-rowid-columns.md)
+        - [TEXT and BYTE (LOB) types](10_sql-support/1333-text-and-byte-lob-types.md)
+        - [SQL table definition](10_sql-support/1334-sql-table-definition.md)
+        - [Name resolution of SQL objects](10_sql-support/1335-name-resolution-of-sql-objects.md)
+        - [MySQL/MariaDB VECTOR data type](10_sql-support/1336-mysql-mariadb-vector-data-type.md)
+      - [Data manipulation](10_sql-support/1337-data-manipulation.md) — Oracle® MySQL related data manipulation topics.
+        - [Reserved words](10_sql-support/1338-reserved-words.md)
+        - [Outer joins](10_sql-support/1339-outer-joins.md)
+        - [Transactions handling](10_sql-support/1340-transactions-handling.md)
+        - [Temporary tables](10_sql-support/1341-temporary-tables.md)
+        - [Substrings in SQL](10_sql-support/1342-substrings-in-sql.md)
+        - [The LENGTH() function](10_sql-support/1343-the-length-function.md)
+        - [MATCHES and LIKE](10_sql-support/1344-matches-and-like.md)
+        - [Row limiting clause](10_sql-support/1345-row-limiting-clause.md)
+        - [String concatenation operator](10_sql-support/1346-string-concatenation-operator.md)
+      - [BDL programming](10_sql-support/1347-bdl-programming.md) — Oracle® MySQL related programming topics.
+        - [INSERT cursors](10_sql-support/1348-insert-cursors.md)
+        - [Cursors WITH HOLD](10_sql-support/1349-cursors-with-hold.md)
+        - [SELECT … FOR UPDATE](10_sql-support/1350-select-for-update.md)
+        - [UPDATE/DELETE … WHERE CURRENT OF](10_sql-support/1351-update-delete-where-current-of.md)
+        - [LOAD and UNLOAD](10_sql-support/1352-load-and-unload.md)
+        - [SQL Interruption](10_sql-support/1353-sql-interruption.md)
+        - [Scrollable cursors](10_sql-support/1354-scrollable-cursors.md)
+        - [Stored procedure calls](10_sql-support/1355-stored-procedure-calls.md)
+          - [Stored procedures with output parameters](10_sql-support/1356-stored-procedures-with-output-parameters.md)
+          - [Stored functions returning values](10_sql-support/1357-stored-functions-returning-values.md)
+          - [Stored procedures with result set](10_sql-support/1358-stored-procedures-with-result-set.md)
+    - [Oracle® Database](10_sql-support/1359-oracle-database.md)
+      - [Purpose of the Oracle® SQL guide](10_sql-support/1360-purpose-of-the-oracle-sql-guide.md)
+      - [Installation (Runtime Configuration)](10_sql-support/1361-installation-runtime-configuration.md) — Oracle Database related installation topics.
+        - [Install Oracle and create a database - database configuration/design tasks](10_sql-support/1362-install-oracle-and-create-a-database-database-configuration.md)
+        - [Prepare the runtime environment - connecting to the database](10_sql-support/1363-prepare-the-runtime-environment-connecting-to-the-database.md)
+      - [Database concepts](10_sql-support/1364-database-concepts.md) — Oracle Database related database concepts topics.
+        - [Database concepts](10_sql-support/1365-database-concepts.md)
+        - [Concurrency management](10_sql-support/1366-concurrency-management.md)
+        - [Transactions handling](10_sql-support/1367-transactions-handling.md)
+        - [Database users](10_sql-support/1368-database-users.md)
+        - [Setting privileges](10_sql-support/1369-setting-privileges.md)
+      - [Data dictionary](10_sql-support/1370-data-dictionary.md) — Oracle Database related data dictionary topics.
+        - [SQL types mapping: Oracle® database](10_sql-support/1371-sql-types-mapping-oracle-database.md)
+        - [BOOLEAN data type](10_sql-support/1372-boolean-data-type.md)
+        - [CHAR and VARCHAR data types](10_sql-support/1373-char-and-varchar-data-types.md)
+        - [Numeric data types](10_sql-support/1374-numeric-data-types.md)
+        - [DATE and DATETIME data types](10_sql-support/1375-date-and-datetime-data-types.md)
+        - [INTERVAL data type](10_sql-support/1376-interval-data-type.md)
+        - [SERIAL and BIGSERIAL data types](10_sql-support/1377-serial-and-bigserial-data-types.md)
+        - [ROWID columns](10_sql-support/1378-rowid-columns.md)
+        - [The RAW data type](10_sql-support/1379-the-raw-data-type.md)
+        - [TEXT and BYTE (LOB) types](10_sql-support/1380-text-and-byte-lob-types.md)
+        - [SQL table definition](10_sql-support/1381-sql-table-definition.md)
+        - [Name resolution of SQL objects](10_sql-support/1382-name-resolution-of-sql-objects.md)
+        - [NULLs in indexed columns](10_sql-support/1383-nulls-in-indexed-columns.md)
+        - [Oracle JSON data type](10_sql-support/1384-oracle-json-data-type.md)
+        - [Oracle VECTOR data type](10_sql-support/1385-oracle-vector-data-type.md)
+      - [Data manipulation](10_sql-support/1386-data-manipulation.md) — Oracle Database related data manipulation topics.
+        - [Reserved words](10_sql-support/1387-reserved-words.md)
+        - [Outer joins](10_sql-support/1388-outer-joins.md)
+        - [Transactions handling](10_sql-support/1389-transactions-handling.md)
+        - [Temporary tables](10_sql-support/1390-temporary-tables.md)
+          - [Using the default temporary table emulation](10_sql-support/1391-using-the-default-temporary-table-emulation.md)
+          - [Using the global temporary table emulation](10_sql-support/1392-using-the-global-temporary-table-emulation.md)
+          - [Using the private temporary table emulation](10_sql-support/1393-using-the-private-temporary-table-emulation.md)
+        - [Substrings in SQL](10_sql-support/1394-substrings-in-sql.md)
+        - [The LENGTH() function](10_sql-support/1395-the-length-function.md)
+        - [Empty character strings](10_sql-support/1396-empty-character-strings.md)
+        - [String delimiters](10_sql-support/1397-string-delimiters.md)
+        - [Single row SELECT](10_sql-support/1398-single-row-select.md)
+        - [MATCHES and LIKE](10_sql-support/1399-matches-and-like.md)
+        - [SELECT * (asterisk)](10_sql-support/1400-select-asterisk.md)
+        - [Row limiting clause](10_sql-support/1401-row-limiting-clause.md)
+      - [BDL programming](10_sql-support/1402-bdl-programming.md) — Oracle Database related programming topics.
+        - [SQL errors on PREPARE](10_sql-support/1403-sql-errors-on-prepare.md)
+        - [INSERT cursors](10_sql-support/1404-insert-cursors.md)
+        - [Cursors WITH HOLD](10_sql-support/1405-cursors-with-hold.md)
+        - [SELECT … FOR UPDATE](10_sql-support/1406-select-for-update.md)
+        - [UPDATE/DELETE … WHERE CURRENT OF](10_sql-support/1407-update-delete-where-current-of.md)
+        - [LOAD and UNLOAD](10_sql-support/1408-load-and-unload.md)
+        - [SQL Interruption](10_sql-support/1409-sql-interruption.md)
+        - [Scrollable cursors](10_sql-support/1410-scrollable-cursors.md)
+        - [Stored procedure calls](10_sql-support/1411-stored-procedure-calls.md)
+          - [Stored procedures with output parameters](10_sql-support/1412-stored-procedures-with-output-parameters.md)
+          - [Stored functions with a return value](10_sql-support/1413-stored-functions-with-a-return-value.md)
+          - [Stored procedures with result set](10_sql-support/1414-stored-procedures-with-result-set.md)
+    - [PostgreSQL](10_sql-support/1415-postgresql.md)
+      - [Purpose of the PostgreSQL SQL guide](10_sql-support/1416-purpose-of-the-postgresql-sql-guide.md)
+      - [Installation (Runtime Configuration)](10_sql-support/1417-installation-runtime-configuration.md) — PostgreSQL related installation topics.
+        - [Install PostgreSQL and create a database - database configuration/design tasks](10_sql-support/1418-install-postgresql-and-create-a-database-database-configurat.md)
+        - [Prepare the runtime environment - connecting to the database](10_sql-support/1419-prepare-the-runtime-environment-connecting-to-the-database.md)
+      - [Database concepts](10_sql-support/1420-database-concepts.md) — PostgreSQL related database concepts topics.
+        - [Database concepts](10_sql-support/1421-database-concepts.md)
+        - [Concurrency management](10_sql-support/1422-concurrency-management.md)
+        - [Transactions handling](10_sql-support/1423-transactions-handling.md)
+        - [Database users](10_sql-support/1424-database-users.md)
+        - [Setting privileges](10_sql-support/1425-setting-privileges.md)
+      - [Data dictionary](10_sql-support/1426-data-dictionary.md) — PostgreSQL related data dictionary topics.
+        - [SQL types mapping: PostgreSQL](10_sql-support/1427-sql-types-mapping-postgresql.md)
+        - [Extracting database schemas from PostgreSQL](10_sql-support/1428-extracting-database-schemas-from-postgresql.md)
+        - [BOOLEAN data type](10_sql-support/1429-boolean-data-type.md)
+        - [CHAR and VARCHAR data types](10_sql-support/1430-char-and-varchar-data-types.md)
+        - [Numeric data types](10_sql-support/1431-numeric-data-types.md)
+        - [DATE and DATETIME data types](10_sql-support/1432-date-and-datetime-data-types.md)
+        - [INTERVAL data type](10_sql-support/1433-interval-data-type.md)
+        - [SERIAL and BIGSERIAL data types](10_sql-support/1434-serial-and-bigserial-data-types.md)
+        - [ROWID columns](10_sql-support/1435-rowid-columns.md)
+        - [TEXT and BYTE (LOB) types](10_sql-support/1436-text-and-byte-lob-types.md)
+        - [SQL table definition](10_sql-support/1437-sql-table-definition.md)
+        - [Name resolution of SQL objects](10_sql-support/1438-name-resolution-of-sql-objects.md)
+        - [PostgreSQL JSON/JSONB data types](10_sql-support/1439-postgresql-json-jsonb-data-types.md)
+        - [PostgreSQL TSVECTOR/TSQUERY data types](10_sql-support/1440-postgresql-tsvector-tsquery-data-types.md)
+        - [PostgreSQL pgvector extension data types](10_sql-support/1441-postgresql-pgvector-extension-data-types.md)
+      - [Data manipulation](10_sql-support/1442-data-manipulation.md) — PostgreSQL related data manipulation topics.
+        - [Reserved words](10_sql-support/1443-reserved-words.md)
+        - [Outer joins](10_sql-support/1444-outer-joins.md)
+        - [Transactions handling](10_sql-support/1445-transactions-handling.md)
+        - [Temporary tables](10_sql-support/1446-temporary-tables.md)
+        - [Substrings in SQL](10_sql-support/1447-substrings-in-sql.md)
+        - [String delimiters](10_sql-support/1448-string-delimiters.md)
+        - [MATCHES and LIKE](10_sql-support/1449-matches-and-like.md)
+        - [The LENGTH() function](10_sql-support/1450-the-length-function.md)
+        - [Row limiting clause](10_sql-support/1451-row-limiting-clause.md)
+        - [Type conversion rules](10_sql-support/1452-type-conversion-rules.md)
+      - [BDL programming](10_sql-support/1453-bdl-programming.md) — PostgreSQL related programming topics.
+        - [SQL errors on PREPARE](10_sql-support/1454-sql-errors-on-prepare.md)
+        - [INSERT cursors](10_sql-support/1455-insert-cursors.md)
+        - [Cursors WITH HOLD](10_sql-support/1456-cursors-with-hold.md)
+        - [SELECT … FOR UPDATE](10_sql-support/1457-select-for-update.md)
+        - [UPDATE/DELETE … WHERE CURRENT OF](10_sql-support/1458-update-delete-where-current-of.md)
+        - [LOAD and UNLOAD](10_sql-support/1459-load-and-unload.md)
+        - [SQL Interruption](10_sql-support/1460-sql-interruption.md)
+        - [Scrollable cursors](10_sql-support/1461-scrollable-cursors.md)
+        - [Stored procedure calls](10_sql-support/1462-stored-procedure-calls.md)
+          - [Stored procedure with output parameters](10_sql-support/1463-stored-procedure-with-output-parameters.md)
+          - [Stored functions with result set](10_sql-support/1464-stored-functions-with-result-set.md)
+          - [Stored function with output parameters](10_sql-support/1465-stored-function-with-output-parameters.md)
+    - [SQLite](10_sql-support/1466-sqlite.md)
+      - [Purpose of the SQLite SQL guide](10_sql-support/1467-purpose-of-the-sqlite-sql-guide.md)
+      - [Installation (Runtime Configuration)](10_sql-support/1468-installation-runtime-configuration.md) — SQLite related installation topics.
+        - [Install SQLite and create a database - database configuration/design tasks](10_sql-support/1469-install-sqlite-and-create-a-database-database-configuration.md)
+        - [Prepare the runtime environment - connecting to the database](10_sql-support/1470-prepare-the-runtime-environment-connecting-to-the-database.md)
+      - [Database concepts](10_sql-support/1471-database-concepts.md) — SQLite related database concepts topics.
+        - [Database concepts](10_sql-support/1472-database-concepts.md)
+        - [Concurrency management](10_sql-support/1473-concurrency-management.md)
+        - [Transactions handling](10_sql-support/1474-transactions-handling.md)
+        - [Database users](10_sql-support/1475-database-users.md)
+      - [Data dictionary](10_sql-support/1476-data-dictionary.md) — SQLite related data dictionary topics.
+        - [SQL types mapping: SQLite](10_sql-support/1477-sql-types-mapping-sqlite.md)
+        - [BOOLEAN data type](10_sql-support/1478-boolean-data-type.md)
+        - [CHAR and VARCHAR data types](10_sql-support/1479-char-and-varchar-data-types.md)
+        - [Numeric data types](10_sql-support/1480-numeric-data-types.md)
+        - [DATE and DATETIME data types](10_sql-support/1481-date-and-datetime-data-types.md)
+        - [INTERVAL data type](10_sql-support/1482-interval-data-type.md)
+        - [SERIAL and BIGSERIAL data types](10_sql-support/1483-serial-and-bigserial-data-types.md)
+        - [ROWID columns](10_sql-support/1484-rowid-columns.md)
+        - [SQL table definition](10_sql-support/1485-sql-table-definition.md)
+        - [TEXT and BYTE (LOB) types](10_sql-support/1486-text-and-byte-lob-types.md)
+        - [Name resolution of SQL objects](10_sql-support/1487-name-resolution-of-sql-objects.md)
+      - [Data manipulation](10_sql-support/1488-data-manipulation.md) — SQLite related data manipulation topics.
+        - [Outer joins](10_sql-support/1489-outer-joins.md)
+        - [Transactions handling](10_sql-support/1490-transactions-handling.md)
+        - [Temporary tables](10_sql-support/1491-temporary-tables.md)
+        - [Substrings in SQL](10_sql-support/1492-substrings-in-sql.md)
+        - [MATCHES and LIKE](10_sql-support/1493-matches-and-like.md)
+        - [The LENGTH() function](10_sql-support/1494-the-length-function.md)
+        - [Row limiting clause](10_sql-support/1495-row-limiting-clause.md)
+      - [BDL programming](10_sql-support/1496-bdl-programming.md) — SQLite related programming topics.
+        - [INSERT cursors](10_sql-support/1497-insert-cursors.md)
+        - [SELECT … FOR UPDATE](10_sql-support/1498-select-for-update.md)
+        - [Cursors WITH HOLD](10_sql-support/1499-cursors-with-hold.md)
+        - [UPDATE/DELETE … WHERE CURRENT OF](10_sql-support/1500-update-delete-where-current-of.md)
+        - [LOAD and UNLOAD](10_sql-support/1501-load-and-unload.md)
+        - [SQL Interruption](10_sql-support/1502-sql-interruption.md)
+        - [Scrollable cursors](10_sql-support/1503-scrollable-cursors.md)
+        - [Modifying many rows in a table](10_sql-support/1504-modifying-many-rows-in-a-table.md)
+        - [Optimizing database file usage](10_sql-support/1505-optimizing-database-file-usage.md)
+        - [Drop table limitation](10_sql-support/1506-drop-table-limitation.md)
+- [User interface](11_user-interface/1507-user-interface.md) — These topics cover programming the user interface (UI) with the Genero Business Development Language.
+  - [User interface basics](11_user-interface/1508-user-interface-basics.md) — This section introduces to the foundation of the Genero user interface.
+    - [The dynamic user interface](11_user-interface/1509-the-dynamic-user-interface.md) — The dynamic user interface is the base concept of the Genero user interaction components.
+    - [The abstract user interface tree](11_user-interface/1510-the-abstract-user-interface-tree.md) — The abstract user interface tree is the XML representation of the application forms displayed to the end user.
+      - [What does the abstract user interface tree contain?](11_user-interface/1511-what-does-the-abstract-user-interface-tree-contain.md)
+      - [Manipulating the abstract user interface tree](11_user-interface/1512-manipulating-the-abstract-user-interface-tree.md)
+      - [XML node types and attribute names](11_user-interface/1513-xml-node-types-and-attribute-names.md)
+      - [Actions in the abstract user interface tree](11_user-interface/1514-actions-in-the-abstract-user-interface-tree.md)
+      - [Inspecting the AUI tree of a front-end](11_user-interface/1515-inspecting-the-aui-tree-of-a-front-end.md)
+    - [Genero user interface modes](11_user-interface/1516-genero-user-interface-modes.md) — User interface modes allow you to adapt the application form rendering to different types of displays.
+      - [Text mode rendering (TUI mode)](11_user-interface/1517-text-mode-rendering-tui-mode.md)
+      - [Graphical mode rendering (GUI mode)](11_user-interface/1518-graphical-mode-rendering-gui-mode.md)
+        - [Graphical mode with Traditional Display](11_user-interface/1519-graphical-mode-with-traditional-display.md)
+    - [GUI front-end connection](11_user-interface/1520-gui-front-end-connection.md) — This section explains runtime to front-end connection in its simplest form.
+      - [Connecting with a front-end](11_user-interface/1521-connecting-with-a-front-end.md)
+      - [The front-end protocol](11_user-interface/1522-the-front-end-protocol.md)
+      - [Front-end identification](11_user-interface/1523-front-end-identification.md)
+      - [GUI connection timeout](11_user-interface/1524-gui-connection-timeout.md)
+      - [Wait for front-end ping timeout](11_user-interface/1525-wait-for-front-end-ping-timeout.md)
+      - [Front-end protocol errors](11_user-interface/1526-front-end-protocol-errors.md)
+      - [Debugging the front-end protocol](11_user-interface/1527-debugging-the-front-end-protocol.md)
+      - [Front-end protocol logging](11_user-interface/1528-front-end-protocol-logging.md)
+      - [GUI log events](11_user-interface/1529-gui-log-events.md)
+      - [Automatic front-end startup](11_user-interface/1530-automatic-front-end-startup.md)
+    - [Using a text terminal](11_user-interface/1531-using-a-text-terminal.md) — This section covers topics about text terminal configuration when using the TUI mode.
+      - [TERMINFO terminal capabilities](11_user-interface/1532-terminfo-terminal-capabilities.md)
+      - [TERMCAP terminal capabilities](11_user-interface/1533-termcap-terminal-capabilities.md)
+        - [Termcap syntax](11_user-interface/1534-termcap-syntax.md)
+        - [Genero-specific termcap definitions](11_user-interface/1535-genero-specific-termcap-definitions.md)
+      - [Text mode screen dump](11_user-interface/1536-text-mode-screen-dump.md)
+  - [Form definitions](11_user-interface/1537-form-definitions.md) — This section describes how to define application forms and program resources related to the presentation layer.
+    - [Form rendering](11_user-interface/1538-form-rendering.md) — The section explains the layout rules to render forms on graphical front-ends.
+      - [Form rendering basics](11_user-interface/1539-form-rendering-basics.md) — Get the essentials about form rendering.
+      - [Character encoding in .per](11_user-interface/1540-character-encoding-in-per.md) — The character encoding used to edit and compile .per form specification files is defined by the current locale.
+      - [Responsive Layout](11_user-interface/1541-responsive-layout.md) — Forms can be designed to adapt to the front-end screen possibilities.
+        - [Understanding Responsive Layout](11_user-interface/1542-understanding-responsive-layout.md) — Forms can be designed to adapt to the front-end screen possibilities.
+        - [Layout structure for responsive](11_user-interface/1543-layout-structure-for-responsive.md) — Use the LAYOUT structure to define forms that adapt to screen sizes.
+        - [Horizontal stretching](11_user-interface/1544-horizontal-stretching.md) — Define stretchable form elements to achieve responsive layout.
+        - [Hiding form elements](11_user-interface/1545-hiding-form-elements.md) — Forms elements can be automatically hidden depending on the screen size.
+        - [HBOX/VBOX orientation](11_user-interface/1546-hbox-vbox-orientation.md) — HBOX/VBOX containers can be defined to adapt to the screen size.
+        - [Horizontal box splitting](11_user-interface/1547-horizontal-box-splitting.md) — HBOX/VBOX containers can be defined to display a single child container.
+        - [Adapting to viewport changes](11_user-interface/1548-adapting-to-viewport-changes.md) — Application forms and functions can be adapted to the front-end viewport size or mobile device orientation.
+      - [Grid-based layout](11_user-interface/1549-grid-based-layout.md) — A form file can define a grid-based layout within a tree of layout items.
+        - [The cell grid concept](11_user-interface/1550-the-cell-grid-concept.md) — Form elements align to each other by following the cells of a virtual grid.
+        - [Elements arrangement in forms](11_user-interface/1551-elements-arrangement-in-forms.md) — When resizing a window, the content will either stretch with the window, be evenly distributed, or be packed in the top left position.
+        - [Widget position and size in grid](11_user-interface/1552-widget-position-and-size-in-grid.md) — Form items render as widgets in the window, at a given position and with a given size.
+        - [Form item dependencies in grids](11_user-interface/1553-form-item-dependencies-in-grids.md) — Form items interact with each other in terms of width, depending on the front-end widget size.
+        - [Automatic HBox/VBox with splitter](11_user-interface/1554-automatic-hbox-vbox-with-splitter.md) — Horizontal and vertical boxes with splitter are created automatically when stretchable elements are set side by side.
+        - [Complex grid layout example](11_user-interface/1555-complex-grid-layout-example.md) — Describes how form items align in grid-based front-ends with an example.
+        - [Using hbox tags to align form items](11_user-interface/1556-using-hbox-tags-to-align-form-items.md) — The hbox tag concept has been introduced to bypass the limitations of the character-based grid in forms.
+          - [Defining hbox tags in grids](11_user-interface/1557-defining-hbox-tags-in-grids.md)
+          - [Spacer items in hbox tags](11_user-interface/1558-spacer-items-in-hbox-tags.md)
+          - [Widget width inside hbox tags](11_user-interface/1559-widget-width-inside-hbox-tags.md)
+      - [Front-end stored settings](11_user-interface/1560-front-end-stored-settings.md) — Front-ends can store some layout properties of windows and form elements, for subsequent program executions.
+    - [Windows and forms](11_user-interface/1561-windows-and-forms.md) — The section describes the concept of windows and forms in the language.
+      - [Understanding windows and forms](11_user-interface/1562-understanding-windows-and-forms.md) — This is an introduction to Genero windows and forms.
+      - [Containers for program windows](11_user-interface/1563-containers-for-program-windows.md) — Program windows are displayed in window containers by the front-end.
+      - [The window concept](11_user-interface/1564-the-window-concept.md) — Windows are containers for .42f forms.
+      - [The form concept](11_user-interface/1565-the-form-concept.md) — Forms define the layout and presentation of areas used by the dialogs, to display or input data.
+      - [Position and size of a window](11_user-interface/1566-position-and-size-of-a-window.md) — Window objects can be created with a position and size for the TUI mode.
+      - [Configuring windows with styles](11_user-interface/1567-configuring-windows-with-styles.md) — Use the STYLE attribute to set a style for a window.
+      - [Defining the window title](11_user-interface/1568-defining-the-window-title.md) — Use the TEXT attribute to define a title for a window.
+      - [Defining the window icon](11_user-interface/1569-defining-the-window-icon.md) — Use a IMAGE attribute to define the icon for a window.
+      - [Field-anchored windows](11_user-interface/1570-field-anchored-windows.md) — The Window style attribute "position" can be set to "field" in order to display the window under the current field.
+      - [Instructions for windows and forms](11_user-interface/1571-instructions-for-windows-and-forms.md) — This section groups the language instructions to handle windows and forms.
+        - [OPEN WINDOW](11_user-interface/1572-open-window.md) — Creates and displays a new window.
+          - [OPEN WINDOW attributes](11_user-interface/1573-open-window-attributes.md) — List of attributes for the OPEN WINDOW instruction.
+          - [WITH FORM clause](11_user-interface/1574-with-form-clause.md) — Creating a window object with a form.
+        - [CLOSE WINDOW](11_user-interface/1575-close-window.md) — Closes and destroys a window.
+        - [CURRENT WINDOW](11_user-interface/1576-current-window.md) — Makes a specified window the current window.
+        - [CLEAR WINDOW](11_user-interface/1577-clear-window.md) — Clears the contents of a window.
+        - [OPEN FORM](11_user-interface/1578-open-form.md) — Declares a compiled form in the program.
+        - [DISPLAY FORM](11_user-interface/1579-display-form.md) — Displays and associates a form with the current window.
+        - [CLOSE FORM](11_user-interface/1580-close-form.md) — Closes the resources allocated by OPEN FORM.
+        - [CLEAR SCREEN](11_user-interface/1581-clear-screen.md) — Clears the complete application screen.
+        - [DISPLAY AT](11_user-interface/1582-display-at.md) — The DISPLAY ... AT instruction displays text at a given line/column position in the current window.
+    - [Using images](11_user-interface/1583-using-images.md) — Describes how to use pictures in the forms of your application.
+      - [Image handling basics](11_user-interface/1584-image-handling-basics.md) — This is an introduction to image handling in Genero.
+      - [Controlling the image layout](11_user-interface/1585-controlling-the-image-layout.md) — Explains how image form items can be sized in different front-end layout systems.
+      - [Providing the image resource](11_user-interface/1586-providing-the-image-resource.md) — There are several things you need to know about providing an image resource in a Genero program.
+      - [Static images](11_user-interface/1587-static-images.md) — Describes how to decorate forms with icons.
+      - [Runtime images](11_user-interface/1588-runtime-images.md) — Explains how to display pictures at runtime.
+    - [Accessibility guidelines](11_user-interface/1589-accessibility-guidelines.md) — This section describes the best practices to make your application accessible to disabled people.
+      - [Keyboard access](11_user-interface/1590-keyboard-access.md) — How to implement keyboard usage to follow accessibility standard?
+      - [Screen readers](11_user-interface/1591-screen-readers.md) — How to integrate with platform screen readers?
+      - [Usability and ergonomics](11_user-interface/1592-usability-and-ergonomics.md) — How to adapt application forms to disabled users?
+    - [Message files](11_user-interface/1593-message-files.md) — Message files centralize strings and larger texts identified by a number, that can be used in programs.
+      - [Understanding message files](11_user-interface/1594-understanding-message-files.md) — This is an introduction to message files.
+      - [Syntax of message files (.msg)](11_user-interface/1595-syntax-of-message-files-msg.md) — A message file contains a set of messages identified by an integer number.
+      - [Compiling message files (.msg)](11_user-interface/1596-compiling-message-files-msg.md) — The .msg message files must be compiled to .iem binary files, in order to be loaded by the runtime system.
+      - [Using message files at runtime](11_user-interface/1597-using-message-files-at-runtime.md)
+      - [Examples](11_user-interface/1598-examples.md) — Message files (.msg) usage examples.
+        - [Example 1: Help message file used in a MENU](11_user-interface/1599-example-1-help-message-file-used-in-a-menu.md)
+    - [Action defaults files](11_user-interface/1600-action-defaults-files.md) — Action defaults files allow to centralize action configuration parameters such as text, icon, accelerators and behavior options in XML format.
+      - [Understanding action defaults files](11_user-interface/1601-understanding-action-defaults-files.md) — This is an introduction to action default files.
+      - [Syntax of action defaults files (.4ad)](11_user-interface/1602-syntax-of-action-defaults-files-4ad.md) — A .4ad action default file is an XML file defining default attributes for actions.
+      - [Action default attributes reference (.4ad)](11_user-interface/1603-action-default-attributes-reference-4ad.md) — This topic contains all attributes you can define in a .4ad action defaults file.
+      - [Using action defaults files](11_user-interface/1604-using-action-defaults-files.md) — To use action default files, you must understand how they work and how to structure the code.
+      - [Examples](11_user-interface/1605-examples.md) — Action defaults files (.4ad) usage examples.
+        - [Example 1: Loading a global action defaults file](11_user-interface/1606-example-1-loading-a-global-action-defaults-file.md)
+    - [Presentation styles](11_user-interface/1607-presentation-styles.md) — Use presentation styles to specify decoration attributes for window and form elements.
+      - [Understanding presentation styles](11_user-interface/1608-understanding-presentation-styles.md) — Presentation styles centralize the attributes related to the decoration of the graphical user interface elements.
+      - [Syntax of presentation styles file (.4st)](11_user-interface/1609-syntax-of-presentation-styles-file-4st.md) — A .4st presentation styles file is an XML file defining style attributes to be applied by front-ends.
+      - [Using presentation styles](11_user-interface/1610-using-presentation-styles.md) — Use presentation styles to centralize the decoration of your user interface.
+        - [Defining a style](11_user-interface/1611-defining-a-style.md) — Styles can be defined to be global (for all elements), for an element in general, or for specific types of an element.
+        - [Pseudo selectors](11_user-interface/1612-pseudo-selectors.md) — Pseudo selectors can be used to apply style only when some conditions are fulfilled.
+        - [Using a style](11_user-interface/1613-using-a-style.md) — To apply a specific style, set the style-name in the style attribute of the node representing the graphical element in the abstract user interface tree.
+        - [Order of precedence](11_user-interface/1614-order-of-precedence.md) — Style definitions are applied following and order of precedence.
+        - [Combining styles and style attributes](11_user-interface/1615-combining-styles-and-style-attributes.md) — Several styles can be combined, and style attributes can be mixed.
+        - [Style attribute inheritance](11_user-interface/1616-style-attribute-inheritance.md) — A style attribute may be inherited by the descendants of a given node in the abstract user interface tree.
+        - [Presentation styles in the AUI tree](11_user-interface/1617-presentation-styles-in-the-aui-tree.md) — Where to find presentation styles definitions in the AUI Tree?
+        - [Loading presentation styles](11_user-interface/1618-loading-presentation-styles.md) — Presentation styles are defined in an XML file with a 4st extension. In order to load the presentation styles, the runtime system needs to locate the appropriate style file.
+        - [Combining TTY and style attributes](11_user-interface/1619-combining-tty-and-style-attributes.md) — TTY attributes can define style attribute equivalents such as the text color. Different precedence rules apply, depending on the TTY attribute specification.
+        - [Element types](11_user-interface/1620-element-types.md) — Which AUI tree elements can get a style?
+      - [Predefined attribute values](11_user-interface/1621-predefined-attribute-values.md) — This section describes the values that must be used for some style attributes.
+        - [Colors](11_user-interface/1622-colors.md) — When providing a value for style attributes that define color, you can specify a generic color name or its RGB value.
+        - [Fonts](11_user-interface/1623-fonts.md) — A graphical application defaults to using the front-end platform theme. The front-end tries to determine the default font for the application screens.
+          - [Font families](11_user-interface/1624-font-families.md) — Use the fontFamily style attribute to define a font family.
+          - [Font sizes](11_user-interface/1625-font-sizes.md) — Use the fontSize style attribute to influence the size of a font.
+          - [Font styles](11_user-interface/1626-font-styles.md) — Use the fontStyle style attribute to define the style of a font.
+          - [Font weights](11_user-interface/1627-font-weights.md) — Use the fontWeight style attribute to define the aspect of a font.
+      - [Style attributes reference](11_user-interface/1628-style-attributes-reference.md) — A presentation style attribute may be a common attribute that can be applied to any graphical element. Most presentation style attributes apply only to a specific graphical element.
+        - [Style attributes common to all elements](11_user-interface/1629-style-attributes-common-to-all-elements.md) — Common presentation style attributes apply to any graphical element, such as windows, layout containers, or form items.
+        - [Action/MenuAction style attributes](11_user-interface/1630-action-menuaction-style-attributes.md) — These style attributes apply to default action views (MenuAction and Action classes).
+        - [Button style attributes](11_user-interface/1631-button-style-attributes.md) — Button presentation style attributes apply to BUTTON elements.
+        - [ButtonEdit style attributes](11_user-interface/1632-buttonedit-style-attributes.md) — ButtonEdit presentation style attributes apply to BUTTONEDIT elements.
+        - [CheckBox style attributes](11_user-interface/1633-checkbox-style-attributes.md) — CheckBox presentation style attributes apply to CHECKBOX elements.
+        - [ComboBox style attributes](11_user-interface/1634-combobox-style-attributes.md) — ComboBox presentation style attributes apply to COMBOBOX elements.
+        - [DateEdit style attributes](11_user-interface/1635-dateedit-style-attributes.md) — DateEdit presentation style attributes apply to DATEEDIT elements.
+        - [DateTimeEdit style attributes](11_user-interface/1636-datetimeedit-style-attributes.md) — DateEdit presentation style attributes apply to DATEEDIT elements.
+        - [Edit style attributes](11_user-interface/1637-edit-style-attributes.md) — Edit presentation style attributes apply to an EDIT element.
+        - [Folder style attributes](11_user-interface/1638-folder-style-attributes.md) — Folder presentation style attributes apply to FOLDER tab elements.
+        - [Group style attributes](11_user-interface/1639-group-style-attributes.md) — Group presentation style attributes apply to an GROUP element.
+        - [HBox style attributes](11_user-interface/1640-hbox-style-attributes.md) — HBox presentation style attributes apply to an HBox element.
+        - [Image style attributes](11_user-interface/1641-image-style-attributes.md) — Image style presentation attributes apply to an IMAGE element.
+        - [Label style attributes](11_user-interface/1642-label-style-attributes.md) — Label presentation style attributes apply to LABEL elements.
+        - [Menu style attributes](11_user-interface/1643-menu-style-attributes.md) — Menu presentation style attributes apply to MENU elements.
+        - [Message style attributes](11_user-interface/1644-message-style-attributes.md) — Message presentation style attributes apply to an ERROR or MESSAGE instruction.
+        - [ProgressBar style attributes](11_user-interface/1645-progressbar-style-attributes.md) — ProgressBar presentation style attributes apply to PROGRESSBAR elements.
+        - [ScrollGrid style attributes](11_user-interface/1646-scrollgrid-style-attributes.md) — ScrollGrid presentation style attributes apply to SCROLLGRID container.
+        - [SpinEdit style attributes](11_user-interface/1647-spinedit-style-attributes.md) — SpinEdit presentation style attributes apply to an SPINEDIT element.
+        - [Table style attributes](11_user-interface/1648-table-style-attributes.md) — Table presentation style attributes apply to a TABLE container.
+        - [Tree style attributes](11_user-interface/1649-tree-style-attributes.md) — Tree presentation style attributes apply to the TREE container.
+        - [TextEdit style attributes](11_user-interface/1650-textedit-style-attributes.md) — Textedit presentation style attributes apply to the TEXTEDIT element.
+        - [ToolBar style attributes](11_user-interface/1651-toolbar-style-attributes.md) — ToolBar presentation style attributes apply to the TOOLBAR element.
+        - [UserInterface style attributes](11_user-interface/1652-userinterface-style-attributes.md) — UserInterface presentation style attributes define general options related to the application user interface.
+        - [VBox style attributes](11_user-interface/1653-vbox-style-attributes.md) — VBox presentation style attributes apply to an VBox element.
+        - [Window style attributes](11_user-interface/1654-window-style-attributes.md) — Window presentation style attributes apply to a window element.
+          - [Window style attributes: Basics](11_user-interface/1655-window-style-attributes-basics.md) — Basic presentation style attributes for window elements.
+          - [Window style attributes: Miscellaneous](11_user-interface/1656-window-style-attributes-miscellaneous.md) — Miscellaneous presentation style attributes for window elements.
+          - [Window style attributes: Action Panel](11_user-interface/1657-window-style-attributes-action-panel.md) — Presentation style attributes that apply to the window action panel.
+          - [Window style attributes: Ring Menu](11_user-interface/1658-window-style-attributes-ring-menu.md) — Presentation style attributes that apply to a window ring menu.
+      - [Examples](11_user-interface/1659-examples.md) — Presentation style (*.4st) usage examples.
+        - [Example 1: Defining styles for grid elements](11_user-interface/1660-example-1-defining-styles-for-grid-elements.md)
+        - [Example 2: Defining styles for table rows](11_user-interface/1661-example-2-defining-styles-for-table-rows.md)
+    - [Form specification files](11_user-interface/1662-form-specification-files.md) — Form specification files are the source files defining the layout and content of application forms.
+      - [Understanding form files](11_user-interface/1663-understanding-form-files.md) — A form specification file is a source file that defines an application form providing for end user interaction with a program.
+      - [Form file concepts](11_user-interface/1664-form-file-concepts.md) — Form specification file contains different types of elements.
+        - [Form items](11_user-interface/1665-form-items.md) — The concept of form item includes all elements used in the definition of a form.
+          - [Satellite items](11_user-interface/1666-satellite-items.md) — Satellite items are display elements defined outside the LAYOUT section.
+          - [Static items](11_user-interface/1667-static-items.md) — A static item defines a simple form item as a final grid element that does not change.
+          - [Layout items](11_user-interface/1668-layout-items.md) — Layout items are containers with a body that can hold other form items.
+          - [Action views](11_user-interface/1669-action-views.md) — An action view defines a form item that can trigger an action in the program.
+          - [Form fields](11_user-interface/1670-form-fields.md) — Form fields are form elements designed for data input and/or data display.
+            - [Database column fields](11_user-interface/1671-database-column-fields.md) — Form fields defined with a table and column name get data type from the database schema file.
+            - [Formonly fields](11_user-interface/1672-formonly-fields.md) — FORMONLY form fields define their data type explicitly, with or without referencing a database columns.
+            - [Phantom fields](11_user-interface/1673-phantom-fields.md) — A PHANTOM field defines a screen-record field which is not rendered in the layout (it acts as a hidden field).
+            - [Aggregate fields](11_user-interface/1674-aggregate-fields.md) — An AGGREGATE field defines a screen-record field to display summary information for a TABLE column.
+          - [Identifying form items](11_user-interface/1675-identifying-form-items.md) — Elements defined in a form file can be identified with a name, to be used in programs.
+          - [Screen records / arrays](11_user-interface/1676-screen-records-arrays.md) — Form fields can be grouped in a screen record or screen array definition.
+          - [Form tags](11_user-interface/1677-form-tags.md) — Form tags define layout elements inside a grid-based container.
+            - [Layout tags](11_user-interface/1678-layout-tags.md) — Layout tags define layout areas for containers inside the frame of a grid-based container.
+            - [Item tags](11_user-interface/1679-item-tags.md) — Item tags define the position and size in a grid-based container.
+            - [Hbox tags](11_user-interface/1680-hbox-tags.md) — Hbox tags group several item tags within the same horizontal layout box, inside a grid-based container (GRID).
+        - [External form inclusion](11_user-interface/1681-external-form-inclusion.md) — Form inclusion allows to reuse the same form part in different forms.
+        - [Boolean expressions in forms](11_user-interface/1682-boolean-expressions-in-forms.md) — Some form item definitions can include boolean expressions with a form file specific syntax.
+      - [Form item types](11_user-interface/1683-form-item-types.md) — The form item types defines the purpose of form elements.
+        - [BUTTON item type](11_user-interface/1684-button-item-type.md) — Defines a push-button that can trigger an action.
+        - [BUTTONEDIT item type](11_user-interface/1685-buttonedit-item-type.md) — Defines a line-edit with a push-button that can trigger an action.
+        - [CHECKBOX item type](11_user-interface/1686-checkbox-item-type.md) — Defines a boolean or three-state checkbox field.
+        - [COMBOBOX item type](11_user-interface/1687-combobox-item-type.md) — Defines a line-edit with a drop-down list of values.
+        - [DATEEDIT item type](11_user-interface/1688-dateedit-item-type.md) — Defines a line-edit with a calendar widget to pick a date.
+        - [DATETIMEEDIT item type](11_user-interface/1689-datetimeedit-item-type.md) — Defines a line-edit with a calendar widget to pick a datetime.
+        - [EDIT item type](11_user-interface/1690-edit-item-type.md) — Defines a simple line-edit field.
+        - [FOLDER item type](11_user-interface/1691-folder-item-type.md) — Defines a layout area to hold folder pages.
+        - [GRID item type](11_user-interface/1692-grid-item-type.md) — Defines a layout area based on a grid of cells.
+        - [GROUP item type](11_user-interface/1693-group-item-type.md) — Defines a layout area to group other layout elements together.
+        - [HBOX item type](11_user-interface/1694-hbox-item-type.md) — Defines a layout area to render child elements in horizontal direction.
+        - [IMAGE item type](11_user-interface/1695-image-item-type.md) — Defines an area that can display an image resource.
+        - [LABEL item type](11_user-interface/1696-label-item-type.md) — Defines a simple text area to display a read-only value.
+        - [PAGE item type](11_user-interface/1697-page-item-type.md) — Defines the content of a folder page.
+        - [PROGRESSBAR item type](11_user-interface/1698-progressbar-item-type.md) — Defines a progress indicator field.
+        - [RADIOGROUP item type](11_user-interface/1699-radiogroup-item-type.md) — Defines a mutual exclusive set of options field.
+        - [SCROLLGRID item type](11_user-interface/1700-scrollgrid-item-type.md) — Defines a scrollable grid view widget.
+        - [SLIDER item type](11_user-interface/1701-slider-item-type.md) — Defines a slider form item.
+        - [SPINEDIT item type](11_user-interface/1702-spinedit-item-type.md) — Defines a spin box widget to enter integer values.
+        - [TABLE item type](11_user-interface/1703-table-item-type.md) — Defines a list view widget.
+        - [TEXTEDIT item type](11_user-interface/1704-textedit-item-type.md) — Defines a multi-line edit field.
+        - [TIMEEDIT item type](11_user-interface/1705-timeedit-item-type.md) — Defines a line-edit field with a clock widget to pick a time.
+        - [TREE item type](11_user-interface/1706-tree-item-type.md) — Defines a tree view widget.
+        - [VBOX item type](11_user-interface/1707-vbox-item-type.md) — Defines a layout area to render child elements in vertical direction.
+        - [WEBCOMPONENT item type](11_user-interface/1708-webcomponent-item-type.md) — Defines a specialized form item that holds an external component.
+      - [Form file structure](11_user-interface/1709-form-file-structure.md) — A form specification file is defined by a set of sections.
+        - [SCHEMA section](11_user-interface/1710-schema-section.md) — Defines the database schema file to be used to compile the form.
+        - [ACTION DEFAULTS section](11_user-interface/1711-action-defaults-section.md) — The ACTION DEFAULTS section defines local action view default attributes for the form elements.
+        - [TOPMENU section](11_user-interface/1712-topmenu-section.md) — The TOPMENU section defines a pull-down menu with options that are bound to actions.
+        - [TOOLBAR section](11_user-interface/1713-toolbar-section.md) — The TOOLBAR section defines a toolbar with buttons that are bound to actions.
+        - [SCREEN section](11_user-interface/1714-screen-section.md) — The SCREEN section defines the form layout for TUI mode forms.
+        - [LAYOUT section](11_user-interface/1715-layout-section.md) — The LAYOUT section defines the graphical alignment of the form by using a tree of layout containers.
+          - [FORM clause](11_user-interface/1716-form-clause.md) — Reuse the definition of a form in the current form.
+          - [HBOX container](11_user-interface/1717-hbox-container.md) — Packs child layout elements horizontally.
+          - [VBOX container](11_user-interface/1718-vbox-container.md) — Packs child layout elements vertically.
+          - [GROUP container](11_user-interface/1719-group-container.md) — Defines a layout area to group other layout elements together.
+          - [FOLDER container](11_user-interface/1720-folder-container.md) — Defines the parent container for folder pages.
+          - [PAGE container](11_user-interface/1721-page-container.md) — Defines the content of a folder page.
+          - [GRID container](11_user-interface/1722-grid-container.md) — Defines a layout area based on a grid of cells.
+          - [SCROLLGRID container](11_user-interface/1723-scrollgrid-container.md) — Defines a scrollable grid view widget.
+          - [TABLE container](11_user-interface/1724-table-container.md) — Defines a re-sizable table designed to display a list of records.
+          - [TREE container](11_user-interface/1725-tree-container.md) — The TREE container defines the presentation of a list of ordered records in a tree-view widget.
+        - [TABLES section](11_user-interface/1726-tables-section.md) — Defines the list of database tables referenced by form field definitions.
+        - [ATTRIBUTES section](11_user-interface/1727-attributes-section.md) — The ATTRIBUTES section describes properties of elements used in the form.
+          - [AGGREGATE item definition](11_user-interface/1728-aggregate-item-definition.md) — Defines screen-record fields that hold computed values to be displayed as footer cells in a TABLE container.
+          - [PHANTOM item definition](11_user-interface/1729-phantom-item-definition.md) — Defines a form field, that must not be displayed to the end user.
+          - [BUTTON item definition](11_user-interface/1730-button-item-definition.md) — Defines attributes for a push-button that can trigger an action.
+          - [BUTTONEDIT item definition](11_user-interface/1731-buttonedit-item-definition.md) — Defines attributes for a line-edit field with a push-button that can trigger an action.
+          - [CANVAS item definition](11_user-interface/1732-canvas-item-definition.md) — Defines attributes for a CANVAS drawing area.
+          - [CHECKBOX item definition](11_user-interface/1733-checkbox-item-definition.md) — Defines attributes for a boolean or three-state checkbox field.
+          - [COMBOBOX item definition](11_user-interface/1734-combobox-item-definition.md) — Defines attributes for an edit field with a drop-down list.
+          - [DATEEDIT item definition](11_user-interface/1735-dateedit-item-definition.md) — Defines attributes for a line-edit field with a calendar widget to pick a date.
+          - [DATETIMEEDIT item definition](11_user-interface/1736-datetimeedit-item-definition.md) — Defines attributes for a line-edit field with a calendar widget to pick a datetime.
+          - [EDIT item definition](11_user-interface/1737-edit-item-definition.md) — Defines attributes for a simple line-edit field.
+          - [GROUP item definition](11_user-interface/1738-group-item-definition.md) — Defines attributes for a group-box layout tag.
+          - [IMAGE item definition](11_user-interface/1739-image-item-definition.md) — Defines attributes for an area that can display an image resource.
+          - [LABEL item definition](11_user-interface/1740-label-item-definition.md) — Defines attributes for a simple text area to display a read-only value.
+          - [PROGRESSBAR item definition](11_user-interface/1741-progressbar-item-definition.md) — Defines attributes for a progress indicator field.
+          - [RADIOGROUP item definition](11_user-interface/1742-radiogroup-item-definition.md) — Defines attributes for a mutually-exclusive set of option fields.
+          - [SCROLLGRID item definition](11_user-interface/1743-scrollgrid-item-definition.md) — Defines attributes for a scrollgrid layout tag.
+          - [SLIDER item definition](11_user-interface/1744-slider-item-definition.md) — Defines attributes for a slider element.
+          - [SPINEDIT item definition](11_user-interface/1745-spinedit-item-definition.md) — Defines attributes for a spin box widget to enter integer values.
+          - [TABLE item definition](11_user-interface/1746-table-item-definition.md) — Defines attributes for a table layout tag.
+          - [TEXTEDIT item definition](11_user-interface/1747-textedit-item-definition.md) — Defines attributes for a multi-line edit field.
+          - [TIMEEDIT item definition](11_user-interface/1748-timeedit-item-definition.md) — Defines attributes for a line-edit with a clock widget to pick a time.
+          - [TREE item definition](11_user-interface/1749-tree-item-definition.md) — Defines attributes for a tree layout tag.
+          - [WEBCOMPONENT item definition](11_user-interface/1750-webcomponent-item-definition.md) — Defines attributes for a generic form field that can receive an external widget.
+        - [INSTRUCTIONS section](11_user-interface/1751-instructions-section.md) — The INSTRUCTIONS section is used to define screen arrays, non-default screen records, and global form properties.
+        - [KEYS section](11_user-interface/1752-keys-section.md) — The KEYS section can be used to define default key labels for the current form.
+      - [Form item attributes](11_user-interface/1753-form-item-attributes.md) — The form item attributes reference.
+        - [ACCELERATOR attribute](11_user-interface/1754-accelerator-attribute.md) — The ACCELERATOR is an action attribute defining the primary accelerator key for an action.
+        - [ACCELERATOR2 attribute](11_user-interface/1755-accelerator2-attribute.md) — The ACCELERATOR2 is an action attribute defining the secondary accelerator key for an action.
+        - [ACCELERATOR3 attribute](11_user-interface/1756-accelerator3-attribute.md) — The ACCELERATOR3 is an action attribute defining the third accelerator key for an action.
+        - [ACCELERATOR4 attribute](11_user-interface/1757-accelerator4-attribute.md) — The ACCELERATOR4 is an action attribute defining the fourth accelerator key for an action.
+        - [ACTION attribute](11_user-interface/1758-action-attribute.md) — The ACTION attribute defines the action associated with the form item.
+        - [AGGREGATETEXT attribute](11_user-interface/1759-aggregatetext-attribute.md) — The AGGREGATETEXT attribute defines a label to be displayed for aggregate fields.
+        - [AGGREGATETYPE attribute](11_user-interface/1760-aggregatetype-attribute.md) — The AGGREGATETYPE attribute defines how the aggregate field value is computed.
+        - [AUTOHIDE attribute](11_user-interface/1761-autohide-attribute.md) — The AUTOHIDE attribute hides automatically the form element when the related action gets inactive.
+        - [AUTOSCALE attribute](11_user-interface/1762-autoscale-attribute.md) — The AUTOSCALE attribute causes the form element contents to automatically scale to the size given to the item.
+        - [AUTONEXT attribute](11_user-interface/1763-autonext-attribute.md) — The AUTONEXT attribute forces the focus to automatically leave the current field when completed.
+        - [BUTTONTEXTHIDDEN attribute](11_user-interface/1764-buttontexthidden-attribute.md) — The BUTTONTEXTHIDDEN attribute indicates that the button labels for an element are not to be displayed.
+        - [CENTURY attribute](11_user-interface/1765-century-attribute.md) — The CENTURY attribute defines expansion of the year in a DATE or DATETIME field.
+        - [COLOR attribute](11_user-interface/1766-color-attribute.md) — The COLOR attribute defines the foreground color of the text displayed by a form element.
+        - [COLOR WHERE Attribute](11_user-interface/1767-color-where-attribute.md) — The COLOR WHERE attribute defines a condition to set the foreground color dynamically.
+        - [CONTEXTMENU attribute](11_user-interface/1768-contextmenu-attribute.md) — The CONTEXTMENU attribute defines whether a context menu option must be displayed for an action.
+        - [COMMENT attribute](11_user-interface/1769-comment-attribute.md) — The COMMENT attribute defines a hint for the user about the form element.
+        - [COMPLETER attribute](11_user-interface/1770-completer-attribute.md) — The COMPLETER attribute enables autocompletion for the edit field.
+        - [COMPONENTTYPE attribute](11_user-interface/1771-componenttype-attribute.md) — The COMPONENTTYPE attribute defines a name identifying the external widget for WEBCOMPONENT fields.
+        - [DEFAULT attribute](11_user-interface/1772-default-attribute.md) — The DEFAULT attribute defines a default value to a field during data entry.
+        - [DEFAULTVIEW attribute](11_user-interface/1773-defaultview-attribute.md) — The DEFAULTVIEW attribute defines if a default view (a button) must be displayed for a given action.
+        - [DISPLAY LIKE attribute](11_user-interface/1774-display-like-attribute.md) — The DISPLAY LIKE attribute applies column attributes defined in the database schema files (.att) to a field.
+        - [DOUBLECLICK attribute](11_user-interface/1775-doubleclick-attribute.md) — The DOUBLECLICK attribute defines the action for row choice on TABLE/TREE/SCROLLGRID rows.
+        - [DOWNSHIFT attribute](11_user-interface/1776-downshift-attribute.md) — The DOWNSHIFT attribute forces character input to lowercase letters.
+        - [EXPANDEDCOLUMN attribute](11_user-interface/1777-expandedcolumn-attribute.md) — The EXPANDEDCOLUMN attribute specifies the form field that indicates whether a tree node is expanded.
+        - [FONTPITCH attribute](11_user-interface/1778-fontpitch-attribute.md) — The FONTPITCH attribute defines the character font type as fixed or variable when the default font is used.
+        - [FORMAT attribute](11_user-interface/1779-format-attribute.md) — The FORMAT attribute defines the data formatting of numeric and date fields, for input and display.
+        - [FLIPPED attribute](11_user-interface/1780-flipped-attribute.md) — The FLIPPED attribute flips TABLE columns into rows.
+        - [GRIDCHILDRENINPARENT attribute](11_user-interface/1781-gridchildreninparent-attribute.md) — The GRIDCHILDRENINPARENT attribute is used for a container to align its children to the parent container.
+        - [HEIGHT attribute](11_user-interface/1782-height-attribute.md) — The HEIGHT attribute forces an explicit height for a form element.
+        - [HIDDEN attribute](11_user-interface/1783-hidden-attribute.md) — The HIDDEN attribute indicates if an element must be visible to the user.
+        - [IDCOLUMN attribute](11_user-interface/1784-idcolumn-attribute.md) — The IDCOLUMN attribute specifies the form field that contains the identifier of a tree node.
+        - [IMAGE attribute](11_user-interface/1785-image-attribute.md) — The IMAGE attribute defines the image resource to be displayed for the form item.
+        - [IMAGECOLUMN attribute](11_user-interface/1786-imagecolumn-attribute.md) — The IMAGECOLUMN attribute defines the form field containing the image for the current field.
+        - [IMAGECOLLAPSED attribute](11_user-interface/1787-imagecollapsed-attribute.md) — The IMAGECOLLAPSED attribute sets the global icon to be used when a tree node is collapsed.
+        - [IMAGEEXPANDED attribute](11_user-interface/1788-imageexpanded-attribute.md) — The IMAGEEXPANDED attribute sets the global icon to be used when a tree node is expanded.
+        - [IMAGELEAF attribute](11_user-interface/1789-imageleaf-attribute.md) — The IMAGELEAF attribute defines the global icon for leaf nodes of a TREE container.
+        - [INCLUDE attribute](11_user-interface/1790-include-attribute.md) — The INCLUDE attribute defines a list of possible values for a field.
+        - [INITIALIZER attribute](11_user-interface/1791-initializer-attribute.md) — The INITIALIZER attribute allows you to specify an initialization function that will be automatically called by the runtime system to set up the form item.
+        - [INITIALPAGESIZE attribute](11_user-interface/1792-initialpagesize-attribute.md) — The INITIALPAGESIZE attribute defines the initial page size of a list element.
+        - [INVISIBLE attribute](11_user-interface/1793-invisible-attribute.md) — The INVISIBLE attribute prevents field data being readable on the screen.
+        - [ISNODECOLUMN attribute](11_user-interface/1794-isnodecolumn-attribute.md) — The ISNODECOLUMN attribute specifies the form field that indicates whether a tree node has children.
+        - [ITEMS attribute](11_user-interface/1795-items-attribute.md) — The ITEMS attribute defines a list of possible values that can be used by the form item.
+        - [JUSTIFY attribute](11_user-interface/1796-justify-attribute.md) — The JUSTIFY attribute defines the alignment of a text field content, and table column headers.
+        - [KEY attribute](11_user-interface/1797-key-attribute.md) — The KEY attribute is used to define the labels of keys when the field is made current.
+        - [KEYBOARDHINT attribute](11_user-interface/1798-keyboardhint-attribute.md) — The KEYBOARDHINT attribute gives an indication of the kind of data the form field contains, allowing the front-end to adapt the keyboard accordingly.
+        - [MINHEIGHT attribute](11_user-interface/1799-minheight-attribute.md) — The MINHEIGHT attribute defines the minimum height of a form.
+        - [MINWIDTH attribute](11_user-interface/1800-minwidth-attribute.md) — The MINWIDTH attribute defines the minimum width of a form.
+        - [NOENTRY attribute](11_user-interface/1801-noentry-attribute.md) — The NOENTRY attribute prevents data entry in the field during an input dialog.
+        - [NOSWIPE attribute](11_user-interface/1802-noswipe-attribute.md) — The NOSWIPE attribute denies swipe gestures on the element.
+        - [NOT NULL attribute](11_user-interface/1803-not-null-attribute.md) — The NOT NULL attribute specifies that the field does not accept NULL values.
+        - [NOTEDITABLE attribute](11_user-interface/1804-noteditable-attribute.md) — The NOTEDITABLE attribute disables the text editor.
+        - [ORIENTATION attribute](11_user-interface/1805-orientation-attribute.md) — The ORIENTATION attribute defines whether an element displays vertically or horizontally.
+        - [PARENTIDCOLUMN attribute](11_user-interface/1806-parentidcolumn-attribute.md) — The PARENTIDCOLUMN attribute specifies the form field that contains the identifier of the parent node of a tree node.
+        - [PICTURE attribute](11_user-interface/1807-picture-attribute.md) — The PICTURE attribute specifies a character pattern for data entry in a text field, and prevents entry of values that conflict with the specified pattern.
+        - [PLACEHOLDER attribute](11_user-interface/1808-placeholder-attribute.md) — The PLACEHOLDER attribute defines a hint for the user when the field contains no value.
+        - [PROGRAM attribute](11_user-interface/1809-program-attribute.md) — The PROGRAM attribute can specify an external application program to edit TEXT or BYTE fields.
+        - [PROPERTIES attribute](11_user-interface/1810-properties-attribute.md) — The PROPERTIES attribute is used to define a list of widget-specific characteristics.
+        - [QUERYEDITABLE attribute](11_user-interface/1811-queryeditable-attribute.md) — The QUERYEDITABLE attribute makes a COMBOBOX field editable during a CONSTRUCT statement.
+        - [REQUIRED attribute](11_user-interface/1812-required-attribute.md) — The REQUIRED attribute forces the user to modify the content of a field during an input dialog.
+        - [REVERSE attribute](11_user-interface/1813-reverse-attribute.md) — The REVERSE attribute displays any value in the field in reverse video (dark characters in a bright field).
+        - [SAMPLE attribute](11_user-interface/1814-sample-attribute.md) — The SAMPLE attribute defines the text to be used to compute the width of a form field widget.
+        - [SCROLL attribute](11_user-interface/1815-scroll-attribute.md) — The SCROLL attribute can be used to enable horizontal scrolling in a character field.
+        - [SCROLLBARS attribute](11_user-interface/1816-scrollbars-attribute.md) — The SCROLLBARS attribute can be used to specify scrollbars for a form item.
+        - [SIZEPOLICY attribute](11_user-interface/1817-sizepolicy-attribute.md) — The SIZEPOLICY attribute is a sizing directive based on the content of a form item.
+        - [SPLIT attribute](11_user-interface/1818-split-attribute.md) — The SPLIT attribute forces a horizontal box to show only one child container.
+        - [SPLITTER attribute](11_user-interface/1819-splitter-attribute.md) — The SPLITTER attribute forces the container to use a splitter widget between each child element.
+        - [STEP attribute](11_user-interface/1820-step-attribute.md) — The STEP attribute specifies how a value is increased or decreased in one step (by a mouse click or key up/down).
+        - [STRETCH attribute](11_user-interface/1821-stretch-attribute.md) — The STRETCH attribute defines if the form element can grow or has a fixed size.
+        - [STRETCHCOLUMNS attribute](11_user-interface/1822-stretchcolumns-attribute.md) — The STRETCHCOLUMNS attribute makes all TABLE/TREE columns stretchable.
+        - [STRETCHMAX attribute](11_user-interface/1823-stretchmax-attribute.md) — The STRETCHMAX attribute defines the maximum stretching width for a TABLE/TREE column.
+        - [STRETCHMIN attribute](11_user-interface/1824-stretchmin-attribute.md) — The STRETCHMIN attribute defines the minimum stretching width.
+        - [STYLE attribute](11_user-interface/1825-style-attribute.md) — The STYLE attribute specifies a presentation style for a form element.
+        - [TABINDEX attribute](11_user-interface/1826-tabindex-attribute.md) — The TABINDEX attribute defines the tab order for a form item.
+        - [TAG attribute](11_user-interface/1827-tag-attribute.md) — The TAG attribute can be used to identify the form item with a specific string.
+        - [TEXT attribute](11_user-interface/1828-text-attribute.md) — The TEXT attribute defines the label associated with a form item.
+        - [TITLE attribute](11_user-interface/1829-title-attribute.md) — The TITLE attribute defines the title of a form item.
+        - [UNHIDABLE attribute](11_user-interface/1830-unhidable-attribute.md) — The UNHIDABLE attribute indicates that the element cannot be hidden or shown by the user with the context menu.
+        - [UNHIDABLECOLUMNS attribute](11_user-interface/1831-unhidablecolumns-attribute.md) — The UNHIDABLECOLUMNS attribute indicates that the columns of the table cannot be hidden or shown by the user with the context menu.
+        - [UNMOVABLE attribute](11_user-interface/1832-unmovable-attribute.md) — The UNMOVABLE attribute prevents the user from moving a defined column of a table.
+        - [UNMOVABLECOLUMNS attribute](11_user-interface/1833-unmovablecolumns-attribute.md) — The UNMOVABLECOLUMNS attribute prevents the user from moving columns of a table.
+        - [UNSIZABLE attribute](11_user-interface/1834-unsizable-attribute.md) — The UNSIZABLE attribute indicates that the element cannot be resized by the user.
+        - [UNSIZABLECOLUMNS attribute](11_user-interface/1835-unsizablecolumns-attribute.md) — The UNSIZABLECOLUMNS attribute indicates that the columns of the table cannot be resized by the user.
+        - [UNSORTABLE attribute](11_user-interface/1836-unsortable-attribute.md) — The UNSORTABLE attribute indicates that the element cannot be selected by the user for sorting.
+        - [UNSORTABLECOLUMNS attribute](11_user-interface/1837-unsortablecolumns-attribute.md) — The UNSORTABLECOLUMNS attribute indicates that the columns of the table cannot be selected by the user for sorting.
+        - [UPSHIFT attribute](11_user-interface/1838-upshift-attribute.md) — The UPSHIFT attribute forces character input to uppercase letters.
+        - [VALIDATE attribute](11_user-interface/1839-validate-attribute.md) — The VALIDATE action attribute defines the data validation level for a given action.
+        - [VALIDATE LIKE attribute](11_user-interface/1840-validate-like-attribute.md) — The VALIDATE LIKE attribute applies column attributes defined in the .val database schema files to a field.
+        - [VALUEMIN attribute](11_user-interface/1841-valuemin-attribute.md) — The VALUEMIN attribute defines a lower limit of values displayed in widgets (such as progress bars).
+        - [VALUEMAX attribute](11_user-interface/1842-valuemax-attribute.md) — The VALUEMAX attribute defines a upper limit of values displayed in widgets (such as progress bars).
+        - [VALUECHECKED attribute](11_user-interface/1843-valuechecked-attribute.md) — The VALUECHECKED attribute defines the value associated with a checkbox item when it is checked.
+        - [VALUEUNCHECKED attribute](11_user-interface/1844-valueunchecked-attribute.md) — The VALUEUNCHECKED attribute defines the value associated with a checkbox item when it is not checked.
+        - [VERIFY attribute](11_user-interface/1845-verify-attribute.md) — The VERIFY attribute requires users to enter data in the field twice to reduce the probability of erroneous data entry.
+        - [VERSION attribute](11_user-interface/1846-version-attribute.md) — The VERSION attribute is used to specify a user version string for an element.
+        - [WANTFIXEDPAGESIZE attribute](11_user-interface/1847-wantfixedpagesize-attribute.md) — The WANTFIXEDPAGESIZE attribute controls the vertical resizing of a list element.
+        - [WANTNORETURNS attribute](11_user-interface/1848-wantnoreturns-attribute.md) — The WANTNORETURNS attribute forces a text field to reject newline characters when the user presses the Return key.
+        - [WANTTABS attribute](11_user-interface/1849-wanttabs-attribute.md) — The WANTTABS attribute forces a text field to insert Tab characters in the text when the user presses the Tab key.
+        - [WIDTH attribute](11_user-interface/1850-width-attribute.md) — The WIDTH attribute forces an explicit width of a form element.
+        - [WINDOWSTYLE attribute](11_user-interface/1851-windowstyle-attribute.md) — The WINDOWSTYLE attribute defines the style to be used by the parent window of a form.
+        - [WORDWRAP Attribute](11_user-interface/1852-wordwrap-attribute.md) — The WORDWRAP attribute enables a multiple-line editor in TUI mode.
+      - [Examples](11_user-interface/1853-examples.md) — Form definition (.per) examples.
+        - [Example 1: Form with grids and table](11_user-interface/1854-example-1-form-with-grids-and-table.md)
+    - [Toolbars](11_user-interface/1855-toolbars.md) — Toolbars define a bar of buttons that appears at the top of application forms.
+      - [Understanding toolbars](11_user-interface/1856-understanding-toolbars.md) — This is an introduction to toolbars definition.
+      - [Defining toolbars in the form file](11_user-interface/1857-defining-toolbars-in-the-form-file.md) — Toolbars can be defined in the form specification file within the TOOLBAR section.
+      - [Syntax of a toolbar file (.4tb)](11_user-interface/1858-syntax-of-a-toolbar-file-4tb.md) — A .4tb toolbar file is an XML file that holds a tree of elements defining a toolbar structure.
+      - [Loading .4tb toolbar definition files](11_user-interface/1859-loading-4tb-toolbar-definition-files.md) — Toolbar XML definition files can be loaded at runtime.
+      - [Creating the toolbar manually with DOM](11_user-interface/1860-creating-the-toolbar-manually-with-dom.md) — Toolbars can be created at runtime by creating the corresponding XML representation in the AUI tree.
+      - [Toolbars on mobile devices](11_user-interface/1861-toolbars-on-mobile-devices.md) — Toolbars can be used to control action view rendering on mobile devices.
+      - [Examples](11_user-interface/1862-examples.md) — Toolbar usage examples.
+        - [Example 1: Toolbar in XML format](11_user-interface/1863-example-1-toolbar-in-xml-format.md)
+        - [Example 2: Toolbar created dynamically](11_user-interface/1864-example-2-toolbar-created-dynamically.md)
+        - [Example 3: Toolbar section in form file](11_user-interface/1865-example-3-toolbar-section-in-form-file.md)
+    - [Topmenus](11_user-interface/1866-topmenus.md) — Topmenus define typical pull-down menus that appear at the top of application forms.
+      - [Understanding topmenus](11_user-interface/1867-understanding-topmenus.md) — This is an introduction to topmenu definitions.
+      - [Defining the topmenu in a form file](11_user-interface/1868-defining-the-topmenu-in-a-form-file.md) — Topmenus can be defined in the form specification file within the TOPMENU section.
+      - [Syntax of a topmenu file (.4tm)](11_user-interface/1869-syntax-of-a-topmenu-file-4tm.md) — A .4tm topmenu file is an XML file that holds a tree of elements defining a topmenu structure.
+      - [Loading .4tm topmenu definition files](11_user-interface/1870-loading-4tm-topmenu-definition-files.md) — Topmenu XML definition files can be loaded at runtime.
+      - [Creating the topmenu dynamically](11_user-interface/1871-creating-the-topmenu-dynamically.md) — Topmenus can be created at runtime by creating the corresponding XML representation in the AUI tree.
+      - [Examples](11_user-interface/1872-examples.md) — Topmenu usage examples.
+        - [Example 1: Topmenu in XML format](11_user-interface/1873-example-1-topmenu-in-xml-format.md)
+        - [Example 2: Topmenu section in form file](11_user-interface/1874-example-2-topmenu-section-in-form-file.md)
+  - [Dialog instructions](11_user-interface/1875-dialog-instructions.md) — This section describes the dialog instructions to control application forms and the concepts related to dialog implementation.
+    - [Static display (DISPLAY/ERROR/MESSAGE/CLEAR)](11_user-interface/1876-static-display-display-error-message-clear.md) — This section explains the instructions displaying static information to application forms, such as DISPLAY, ERROR, MESSAGE, CLEAR.
+      - [Display of data and messages](11_user-interface/1877-display-of-data-and-messages.md) — The values contained in program variables can be displayed to the current form with the DISPLAY BY NAME or DISPLAY TO instruction.
+      - [DISPLAY (to stdout)](11_user-interface/1878-display-to-stdout.md) — The DISPLAY instruction displays text in line mode to the standard output channel.
+      - [DISPLAY AT](11_user-interface/1879-display-at.md) — The DISPLAY ... AT instruction displays text at a given line/column position in the current window.
+      - [DISPLAY TO](11_user-interface/1880-display-to.md) — The DISPLAY ... TO instruction displays data to specific form fields.
+      - [DISPLAY BY NAME](11_user-interface/1881-display-by-name.md) — The DISPLAY BY NAME instruction displays data to form fields corresponding to the variable names.
+      - [CLEAR FORM](11_user-interface/1882-clear-form.md) — The CLEAR FORM instruction clears all fields in the current form.
+      - [CLEAR SCREEN ARRAY](11_user-interface/1883-clear-screen-array.md) — The CLEAR SCREEN ARRAY instruction clears the values of all rows of the form list identified by the specified screen array.
+      - [CLEAR field-list](11_user-interface/1884-clear-field-list.md) — The CLEAR field-list instruction clears specific fields in the current form.
+      - [MESSAGE](11_user-interface/1885-message.md) — The MESSAGE instruction displays a message to the user.
+      - [ERROR](11_user-interface/1886-error.md) — The ERROR instruction displays an error message to the user.
+      - [SCROLL](11_user-interface/1887-scroll.md) — The SCROLL instruction moves data rows up or down in a screen array.
+    - [Prompt for values (PROMPT)](11_user-interface/1888-prompt-for-values-prompt.md) — The PROMPT instruction provides unique field input in an automatic pop-up window.
+      - [Understanding the PROMPT instruction](11_user-interface/1889-understanding-the-prompt-instruction.md) — The PROMPT instruction is used to query for a single value from the user.
+      - [Syntax of PROMPT instruction](11_user-interface/1890-syntax-of-prompt-instruction.md) — The PROMPT statement assigns a user-supplied value to a variable.
+      - [PROMPT programming steps](11_user-interface/1891-prompt-programming-steps.md)
+      - [Using simple prompt inputs](11_user-interface/1892-using-simple-prompt-inputs.md) — Dialog coding concepts, configuration and code structure.
+        - [PROMPT instruction configuration](11_user-interface/1893-prompt-instruction-configuration.md)
+        - [Default actions in PROMPT](11_user-interface/1894-default-actions-in-prompt.md)
+        - [Interaction blocks](11_user-interface/1895-interaction-blocks.md)
+          - [ON ACTION block](11_user-interface/1896-on-action-block.md)
+          - [ON IDLE block](11_user-interface/1897-on-idle-block.md)
+          - [ON KEY block](11_user-interface/1898-on-key-block.md)
+          - [ON TIMER block](11_user-interface/1899-on-timer-block.md)
+      - [Examples](11_user-interface/1900-examples.md) — PROMPT dialog examples.
+        - [Example 1: Simple PROMPT statements](11_user-interface/1901-example-1-simple-prompt-statements.md)
+        - [Example 2: PROMPT with validation checking](11_user-interface/1902-example-2-prompt-with-validation-checking.md)
+        - [Example 3: PROMPT with ATTRIBUTES and ON ACTION](11_user-interface/1903-example-3-prompt-with-attributes-and-on-action.md)
+    - [Ring menus (MENU)](11_user-interface/1904-ring-menus-menu.md) — The MENU instruction implements a list of options the end user can choose from.
+      - [Understanding ring menus](11_user-interface/1905-understanding-ring-menus.md) — The MENU instruction implements a set of choices, also known as action handlers.
+      - [Syntax of the MENU instruction](11_user-interface/1906-syntax-of-the-menu-instruction.md) — The MENU instruction defines a set of options the end user can select to trigger actions in a program.
+      - [MENU programming steps](11_user-interface/1907-menu-programming-steps.md) — Follow this procedure to use the MENU dialog instruction.
+      - [Using ring menus](11_user-interface/1908-using-ring-menus.md) — Dialog coding concepts, configuration and code structure.
+        - [Rendering modes of a menu](11_user-interface/1909-rendering-modes-of-a-menu.md)
+        - [Binding action views to menu options](11_user-interface/1910-binding-action-views-to-menu-options.md)
+        - [MENU instruction configuration](11_user-interface/1911-menu-instruction-configuration.md)
+        - [Default actions in MENU](11_user-interface/1912-default-actions-in-menu.md)
+        - [MENU control blocks](11_user-interface/1913-menu-control-blocks.md)
+          - [BEFORE MENU block](11_user-interface/1914-before-menu-block.md)
+        - [MENU interaction blocks](11_user-interface/1915-menu-interaction-blocks.md)
+          - [COMMAND [KEY()] "option" block](11_user-interface/1916-command-key-option-block.md)
+          - [COMMAND KEY() block](11_user-interface/1917-command-key-block.md)
+          - [ON ACTION block](11_user-interface/1918-on-action-block.md)
+          - [ON IDLE block](11_user-interface/1919-on-idle-block.md)
+          - [ON TIMER block](11_user-interface/1920-on-timer-block.md)
+        - [MENU control instructions](11_user-interface/1921-menu-control-instructions.md)
+          - [CONTINUE MENU instruction](11_user-interface/1922-continue-menu-instruction.md)
+          - [EXIT MENU instruction](11_user-interface/1923-exit-menu-instruction.md)
+          - [NEXT OPTION instruction](11_user-interface/1924-next-option-instruction.md)
+          - [SHOW/HIDE OPTION instruction](11_user-interface/1925-show-hide-option-instruction.md)
+      - [Examples](11_user-interface/1926-examples.md) — MENU dialog examples.
+        - [Example 1: MENU with abstract action options](11_user-interface/1927-example-1-menu-with-abstract-action-options.md)
+        - [Example 2: MENU with text-mode options](11_user-interface/1928-example-2-menu-with-text-mode-options.md)
+        - [Example 3: MENU with STYLE="dialog"](11_user-interface/1929-example-3-menu-with-style-dialog.md)
+    - [Record input (INPUT)](11_user-interface/1930-record-input-input.md) — The INPUT instruction provides single record input control in an application form.
+      - [Understanding the INPUT instruction](11_user-interface/1931-understanding-the-input-instruction.md) — The INPUT instruction controls a single record input from form fields.
+      - [Syntax of the INPUT instruction](11_user-interface/1932-syntax-of-the-input-instruction.md) — The INPUT statement supports data entry in fields of the current form.
+      - [INPUT programming steps](11_user-interface/1933-input-programming-steps.md) — Follow this procedure to use the INPUT dialog instruction.
+      - [Using simple record inputs](11_user-interface/1934-using-simple-record-inputs.md) — Dialog coding concepts, configuration and code structure.
+        - [Variable binding in INPUT](11_user-interface/1935-variable-binding-in-input.md)
+        - [INPUT instruction configuration](11_user-interface/1936-input-instruction-configuration.md)
+        - [Default actions in INPUT](11_user-interface/1937-default-actions-in-input.md)
+        - [INPUT control blocks](11_user-interface/1938-input-control-blocks.md)
+          - [INPUT control blocks execution order](11_user-interface/1939-input-control-blocks-execution-order.md)
+          - [BEFORE INPUT block](11_user-interface/1940-before-input-block.md)
+          - [AFTER INPUT block](11_user-interface/1941-after-input-block.md)
+          - [BEFORE FIELD block](11_user-interface/1942-before-field-block.md)
+          - [ON CHANGE block](11_user-interface/1943-on-change-block.md)
+          - [AFTER FIELD block](11_user-interface/1944-after-field-block.md)
+        - [INPUT interaction blocks](11_user-interface/1945-input-interaction-blocks.md)
+          - [ON ACTION block](11_user-interface/1946-on-action-block.md)
+          - [ON IDLE block](11_user-interface/1947-on-idle-block.md)
+          - [ON KEY block](11_user-interface/1948-on-key-block.md)
+          - [ON TIMER block](11_user-interface/1949-on-timer-block.md)
+        - [INPUT control instructions](11_user-interface/1950-input-control-instructions.md)
+          - [ACCEPT INPUT instruction](11_user-interface/1951-accept-input-instruction.md)
+          - [CONTINUE INPUT instruction](11_user-interface/1952-continue-input-instruction.md)
+          - [EXIT INPUT instruction](11_user-interface/1953-exit-input-instruction.md)
+          - [CLEAR instruction in dialogs](11_user-interface/1954-clear-instruction-in-dialogs.md)
+          - [NEXT FIELD instruction](11_user-interface/1955-next-field-instruction.md)
+      - [Examples](11_user-interface/1956-examples.md) — INPUT dialog examples.
+        - [Example 1: INPUT with binding by field position](11_user-interface/1957-example-1-input-with-binding-by-field-position.md)
+        - [Example 2: INPUT with binding by field name](11_user-interface/1958-example-2-input-with-binding-by-field-name.md)
+    - [Record list (DISPLAY ARRAY)](11_user-interface/1959-record-list-display-array.md) — The DISPLAY ARRAY instruction provides record list navigation in an application form, with optional record modification actions.
+      - [Understanding the DISPLAY ARRAY instruction](11_user-interface/1960-understanding-the-display-array-instruction.md) — The DISPLAY ARRAY dialog controls a list of records.
+      - [Syntax of DISPLAY ARRAY instruction](11_user-interface/1961-syntax-of-display-array-instruction.md) — The DISPLAY ARRAY instruction controls the display of a program array on the screen.
+      - [DISPLAY ARRAY programming steps](11_user-interface/1962-display-array-programming-steps.md) — Follow this procedure to use the DISPLAY ARRAY dialog instruction.
+      - [Using record lists](11_user-interface/1963-using-record-lists.md) — Dialog coding concepts, configuration and code structure.
+        - [Variable binding in DISPLAY ARRAY](11_user-interface/1964-variable-binding-in-display-array.md)
+        - [DISPLAY ARRAY instruction configuration](11_user-interface/1965-display-array-instruction-configuration.md)
+        - [Default actions in DISPLAY ARRAY](11_user-interface/1966-default-actions-in-display-array.md)
+        - [DISPLAY ARRAY data blocks](11_user-interface/1967-display-array-data-blocks.md)
+          - [ON FILL BUFFER block](11_user-interface/1968-on-fill-buffer-block.md)
+          - [ON EXPAND block](11_user-interface/1969-on-expand-block.md)
+          - [ON COLLAPSE block](11_user-interface/1970-on-collapse-block.md)
+        - [DISPLAY ARRAY control blocks](11_user-interface/1971-display-array-control-blocks.md)
+          - [DISPLAY ARRAY control blocks execution order](11_user-interface/1972-display-array-control-blocks-execution-order.md)
+          - [BEFORE DISPLAY block](11_user-interface/1973-before-display-block.md)
+          - [AFTER DISPLAY block](11_user-interface/1974-after-display-block.md)
+          - [BEFORE ROW block](11_user-interface/1975-before-row-block.md)
+          - [AFTER ROW block](11_user-interface/1976-after-row-block.md)
+          - [BEFORE FIELD block](11_user-interface/1977-before-field-block.md)
+          - [AFTER FIELD block](11_user-interface/1978-after-field-block.md)
+        - [DISPLAY ARRAY interaction blocks](11_user-interface/1979-display-array-interaction-blocks.md)
+          - [ON ACTION block](11_user-interface/1980-on-action-block.md)
+          - [ON IDLE block](11_user-interface/1981-on-idle-block.md)
+          - [ON KEY block](11_user-interface/1982-on-key-block.md)
+          - [ON TIMER block](11_user-interface/1983-on-timer-block.md)
+          - [ON APPEND block](11_user-interface/1984-on-append-block.md)
+          - [ON INSERT block](11_user-interface/1985-on-insert-block.md)
+          - [ON UPDATE block](11_user-interface/1986-on-update-block.md)
+          - [ON DELETE block](11_user-interface/1987-on-delete-block.md)
+          - [ON SELECTION CHANGE block](11_user-interface/1988-on-selection-change-block.md)
+          - [ON SORT block](11_user-interface/1989-on-sort-block.md)
+          - [ON DRAG_START block](11_user-interface/1990-on-drag-start-block.md)
+          - [ON DRAG_FINISHED block](11_user-interface/1991-on-drag-finished-block.md)
+          - [ON DRAG_ENTER block](11_user-interface/1992-on-drag-enter-block.md)
+          - [ON DRAG_OVER block](11_user-interface/1993-on-drag-over-block.md)
+          - [ON DROP block](11_user-interface/1994-on-drop-block.md)
+        - [DISPLAY ARRAY control instructions](11_user-interface/1995-display-array-control-instructions.md)
+          - [CONTINUE DISPLAY instruction](11_user-interface/1996-continue-display-instruction.md)
+          - [EXIT DISPLAY instruction](11_user-interface/1997-exit-display-instruction.md)
+          - [ACCEPT DISPLAY instruction](11_user-interface/1998-accept-display-instruction.md)
+          - [NEXT FIELD instruction](11_user-interface/1999-next-field-instruction.md)
+      - [Examples](11_user-interface/2000-examples.md) — DISPLAY ARRAY dialog usage examples.
+        - [Example 1: DISPLAY ARRAY using full list mode](11_user-interface/2001-example-1-display-array-using-full-list-mode.md)
+        - [Example 2: DISPLAY ARRAY using paged mode](11_user-interface/2002-example-2-display-array-using-paged-mode.md)
+        - [Example 3: DISPLAY ARRAY using modification triggers](11_user-interface/2003-example-3-display-array-using-modification-triggers.md)
+        - [Example 4: DISPLAY ARRAY with structured array](11_user-interface/2004-example-4-display-array-with-structured-array.md)
+    - [Editable record list (INPUT ARRAY)](11_user-interface/2005-editable-record-list-input-array.md) — The INPUT ARRAY instruction provides always-editable record list handling in an application form.
+      - [Understanding the INPUT ARRAY instruction](11_user-interface/2006-understanding-the-input-array-instruction.md) — The INPUT ARRAY dialog controls a list of records than can be directly edited.
+      - [Syntax of INPUT ARRAY instruction](11_user-interface/2007-syntax-of-input-array-instruction.md) — The INPUT ARRAY supports data entry by users into a screen array and stores the entered data in an array of records.
+      - [INPUT ARRAY programming steps](11_user-interface/2008-input-array-programming-steps.md) — Follow this procedure to use the INPUT ARRAY dialog instruction.
+      - [Using editable record lists](11_user-interface/2009-using-editable-record-lists.md) — Dialog coding concepts, configuration and code structure.
+        - [Variable binding in INPUT ARRAY](11_user-interface/2010-variable-binding-in-input-array.md)
+        - [INPUT ARRAY instruction configuration](11_user-interface/2011-input-array-instruction-configuration.md)
+        - [Default actions in INPUT ARRAY](11_user-interface/2012-default-actions-in-input-array.md)
+        - [INPUT ARRAY control blocks](11_user-interface/2013-input-array-control-blocks.md)
+          - [INPUT ARRAY control blocks execution order](11_user-interface/2014-input-array-control-blocks-execution-order.md)
+          - [BEFORE INPUT block](11_user-interface/2015-before-input-block.md)
+          - [AFTER INPUT block](11_user-interface/2016-after-input-block.md)
+          - [BEFORE ROW block](11_user-interface/2017-before-row-block.md)
+          - [ON ROW CHANGE block](11_user-interface/2018-on-row-change-block.md)
+          - [AFTER ROW block](11_user-interface/2019-after-row-block.md)
+          - [BEFORE INSERT block](11_user-interface/2020-before-insert-block.md)
+          - [AFTER INSERT block](11_user-interface/2021-after-insert-block.md)
+          - [BEFORE DELETE block](11_user-interface/2022-before-delete-block.md)
+          - [AFTER DELETE block](11_user-interface/2023-after-delete-block.md)
+          - [BEFORE FIELD block](11_user-interface/2024-before-field-block.md)
+          - [ON CHANGE block](11_user-interface/2025-on-change-block.md)
+          - [AFTER FIELD block](11_user-interface/2026-after-field-block.md)
+        - [INPUT ARRAY interaction blocks](11_user-interface/2027-input-array-interaction-blocks.md)
+          - [ON ACTION block](11_user-interface/2028-on-action-block.md)
+          - [ON IDLE block](11_user-interface/2029-on-idle-block.md)
+          - [ON KEY block](11_user-interface/2030-on-key-block.md)
+          - [ON SORT block](11_user-interface/2031-on-sort-block.md)
+          - [ON TIMER block](11_user-interface/2032-on-timer-block.md)
+        - [INPUT ARRAY control instructions](11_user-interface/2033-input-array-control-instructions.md)
+          - [ACCEPT INPUT instruction](11_user-interface/2034-accept-input-instruction.md)
+          - [EXIT INPUT instruction](11_user-interface/2035-exit-input-instruction.md)
+          - [CANCEL DELETE instruction](11_user-interface/2036-cancel-delete-instruction.md)
+          - [CANCEL INSERT instruction](11_user-interface/2037-cancel-insert-instruction.md)
+          - [CONTINUE INPUT instruction](11_user-interface/2038-continue-input-instruction.md)
+          - [NEXT FIELD instruction](11_user-interface/2039-next-field-instruction.md)
+          - [CLEAR instruction in dialogs](11_user-interface/2040-clear-instruction-in-dialogs.md)
+      - [Examples](11_user-interface/2041-examples.md) — INPUT ARRAY dialog examples.
+        - [Example 1: INPUT ARRAY with empty record list](11_user-interface/2042-example-1-input-array-with-empty-record-list.md)
+        - [Example 2: INPUT ARRAY using a static array](11_user-interface/2043-example-2-input-array-using-a-static-array.md)
+        - [Example 3: INPUT ARRAY using a dynamic array](11_user-interface/2044-example-3-input-array-using-a-dynamic-array.md)
+        - [Example 4: INPUT ARRAY updating the database table](11_user-interface/2045-example-4-input-array-updating-the-database-table.md)
+    - [Query by example (CONSTRUCT)](11_user-interface/2046-query-by-example-construct.md) — The CONSTRUCT instruction implements database query criteria input in an application form.
+      - [Understanding the CONSTRUCT instruction](11_user-interface/2047-understanding-the-construct-instruction.md) — The CONSTRUCT instruction provides database query, by entering search filters directly in form fields.
+      - [Syntax of CONSTRUCT instruction](11_user-interface/2048-syntax-of-construct-instruction.md) — The CONSTRUCT instruction provides database query by example, producing a WHERE condition for SELECT.
+      - [CONSTRUCT programming steps](11_user-interface/2049-construct-programming-steps.md) — Follow this procedure to use the CONSTRUCT dialog instruction.
+      - [Using query by example](11_user-interface/2050-using-query-by-example.md) — Dialog coding concepts, configuration, and code structure.
+        - [Form field specification in CONSTRUCT](11_user-interface/2051-form-field-specification-in-construct.md)
+        - [Query operators in CONSTRUCT](11_user-interface/2052-query-operators-in-construct.md)
+        - [CONSTRUCT instruction configuration](11_user-interface/2053-construct-instruction-configuration.md)
+        - [Default actions IN CONSTRUCT](11_user-interface/2054-default-actions-in-construct.md)
+        - [CONSTRUCT control blocks](11_user-interface/2055-construct-control-blocks.md)
+          - [CONSTRUCT control blocks execution order](11_user-interface/2056-construct-control-blocks-execution-order.md)
+          - [BEFORE CONSTRUCT block](11_user-interface/2057-before-construct-block.md)
+          - [AFTER CONSTRUCT block](11_user-interface/2058-after-construct-block.md)
+          - [BEFORE FIELD block](11_user-interface/2059-before-field-block.md)
+          - [ON CHANGE block](11_user-interface/2060-on-change-block.md)
+          - [AFTER FIELD block](11_user-interface/2061-after-field-block.md)
+        - [CONSTRUCT interaction blocks](11_user-interface/2062-construct-interaction-blocks.md)
+          - [ON ACTION block](11_user-interface/2063-on-action-block.md)
+          - [ON IDLE block](11_user-interface/2064-on-idle-block.md)
+          - [ON KEY block](11_user-interface/2065-on-key-block.md)
+          - [ON TIMER block](11_user-interface/2066-on-timer-block.md)
+        - [CONSTRUCT control instructions](11_user-interface/2067-construct-control-instructions.md)
+          - [ACCEPT CONSTRUCT instruction](11_user-interface/2068-accept-construct-instruction.md)
+          - [CONTINUE CONSTRUCT instruction](11_user-interface/2069-continue-construct-instruction.md)
+          - [EXIT CONSTRUCT instruction](11_user-interface/2070-exit-construct-instruction.md)
+          - [NEXT FIELD instruction](11_user-interface/2071-next-field-instruction.md)
+          - [CLEAR instruction in dialogs](11_user-interface/2072-clear-instruction-in-dialogs.md)
+      - [Examples](11_user-interface/2073-examples.md) — CONSTRUCT dialog usage examples.
+        - [Example 1: CONSTRUCT with binding by field position](11_user-interface/2074-example-1-construct-with-binding-by-field-position.md)
+        - [Example 2: CONSTRUCT with binding by field name](11_user-interface/2075-example-2-construct-with-binding-by-field-name.md)
+    - [Multiple dialogs (DIALOG - inside functions)](11_user-interface/2076-multiple-dialogs-dialog-inside-functions.md) — The procedural DIALOG instruction allows for the combination of record list, record input, and query criteria input in the same application form.
+      - [Understanding multiple dialogs](11_user-interface/2077-understanding-multiple-dialogs.md) — Multiple dialogs are defined with DIALOG blocks inside a FUNCTION.
+      - [Syntax of the procedural DIALOG instruction](11_user-interface/2078-syntax-of-the-procedural-dialog-instruction.md) — The DIALOG block is an interactive instruction that executes several sub-dialogs simultaneously.
+      - [Procedural dialog programming steps](11_user-interface/2079-procedural-dialog-programming-steps.md) — Follow this procedure to use the DIAOG instruction.
+      - [Using multiple dialogs](11_user-interface/2080-using-multiple-dialogs.md) — Dialog coding concepts, configuration and code structure.
+        - [Identifying sub-dialogs in DIALOG](11_user-interface/2081-identifying-sub-dialogs-in-dialog.md) — Sub-dialogs need to be identified by a name to distinguish the different contexts.
+        - [Structure of a procedural DIALOG block](11_user-interface/2082-structure-of-a-procedural-dialog-block.md)
+          - [The INPUT sub-dialog](11_user-interface/2083-the-input-sub-dialog.md) — The INPUT sub-dialog implements single record input in fields of the current form.
+          - [The CONSTRUCT sub-dialog](11_user-interface/2084-the-construct-sub-dialog.md) — The CONSTRUCT sub-dialog provides database query by example feature, converting search criteria entered by the user into an SQL WHERE condition that can be used to execute a SELECT statement.
+          - [The DISPLAY ARRAY sub-dialog](11_user-interface/2085-the-display-array-sub-dialog.md) — The DISPLAY ARRAY sub-dialog is the controller to implement the navigation in a list of records, with option data modification actions.
+          - [The INPUT ARRAY sub-dialog](11_user-interface/2086-the-input-array-sub-dialog.md) — The INPUT ARRAY sub-dialog is the controller to implement the navigation and edition in a list of records.
+          - [The SUBDIALOG clause](11_user-interface/2087-the-subdialog-clause.md)
+        - [Procedural DIALOG block configuration](11_user-interface/2088-procedural-dialog-block-configuration.md)
+          - [DIALOG ATTRIBUTES clause](11_user-interface/2089-dialog-attributes-clause.md)
+          - [INPUT ATTRIBUTES clause](11_user-interface/2090-input-attributes-clause.md) — INPUT specific attributes can be defined in the ATTRIBUTE clause of the sub-dialog header.
+          - [DISPLAY ARRAY ATTRIBUTES clause](11_user-interface/2091-display-array-attributes-clause.md) — DISPLAY ARRAY specific attributes can be defined in the ATTRIBUTE clause of the sub-dialog header.
+          - [INPUT ARRAY ATTRIBUTES clause](11_user-interface/2092-input-array-attributes-clause.md) — INPUT ARRAY specific attributes can be defined in the ATTRIBUTE clause of the sub-dialog header.
+          - [CONSTRUCT ATTRIBUTES clause](11_user-interface/2093-construct-attributes-clause.md) — CONSTRUCT specific attributes can be defined in the ATTRIBUTE clause of the sub-dialog header.
+        - [Default actions created by a DIALOG block](11_user-interface/2094-default-actions-created-by-a-dialog-block.md) — Default actions ease the implementation of the controller by providing expected actions.
+        - [DIALOG data blocks](11_user-interface/2095-dialog-data-blocks.md) — Dialog data blocks are dialog triggers invoked when the dialog controller needs data to feed the view with values.
+          - [ON FILL BUFFER block](11_user-interface/2096-on-fill-buffer-block.md)
+          - [ON EXPAND block](11_user-interface/2097-on-expand-block.md)
+          - [ON COLLAPSE block](11_user-interface/2098-on-collapse-block.md)
+        - [DIALOG control blocks](11_user-interface/2099-dialog-control-blocks.md) — Dialog control blocks are predefined dialog triggers where you can implement specific code to control the interactive instruction.
+          - [Control block execution order in multiple dialogs](11_user-interface/2100-control-block-execution-order-in-multiple-dialogs.md)
+          - [BEFORE DIALOG block](11_user-interface/2101-before-dialog-block.md)
+          - [AFTER DIALOG block](11_user-interface/2102-after-dialog-block.md)
+          - [BEFORE FIELD block](11_user-interface/2103-before-field-block.md)
+          - [AFTER FIELD block](11_user-interface/2104-after-field-block.md)
+          - [ON CHANGE block](11_user-interface/2105-on-change-block.md)
+          - [BEFORE INPUT block](11_user-interface/2106-before-input-block.md)
+          - [AFTER INPUT block](11_user-interface/2107-after-input-block.md)
+          - [BEFORE CONSTRUCT block](11_user-interface/2108-before-construct-block.md)
+          - [AFTER CONSTRUCT block](11_user-interface/2109-after-construct-block.md)
+          - [BEFORE DISPLAY block](11_user-interface/2110-before-display-block.md)
+          - [AFTER DISPLAY block](11_user-interface/2111-after-display-block.md)
+          - [BEFORE ROW block](11_user-interface/2112-before-row-block.md)
+          - [ON ROW CHANGE block](11_user-interface/2113-on-row-change-block.md)
+          - [AFTER ROW block](11_user-interface/2114-after-row-block.md)
+          - [BEFORE INSERT block](11_user-interface/2115-before-insert-block.md)
+          - [AFTER INSERT block](11_user-interface/2116-after-insert-block.md)
+          - [BEFORE DELETE block](11_user-interface/2117-before-delete-block.md)
+          - [AFTER DELETE block](11_user-interface/2118-after-delete-block.md)
+        - [DIALOG interaction blocks](11_user-interface/2119-dialog-interaction-blocks.md) — Dialog interaction blocks are dialog triggers that can be used to execute specific code when the user executes an action in the dialog. For example, when pressing a button in the form, the corresponding ON ACTION interaction block will be executed.
+          - [ON ACTION block](11_user-interface/2120-on-action-block.md)
+          - [ON IDLE block](11_user-interface/2121-on-idle-block.md)
+          - [ON KEY block](11_user-interface/2122-on-key-block.md)
+          - [ON TIMER block](11_user-interface/2123-on-timer-block.md)
+          - [COMMAND [KEY] block](11_user-interface/2124-command-key-block.md)
+          - [ON APPEND block](11_user-interface/2125-on-append-block.md)
+          - [ON INSERT block](11_user-interface/2126-on-insert-block.md)
+          - [ON UPDATE block](11_user-interface/2127-on-update-block.md)
+          - [ON DELETE block](11_user-interface/2128-on-delete-block.md)
+          - [ON SELECTION CHANGE block](11_user-interface/2129-on-selection-change-block.md)
+          - [ON SORT block](11_user-interface/2130-on-sort-block.md)
+          - [ON DRAG_START block](11_user-interface/2131-on-drag-start-block.md)
+          - [ON DRAG_FINISHED block](11_user-interface/2132-on-drag-finished-block.md)
+          - [ON DRAG_ENTER block](11_user-interface/2133-on-drag-enter-block.md)
+          - [ON DRAG_OVER block](11_user-interface/2134-on-drag-over-block.md)
+          - [ON DROP block](11_user-interface/2135-on-drop-block.md)
+        - [DIALOG control instructions](11_user-interface/2136-dialog-control-instructions.md) — Dialog control instructions are language instructions dedicated to dialog control, to programmatically force the dialog to behave in a given way.
+          - [NEXT FIELD instruction](11_user-interface/2137-next-field-instruction.md)
+          - [CLEAR instruction in dialogs](11_user-interface/2138-clear-instruction-in-dialogs.md)
+          - [DISPLAY TO / BY NAME in dialogs](11_user-interface/2139-display-to-by-name-in-dialogs.md)
+          - [CONTINUE DIALOG instruction](11_user-interface/2140-continue-dialog-instruction.md)
+          - [EXIT DIALOG instruction](11_user-interface/2141-exit-dialog-instruction.md)
+          - [ACCEPT DIALOG instruction](11_user-interface/2142-accept-dialog-instruction.md)
+          - [CANCEL DIALOG instruction](11_user-interface/2143-cancel-dialog-instruction.md)
+          - [CANCEL DELETE instruction](11_user-interface/2144-cancel-delete-instruction.md)
+          - [CANCEL INSERT instruction](11_user-interface/2145-cancel-insert-instruction.md)
+      - [Examples](11_user-interface/2146-examples.md) — DIALOG (multiple dialog) usage examples.
+        - [Example 1: DIALOG controlling two lists](11_user-interface/2147-example-1-dialog-controlling-two-lists.md)
+        - [Example 2: DIALOG with CONSTRUCT and DISPLAY ARRAY](11_user-interface/2148-example-2-dialog-with-construct-and-display-array.md)
+        - [Example 3: DIALOG with SUBDIALOG](11_user-interface/2149-example-3-dialog-with-subdialog.md)
+    - [Declarative dialogs (DIALOG - at module level)](11_user-interface/2150-declarative-dialogs-dialog-at-module-level.md) — DIALOG/END DIALOG defined at module level implement declarative dialogs that can be used in procedural dialogs.
+      - [Understanding declarative dialogs](11_user-interface/2151-understanding-declarative-dialogs.md) — Declarative dialogs are defined with DIALOG blocks at the module level.
+      - [Syntax of the declarative DIALOG block](11_user-interface/2152-syntax-of-the-declarative-dialog-block.md) — The declarative DIALOG block defines an interactive instruction that can be used by a parent DIALOG using the SUBDIALOG clause.
+      - [Declarative dialog programming steps](11_user-interface/2153-declarative-dialog-programming-steps.md) — This procedure describes how to implement a declarative DIALOG block.
+      - [Using declarative dialogs](11_user-interface/2154-using-declarative-dialogs.md) — Dialog coding concepts, configuration and code structure.
+        - [Structure of a declarative DIALOG block](11_user-interface/2155-structure-of-a-declarative-dialog-block.md) — A declarative DIALOG instruction is made of a single sub-dialog block, with an optional DEFINE clause to declare local variables.
+          - [The DEFINE clause](11_user-interface/2156-the-define-clause.md) — The DEFINE clause can be used to define program variables with a scope that is local to the declarative dialog block.
+          - [The INPUT sub-dialog](11_user-interface/2157-the-input-sub-dialog.md) — The INPUT sub-dialog implements single record input in fields of the current form.
+          - [The CONSTRUCT sub-dialog](11_user-interface/2158-the-construct-sub-dialog.md) — The CONSTRUCT sub-dialog provides database query by example feature, converting search criteria entered by the user into an SQL WHERE condition that can be used to execute a SELECT statement.
+          - [The DISPLAY ARRAY sub-dialog](11_user-interface/2159-the-display-array-sub-dialog.md) — The DISPLAY ARRAY sub-dialog is the controller to implement the navigation in a list of records, with option data modification actions.
+          - [The INPUT ARRAY sub-dialog](11_user-interface/2160-the-input-array-sub-dialog.md) — The INPUT ARRAY sub-dialog is the controller to implement the navigation and edition in a list of records.
+        - [Declarative DIALOG block configuration](11_user-interface/2161-declarative-dialog-block-configuration.md) — Attributes defined in the ATTRIBUTES clause of dialogs can be used to configure a declarative DIALOG block and its sub-dialogs.
+          - [INPUT ATTRIBUTES clause](11_user-interface/2162-input-attributes-clause.md) — INPUT specific attributes can be defined in the ATTRIBUTE clause of the sub-dialog header.
+          - [DISPLAY ARRAY ATTRIBUTES clause](11_user-interface/2163-display-array-attributes-clause.md) — DISPLAY ARRAY specific attributes can be defined in the ATTRIBUTE clause of the sub-dialog header.
+          - [INPUT ARRAY ATTRIBUTES clause](11_user-interface/2164-input-array-attributes-clause.md) — INPUT ARRAY specific attributes can be defined in the ATTRIBUTE clause of the sub-dialog header.
+          - [CONSTRUCT ATTRIBUTES clause](11_user-interface/2165-construct-attributes-clause.md) — CONSTRUCT specific attributes can be defined in the ATTRIBUTE clause of the sub-dialog header.
+        - [Default actions created by a DIALOG block](11_user-interface/2166-default-actions-created-by-a-dialog-block.md) — Default actions ease the implementation of the controller by providing expected actions.
+        - [DIALOG data blocks](11_user-interface/2167-dialog-data-blocks.md) — Dialog data blocks are dialog triggers invoked when the dialog controller needs data to feed the view with values.
+          - [ON FILL BUFFER block](11_user-interface/2168-on-fill-buffer-block.md)
+          - [ON EXPAND block](11_user-interface/2169-on-expand-block.md)
+          - [ON COLLAPSE block](11_user-interface/2170-on-collapse-block.md)
+        - [DIALOG control blocks](11_user-interface/2171-dialog-control-blocks.md) — Dialog control blocks are predefined dialog triggers where you can implement specific code to control the interactive instruction.
+          - [Control block execution order with declarative dialogs](11_user-interface/2172-control-block-execution-order-with-declarative-dialogs.md)
+          - [BEFORE FIELD block](11_user-interface/2173-before-field-block.md)
+          - [AFTER FIELD block](11_user-interface/2174-after-field-block.md)
+          - [ON CHANGE block](11_user-interface/2175-on-change-block.md)
+          - [BEFORE INPUT block](11_user-interface/2176-before-input-block.md)
+          - [AFTER INPUT block](11_user-interface/2177-after-input-block.md)
+          - [BEFORE CONSTRUCT block](11_user-interface/2178-before-construct-block.md)
+          - [AFTER CONSTRUCT block](11_user-interface/2179-after-construct-block.md)
+          - [BEFORE DISPLAY block](11_user-interface/2180-before-display-block.md)
+          - [AFTER DISPLAY block](11_user-interface/2181-after-display-block.md)
+          - [BEFORE ROW block](11_user-interface/2182-before-row-block.md)
+          - [ON ROW CHANGE block](11_user-interface/2183-on-row-change-block.md)
+          - [AFTER ROW block](11_user-interface/2184-after-row-block.md)
+          - [BEFORE INSERT block](11_user-interface/2185-before-insert-block.md)
+          - [AFTER INSERT block](11_user-interface/2186-after-insert-block.md)
+          - [BEFORE DELETE block](11_user-interface/2187-before-delete-block.md)
+          - [AFTER DELETE block](11_user-interface/2188-after-delete-block.md)
+        - [DIALOG interaction blocks](11_user-interface/2189-dialog-interaction-blocks.md) — Dialog interaction blocks are dialog triggers that can be used to execute specific code when the user executes an action in the dialog. For example, when pressing a button in the form, the corresponding ON ACTION interaction block will be executed.
+          - [ON ACTION block](11_user-interface/2190-on-action-block.md)
+          - [ON IDLE block](11_user-interface/2191-on-idle-block.md)
+          - [ON KEY block](11_user-interface/2192-on-key-block.md)
+          - [ON TIMER block](11_user-interface/2193-on-timer-block.md)
+          - [ON APPEND block](11_user-interface/2194-on-append-block.md)
+          - [ON INSERT block](11_user-interface/2195-on-insert-block.md)
+          - [ON UPDATE block](11_user-interface/2196-on-update-block.md)
+          - [ON DELETE block](11_user-interface/2197-on-delete-block.md)
+          - [ON SELECTION CHANGE block](11_user-interface/2198-on-selection-change-block.md)
+          - [ON SORT block](11_user-interface/2199-on-sort-block.md)
+          - [ON DRAG_START block](11_user-interface/2200-on-drag-start-block.md)
+          - [ON DRAG_FINISHED block](11_user-interface/2201-on-drag-finished-block.md)
+          - [ON DRAG_ENTER block](11_user-interface/2202-on-drag-enter-block.md)
+          - [ON DRAG_OVER block](11_user-interface/2203-on-drag-over-block.md)
+          - [ON DROP block](11_user-interface/2204-on-drop-block.md)
+        - [DIALOG control instructions](11_user-interface/2205-dialog-control-instructions.md) — Dialog control instructions are language instructions dedicated to dialog control, to programmatically force the dialog to behave in a given way.
+          - [NEXT FIELD instruction](11_user-interface/2206-next-field-instruction.md)
+          - [CLEAR instruction in dialogs](11_user-interface/2207-clear-instruction-in-dialogs.md)
+          - [DISPLAY TO / BY NAME in dialogs](11_user-interface/2208-display-to-by-name-in-dialogs.md)
+          - [CONTINUE DIALOG instruction](11_user-interface/2209-continue-dialog-instruction.md)
+          - [EXIT DIALOG instruction](11_user-interface/2210-exit-dialog-instruction.md)
+          - [ACCEPT DIALOG instruction](11_user-interface/2211-accept-dialog-instruction.md)
+          - [CANCEL DIALOG instruction](11_user-interface/2212-cancel-dialog-instruction.md)
+          - [CANCEL DELETE instruction](11_user-interface/2213-cancel-delete-instruction.md)
+          - [CANCEL INSERT instruction](11_user-interface/2214-cancel-insert-instruction.md)
+      - [Examples](11_user-interface/2215-examples.md) — Declarative dialogs usage examples.
+        - [Example 1: Comment sub-dialog](11_user-interface/2216-example-1-comment-sub-dialog.md)
+  - [User interface programming](11_user-interface/2217-user-interface-programming.md) — Describes how to program user interface and dialog instructions.
+    - [Dialog programming basics](11_user-interface/2218-dialog-programming-basics.md) — This section describes basic dialog programming concepts.
+      - [The model-view-controller paradigm](11_user-interface/2219-the-model-view-controller-paradigm.md) — The dynamic user interface architecture is based on the Model-View-Controller (MVC) paradigm.
+      - [What are dialog controllers?](11_user-interface/2220-what-are-dialog-controllers.md) — Application forms are controlled by interactive instruction blocks called dialogs. These blocks perform the common tasks associated with the form, such as field input and action handling.
+      - [Dialog configuration with FGLPROFILE](11_user-interface/2221-dialog-configuration-with-fglprofile.md) — FGLPROFILE parameters can be used to configure dialog behavior.
+      - [The DIALOG control class](11_user-interface/2222-the-dialog-control-class.md) — This topic explains the purpose of the ui.DIALOG class.
+      - [Dialog control functions](11_user-interface/2223-dialog-control-functions.md) — The language provides several built-in functions and operators to be used in a dialog instruction.
+      - [Refreshing the display when processing](11_user-interface/2224-refreshing-the-display-when-processing.md) — This topic explains when to use the ui.Interface.refresh() method.
+      - [User interruption handling](11_user-interface/2225-user-interruption-handling.md) — Allow the end user to cancel a dialog or a long running procedure.
+      - [Get program control if user is inactive](11_user-interface/2226-get-program-control-if-user-is-inactive.md) — Execute some code after a given number of seconds, when the user does not interact with the program.
+      - [Get program control on a regular (timed) basis](11_user-interface/2227-get-program-control-on-a-regular-timed-basis.md) — Execute some code after a given number of seconds, with or without user interaction with the program.
+      - [Front-End function calls](11_user-interface/2228-front-end-function-calls.md) — The language allows to execute specific functions on the front-end platform.
+      - [Controlling web application state (#anchor)](11_user-interface/2229-controlling-web-application-state-anchor.md) — With GBC in a web browser, the context/state of a program can be managed with URL # anchors.
+    - [Input fields](11_user-interface/2230-input-fields.md) — Describes various concepts related to form field management in dialogs
+      - [Field data type](11_user-interface/2231-field-data-type.md) — Depending on the type of dialog, the field data type is defined by program variables or form specification file.
+      - [Binding variables to form fields](11_user-interface/2232-binding-variables-to-form-fields.md) — Some dialogs need program variables to store form field values.
+      - [Input length of form fields](11_user-interface/2233-input-length-of-form-fields.md) — Field input length defines the amount of characters the user can type in a form field.
+      - [Field configuration and decoration](11_user-interface/2234-field-configuration-and-decoration.md) — Form fields can be customized with specific decoration and settings.
+      - [The buffered and unbuffered modes](11_user-interface/2235-the-buffered-and-unbuffered-modes.md) — The buffered and unbuffered mode control the synchronization of program variables and form fields.
+      - [Form field initialization](11_user-interface/2236-form-field-initialization.md) — Form field initialization can be controlled by the WITHOUT DEFAULTS dialog option.
+      - [Input field modification flag](11_user-interface/2237-input-field-modification-flag.md) — Each input field controlled by a dialog instruction has a modification flag.
+      - [Reacting to field value changes](11_user-interface/2238-reacting-to-field-value-changes.md) — This section describes the purpose of the ON CHANGE interaction block.
+      - [Immediate detection of user changes](11_user-interface/2239-immediate-detection-of-user-changes.md) — This section describes the dialogtouched predefined action.
+      - [Form-level validation rules](11_user-interface/2240-form-level-validation-rules.md) — Form-level validation rules can be defined for each field controlled by a dialog.
+      - [Form field deactivation](11_user-interface/2241-form-field-deactivation.md)
+      - [Identifying sub-dialogs in DIALOG](11_user-interface/2242-identifying-sub-dialogs-in-dialog.md) — Sub-dialogs need to be identified by a name to distinguish the different contexts.
+      - [Defining the tabbing order](11_user-interface/2243-defining-the-tabbing-order.md) — Control the order of tabbing through the fields with the TABINDEX attribute.
+      - [Which form item has the focus?](11_user-interface/2244-which-form-item-has-the-focus.md) — Identify what element of the current form has the focus.
+      - [Giving the focus to a form element](11_user-interface/2245-giving-the-focus-to-a-form-element.md) — How to force the focus to move or stay in a specific form element using program code.
+      - [Detection of focus changes](11_user-interface/2246-detection-of-focus-changes.md) — Describes how to detect when the focus goes from field to field or to a read-only list.
+      - [Enabling autocompletion](11_user-interface/2247-enabling-autocompletion.md) — Autocompletion allows a list of completion proposals to be displayed while the user is typing text into a field.
+      - [Multi-valued fields](11_user-interface/2248-multi-valued-fields.md) — Multi-valued form fields allow to display and input a set of values in the same character string field.
+      - [Phone number fields](11_user-interface/2249-phone-number-fields.md) — Phone number fields allow to display and input formatted telephone numbers, with international call prefix selection.
+      - [Filling a COMBOBOX item list](11_user-interface/2250-filling-a-combobox-item-list.md) — The item list of COMBOBOX fields can be initialized at runtime.
+      - [Field-anchored picklist](11_user-interface/2251-field-anchored-picklist.md) — Drop-down picklist windows can be displayed under the current field.
+      - [Rich Text Editing in TEXTEDIT](11_user-interface/2252-rich-text-editing-in-textedit.md) — The TEXTEDIT form item provides a rich text editing feature based on HTML.
+    - [Dialog actions](11_user-interface/2253-dialog-actions.md) — Describes how to program action handling when the end user triggers an action on the front-end.
+      - [Action handling basics](11_user-interface/2254-action-handling-basics.md) — This topic describes the basic concepts of dialog actions.
+      - [Predefined actions](11_user-interface/2255-predefined-actions.md) — Genero predefines some action names for common operations of interactive instructions.
+        - [Understanding predefined actions](11_user-interface/2256-understanding-predefined-actions.md)
+        - [List of predefined actions](11_user-interface/2257-list-of-predefined-actions.md)
+      - [Default action views](11_user-interface/2258-default-action-views.md) — A default action view is created to render an action handler, when no explicit action view exists for it.
+      - [Configuring actions](11_user-interface/2259-configuring-actions.md) — Action attributes related to decoration, keyboard shortcuts, and behavior can be defined with action attributes.
+        - [Action attributes context usage](11_user-interface/2260-action-attributes-context-usage.md)
+        - [Using attributes of action defaults](11_user-interface/2261-using-attributes-of-action-defaults.md)
+        - [Dialog action handler attributes](11_user-interface/2262-dialog-action-handler-attributes.md)
+        - [Configuring default action views dynamically](11_user-interface/2263-configuring-default-action-views-dynamically.md)
+        - [Text attribute shows default action view](11_user-interface/2264-text-attribute-shows-default-action-view.md)
+        - [Defining keyboard accelerators for actions](11_user-interface/2265-defining-keyboard-accelerators-for-actions.md)
+        - [Action attributes list](11_user-interface/2266-action-attributes-list.md)
+          - [ACCELERATOR action attribute](11_user-interface/2267-accelerator-action-attribute.md) — The ACCELERATOR is an action attribute defining the primary accelerator key for an action.
+          - [ACCELERATOR2 action attribute](11_user-interface/2268-accelerator2-action-attribute.md) — The ACCELERATOR2 is an action attribute defining the secondary accelerator key for an action.
+          - [ACCELERATOR3 action attribute](11_user-interface/2269-accelerator3-action-attribute.md) — The ACCELERATOR3 is an action attribute defining the third accelerator key for an action.
+          - [ACCELERATOR4 action attribute](11_user-interface/2270-accelerator4-action-attribute.md) — The ACCELERATOR4 is an action attribute defining the fourth accelerator key for an action.
+          - [COMMENT action attribute](11_user-interface/2271-comment-action-attribute.md) — The COMMENT attribute defines hint for the user about the action.
+          - [CONTEXTMENU action attribute](11_user-interface/2272-contextmenu-action-attribute.md) — The CONTEXTMENU attribute defines whether a context menu option must be displayed for an action.
+          - [DEFAULTVIEW action attribute](11_user-interface/2273-defaultview-action-attribute.md) — The DEFAULTVIEW attribute defines if a default view (a button) must be displayed for a given action.
+          - [IMAGE action attribute](11_user-interface/2274-image-action-attribute.md) — The IMAGE attribute defines the image resource to be displayed for the action.
+          - [ROWBOUND action attribute](11_user-interface/2275-rowbound-action-attribute.md) — The ROWBOUND attribute defines if the action is related to the row context of a record list.
+          - [TEXT action attribute](11_user-interface/2276-text-action-attribute.md) — The TEXT attribute defines the label associated to the action.
+          - [VALIDATE action attribute](11_user-interface/2277-validate-action-attribute.md) — The VALIDATE action attribute defines the data validation level for a given action.
+      - [Defining action views in forms](11_user-interface/2278-defining-action-views-in-forms.md) — How to define action views that will fire action events.
+      - [Implementing dialog action handlers](11_user-interface/2279-implementing-dialog-action-handlers.md) — How to execute user code in ON ACTION blocks when an action is fired.
+      - [Binding action views to action handlers](11_user-interface/2280-binding-action-views-to-action-handlers.md) — How are action views of the forms bound to action handlers in the program code?
+      - [Data validation at action invocation](11_user-interface/2281-data-validation-at-action-invocation.md) — The validate action attribute controls field validation when an action is fired.
+      - [Enabling and disabling actions](11_user-interface/2282-enabling-and-disabling-actions.md) — By default, dialog actions are enabled. However, it is recommended that an action be disabled when not allowed in the current context.
+      - [Hiding and showing default action views](11_user-interface/2283-hiding-and-showing-default-action-views.md) — If needed, default action views can be hidden or shown.
+      - [Sub-dialog actions in procedural DIALOG blocks](11_user-interface/2284-sub-dialog-actions-in-procedural-dialog-blocks.md) — This topic describes how action are differentiated with handlers defined in a procedural DIALOG block.
+      - [Field-specific actions (INFIELD clause)](11_user-interface/2285-field-specific-actions-infield-clause.md) — Using the INFIELD clause of ON ACTION provides automatic action activation when a field gets the focus.
+      - [Multilevel action conflicts](11_user-interface/2286-multilevel-action-conflicts.md)
+      - [Action views in chromebar](11_user-interface/2287-action-views-in-chromebar.md) — Default action views and toolbar action views can be displayed in the chromebar, to save space on small screens.
+      - [Action display in the context menu](11_user-interface/2288-action-display-in-the-context-menu.md) — The CONTEXTMENU action default attribute allows you to control action visibility in the context menu.
+      - [Implementing the close action](11_user-interface/2289-implementing-the-close-action.md) — The close action is a predefined action dedicated to close graphical windows (for example, with the X cross button).
+      - [Implementing the back action](11_user-interface/2290-implementing-the-back-action.md) — The back action is a predefined action dedicated to move back in the stack of windows/forms.
+      - [Actions bound to the current row](11_user-interface/2291-actions-bound-to-the-current-row.md) — Actions can be configured with the ROWBOUND attribute depending on whether there is a current row.
+      - [Keyboard accelerator names](11_user-interface/2292-keyboard-accelerator-names.md) — Reference for keyboard accelerator names to be used in ACCELERATOR* attributes, and in ON KEY / COMMAND KEY clauses in source dialog code.
+        - [ON KEY Virtual keys](11_user-interface/2293-on-key-virtual-keys.md) — Virtual keys are the key names that can be used in program instructions such as ON KEY and COMMAND KEY.
+        - [Accelerator key names](11_user-interface/2294-accelerator-key-names.md) — Accelerators keys are attributes defining the keyboard shortcuts for actions.
+        - [Accelerator key modifiers](11_user-interface/2295-accelerator-key-modifiers.md) — Key modifiers define keyboard control key combinations in accelerator key names.
+      - [Setting action key labels](11_user-interface/2296-setting-action-key-labels.md) — Labels can be defined to decorate buttons controlled by ON KEY / COMMAND KEY action handlers.
+      - [Action views on mobile devices](11_user-interface/2297-action-views-on-mobile-devices.md) — Action views are rendered following mobile specific standards.
+      - [Automatic action views](11_user-interface/2298-automatic-action-views.md) — Action views can be rendered automatically in some form elements.
+    - [List dialogs](11_user-interface/2299-list-dialogs.md) — Describes how to program dialogs controlling list containers.
+      - [Understanding list dialogs](11_user-interface/2300-understanding-list-dialogs.md) — List dialogs are dialogs controlling a list of records rendered in a list container such as TABLE, TREE or SCROLLGRID.
+      - [Array binding in list controllers](11_user-interface/2301-array-binding-in-list-controllers.md) — Program array elements are bound to screen arrays elements in the definition of the DISPLAY ARRAY or INPUT ARRAY list dialog.
+      - [Controlling the number of rows](11_user-interface/2302-controlling-the-number-of-rows.md) — Methods are provided to set and get the total number of rows in a read-only or editable list of records.
+      - [Handling the current row](11_user-interface/2303-handling-the-current-row.md) — Query and control the current row in a read-only or editable list of records.
+      - [Defining the action for a row choice](11_user-interface/2304-defining-the-action-for-a-row-choice.md) — The row choice in the DISPLAY ARRAY/INPUT ARRAY dialog can be associated with a dedicated action.
+      - [Field-level focus in DISPLAY ARRAY](11_user-interface/2305-field-level-focus-in-display-array.md) — The DISPLAY ARRAY dialog supports cell-level focus with the FOCUSONFIELD.
+      - [Actions bound to the current row](11_user-interface/2306-actions-bound-to-the-current-row.md) — Actions can be configured with the ROWBOUND attribute depending on whether there is a current row.
+      - [Populating a DISPLAY ARRAY](11_user-interface/2307-populating-a-display-array.md) — The program array must be filled with rows to populate the DISPLAY ARRAY dialog.
+        - [Full list mode of DISPLAY ARRAY](11_user-interface/2308-full-list-mode-of-display-array.md) — In order to handle short/medium result sets, use the full list mode of DISPLAY ARRAY.
+        - [Paged mode of DISPLAY ARRAY](11_user-interface/2309-paged-mode-of-display-array.md) — In order to handle very large result sets, use the paged mode of DISPLAY ARRAY.
+      - [INPUT ARRAY row modifications](11_user-interface/2310-input-array-row-modifications.md) — Controlling row creation and deletion in an editable record list.
+      - [Appending rows in INPUT ARRAY](11_user-interface/2311-appending-rows-in-input-array.md) — Rows appended at the end of an editable list are temporary until they are edited.
+      - [DISPLAY ARRAY modification triggers](11_user-interface/2312-display-array-modification-triggers.md) — Using dedicated interaction blocks to allow the user to modify a read-only record list.
+      - [Cell color attributes](11_user-interface/2313-cell-color-attributes.md) — List controllers can display every cell in a specific color.
+      - [Multiple row selection](11_user-interface/2314-multiple-row-selection.md) — Multiple row selection allows the end user to select several rows within a list of records.
+    - [Table views](11_user-interface/2315-table-views.md) — Describes how to implement table/list views.
+      - [Understanding tables views](11_user-interface/2316-understanding-tables-views.md) — Table views define the graphical element to display a list of records.
+      - [Defining tables in the layout](11_user-interface/2317-defining-tables-in-the-layout.md) — Define table views in the LAYOUT section of the form definition file.
+      - [Binding tables to arrays in dialogs](11_user-interface/2318-binding-tables-to-arrays-in-dialogs.md) — Program arrays act as data model that are bound to form tables, when implementing list dialogs.
+      - [Controlling table rendering](11_user-interface/2319-controlling-table-rendering.md) — Table rendering can be controlled by the use of presentation styles and table attributes.
+      - [Displaying column images](11_user-interface/2320-displaying-column-images.md) — You can use PHANTOM fields and the IMAGECOLUMN attribute to display images in a column, to the left of the column value.
+      - [Image columns firing actions](11_user-interface/2321-image-columns-firing-actions.md) — Columns in tables displaying images can trigger action events, when the user selects the image.
+      - [Binding action views to a table row](11_user-interface/2322-binding-action-views-to-a-table-row.md) — A rowbound action specifies an action to apply to the selected row. Rowbound actions get specific rendering.
+      - [Controlling columns layout](11_user-interface/2323-controlling-columns-layout.md) — By default, a user can position, hide, show, and resize columns in TABLE and TREE containers.
+      - [Sorting rows in a list](11_user-interface/2324-sorting-rows-in-a-list.md) — List controllers implement a built-in sort. This feature can be disabled if not required.
+      - [Finding rows matching a pattern](11_user-interface/2325-finding-rows-matching-a-pattern.md) — List controllers implement a built-in find. This feature can be disabled if not required.
+      - [Keyboard seek to matching row](11_user-interface/2326-keyboard-seek-to-matching-row.md) — The keyboard seek feature allows a user to find a row in a read-only list, by typing characters.
+      - [List reduce filter](11_user-interface/2327-list-reduce-filter.md) — The reduce filter allows a user to limit the row set in the list by using a filter.
+      - [Row and cell highlighting in TABLE](11_user-interface/2328-row-and-cell-highlighting-in-table.md) — TABLE containers can be configured with presentation styles, to control row and cell highlighting, using specific foreground and background colors.
+      - [Summary lines in tables](11_user-interface/2329-summary-lines-in-tables.md) — Table views can display a summary line, to show aggregate values for columns.
+      - [Defining the action for a row choice](11_user-interface/2330-defining-the-action-for-a-row-choice.md) — The row choice in a TABLE can be associated with a dedicated action.
+      - [Multi-row selection in tables](11_user-interface/2331-multi-row-selection-in-tables.md) — Multi-row selection can be used with a DISPLAY ARRAY controlling a TABLE container.
+      - [Table features not supported on mobile](11_user-interface/2332-table-features-not-supported-on-mobile.md) — Some table / list view features are not supported on mobile devices.
+      - [Examples](11_user-interface/2333-examples.md) — TABLE (table views) usage examples.
+        - [Example 1: Simple table view](11_user-interface/2334-example-1-simple-table-view.md)
+    - [Scrollgrid views](11_user-interface/2335-scrollgrid-views.md) — Describes how to implement scrollgrid views.
+      - [Understanding scrollgrid views](11_user-interface/2336-understanding-scrollgrid-views.md) — A scrollgrid view defines a graphical element to display a scrolling list of data records in a set of form fields positioned in a grid.
+      - [Defining scrollgrid in the layout](11_user-interface/2337-defining-scrollgrid-in-the-layout.md) — Define scrollgrid views in the LAYOUT section of the form definition file.
+      - [Binding scrollgrids to arrays in dialogs](11_user-interface/2338-binding-scrollgrids-to-arrays-in-dialogs.md) — Program arrays act as data model that are bound to form scrollgrids, when implementing list dialogs.
+      - [Controlling scrollgrid rendering](11_user-interface/2339-controlling-scrollgrid-rendering.md) — Scrollgrid rendering can be controlled by the use of presentation styles and scrollgrid attributes.
+      - [Row and cell highlighting in SCROLLGRID](11_user-interface/2340-row-and-cell-highlighting-in-scrollgrid.md) — SCROLLGRID containers can be configured with presentation styles, to control row and cell highlighting, using specific foreground and background colors.
+      - [Binding action views to a scrollgrid row](11_user-interface/2341-binding-action-views-to-a-scrollgrid-row.md) — A rowbound action specifies an action to apply to the selected row. Rowbound actions get specific rendering.
+      - [Finding rows matching a pattern](11_user-interface/2342-finding-rows-matching-a-pattern.md) — List controllers implement a built-in find. This feature can be disabled if not required.
+      - [Keyboard seek to matching row](11_user-interface/2343-keyboard-seek-to-matching-row.md) — The keyboard seek feature allows a user to find a row in a read-only list, by typing characters.
+      - [List reduce filter](11_user-interface/2344-list-reduce-filter.md) — The reduce filter allows a user to limit the row set in the list by using a filter.
+      - [Defining the action for a row choice](11_user-interface/2345-defining-the-action-for-a-row-choice.md) — The row choice in a SCROLLGRID can be associated with a dedicated action.
+      - [Using scrollgrid on mobile devices](11_user-interface/2346-using-scrollgrid-on-mobile-devices.md) — Scrollgrid views have specific limitations on mobile devices.
+        - [Unsupported scrollgrid features (mobile)](11_user-interface/2347-unsupported-scrollgrid-features-mobile.md) — Some scrollgrid view features are not supported on mobile devices.
+        - [Supported scrollgrid features (mobile)](11_user-interface/2348-supported-scrollgrid-features-mobile.md) — The list view provides features that are supported on mobile devices.
+      - [Examples](11_user-interface/2349-examples.md) — SCROLLGRID (scrollgrid views) usage examples.
+        - [Example 1: Simple scrollgrid view](11_user-interface/2350-example-1-simple-scrollgrid-view.md)
+        - [Example 2: Scrollgrid as listview](11_user-interface/2351-example-2-scrollgrid-as-listview.md)
+    - [Tree views](11_user-interface/2352-tree-views.md) — Describes how to implement tree views.
+      - [Understanding tree-views](11_user-interface/2353-understanding-tree-views.md) — This is an introduction to treeview programming.
+      - [Defining a TREE container](11_user-interface/2354-defining-a-tree-container.md) — Start a tree-view implementation by defining the TREE container in the form definition file.
+      - [Defining the program array for tree-views](11_user-interface/2355-defining-the-program-array-for-tree-views.md) — The program array containing the tree-view nodes must use a specific record structure.
+      - [Filling the program array with rows](11_user-interface/2356-filling-the-program-array-with-rows.md) — This topic describes how to fill a program array for a tree-view.
+      - [Controlling a tree-view with DISPLAY ARRAY](11_user-interface/2357-controlling-a-tree-view-with-display-array.md) — A DISPLAY ARRAY dialog needs to be used to control a tree-view.
+      - [Modifying the tree during dialog execution](11_user-interface/2358-modifying-the-tree-during-dialog-execution.md) — The tree-view content can be changed while executing the DISPLAY ARRAY dialog.
+      - [Row highlighting in TREE](11_user-interface/2359-row-highlighting-in-tree.md) — TREE containers can be configured with presentation styles, to control row highlighting, using specific foreground and background colors.
+      - [Binding action views to a treeview row](11_user-interface/2360-binding-action-views-to-a-treeview-row.md) — A rowbound action specifies an action to apply to the selected row. Rowbound actions get specific rendering.
+      - [Using regular DISPLAY ARRAY control blocks](11_user-interface/2361-using-regular-display-array-control-blocks.md) — Simple table DISPLAY ARRAY control blocks can be used with tree-views.
+      - [Dynamic filling of very large trees](11_user-interface/2362-dynamic-filling-of-very-large-trees.md) — How to optimize the implementation of large tree-views?
+      - [Built-in sort and tree-views](11_user-interface/2363-built-in-sort-and-tree-views.md) — Build-in sort on tree-views can be disabled if needed.
+      - [Multi-row selection and tree-views](11_user-interface/2364-multi-row-selection-and-tree-views.md) — Multi-row selection can be used with a DISPLAY ARRAY controlling a TREE container.
+      - [Drag and drop in tree-views](11_user-interface/2365-drag-and-drop-in-tree-views.md) — Drag and drop is supported with a DISPLAY ARRAY controlling a TREE.
+      - [Tree-view predefined actions](11_user-interface/2366-tree-view-predefined-actions.md) — Several predefined actions are implicitly available with a DISPLAY ARRAY controlling a TREE.
+      - [Examples](11_user-interface/2367-examples.md) — TREE (treeview) usage examples.
+        - [Example 1: Static tree view (filled before dialog starts)](11_user-interface/2368-example-1-static-tree-view-filled-before-dialog-starts.md)
+        - [Example 2: Dynamic tree view (filled on demand)](11_user-interface/2369-example-2-dynamic-tree-view-filled-on-demand.md)
+    - [Drag & drop](11_user-interface/2370-drag-drop.md) — Explains programming techniques for the drag & drop feature.
+      - [Understanding drag & drop](11_user-interface/2371-understanding-drag-drop.md) — This is an introduction to drag & drop programming.
+      - [Syntax of drag & drop interaction blocks](11_user-interface/2372-syntax-of-drag-drop-interaction-blocks.md) — The ON DRAG* / ON DROP interaction blocks implement drag & drop operations.
+      - [Default drag & drop operation](11_user-interface/2373-default-drag-drop-operation.md) — DISPLAY ARRAY dialogs implement a default drag operation.
+      - [Control block execution order](11_user-interface/2374-control-block-execution-order.md) — What is the execution order of drag & drop related dialog control blocks?
+      - [Handle drag & drop data with MIME types](11_user-interface/2375-handle-drag-drop-data-with-mime-types.md) — How to handle MIME types with drag & drop?
+      - [Examples](11_user-interface/2376-examples.md) — Drag & Drop usage examples.
+        - [Example 1: Two lists side-by-side with drag & drop](11_user-interface/2377-example-1-two-lists-side-by-side-with-drag-drop.md)
+    - [Web components](11_user-interface/2378-web-components.md) — This section describes how to use web components in your application.
+      - [Understanding web components](11_user-interface/2379-understanding-web-components.md) — External graphical components can be integrated into forms by using the WEBCOMPONENT form item type.
+      - [WEBCOMPONENT item type](11_user-interface/2380-webcomponent-item-type.md) — Defines a specialized form item that holds an external component.
+      - [Controlling the web component layout](11_user-interface/2381-controlling-the-web-component-layout.md)
+        - [Web component grid layout](11_user-interface/2382-web-component-grid-layout.md)
+        - [Web component HTML layout](11_user-interface/2383-web-component-html-layout.md)
+      - [Debugging a web component](11_user-interface/2384-debugging-a-web-component.md)
+      - [Using a URL-based web component](11_user-interface/2385-using-a-url-based-web-component.md) — This section describes how to add a URL-based web component to your application.
+        - [Defining a URL-based web component in forms](11_user-interface/2386-defining-a-url-based-web-component-in-forms.md) — A URL-based web component needs to be declared in the form definition.
+        - [Specifying the URL source of a web component](11_user-interface/2387-specifying-the-url-source-of-a-web-component.md) — The content of URL-based web components is defined by the form field value. It can only be set by program.
+        - [Controlling the URL web component in programs](11_user-interface/2388-controlling-the-url-web-component-in-programs.md) — URL-based web components can be controlled with the field value and with front calls
+        - [Examples](11_user-interface/2389-examples.md) — URL-based Web Components usage examples.
+          - [Example 1: URL-based web component using Wikipedia](11_user-interface/2390-example-1-url-based-web-component-using-wikipedia.md)
+      - [Using a gICAPI web component](11_user-interface/2391-using-a-gicapi-web-component.md) — This section describes how to add a gICAPI-based web component to your application.
+        - [HTML document and JavaScript for the gICAPI object](11_user-interface/2392-html-document-and-javascript-for-the-gicapi-object.md) — A gICAPI web component is identified by an HTML document containing the JavaScript interface (or a reference to the .js file).
+        - [The gICAPI web component interface script](11_user-interface/2393-the-gicapi-web-component-interface-script.md) — The gICAPI web components are controlled on the front-end through a gICAPI interface object, defined in a JavaScript script.
+          - [gICAPI.Action()](11_user-interface/2394-gicapi-action.md) — The gICAPI.Action() function is used to perform an action in the current dialog.
+          - [gICAPI.onData()](11_user-interface/2395-gicapi-ondata.md) — The gICAPI.onData() function is executed when field data is sent by the program.
+          - [gICAPI.onFlushData()](11_user-interface/2396-gicapi-onflushdata.md) — The gICAPI.onFlushData() function is executed when the front-end must send the field value to the program.
+          - [gICAPI.onFocus()](11_user-interface/2397-gicapi-onfocus.md) — The gICAPI.onFocus() function is used to detect if the WEBCOMPONENT field lost or acquired focus.
+          - [gICAPI.onProperty()](11_user-interface/2398-gicapi-onproperty.md) — The gICAPI.onProperty() function is executed when web component properties change.
+          - [gICAPI.onStateChanged()](11_user-interface/2399-gicapi-onstatechanged.md) — The gICAPI.onStateChanged() function is executed when the state of the field changes.
+          - [gICAPI.SetData()](11_user-interface/2400-gicapi-setdata.md) — The gICAPI.SetData() function registers WEBCOMPONENT field data to be sent to the program.
+          - [gICAPI.SetFocus()](11_user-interface/2401-gicapi-setfocus.md) — The gICAPI.SetFocus() function must be used to request the focus to the runtime system.
+          - [gICAPI.UseGbcThemeVariables()](11_user-interface/2402-gicapi-usegbcthemevariables.md) — The gICAPI.UseGbcThemeVariables() function can be used to declare a set of GBC theme variables to be referenced in the CSS of a web component.
+        - [Deploying the gICAPI web component files](11_user-interface/2403-deploying-the-gicapi-web-component-files.md) — Deploy web component files to the front-end platform before using gICAPI web components.
+          - [Deploying gICAPI assets in direct mode](11_user-interface/2404-deploying-gicapi-assets-in-direct-mode.md) — Using GDC, GMI or GMA front-ends in direct mode (not through GAS)
+          - [Deploying gICAPI assets with GAS](11_user-interface/2405-deploying-gicapi-assets-with-gas.md) — Using gICAPI web components through the GAS.
+          - [Deploying gICAPI assets on mobile](11_user-interface/2406-deploying-gicapi-assets-on-mobile.md) — Using GMI and GMA front-ends, executing app on mobile device
+        - [Defining a gICAPI web component in forms](11_user-interface/2407-defining-a-gicapi-web-component-in-forms.md) — When defining a gICAPI web component in a form specification file, you can also provide a sizing policy and define additional properties.
+        - [Controlling the gICAPI web component in programs](11_user-interface/2408-controlling-the-gicapi-web-component-in-programs.md)
+        - [Using image resources with the gICAPI web component](11_user-interface/2409-using-image-resources-with-the-gicapi-web-component.md) — This section explains how to use image resources in a gICAPI web component.
+        - [Examples](11_user-interface/2410-examples.md) — GICAPI Web Component usage examples.
+          - [Example 1: Calling a JavaScript function](11_user-interface/2411-example-1-calling-a-javascript-function.md)
+          - [Example 2: Simple text input](11_user-interface/2412-example-2-simple-text-input.md)
+          - [Example 3: Application images](11_user-interface/2413-example-3-application-images.md)
+          - [Example 4: Color picker](11_user-interface/2414-example-4-color-picker.md)
+      - [Built-in web components](11_user-interface/2415-built-in-web-components.md) — Genero provides a set of ready-to-use web components.
+        - [Understanding built-in web components](11_user-interface/2416-understanding-built-in-web-components.md) — This section describes the available built-in web components and how to use them.
+        - [Built-in web components reference](11_user-interface/2417-built-in-web-components-reference.md) — List of all built-in web components
+          - [The fglgallery web component](11_user-interface/2418-the-fglgallery-web-component.md) — The fglgallery built-in web component shows a collection of pictures the end user can choose from.
+            - [Examples](11_user-interface/2419-examples.md) — fglgallery built-in web component usage examples.
+              - [Example 1: Simple fglgallery example using free pictures from the web](11_user-interface/2420-example-1-simple-fglgallery-example-using-free-pictures-from.md)
+          - [The fglsvgcanvas web component](11_user-interface/2421-the-fglsvgcanvas-web-component.md) — The fglsvgcanvas built-in web component implements a drawing canvas for Scalable Vector Graphics content.
+            - [Examples](11_user-interface/2422-examples.md) — fglsvgcanvas built-in web component usage examples.
+              - [Example 1: Analog clock with fglsvgcanvas](11_user-interface/2423-example-1-analog-clock-with-fglsvgcanvas.md)
+              - [Example 2: Basic clickable SVG shapes with fglsvgcanvas](11_user-interface/2424-example-2-basic-clickable-svg-shapes-with-fglsvgcanvas.md)
+    - [Dynamic Dialogs](11_user-interface/2425-dynamic-dialogs.md) — Dialogs can be created at runtime with the ui.Dialog class.
+      - [Understanding dynamic dialogs](11_user-interface/2426-understanding-dynamic-dialogs.md) — This section provides basics about dynamic dialogs.
+      - [Create forms dynamically](11_user-interface/2427-create-forms-dynamically.md) — Dynamic dialogs are typically used with forms that are generated at runtime.
+      - [Instantiate a dynamic dialog](11_user-interface/2428-instantiate-a-dynamic-dialog.md) — The dynamic dialogs needs to be created with specific ui.Dialog methods.
+      - [Configuring a dynamic dialog](11_user-interface/2429-configuring-a-dynamic-dialog.md) — The dynamic dialogs can be configured with attributes.
+      - [The dynamic dialog event loop](11_user-interface/2430-the-dynamic-dialog-event-loop.md) — Dynamic dialog body is implemented with a WHILE loop using ui.Dialog.nextEvent().
+      - [Controlling field values](11_user-interface/2431-controlling-field-values.md) — Fields values in dynamic dialogs can be manipulated dynamically.
+      - [Ending dynamic dialogs](11_user-interface/2432-ending-dynamic-dialogs.md) — Describes how to terminate dynamic dialogs.
+      - [Dynamic multiple dialog](11_user-interface/2433-dynamic-multiple-dialog.md) — Dynamic dialogs allows you to create the equivalent of a DIALOG procedural dialog.
+      - [Using dynamic cursors](11_user-interface/2434-using-dynamic-cursors.md) — Implementing a dynamic dialog based on the database schema.
+      - [DISPLAY ARRAY dynamic dialog](11_user-interface/2435-display-array-dynamic-dialog.md) — DISPLAY ARRAY can be implemented with dynamic dialogs.
+      - [Paged mode DISPLAY ARRAY](11_user-interface/2436-paged-mode-display-array.md) — Dynamic dialogs using DISPLAY ARRAY can use ON FILL BUFFER events to fill pages of rows.
+      - [Additional features](11_user-interface/2437-additional-features.md) — Miscellaneous features of dynamic dialogs.
+    - [Canvases](11_user-interface/2438-canvases.md) — Canvases are form drawing areas.
+      - [Understanding canvases](11_user-interface/2439-understanding-canvases.md) — This is an introduction to CANVAS drawing.
+      - [CANVAS item definition](11_user-interface/2440-canvas-item-definition.md) — Defines attributes for a CANVAS drawing area.
+      - [Syntax of canvas nodes](11_user-interface/2441-syntax-of-canvas-nodes.md) — The AUI tree contains the XML representation of the canvas, with a variety of elements defining shapes.
+      - [Canvas drawing area](11_user-interface/2442-canvas-drawing-area.md) — The canvas area defines a two-dimensional coordinate system for drawing elements.
+      - [Canvas drawing functions](11_user-interface/2443-canvas-drawing-functions.md)
+      - [Examples](11_user-interface/2444-examples.md) — Canvas usage examples.
+        - [Example 1: Simple canvas](11_user-interface/2445-example-1-simple-canvas.md)
+    - [Start menus](11_user-interface/2446-start-menus.md) — Start menus define a tree of application programs that can be started.
+      - [Understanding start menus](11_user-interface/2447-understanding-start-menus.md) — This is an introduction to start menus.
+      - [Syntax of start menu files (.4sm)](11_user-interface/2448-syntax-of-start-menu-files-4sm.md) — A start menu file contains a tree of XML elements defining the application menu to start programs.
+      - [Loading a start menu from an XML file](11_user-interface/2449-loading-a-start-menu-from-an-xml-file.md) — Start menu XML definition files can be loaded at runtime.
+      - [Creating the start menu dynamically](11_user-interface/2450-creating-the-start-menu-dynamically.md) — Start menu can be created dynamically with the om.DomNode class.
+      - [Examples](11_user-interface/2451-examples.md) — Start menu usage examples.
+        - [Example 1: Start menu in XML format](11_user-interface/2452-example-1-start-menu-in-xml-format.md)
+        - [Example 2: Start menu created dynamically](11_user-interface/2453-example-2-start-menu-created-dynamically.md)
+    - [Folders](11_user-interface/2454-folders.md) — FOLDER combined with PAGE containers render as folder tabs, and must be controlled with a DIALOG instruction.
+      - [Understanding folder tabs](11_user-interface/2455-understanding-folder-tabs.md) — Folders allow to display a set of form elements in dedicated pages (aka folder tabs).
+      - [Controlling folder rendering](11_user-interface/2456-controlling-folder-rendering.md) — Folder rendering can be controlled by the use of presentation styles and folder attributes.
+      - [Detecting folder page focus changes](11_user-interface/2457-detecting-folder-page-focus-changes.md) — Field focus change defines the current folder page.
+      - [Bring a folder page to the top](11_user-interface/2458-bring-a-folder-page-to-the-top.md) — How to make a folder page current?
+      - [Nested folder tabs](11_user-interface/2459-nested-folder-tabs.md) — Folder pages can contain other folders. How to deal with this?
+      - [Using actions for page selection](11_user-interface/2460-using-actions-for-page-selection.md) — An action event handler can be associated to a given folder page.
+- [Reports](12_reports/2461-reports.md)
+  - [Understanding reports](12_reports/2462-understanding-reports.md) — A report can arrange and format the data depending on the instructions used and display the output on the screen, send it to a printer, or store it as a file for future use.
+  - [XML output for reports](12_reports/2463-xml-output-for-reports.md) — For better integration with external tools based on XML standards, reports can produce XML output.
+    - [Writing an XML report driver and routine](12_reports/2464-writing-an-xml-report-driver-and-routine.md)
+    - [Structure of XML report output](12_reports/2465-structure-of-xml-report-output.md)
+    - [Conditional statements in XML output](12_reports/2466-conditional-statements-in-xml-output.md)
+    - [Examples](12_reports/2467-examples.md)
+      - [Example 1: Nested XML report](12_reports/2468-example-1-nested-xml-report.md)
+  - [The report driver](12_reports/2469-the-report-driver.md) — The report driver retrieves data, starts the report engine and sends the data (as input records) to be formatted by the REPORT routine.
+    - [START REPORT](12_reports/2470-start-report.md) — The START REPORT instruction initializes a report execution.
+    - [OUTPUT TO REPORT](12_reports/2471-output-to-report.md) — The OUTPUT TO REPORT instruction provides a data row to the report execution.
+    - [FINISH REPORT](12_reports/2472-finish-report.md) — The FINISH REPORT instruction finalizes a report execution.
+    - [TERMINATE REPORT](12_reports/2473-terminate-report.md) — The TERMINATE REPORT instruction cancels a report execution.
+  - [The report routine](12_reports/2474-the-report-routine.md) — The report routine implements the body of a report, with formatting instructions.
+    - [The report prototype](12_reports/2475-the-report-prototype.md)
+    - [DEFINE section in REPORT](12_reports/2476-define-section-in-report.md) — Defines report parameters and local variables.
+    - [OUTPUT section in REPORT](12_reports/2477-output-section-in-report.md) — Specifies report destination and page format options.
+    - [ORDER BY section in REPORT](12_reports/2478-order-by-section-in-report.md) — Forces a sort order of unsorted data rows in reports.
+    - [FORMAT section in REPORT](12_reports/2479-format-section-in-report.md) — Defines the formatting directives inside a report routine.
+      - [FORMAT EVERY ROW](12_reports/2480-format-every-row.md) — Default format specification of a report.
+      - [FIRST PAGE HEADER](12_reports/2481-first-page-header.md) — Defines the printing commands for the first page of a report.
+      - [PAGE HEADER](12_reports/2482-page-header.md) — Defines the printing commands for the top of all pages of a report.
+      - [PAGE TRAILER](12_reports/2483-page-trailer.md) — Defines the printing commands for the tail of all pages of a report.
+      - [BEFORE/AFTER GROUP OF](12_reports/2484-before-after-group-of.md) — Defines printing commands of row grouping sections within a report.
+      - [ON EVERY ROW](12_reports/2485-on-every-row.md) — Defines printing commands for each row in a report.
+      - [ON LAST ROW](12_reports/2486-on-last-row.md) — Defines the printing commands of the last row in a report.
+    - [Prohibited report routine statements](12_reports/2487-prohibited-report-routine-statements.md)
+  - [Two-pass reports](12_reports/2488-two-pass-reports.md) — The report engine supports two-pass reports, to order rows automatically.
+  - [Report instructions](12_reports/2489-report-instructions.md) — The report instruction listed in this section can appear only in control blocks of the FORMAT section of a report routine.
+    - [EXIT REPORT](12_reports/2490-exit-report.md) — Cancels the report processing.
+    - [PRINT](12_reports/2491-print.md) — Formats and prints a row of data in a report routine.
+    - [PRINTX](12_reports/2492-printx.md) — Prints an XML formatted row of data in a report, with an additional identifier for XML outputs.
+    - [NEED](12_reports/2493-need.md) — Specifies the number of rows needed in a report section.
+    - [PAUSE](12_reports/2494-pause.md) — Pauses a report displayed to the screen.
+    - [SKIP](12_reports/2495-skip.md) — Skips a given number of lines in a report.
+  - [Report operators](12_reports/2496-report-operators.md) — Report operators can be used to print dynamic report information.
+    - [LINENO](12_reports/2497-lineno.md) — Contains the current line number in a report.
+    - [PAGENO](12_reports/2498-pageno.md) — Contains the current page number in a report.
+    - [SPACES](12_reports/2499-spaces.md) — Generates the given number of blank characters.
+    - [WORDWRAP](12_reports/2500-wordwrap.md) — Splits a character string to match a given margin limit.
+  - [Report aggregate functions](12_reports/2501-report-aggregate-functions.md) — Report aggregate functions can be used to compute data.
+    - [COUNT](12_reports/2502-count.md) — Counts a number of rows in a report based on a condition.
+    - [PERCENT](12_reports/2503-percent.md) — Calculates the percentage of rows matching a condition.
+    - [SUM](12_reports/2504-sum.md) — Calculates the total of a report parameter based on a condition.
+    - [AVG](12_reports/2505-avg.md) — Calculates the average of a report parameter base on a condition.
+    - [MIN](12_reports/2506-min.md) — Calculates the minimum value of a report parameter based on a condition.
+    - [MAX](12_reports/2507-max.md) — Calculates the maximum value of a report parameter based on a condition.
+  - [Report engine configuration](12_reports/2508-report-engine-configuration.md) — Report engine behavior can be controlled with FGLPROFILE settings.
+  - [Examples](12_reports/2509-examples.md)
+    - [Example 1: Simple customer list report](12_reports/2510-example-1-simple-customer-list-report.md)
+- [Programming tools](13_programming-tools/2511-programming-tools.md) — These topics cover programming with the Genero Business Development Language.
+  - [Command reference](13_programming-tools/2512-command-reference.md) — Command line tools provided by FGLGWS packages.
+    - [fglrun](13_programming-tools/2513-fglrun.md) — The fglrun tool is the runtime system program that executes p-code programs.
+    - [fglform](13_programming-tools/2514-fglform.md) — The fglform tool compiles form specification files into XML formatted files used by programs.
+    - [fgl2p](13_programming-tools/2515-fgl2p.md) — The fgl2p tool compiles source files and assembles p-code modules into a .42r program or a .42x library.
+    - [fglcomp](13_programming-tools/2516-fglcomp.md) — The fglcomp tool compiles .4gl source files into .42m p-code modules, and does various other tasks.
+    - [fgllink](13_programming-tools/2517-fgllink.md) — The fgllink tool assembles p-code modules produced with fglcomp into a .42r program or a .42x library.
+    - [fglmkmsg](13_programming-tools/2518-fglmkmsg.md) — The fglmkmsg tool compiles .msg message files into a binary version used by programs.
+    - [fglmkext](13_programming-tools/2519-fglmkext.md) — The fglmkext tool compiles and links a user C Extension.
+    - [fgldb](13_programming-tools/2520-fgldb.md) — The fgldb tool is an interface program for remote debugging.
+    - [fgldbsch](13_programming-tools/2521-fgldbsch.md) — The fgldbsch tool generates the database schema files from an existing database.
+    - [fglmkstr](13_programming-tools/2522-fglmkstr.md) — The fglmkstr tool compiles .str localized string resource files.
+    - [fglwsdl](13_programming-tools/2523-fglwsdl.md) — The fglwsdl tool produces web services stub files for client or server programs (from WSDL / XSD).
+    - [fglrestful](13_programming-tools/2524-fglrestful.md) — The fglrestful tool produces REST web services stub files for client programs using an OpenAPI specification.
+    - [fglpass](13_programming-tools/2525-fglpass.md) — The fglpass tool allows you to encrypt passwords.
+    - [fglgar](13_programming-tools/2526-fglgar.md) — The fglgar is a tool for packaging applications for deployment on any web server with Genero Application Server (GAS).
+    - [fglgitformat](13_programming-tools/2527-fglgitformat.md) — The fglgitformat tool reformats the source lines changed in a GIT history.
+    - [fglformatdiff](13_programming-tools/2528-fglformatdiff.md) — The fglformatdiff tool reformats source lines of a unified diff text.
+    - [fpi](13_programming-tools/2529-fpi.md) — The fpi tool displays product version information.
+  - [Compiling source files](13_programming-tools/2530-compiling-source-files.md) — Describes how to build the runtime files from source files.
+    - [Compiling form specification files (.per)](13_programming-tools/2531-compiling-form-specification-files-per.md) — The .per form definition files must be compiled to .42f XML files, in order to be loaded by the runtime system.
+    - [Compiling message files (.msg)](13_programming-tools/2532-compiling-message-files-msg.md) — The .msg message files must be compiled to .iem binary files, in order to be loaded by the runtime system.
+    - [Compiling string resource files (.str)](13_programming-tools/2533-compiling-string-resource-files-str.md) — The .str source string files must be compiled to .42s binary files, in order to be loaded by the runtime system.
+    - [Compiling program code files (.4gl)](13_programming-tools/2534-compiling-program-code-files-4gl.md) — The .4gl source files must be compiled to .42m p-code files, in order to be loaded by the runtime system.
+    - [Importing modules](13_programming-tools/2535-importing-modules.md) — Describes how to define module interdependence with IMPORT FGL.
+    - [Linking libraries](13_programming-tools/2536-linking-libraries.md) — Describes how to link .42m modules together to build a .42x library file.
+    - [Linking programs](13_programming-tools/2537-linking-programs.md) — Describes how to link .42m modules together to build a .42r program file.
+    - [Using makefiles](13_programming-tools/2538-using-makefiles.md) — Describes how to define program construction rules in makefiles.
+    - [42m module information](13_programming-tools/2539-42m-module-information.md) — Describes how to handle module information in .42m p-code files.
+  - [Source code edition](13_programming-tools/2540-source-code-edition.md) — Simple helper to better render sources in configurable text editors.
+    - [Choosing the correct locale](13_programming-tools/2541-choosing-the-correct-locale.md)
+    - [Avoid Tabs in screen layouts](13_programming-tools/2542-avoid-tabs-in-screen-layouts.md)
+    - [Source code completion](13_programming-tools/2543-source-code-completion.md)
+    - [Configure VIM for Genero BDL](13_programming-tools/2544-configure-vim-for-genero-bdl.md)
+    - [Visual Studio Code extension](13_programming-tools/2545-visual-studio-code-extension.md)
+  - [Source documentation](13_programming-tools/2546-source-documentation.md) — Explains how to automatically generate documentation from your sources.
+    - [Understanding source code documentation](13_programming-tools/2547-understanding-source-code-documentation.md) — This is an introduction to source code documentation.
+    - [Prerequisites to produce documentation](13_programming-tools/2548-prerequisites-to-produce-documentation.md) — This topic lists the requirements to generate source documentation.
+    - [Source documentation structure](13_programming-tools/2549-source-documentation-structure.md) — The source documentation structure is based on the well-known Java-doc technique.
+    - [Adding comments to sources](13_programming-tools/2550-adding-comments-to-sources.md) — Adding relevant information to your source documentation.
+      - [Commenting a module](13_programming-tools/2551-commenting-a-module.md)
+      - [Commenting globals](13_programming-tools/2552-commenting-globals.md)
+      - [Commenting a module constant](13_programming-tools/2553-commenting-a-module-constant.md)
+      - [Commenting a module variable](13_programming-tools/2554-commenting-a-module-variable.md)
+      - [Commenting a module type](13_programming-tools/2555-commenting-a-module-type.md)
+      - [Commenting a function](13_programming-tools/2556-commenting-a-function.md)
+      - [Commenting a method](13_programming-tools/2557-commenting-a-method.md)
+      - [Commenting a report](13_programming-tools/2558-commenting-a-report.md)
+      - [Commenting a package](13_programming-tools/2559-commenting-a-package.md)
+      - [Commenting a project](13_programming-tools/2560-commenting-a-project.md)
+    - [Run the documentation generator](13_programming-tools/2561-run-the-documentation-generator.md) — A step-by-step procedure to build the source documentation.
+  - [Source preprocessor](13_programming-tools/2562-source-preprocessor.md) — A typical preprocessor like in the C language.
+    - [Understanding the preprocessor](13_programming-tools/2563-understanding-the-preprocessor.md) — This is an introduction to the code preprocessor.
+    - [Compilers command line options](13_programming-tools/2564-compilers-command-line-options.md) — Preprocessor options can be used with fglcomp and fglform compilers.
+    - [File inclusion](13_programming-tools/2565-file-inclusion.md) — The &include directive instructs the preprocessor to include a file.
+    - [Conditional compilation](13_programming-tools/2566-conditional-compilation.md) — Integrate code lines conditionally.
+    - [Simple macro definition](13_programming-tools/2567-simple-macro-definition.md) — A simple macro is identified by its name and body.
+    - [Function macro definition](13_programming-tools/2568-function-macro-definition.md) — Function macros are preprocessor macros which can take arguments.
+    - [Predefined macros](13_programming-tools/2569-predefined-macros.md) — A set of predefined preprocessor macros are available.
+    - [Stringification operator](13_programming-tools/2570-stringification-operator.md) — Transforms a preprocessor macro element to a string.
+    - [Concatenation operator](13_programming-tools/2571-concatenation-operator.md) — Concatenates two parameters of a preprocessor macro.
+    - [Undefining a macro](13_programming-tools/2572-undefining-a-macro.md) — Undefines a preprocessor macro.
+  - [Integrated debugger](13_programming-tools/2573-integrated-debugger.md) — Describes the command-line debugger you can use to find bugs in your programs.
+    - [Understanding the debugger](13_programming-tools/2574-understanding-the-debugger.md) — This is an introduction to the integrated debugger.
+    - [Prerequisites to run the debugger](13_programming-tools/2575-prerequisites-to-run-the-debugger.md) — Some requirements are needed before running the integrated debugger.
+    - [Starting fglrun in debug mode](13_programming-tools/2576-starting-fglrun-in-debug-mode.md) — The runtime system can be started in debug mode with the -d option.
+    - [Attaching to a running program](13_programming-tools/2577-attaching-to-a-running-program.md) — It is possible to start the debugger for a program running on the same computer.
+    - [Debugging on a remote computer](13_programming-tools/2578-debugging-on-a-remote-computer.md) — It is possible to remotely start the debugger for an app running on another computer.
+    - [Debugging on a mobile device](13_programming-tools/2579-debugging-on-a-mobile-device.md) — It is possible to remotely start the debugger for an app running on a mobile device.
+    - [Interrupting fglrun in debug mode](13_programming-tools/2580-interrupting-fglrun-in-debug-mode.md) — The SIGINT signal will suspend the execution of the runtime system executing in debug mode.
+    - [Stack frames in the debugger](13_programming-tools/2581-stack-frames-in-the-debugger.md) — The stack frame contains information about function call stack.
+    - [Defining a breakpoint in the code](13_programming-tools/2582-defining-a-breakpoint-in-the-code.md) — Set a breakpoint in the program source code with the BREAKPOINT instruction.
+    - [Expressions in debugger commands](13_programming-tools/2583-expressions-in-debugger-commands.md) — A limited expression syntax can be used in debugger commands.
+    - [Debugging with VS Code](13_programming-tools/2584-debugging-with-vs-code.md) — The Genero BDL VS Code extension can be used to debug programs with VS Code debugger capabilities.
+    - [Using the debug-server](13_programming-tools/2585-using-the-debug-server.md) — The Genero BDL debug-server is a proxy for fglrun processes which can not be accessed directly by the debugger.
+    - [Debugger commands](13_programming-tools/2586-debugger-commands.md) — This topic lists all debugger commands.
+      - [backtrace / where](13_programming-tools/2587-backtrace-where.md) — The backtrace commands prints a summary of how your program reached the current state.
+      - [break](13_programming-tools/2588-break.md) — The break command defines a break point to stop the program execution at a given line or function.
+      - [call](13_programming-tools/2589-call.md) — The call command calls a function in the program.
+      - [clear](13_programming-tools/2590-clear.md) — The clear command clears the breakpoint at a specified line or function.
+      - [continue](13_programming-tools/2591-continue.md) — The continue command continues the execution of the program after a breakpoint.
+      - [delete](13_programming-tools/2592-delete.md) — The delete command allows you to remove breakpoints that you have specified in your debugger session.
+      - [detach](13_programming-tools/2593-detach.md) — The detach command closes the TCP connection of a remove debug session.
+      - [disable](13_programming-tools/2594-disable.md) — The disable command disables the specified breakpoint.
+      - [display](13_programming-tools/2595-display.md) — The display command displays the specified expression's value each time program execution stops.
+      - [down](13_programming-tools/2596-down.md) — The down command moves down in the call stack.
+      - [echo](13_programming-tools/2597-echo.md) — The echo command prints the specified text as prompt.
+      - [enable](13_programming-tools/2598-enable.md) — The enable command enables breakpoints that have previously been disabled.
+      - [finish](13_programming-tools/2599-finish.md) — The finish command continues the execution of a program until the current function returns normally.
+      - [frame](13_programming-tools/2600-frame.md) — The frame command selects and prints a stack frame.
+      - [help](13_programming-tools/2601-help.md) — The help command provides information about debugger commands.
+      - [ignore](13_programming-tools/2602-ignore.md) — The ignore command defines the number of times a breakpoint must be ignored.
+      - [info](13_programming-tools/2603-info.md) — The info command describes the current state of your program.
+      - [list](13_programming-tools/2604-list.md) — The list command prints source code lines of the program being executed.
+      - [next](13_programming-tools/2605-next.md) — The next command continues running the program by executing the next source line in the current stack frame, and then stops.
+      - [output](13_programming-tools/2606-output.md) — The output command prints only the value of the specified expression, suppressing any other output.
+      - [print](13_programming-tools/2607-print.md) — The print command displays the current value of the specified expression.
+      - [ptype](13_programming-tools/2608-ptype.md) — The ptype command prints the data type or structure of a variable.
+      - [quit](13_programming-tools/2609-quit.md) — The quit command terminates the debugger session.
+      - [run](13_programming-tools/2610-run.md) — The run command starts the program.
+      - [set](13_programming-tools/2611-set.md) — The set command allows you to configure your debugger session and change program variable values.
+      - [source](13_programming-tools/2612-source.md) — The source command executes a file of debugger commands.
+      - [signal](13_programming-tools/2613-signal.md) — The signal command sends an interruption signal to the program.
+      - [step](13_programming-tools/2614-step.md) — The step command continues running the program by executing the next line of source code, and then stops.
+      - [tbreak](13_programming-tools/2615-tbreak.md) — The tbreak command sets a temporary breakpoint.
+      - [tty](13_programming-tools/2616-tty.md) — The tty command resets the default program input and output for future run commands.
+      - [undisplay](13_programming-tools/2617-undisplay.md) — The undisplay command cancels expressions to be displayed when the program execution stops.
+      - [until](13_programming-tools/2618-until.md) — The until command continues running the program until the specified location is reached.
+      - [up](13_programming-tools/2619-up.md) — The up command selects and prints the function that called this one, or the function specified by the frame number in the call stack.
+      - [watch](13_programming-tools/2620-watch.md) — The watch command sets a watchpoint for an expression.
+      - [whatis](13_programming-tools/2621-whatis.md) — The whatis command prints the data type of a variable.
+  - [Program profiler](13_programming-tools/2622-program-profiler.md) — Find out what function is causing the bottleneck in your program.
+    - [Understanding the profiler](13_programming-tools/2623-understanding-the-profiler.md) — The profiler is a tool built into the runtime system that allows you to know where your program spends processing time, and which function calls which function.
+    - [Syntax of the program profiler](13_programming-tools/2624-syntax-of-the-program-profiler.md) — The program profiler is enabled by using the -p option of fglrun.
+    - [Profiler output: Flat profile](13_programming-tools/2625-profiler-output-flat-profile.md) — The flat profile shows a summary of the functions called during the program execution.
+    - [Profiler output: Call graph](13_programming-tools/2626-profiler-output-call-graph.md) — The profiler call graph provides detailed function call information.
+    - [Example](13_programming-tools/2627-example.md) — Program profiler example.
+  - [Source code coverage](13_programming-tools/2628-source-code-coverage.md) — Collect information about used source lines
+    - [Understanding the code coverage tool](13_programming-tools/2629-understanding-the-code-coverage-tool.md) — This is an introduction to the code coverage tool.
+    - [Syntax of the code coverage tool](13_programming-tools/2630-syntax-of-the-code-coverage-tool.md) — The code coverage tool is enabled by setting the FGLCOV environment variable.
+    - [Code coverage tool usage](13_programming-tools/2631-code-coverage-tool-usage.md) — This topic describes how to use the code coverage feature.
+  - [Execution trace](13_programming-tools/2632-execution-trace.md) — Print a function call stack of your program.
+    - [Understanding the program execution trace](13_programming-tools/2633-understanding-the-program-execution-trace.md) — This is an introduction to the program execution trace.
+    - [Syntax of the program execution trace](13_programming-tools/2634-syntax-of-the-program-execution-trace.md) — The execution trace is enable by using the --trace option of fglrun.
+    - [Using the program execution trace](13_programming-tools/2635-using-the-program-execution-trace.md) — The program execution trace is typically used in a development environment, to understand the program flow.
+  - [Source code beautifier](13_programming-tools/2636-source-code-beautifier.md) — Reformat the source code for better readability.
+    - [Understanding the code beautifier tool](13_programming-tools/2637-understanding-the-code-beautifier-tool.md) — This is an introduction to the source code beautifier tool.
+    - [Syntax of the code beautifier tool](13_programming-tools/2638-syntax-of-the-code-beautifier-tool.md) — The source code beautifier option of fglcomp is --format.
+    - [Code beautifier tool usage](13_programming-tools/2639-code-beautifier-tool-usage.md) — This topic describes how to use the code beautifier tool.
+  - [Source refactoring](13_programming-tools/2640-source-refactoring.md) — Modify the source code for better readability.
+    - [Understanding the code refactoring tools](13_programming-tools/2641-understanding-the-code-refactoring-tools.md) — This is an introduction to the source code refactoring tools.
+    - [Qualifying imported symbols](13_programming-tools/2642-qualifying-imported-symbols.md) — The fglcomp compiler can automatically qualify imported symbols.
+    - [Make symbols case match definition](13_programming-tools/2643-make-symbols-case-match-definition.md) — The fglcomp compiler can make all symbol names match their definition exactly.
+    - [Mark SQL host variables with $](13_programming-tools/2644-mark-sql-host-variables-with.md) — The fglcomp compiler can mark SQL host variables with a $ dollar sign.
+  - [Packaging web applications](13_programming-tools/2645-packaging-web-applications.md) — Describes methods of packaging the runtime files and resources of your web applications and services using the fglgar tool.
+    - [Introducing the GAS and JGAS](13_programming-tools/2646-introducing-the-gas-and-jgas.md) — The Genero Application Server (GAS) is an engine that plugs in to a Web server for the purpose of delivering Genero Web applications and services. The Genero Application Server for Java (JGAS) is designed to run your applications on the Java EE servlet. A general knowledge of how they operate can be helpful in testing and deploying Web applications.
+    - [Understanding packaging with GAS](13_programming-tools/2647-understanding-packaging-with-gas.md) — Before deploying applications on a GAS installation, you need to package the required compiled files and resources in a Genero archive file. The fglgar command provides this function and you can find out here what is involved in this process.
+    - [Deploying applications on GAS](13_programming-tools/2648-deploying-applications-on-gas.md) — Follow these procedures to build archives for deploying applications and services with fglgar.
+    - [Packaging war files](13_programming-tools/2649-packaging-war-files.md) — Using the fglgar tool to build a Java Web Archive (war) file allows you to deploy applications that are ready to run.
+    - [Packaging gwa files](13_programming-tools/2650-packaging-gwa-files.md) — Using the fglgar tool to build a Genero Web Application (gwa) file allows you to deploy applications that are ready to run in a browser.
+    - [Running applications from a war file](13_programming-tools/2651-running-applications-from-a-war-file.md) — Applications packaged in a Java Web Archive (war) file and deployed in any existing Java Enterprise Edition container such as Apache Tomcat, Jetty, or Glassfish can be run in a browser.
+    - [Examples](13_programming-tools/2652-examples.md) — With the fglgar tool you can immediately see the results of a Genero Web Application or Web Service during your development stage without having to install a Web server or a GAS package.
+  - [Logging options](13_programming-tools/2653-logging-options.md) — Logging solutions allow you to display exchanges between components when a program executes.
+- [Extending the language](14_extending-the-language/2654-extending-the-language.md) — These topics cover extending Genero Business Development Language with other languages and external components.
+  - [The Java interface](14_extending-the-language/2655-the-java-interface.md) — The Java interface allows you to import Java classes and instantiate Java objects in your programs.
+    - [Prerequisites and installation](14_extending-the-language/2656-prerequisites-and-installation.md)
+      - [Learn about Java and OOP](14_extending-the-language/2657-learn-about-java-and-oop.md)
+      - [Java software requirements for FGL](14_extending-the-language/2658-java-software-requirements-for-fgl.md)
+      - [How to set up Java](14_extending-the-language/2659-how-to-set-up-java.md)
+      - [Platform-specific notes for the JVM](14_extending-the-language/2660-platform-specific-notes-for-the-jvm.md)
+    - [Getting started with the Java interface](14_extending-the-language/2661-getting-started-with-the-java-interface.md)
+      - [Import a Java class](14_extending-the-language/2662-import-a-java-class.md)
+      - [Define an object reference variable](14_extending-the-language/2663-define-an-object-reference-variable.md)
+      - [Instantiate a Java class](14_extending-the-language/2664-instantiate-a-java-class.md)
+      - [Calling a method of a class](14_extending-the-language/2665-calling-a-method-of-a-class.md)
+      - [Calling a method of an object](14_extending-the-language/2666-calling-a-method-of-an-object.md)
+    - [Advanced programming](14_extending-the-language/2667-advanced-programming.md)
+      - [Using JVM options](14_extending-the-language/2668-using-jvm-options.md)
+      - [Case sensitivity with Java](14_extending-the-language/2669-case-sensitivity-with-java.md)
+      - [Method overloading in Java](14_extending-the-language/2670-method-overloading-in-java.md)
+      - [Java objects as functions parameters and returns](14_extending-the-language/2671-java-objects-as-functions-parameters-and-returns.md)
+      - [Garbage collection of unused objects](14_extending-the-language/2672-garbage-collection-of-unused-objects.md)
+      - [Using the method return as an object](14_extending-the-language/2673-using-the-method-return-as-an-object.md)
+      - [Ignorable return of Java methods](14_extending-the-language/2674-ignorable-return-of-java-methods.md)
+      - [Static fields of Java classes](14_extending-the-language/2675-static-fields-of-java-classes.md)
+      - [Mapping native and Java data types](14_extending-the-language/2676-mapping-native-and-java-data-types.md)
+        - [Using the DATE type](14_extending-the-language/2677-using-the-date-type.md)
+        - [Using the DATETIME type](14_extending-the-language/2678-using-the-datetime-type.md)
+        - [Using the DECIMAL type](14_extending-the-language/2679-using-the-decimal-type.md)
+        - [Using the TEXT type](14_extending-the-language/2680-using-the-text-type.md)
+        - [Using the BYTE type](14_extending-the-language/2681-using-the-byte-type.md)
+        - [Using the INTERVAL type](14_extending-the-language/2682-using-the-interval-type.md)
+      - [Identifying Genero data types in Java code](14_extending-the-language/2683-identifying-genero-data-types-in-java-code.md)
+      - [Using Genero records](14_extending-the-language/2684-using-genero-records.md)
+      - [Formatting data in Java code](14_extending-the-language/2685-formatting-data-in-java-code.md)
+      - [Character set mapping](14_extending-the-language/2686-character-set-mapping.md)
+      - [Using Java arrays](14_extending-the-language/2687-using-java-arrays.md)
+      - [Passing variable arguments (varargs)](14_extending-the-language/2688-passing-variable-arguments-varargs.md)
+      - [The CAST operator](14_extending-the-language/2689-the-cast-operator.md)
+      - [The INSTANCEOF operator](14_extending-the-language/2690-the-instanceof-operator.md)
+      - [Java exception handling](14_extending-the-language/2691-java-exception-handling.md)
+      - [Troubleshooting Java interface issues](14_extending-the-language/2692-troubleshooting-java-interface-issues.md) — This section describes common issues related to the Java interface.
+      - [Executing Java code with GMA](14_extending-the-language/2693-executing-java-code-with-gma.md)
+        - [Standard Java and Android library usage](14_extending-the-language/2694-standard-java-and-android-library-usage.md) — You can use Java classes that are part of the standard Java library and Android™ Java library.
+        - [Implement Java user extensions in GMA](14_extending-the-language/2695-implement-java-user-extensions-in-gma.md) — A GMA app can execute custom Java code.
+        - [Implement Android™ activities in GMA](14_extending-the-language/2696-implement-android-activities-in-gma.md) — Android™ activities can be bundled with your GMA app and called from the Genero code.
+        - [Packaging custom Java extensions for GMA](14_extending-the-language/2697-packaging-custom-java-extensions-for-gma.md) — Custom Java extension must be integrated in the GMA to run on Android™ devices.
+          - [Custom GMA binary archive build](14_extending-the-language/2698-custom-gma-binary-archive-build.md) — If you are planning to build Genero Mobile for Android™ extensions for your GMA project, you need to do this using Android Studio. Follow this procedure to extend GMA.
+    - [Examples](14_extending-the-language/2699-examples.md) — Java interface usage examples.
+      - [Example 1: Using the Calendar package](14_extending-the-language/2700-example-1-using-the-calendar-package.md)
+      - [Example 2: Using the Apache POI framework](14_extending-the-language/2701-example-2-using-the-apache-poi-framework.md)
+      - [Example 3: Using Java on Android™](14_extending-the-language/2702-example-3-using-java-on-android.md)
+  - [C-Extensions](14_extending-the-language/2703-c-extensions.md) — With C-Extensions, you can bind your own C libraries in the runtime system, to call C function from the application code.
+    - [Understanding C-Extensions](14_extending-the-language/2704-understanding-c-extensions.md) — C-Extensions allow you to write custom shared libraries in the C language.
+    - [Header files for ESQL/C typedefs](14_extending-the-language/2705-header-files-for-esql-c-typedefs.md) — C header files (.h) are required to define C structures for complex data types used in a C-Extension.
+    - [Creating C-Extensions](14_extending-the-language/2706-creating-c-extensions.md) — Custom C-Extensions must be provided to the runtime system as Shared Objects (.so) on UNIX™, and as Dynamically Loadable Libraries (.DLL) on Windows®.
+    - [Creating Informix® ESQL/C Extensions](14_extending-the-language/2707-creating-informix-esql-c-extensions.md) — C-Extension libraries can be created from ESQL/C sources, as long as you have an Informix® ESQL/C compiler which is compatible with your Genero runtime system.
+    - [The C interface file](14_extending-the-language/2708-the-c-interface-file.md) — To make your C functions visible to the runtime system, you must define all the functions in the C interface file.
+    - [Linking programs using C-Extensions](14_extending-the-language/2709-linking-programs-using-c-extensions.md) — When creating a 42r program or 42x library, the linker needs to resolve all function names, including C-Extension functions.
+    - [Loading C-Extensions at runtime](14_extending-the-language/2710-loading-c-extensions-at-runtime.md) — The runtime system can load several C-Extensions libraries, allowing you to properly split your libraries by defining each group of functions in separate C interface files.
+    - [Runtime stack functions](14_extending-the-language/2711-runtime-stack-functions.md) — To pass values between a C function and a program, the C function and the runtime system use the runtime stack.
+    - [Data types and structures](14_extending-the-language/2712-data-types-and-structures.md) — C types are used to write C-Extensions.
+    - [NULL handing](14_extending-the-language/2713-null-handing.md) — Handling NULL in C-Extensions.
+    - [Calling C functions from programs](14_extending-the-language/2714-calling-c-functions-from-programs.md) — C-Extensions functions can be called from the program in the same way that you call a BDL function.
+    - [Calling program functions from C](14_extending-the-language/2715-calling-program-functions-from-c.md) — It is possible to call a BDL function from a C-Extension function.
+    - [Simple C-Extension example](14_extending-the-language/2716-simple-c-extension-example.md) — This example shows how to create a C-Extension library on Linux® using gcc.
+    - [Implementing C-Extensions for GMI](14_extending-the-language/2717-implementing-c-extensions-for-gmi.md) — This section describes how to program C-Extensions for the GMI VM.
+  - [User-defined front calls](14_extending-the-language/2718-user-defined-front-calls.md) — Front-ends can be extended with custom functions to access specific features.
+    - [Implement front call modules for GDC](14_extending-the-language/2719-implement-front-call-modules-for-gdc.md) — Custom front call modules for the desktop front-end are implemented by using the API for GDC front calls in C language.
+    - [Implement front call modules for GMA](14_extending-the-language/2720-implement-front-call-modules-for-gma.md) — Custom front call modules for the Android™ front-end are implemented by using the API for GMA front calls in Java.
+    - [Implement front call modules for GMI](14_extending-the-language/2721-implement-front-call-modules-for-gmi.md) — Custom front call modules for the iOS front-end are implemented by using the API for GMI front calls in Objective-C.
+    - [Implement front call modules for GBC](14_extending-the-language/2722-implement-front-call-modules-for-gbc.md) — Custom front call modules for the Genero Browser Client (GBC) front-end are implemented by using JavaScript.
+- [Library reference](15_library-reference/2723-library-reference.md) — Reference for classes and functions provided as built-in or extension packages.
+  - [Built-in functions](15_library-reference/2724-built-in-functions.md) — A built-in function is a predefined function that is part of the runtime system, or provided as a library function automatically loaded when a program starts. The built-in functions are part of the language.
+    - [Built-in functions](15_library-reference/2725-built-in-functions.md)
+      - [arg_val()](15_library-reference/2726-arg-val.md) — Returns a command line argument by position.
+      - [arr_count()](15_library-reference/2727-arr-count.md) — Returns the number of rows entered during an INPUT ARRAY statement.
+      - [arr_curr()](15_library-reference/2728-arr-curr.md) — Returns the current row in a DISPLAY ARRAY or INPUT ARRAY.
+      - [downshift()](15_library-reference/2729-downshift.md) — Converts a string to lowercase.
+      - [scr_line()](15_library-reference/2730-scr-line.md) — Returns the index of the current row in the form screen array.
+      - [num_args()](15_library-reference/2731-num-args.md) — Returns the number of program arguments.
+      - [err_get()](15_library-reference/2732-err-get.md) — Returns the text corresponding to an error number.
+      - [err_print()](15_library-reference/2733-err-print.md) — Prints in the error line the text corresponding to an error number.
+      - [err_quit()](15_library-reference/2734-err-quit.md) — Prints in the error line the text corresponding to an error number and terminates the program.
+      - [errorlog()](15_library-reference/2735-errorlog.md) — Copies the string passed as parameter into the error log file.
+      - [fgl_buffertouched()](15_library-reference/2736-fgl-buffertouched.md) — Returns TRUE if the input buffer was modified in the current field.
+      - [fgl_db_driver_type()](15_library-reference/2737-fgl-db-driver-type.md) — Returns the 3-letter identifier/code of the current database driver.
+      - [fgl_decimal_truncate()](15_library-reference/2738-fgl-decimal-truncate.md) — Returns a decimal truncated to the precision passed as parameter.
+      - [fgl_decimal_sqrt()](15_library-reference/2739-fgl-decimal-sqrt.md) — Computes the square root of the decimal passed as parameter.
+      - [fgl_decimal_exp()](15_library-reference/2740-fgl-decimal-exp.md) — Returns the value of Euler's constant (e) raised to the power of the decimal passed as parameter.
+      - [fgl_decimal_logn()](15_library-reference/2741-fgl-decimal-logn.md) — Returns the natural logarithm of the decimal passed as parameter.
+      - [fgl_decimal_power()](15_library-reference/2742-fgl-decimal-power.md) — Raises decimal to the power of the real exponent.
+      - [fgl_dialog_getbuffer()](15_library-reference/2743-fgl-dialog-getbuffer.md) — Returns the text of the input buffer of the current field.
+      - [fgl_dialog_setbuffer()](15_library-reference/2744-fgl-dialog-setbuffer.md) — Sets the input buffer of the current field.
+      - [fgl_dialog_getfieldname()](15_library-reference/2745-fgl-dialog-getfieldname.md) — Returns the name of the current input field.
+      - [fgl_dialog_infield()](15_library-reference/2746-fgl-dialog-infield.md) — This function checks for the current input field.
+      - [fgl_dialog_setcursor()](15_library-reference/2747-fgl-dialog-setcursor.md) — This function sets the position of the edit cursor in the current field.
+      - [fgl_dialog_setfieldorder()](15_library-reference/2748-fgl-dialog-setfieldorder.md) — This function enables or disables field order constraint.
+      - [fgl_dialog_setcurrline()](15_library-reference/2749-fgl-dialog-setcurrline.md) — This function moves to a specific row in a record list.
+      - [fgl_dialog_getbufferstart()](15_library-reference/2750-fgl-dialog-getbufferstart.md) — Returns the row offset of the page to feed a paged display array.
+      - [fgl_dialog_getbufferlength()](15_library-reference/2751-fgl-dialog-getbufferlength.md) — Returns the number of rows to feed a paged DISPLAY ARRAY.
+      - [fgl_dialog_getcursor() / fgl_getcursor()](15_library-reference/2752-fgl-dialog-getcursor-fgl-getcursor.md) — Returns the position of the edit cursor in the current field.
+      - [fgl_dialog_getkeylabel()](15_library-reference/2753-fgl-dialog-getkeylabel.md) — Returns the label associated to a key for the current interactive instruction.
+      - [fgl_dialog_getselectionend()](15_library-reference/2754-fgl-dialog-getselectionend.md) — Returns the position of the last selected character in the current field.
+      - [fgl_dialog_setkeylabel()](15_library-reference/2755-fgl-dialog-setkeylabel.md) — Sets the label associated to a key for the current interactive instruction.
+      - [fgl_dialog_setselection()](15_library-reference/2756-fgl-dialog-setselection.md) — Selects the text in the current field.
+      - [fgl_drawbox()](15_library-reference/2757-fgl-drawbox.md) — Draws a rectangle in the current window.
+      - [fgl_drawline()](15_library-reference/2758-fgl-drawline.md) — Draws a line in the current window (TUI and traditional mode).
+      - [fgl_getenv()](15_library-reference/2759-fgl-getenv.md) — Returns the value of the environment variable.
+      - [fgl_gethelp()](15_library-reference/2760-fgl-gethelp.md) — Reads the current help file, returning help text based on the help identifier.
+      - [fgl_getpid()](15_library-reference/2761-fgl-getpid.md) — Returns the system process identifier.
+      - [fgl_getfile()](15_library-reference/2762-fgl-getfile.md) — Retrieves a file from the front-end context to the virtual machine context.
+      - [fgl_getkey()](15_library-reference/2763-fgl-getkey.md) — Waits for a keystroke and returns the key number.
+      - [fgl_getkeylabel()](15_library-reference/2764-fgl-getkeylabel.md) — Returns the default label associated to a key.
+      - [fgl_getresource()](15_library-reference/2765-fgl-getresource.md) — Returns the value of an FGLPROFILE entry.
+      - [fgl_getversion()](15_library-reference/2766-fgl-getversion.md) — Returns the product version number of Genero.
+      - [fgl_getwin_height()](15_library-reference/2767-fgl-getwin-height.md) — Returns the number of rows of the current window.
+      - [fgl_getwin_width()](15_library-reference/2768-fgl-getwin-width.md) — Returns the width of the current window as a number of columns.
+      - [fgl_getwin_x()](15_library-reference/2769-fgl-getwin-x.md) — Returns the horizontal position of the current window.
+      - [fgl_getwin_y()](15_library-reference/2770-fgl-getwin-y.md) — Returns the vertical position of the current window.
+      - [fgl_keyval()](15_library-reference/2771-fgl-keyval.md) — Returns the key code of a logical or physical key.
+      - [fgl_lastkey()](15_library-reference/2772-fgl-lastkey.md) — Returns the key code corresponding to the logical key that the user most recently typed in the form.
+      - [fgl_mblen()](15_library-reference/2773-fgl-mblen.md) — Returns the number of bytes of the first character in a string.
+      - [fgl_putfile()](15_library-reference/2774-fgl-putfile.md) — Transfers a file from the virtual machine context to the front-end context.
+      - [fgl_report_print_binary_file()](15_library-reference/2775-fgl-report-print-binary-file.md) — Prints a file containing binary data during a report.
+      - [fgl_report_set_document_handler()](15_library-reference/2776-fgl-report-set-document-handler.md) — Redirects the next report to an XML document handler.
+      - [fgl_setkeylabel()](15_library-reference/2777-fgl-setkeylabel.md) — Sets the default label associated to a key.
+      - [fgl_scr_size()](15_library-reference/2778-fgl-scr-size.md) — Returns the size of the specified screen array in the current form.
+      - [fgl_setsize()](15_library-reference/2779-fgl-setsize.md) — Sets the size of the main application window.
+      - [fgl_settitle()](15_library-reference/2780-fgl-settitle.md) — Sets the title of the current application window.
+      - [fgl_setenv()](15_library-reference/2781-fgl-setenv.md) — Sets the value of an environment variable.
+      - [fgl_set_arr_curr()](15_library-reference/2782-fgl-set-arr-curr.md) — Moves to a specific row in a record list.
+      - [fgl_sqldebug()](15_library-reference/2783-fgl-sqldebug.md) — Sets the SQL debug level from program code.
+      - [fgl_system()](15_library-reference/2784-fgl-system.md) — Runs a command on the application server.
+      - [fgl_width()](15_library-reference/2785-fgl-width.md) — Returns the number of columns needed to represent the printed version of the expression.
+      - [fgl_window_getoption()](15_library-reference/2786-fgl-window-getoption.md) — Returns attributes of the current window.
+      - [length()](15_library-reference/2787-length.md) — Returns the number of characters in a string passed as parameter.
+      - [set_count()](15_library-reference/2788-set-count.md) — Defines the number of rows containing explicit data in a static array used by the next dialog.
+      - [showhelp()](15_library-reference/2789-showhelp.md) — Displays a runtime help text.
+      - [startlog()](15_library-reference/2790-startlog.md) — Initializes error logging and opens the error log file passed as the parameter.
+      - [upshift()](15_library-reference/2791-upshift.md) — Converts a string to uppercase.
+    - [List of desupported built-in functions](15_library-reference/2792-list-of-desupported-built-in-functions.md)
+    - [The key code table](15_library-reference/2793-the-key-code-table.md)
+  - [Utility modules](15_library-reference/2794-utility-modules.md) — A utility function is a function provided in a separate library; it is not built in the runtime system.
+    - [fgldialog: Common dialog functions](15_library-reference/2795-fgldialog-common-dialog-functions.md)
+      - [fgldialog.fgl_winbutton()](15_library-reference/2796-fgldialog-fgl-winbutton.md) — Displays an interactive message box containing multiple choices, in a pop-up window.
+      - [fgldialog.fgl_winmessage()](15_library-reference/2797-fgldialog-fgl-winmessage.md) — Displays an interactive message box containing text and OK button.
+      - [fgldialog.fgl_winprompt()](15_library-reference/2798-fgldialog-fgl-winprompt.md) — Displays a dialog box containing a field that accepts a value.
+      - [fgldialog.fgl_winquestion()](15_library-reference/2799-fgldialog-fgl-winquestion.md) — Displays an interactive message box with configurable Ok / Yes / No / Cancel / Ignore / Abort / Retry buttons.
+      - [fgldialog.fgl_winwait()](15_library-reference/2800-fgldialog-fgl-winwait.md) — Displays an interactive message box and waits for user validation.
+    - [fgldbutl: Database utility module](15_library-reference/2801-fgldbutl-database-utility-module.md)
+      - [fgldbutl.db_get_database_type()](15_library-reference/2802-fgldbutl-db-get-database-type.md) — Returns the database type for the current connection.
+      - [fgldbutl.db_get_last_serial()](15_library-reference/2803-fgldbutl-db-get-last-serial.md) — Retrieves the last generated serial for a given serial emulation and database table.
+      - [fgldbutl.db_get_sequence()](15_library-reference/2804-fgldbutl-db-get-sequence.md) — Generates a new sequence for a given identifier.
+      - [fgldbutl.db_start_transaction()](15_library-reference/2805-fgldbutl-db-start-transaction.md) — Starts a nested transaction call.
+      - [fgldbutl.db_finish_transaction()](15_library-reference/2806-fgldbutl-db-finish-transaction.md) — Terminates a nested transaction call.
+      - [fgldbutl.db_is_transaction_started()](15_library-reference/2807-fgldbutl-db-is-transaction-started.md) — Indicates whether a nested transaction call is started.
+    - [fglwinexec: Front-end dialogs module](15_library-reference/2808-fglwinexec-front-end-dialogs-module.md)
+      - [fglwinexec.winopendir()](15_library-reference/2809-fglwinexec-winopendir.md) — Opens a dialog window to get a directory path on the front-end workstation.
+      - [fglwinexec.winopenfile()](15_library-reference/2810-fglwinexec-winopenfile.md) — Opens a dialog window to get a file to be read on the front-end workstation.
+      - [fglwinexec.winsavefile()](15_library-reference/2811-fglwinexec-winsavefile.md) — Opens a dialog window to get a file path to save data on the front-end workstation.
+      - [fglwinexec.winexec() MS Windows® FE Only!](15_library-reference/2812-fglwinexec-winexec-ms-windows-fe-only.md) — Executes a program on the workstation where the Windows® front-end runs and returns immediately.
+      - [fglwinexec.winexecwait() MS Windows® FE Only!](15_library-reference/2813-fglwinexec-winexecwait-ms-windows-fe-only.md) — Executes a program on the workstation where the Windows® front-end runs and waits for termination.
+      - [fglwinexec.winshellexec() MS Windows® FE Only!](15_library-reference/2814-fglwinexec-winshellexec-ms-windows-fe-only.md) — Opens a document on the workstation where the Windows® front-end runs.
+    - [VCard: VCF file format module](15_library-reference/2815-vcard-vcf-file-format-module.md)
+      - [VCard.VCAddress type](15_library-reference/2816-vcard-vcaddress-type.md) — The VCAddress structured type holds vCard address data.
+      - [VCard.VCName type](15_library-reference/2817-vcard-vcname-type.md) — The VCName structured type holds vCard data related to the person's name.
+      - [VCard.VCPerson type](15_library-reference/2818-vcard-vcperson-type.md) — The VCPerson structured type holds vCard data.
+      - [VCard.format_person()](15_library-reference/2819-vcard-format-person.md) — Converts a VCPerson record to a vCard string representation vCard.
+      - [VCard.scan_address()](15_library-reference/2820-vcard-scan-address.md) — Extracts an address from a string representing a vCard.
+      - [VCard.scan_email()](15_library-reference/2821-vcard-scan-email.md) — Extracts an email from a string representing a vCard.
+      - [VCard.scan_name()](15_library-reference/2822-vcard-scan-name.md) — Extracts name information from a string representing a vCard.
+      - [VCard.scan_person()](15_library-reference/2823-vcard-scan-person.md) — Extracts person's data from a string representing a vCard.
+      - [VCard.scan_phone()](15_library-reference/2824-vcard-scan-phone.md) — Extracts a phone number from a string representing a vCard.
+    - [fglgallery: Image gallery module](15_library-reference/2825-fglgallery-image-gallery-module.md)
+      - [fglgallery.t_struct_value type](15_library-reference/2826-fglgallery-t-struct-value-type.md) — The t_struct_value type holds image selection data.
+      - [fglgallery.addImage()](15_library-reference/2827-fglgallery-addimage.md) — Adds a picture resource to an fglgallery.
+      - [fglgallery.clean()](15_library-reference/2828-fglgallery-clean.md) — Removes all pictures from an fglgallery.
+      - [fglgallery.create()](15_library-reference/2829-fglgallery-create.md) — Creates a new fglgallery handle.
+      - [fglgallery.deleteImages()](15_library-reference/2830-fglgallery-deleteimages.md) — Deletes pictures used in an fglgallery.
+      - [fglgallery.destroy()](15_library-reference/2831-fglgallery-destroy.md) — Frees resources allocated for an fglgallery.
+      - [fglgallery.display()](15_library-reference/2832-fglgallery-display.md) — Displays an fglgallery to the end user.
+      - [fglgallery.finalize()](15_library-reference/2833-fglgallery-finalize.md) — Releases the fglgallery library.
+      - [fglgallery.flush()](15_library-reference/2834-fglgallery-flush.md) — Displays new added images to the end user.
+      - [fglgallery.getImageCount()](15_library-reference/2835-fglgallery-getimagecount.md) — Returns the number of pictures in an fglgallery.
+      - [fglgallery.getPath()](15_library-reference/2836-fglgallery-getpath.md) — Returns the URL of a picture in an fglgallery.
+      - [fglgallery.getTitle()](15_library-reference/2837-fglgallery-gettitle.md) — Returns the description of a picture in an fglgallery.
+      - [fglgallery.initialize()](15_library-reference/2838-fglgallery-initialize.md) — Prepares the fglgallery library for use.
+      - [fglgallery.setMultipleSelection()](15_library-reference/2839-fglgallery-setmultipleselection.md) — Enables/disables multiple picture selection in an fglgallery.
+      - [fglgallery.setImageAspectRatio()](15_library-reference/2840-fglgallery-setimageaspectratio.md) — Defines the aspect ratio for gallery images.
+    - [fglsvgcanvas: SVG drawing module](15_library-reference/2841-fglsvgcanvas-svg-drawing-module.md)
+      - [fglsvgcanvas.t_svg_rect type](15_library-reference/2842-fglsvgcanvas-t-svg-rect-type.md) — The t_svg_rect type defines the position and dimensions of a rectangle.
+      - [fglsvgcanvas.SVGATT_ constants](15_library-reference/2843-fglsvgcanvas-svgatt-constants.md) — List of predefined SVG attributes.
+      - [fglsvgcanvas.animateTransform()](15_library-reference/2844-fglsvgcanvas-animatetransform.md) — Produces an SVG "animateTransform" element.
+      - [fglsvgcanvas.circle()](15_library-reference/2845-fglsvgcanvas-circle.md) — Produces an SVG "circle" element.
+      - [fglsvgcanvas.clean()](15_library-reference/2846-fglsvgcanvas-clean.md) — Deletes all SVG elements inside the SVG canvas.
+      - [fglsvgcanvas.clipPath_rect()](15_library-reference/2847-fglsvgcanvas-clippath-rect.md) — Produces an SVG "clipPath" element with a "rect" element.
+      - [fglsvgcanvas.color_shade()](15_library-reference/2848-fglsvgcanvas-color-shade.md) — Applies a shade factor to an RGB color.
+      - [fglsvgcanvas.color_tint()](15_library-reference/2849-fglsvgcanvas-color-tint.md) — Applies a tint factor to an RGB color.
+      - [fglsvgcanvas.create()](15_library-reference/2850-fglsvgcanvas-create.md) — Creates a new SVG canvas handler.
+      - [fglsvgcanvas.createChars()](15_library-reference/2851-fglsvgcanvas-createchars.md) — Produces an SVG DOM text node.
+      - [fglsvgcanvas.createElement()](15_library-reference/2852-fglsvgcanvas-createelement.md) — Produces an SVG DOM element with the tag name specified as parameter.
+      - [fglsvgcanvas.defs()](15_library-reference/2853-fglsvgcanvas-defs.md) — Produces an SVG "defs" element.
+      - [fglsvgcanvas.destroy()](15_library-reference/2854-fglsvgcanvas-destroy.md) — Releases resources allocated for the SVG canvas.
+      - [fglsvgcanvas.display()](15_library-reference/2855-fglsvgcanvas-display.md) — Displays the SVG canvas.
+      - [fglsvgcanvas.ellipse()](15_library-reference/2856-fglsvgcanvas-ellipse.md) — Produces an SVG "ellipse" element.
+      - [fglsvgcanvas.filter()](15_library-reference/2857-fglsvgcanvas-filter.md) — Produces the SVG "filter" element.
+      - [fglsvgcanvas.finalize()](15_library-reference/2858-fglsvgcanvas-finalize.md) — Releases the fglsvgcanvas library.
+      - [fglsvgcanvas.g()](15_library-reference/2859-fglsvgcanvas-g.md) — Produces an SVG "g" element.
+      - [fglsvgcanvas.getBBox()](15_library-reference/2860-fglsvgcanvas-getbbox.md) — Returns the bounding box of an SVG element.
+      - [fglsvgcanvas.getItemid()](15_library-reference/2861-fglsvgcanvas-getitemid.md) — Returns SVG element id after a user action.
+      - [fglsvgcanvas.image()](15_library-reference/2862-fglsvgcanvas-image.md) — Produces an SVG "image" element.
+      - [fglsvgcanvas.initialize()](15_library-reference/2863-fglsvgcanvas-initialize.md) — Prepares the fglsvgcanvas library for use.
+      - [fglsvgcanvas.line()](15_library-reference/2864-fglsvgcanvas-line.md) — Produces an SVG "line" element.
+      - [fglsvgcanvas.linearGradient()](15_library-reference/2865-fglsvgcanvas-lineargradient.md) — Produces an SVG "linearGradient" element.
+      - [fglsvgcanvas.marker()](15_library-reference/2866-fglsvgcanvas-marker.md) — Produces an SVG "marker" element.
+      - [fglsvgcanvas.mask()](15_library-reference/2867-fglsvgcanvas-mask.md) — Produces an SVG "mask" element.
+      - [fglsvgcanvas.mediaQuery()](15_library-reference/2868-fglsvgcanvas-mediaquery.md) — Builds an SVG "@media" query for CSS.
+      - [fglsvgcanvas.nl_to_tspan()](15_library-reference/2869-fglsvgcanvas-nl-to-tspan.md) — Converts a string to an SVG "text" element with "tspan" sub-elements.
+      - [fglsvgcanvas.path()](15_library-reference/2870-fglsvgcanvas-path.md) — Produces an SVG "path" element.
+      - [fglsvgcanvas.pattern()](15_library-reference/2871-fglsvgcanvas-pattern.md) — Produces an SVG "pattern" element.
+      - [fglsvgcanvas.polygon()](15_library-reference/2872-fglsvgcanvas-polygon.md) — Produces an SVG "polygon" element.
+      - [fglsvgcanvas.polyline()](15_library-reference/2873-fglsvgcanvas-polyline.md) — Produces an SVG "polyline" element.
+      - [fglsvgcanvas.radialGradient()](15_library-reference/2874-fglsvgcanvas-radialgradient.md) — Produces an SVG "radialGradient" element.
+      - [fglsvgcanvas.rect()](15_library-reference/2875-fglsvgcanvas-rect.md) — Produces an SVG "rect" element.
+      - [fglsvgcanvas.removeElement()](15_library-reference/2876-fglsvgcanvas-removeelement.md) — Deletes an SVG element from the SVG canvas.
+      - [fglsvgcanvas.setAttributes()](15_library-reference/2877-fglsvgcanvas-setattributes.md) — Sets the SVG attributes from an attribute set.
+      - [fglsvgcanvas.setCurrent()](15_library-reference/2878-fglsvgcanvas-setcurrent.md) — Selects the SVG canvas handler for subsequent SVG canvas API calls.
+      - [fglsvgcanvas.setRootSVGAttributes()](15_library-reference/2879-fglsvgcanvas-setrootsvgattributes.md) — Produces the root SVG element.
+      - [fglsvgcanvas.stop()](15_library-reference/2880-fglsvgcanvas-stop.md) — Produces an SVG "stop" element for gradients.
+      - [fglsvgcanvas.styleAttributeList()](15_library-reference/2881-fglsvgcanvas-styleattributelist.md) — Builds a string with a list of attributes to be used in a style attribute.
+      - [fglsvgcanvas.styleDefinition()](15_library-reference/2882-fglsvgcanvas-styledefinition.md) — Produces a CSS style definition with a selection and list of attributes.
+      - [fglsvgcanvas.styleList()](15_library-reference/2883-fglsvgcanvas-stylelist.md) — Produces a CSS style list.
+      - [fglsvgcanvas.svg()](15_library-reference/2884-fglsvgcanvas-svg.md) — Produces an SVG "svg" element.
+      - [fglsvgcanvas.symbol()](15_library-reference/2885-fglsvgcanvas-symbol.md) — Produces an SVG "symbol" element.
+      - [fglsvgcanvas.text()](15_library-reference/2886-fglsvgcanvas-text.md) — Produces an SVG "text" element.
+      - [fglsvgcanvas.text_path()](15_library-reference/2887-fglsvgcanvas-text-path.md) — Produces the SVG "text" element with a "textPath" sub-element.
+      - [fglsvgcanvas.text_tref()](15_library-reference/2888-fglsvgcanvas-text-tref.md) — Produces the SVG "text" element with a "tref" sub-element.
+      - [fglsvgcanvas.title()](15_library-reference/2889-fglsvgcanvas-title.md) — Produces an SVG "title" element.
+      - [fglsvgcanvas.tspan()](15_library-reference/2890-fglsvgcanvas-tspan.md) — Produces an SVG "tspan" element.
+      - [fglsvgcanvas.url()](15_library-reference/2891-fglsvgcanvas-url.md) — Produces a "url(#name)" reference for SVG elements.
+      - [fglsvgcanvas.use()](15_library-reference/2892-fglsvgcanvas-use.md) — Produces an SVG "use" element.
+    - [getopt: Command line options module](15_library-reference/2893-getopt-command-line-options-module.md)
+      - [Getopt module usage](15_library-reference/2894-getopt-module-usage.md) — The getopt.4gl module provides command line argument processing.
+      - [Getopt.GetoptOptions type](15_library-reference/2895-getopt-getoptoptions-type.md) — The GetoptOptions structured array type that holds the definition of command line options.
+      - [Getopt.Getopt type](15_library-reference/2896-getopt-getopt-type.md) — The Getopt structured type is used to process command line options.
+      - [GetOpt constants](15_library-reference/2897-getopt-constants.md) — List of predefined constants for the getopt API.
+      - [Getopt.copyArguments()](15_library-reference/2898-getopt-copyarguments.md) — Returns a dynamic array of string with all command line arguments starting from the provided index.
+      - [Getopt.displayUsage()](15_library-reference/2899-getopt-displayusage.md) — Display the usage and command line option description to the standard output stream.
+      - [Getopt.getMoreArgumentCount()](15_library-reference/2900-getopt-getmoreargumentcount.md) — Returns the number of command line arguments left to be processed after the known options.
+      - [Getopt.getMoreArgument()](15_library-reference/2901-getopt-getmoreargument.md) — Returns the additional argument at the specified index.
+      - [Getopt.getopt()](15_library-reference/2902-getopt-getopt.md) — Process the next command line option.
+      - [Getopt.initDefault()](15_library-reference/2903-getopt-initdefault.md) — Initializes a variable defined with the Getopt type.
+      - [Getopt.initialize()](15_library-reference/2904-getopt-initialize.md) — Initializes a variable defined with the Getopt type for command line argument processing.
+      - [Getopt.invalidOptionSeen()](15_library-reference/2905-getopt-invalidoptionseen.md) — Checks if the command line options are misused.
+      - [Getopt.isEof()](15_library-reference/2906-getopt-iseof.md) — Checks if there are more command line options to be read.
+      - [Getopt.isSuccess()](15_library-reference/2907-getopt-issuccess.md) — Checks if a command line option parsing succeeded.
+  - [Built-in packages](15_library-reference/2908-built-in-packages.md) — These topics cover the built-in classes provided by the Genero Business Development Language.
+    - [BDL data types package](15_library-reference/2909-bdl-data-types-package.md) — These topics cover the built-in classes of BDL data types
+      - [BYTE data type as class](15_library-reference/2910-byte-data-type-as-class.md) — The BYTE primitive data type provides a set of utility methods to manipulate BYTE data.
+        - [BYTE data type methods](15_library-reference/2911-byte-data-type-methods.md)
+          - [BYTE.getLength](15_library-reference/2912-byte-getlength.md) — Returns the length of BYTE content.
+          - [BYTE.readFile](15_library-reference/2913-byte-readfile.md) — Reads a file into a BYTE locator.
+          - [BYTE.writeFile](15_library-reference/2914-byte-writefile.md) — Writes the content of a BYTE to a file.
+      - [STRING data type as class](15_library-reference/2915-string-data-type-as-class.md) — The STRING primitive data type provides a set of utility methods to manipulate character strings.
+        - [STRING data type methods](15_library-reference/2916-string-data-type-methods.md)
+          - [STRING.append](15_library-reference/2917-string-append.md) — Concatenates a string.
+          - [STRING.equals](15_library-reference/2918-string-equals.md) — Compares a string to the content of a string variable.
+          - [STRING.equalsIgnoreCase](15_library-reference/2919-string-equalsignorecase.md) — Makes a case-insensitive string comparison.
+          - [STRING.expandTabs](15_library-reference/2920-string-expandtabs.md) — Converts TAB characters to a 8 space characters.
+          - [STRING.getCharAt](15_library-reference/2921-string-getcharat.md) — Returns the character at the specified position.
+          - [STRING.getIndexOf](15_library-reference/2922-string-getindexof.md) — Returns the position of a substring.
+          - [STRING.getLength](15_library-reference/2923-string-getlength.md) — Returns the length of the current string.
+          - [STRING.getMultibyteLength](15_library-reference/2924-string-getmultibytelength.md) — Counts the number of bytes in the string.
+          - [STRING.matches](15_library-reference/2925-string-matches.md) — Tests if the string matches a regular expression.
+          - [STRING.replaceAll](15_library-reference/2926-string-replaceall.md) — Replace all substrings matching a regular expression.
+          - [STRING.replaceFirst](15_library-reference/2927-string-replacefirst.md) — Replace a substring matching a regular expression.
+          - [STRING.split](15_library-reference/2928-string-split.md) — Splits the current string around matches of the given regular expression.
+          - [STRING.subString](15_library-reference/2929-string-substring.md) — Returns a substring from start and end positions in a given string.
+          - [STRING.toLowerCase](15_library-reference/2930-string-tolowercase.md) — Returns the string converted to lower case.
+          - [STRING.toUpperCase](15_library-reference/2931-string-touppercase.md) — Returns the string converted to upper case.
+          - [STRING.trim](15_library-reference/2932-string-trim.md) — Removes leading and trailing blank space (ASCII 32) characters.
+          - [STRING.trimWhiteSpace](15_library-reference/2933-string-trimwhitespace.md) — Removes leading and trailing whitespace characters.
+          - [STRING.trimLeft](15_library-reference/2934-string-trimleft.md) — Removes leading blank space (ASCII 32) characters.
+          - [STRING.trimLeftWhiteSpace](15_library-reference/2935-string-trimleftwhitespace.md) — Removes leading whitespace characters.
+          - [STRING.trimRight](15_library-reference/2936-string-trimright.md) — Removes trailing blank space (ASCII 32) characters.
+          - [STRING.trimRightWhiteSpace](15_library-reference/2937-string-trimrightwhitespace.md) — Removes trailing whitespace characters.
+      - [TEXT data type as class](15_library-reference/2938-text-data-type-as-class.md) — The TEXT primitive data type provides a set of utility methods to manipulate TEXT data.
+        - [TEXT data type methods](15_library-reference/2939-text-data-type-methods.md)
+          - [TEXT.getLength](15_library-reference/2940-text-getlength.md) — Returns the length of TEXT content.
+          - [TEXT.readFile](15_library-reference/2941-text-readfile.md) — Reads a file into a TEXT locator.
+          - [TEXT.writeFile](15_library-reference/2942-text-writefile.md) — Writes the content of TEXT type to a file.
+      - [DYNAMIC ARRAY as class](15_library-reference/2943-dynamic-array-as-class.md) — The DYNAMIC ARRAY (or static ARRAY) type provides a set of utility methods to manipulate array elements.
+        - [DYNAMIC ARRAY methods](15_library-reference/2944-dynamic-array-methods.md)
+          - [DYNAMIC ARRAY.appendElement](15_library-reference/2945-dynamic-array-appendelement.md) — Adds a new element to the end of the array.
+          - [DYNAMIC ARRAY.clear](15_library-reference/2946-dynamic-array-clear.md) — Removes all elements of the array.
+          - [DYNAMIC ARRAY.copyTo](15_library-reference/2947-dynamic-array-copyto.md) — Copies a complete array to the destination array passed as parameter.
+          - [DYNAMIC ARRAY.deleteElement](15_library-reference/2948-dynamic-array-deleteelement.md) — Removes an element from the array.
+          - [DYNAMIC ARRAY.getLength](15_library-reference/2949-dynamic-array-getlength.md) — Returns the length of the array.
+          - [DYNAMIC ARRAY.insertElement](15_library-reference/2950-dynamic-array-insertelement.md) — Inserts a new element at the given index.
+          - [DYNAMIC ARRAY.search](15_library-reference/2951-dynamic-array-search.md) — Scans the array to find an element that matches the search parameter.
+          - [DYNAMIC ARRAY.searchRange](15_library-reference/2952-dynamic-array-searchrange.md) — Scans the array to find an element that matches the search parameter.
+          - [DYNAMIC ARRAY.sort](15_library-reference/2953-dynamic-array-sort.md) — Sorts the rows in the array.
+          - [DYNAMIC ARRAY.sortByComparisonFunction](15_library-reference/2954-dynamic-array-sortbycomparisonfunction.md) — Sorts the rows in the array by using a comparison function.
+      - [DICTIONARY as class](15_library-reference/2955-dictionary-as-class.md) — The DICTIONARY type provides a set of utility methods to manipulate the dictionary elements.
+        - [DICTIONARY methods](15_library-reference/2956-dictionary-methods.md)
+          - [DICTIONARY.clear](15_library-reference/2957-dictionary-clear.md) — Removes all elements of the dictionary.
+          - [DICTIONARY.contains](15_library-reference/2958-dictionary-contains.md) — Checks if an element with the given key exists in the dictionary.
+          - [DICTIONARY.copyTo](15_library-reference/2959-dictionary-copyto.md) — Copies all elements of the dictionary into another dictionary.
+          - [DICTIONARY.getLength](15_library-reference/2960-dictionary-getlength.md) — Returns the number of elements in the dictionary.
+          - [DICTIONARY.getKeys](15_library-reference/2961-dictionary-getkeys.md) — Returns a dynamic array of all keys of the dictionary.
+          - [DICTIONARY.remove](15_library-reference/2962-dictionary-remove.md) — Removes an element of the dictionary identified by the key.
+      - [Java Array type as class](15_library-reference/2963-java-array-type-as-class.md) — The Java Array type provides a set of utility methods to manipulate array elements.
+        - [Java Array type methods](15_library-reference/2964-java-array-type-methods.md)
+          - [java-array-type.create](15_library-reference/2965-java-array-type-create.md) — Creates a new Java array of the given type.
+          - [java-array.getLength](15_library-reference/2966-java-array-getlength.md) — Returns the length of the Java array.
+    - [The base package](15_library-reference/2967-the-base-package.md) — These topics cover the built-in classes of the base package
+      - [The Application class](15_library-reference/2968-the-application-class.md) — The base.Application class provides a set of utility functions related to the program environment.
+        - [base.Application methods](15_library-reference/2969-base-application-methods.md)
+          - [base.Application.getArgument](15_library-reference/2970-base-application-getargument.md) — Returns the command line argument by position.
+          - [base.Application.getArgumentCount](15_library-reference/2971-base-application-getargumentcount.md) — Returns the total number of command line arguments.
+          - [base.Application.getFglDir](15_library-reference/2972-base-application-getfgldir.md) — Returns the path to the FGLDIR installation directory.
+          - [base.Application.getProgramDir](15_library-reference/2973-base-application-getprogramdir.md) — Returns the directory path of the current program.
+          - [base.Application.getProgramName](15_library-reference/2974-base-application-getprogramname.md) — Returns the name of the current program.
+          - [base.Application.getResourceEntry](15_library-reference/2975-base-application-getresourceentry.md) — Returns the value of a FGLPROFILE entry.
+          - [base.Application.getStackTrace](15_library-reference/2976-base-application-getstacktrace.md) — Returns the function call stack trace.
+          - [base.Application.isGWA](15_library-reference/2977-base-application-isgwa.md) — Indicates if the application runs in a browser.
+          - [base.Application.isMobile](15_library-reference/2978-base-application-ismobile.md) — Indicates if the application runs on a mobile device.
+          - [base.Application.reloadResources](15_library-reference/2979-base-application-reloadresources.md) — Resets FGLRESOURCEPATH and reloads localized string resources.
+      - [The Channel class](15_library-reference/2980-the-channel-class.md) — The base.Channel class is a built-in class providing basic input/output functions.
+        - [base.Channel methods](15_library-reference/2981-base-channel-methods.md)
+          - [base.Channel.create](15_library-reference/2982-base-channel-create.md) — Create a new channel object.
+          - [base.Channel.close](15_library-reference/2983-base-channel-close.md) — Closes the channel.
+          - [base.Channel.closeOut](15_library-reference/2984-base-channel-closeout.md) — Closes the writing stream of the channel.
+          - [base.Channel.dataAvailable](15_library-reference/2985-base-channel-dataavailable.md) — Tests if some data can be read from the channel.
+          - [base.Channel.flush](15_library-reference/2986-base-channel-flush.md) — Flushes the channel.
+          - [base.Channel.getExitStatus](15_library-reference/2987-base-channel-getexitstatus.md) — Returns the exit status of the child process of a pipe channel.
+          - [base.Channel.isEof](15_library-reference/2988-base-channel-iseof.md) — Detect the end of a file.
+          - [base.Channel.openClientSocket](15_library-reference/2989-base-channel-openclientsocket.md) — Open a TCP client socket channel.
+          - [base.Channel.openFile](15_library-reference/2990-base-channel-openfile.md) — Opens a file channel.
+          - [base.Channel.openPipe](15_library-reference/2991-base-channel-openpipe.md) — Opens a pipe channel to a subprocess.
+          - [base.Channel.openServerSocket](15_library-reference/2992-base-channel-openserversocket.md) — Open a TCP server socket channel.
+          - [base.Channel.read](15_library-reference/2993-base-channel-read.md) — Reads a list of data delimited by a separator from the channel.
+          - [base.Channel.readLine](15_library-reference/2994-base-channel-readline.md) — Read a complete line from the channel.
+          - [base.Channel.readOctets](15_library-reference/2995-base-channel-readoctets.md) — Read a given number of bytes and return as a character string.
+          - [base.Channel.setDelimiter](15_library-reference/2996-base-channel-setdelimiter.md) — Define the value delimiter for a channel.
+          - [base.Channel.write](15_library-reference/2997-base-channel-write.md) — Writes a list of data delimited by a separator to the channel.
+          - [base.Channel.writeLine](15_library-reference/2998-base-channel-writeline.md) — Write a complete line to the channel.
+          - [base.Channel.writeNoNL](15_library-reference/2999-base-channel-writenonl.md) — Writes a string to the channel (without newline character).
+        - [Usage](15_library-reference/3000-usage.md)
+          - [Read and write record data](15_library-reference/3001-read-and-write-record-data.md)
+          - [Read and write text lines](15_library-reference/3002-read-and-write-text-lines.md)
+          - [Line terminators on Windows and UNIX](15_library-reference/3003-line-terminators-on-windows-and-unix.md)
+          - [Character string encoding](15_library-reference/3004-character-string-encoding.md)
+          - [BYTE data serialization](15_library-reference/3005-byte-data-serialization.md)
+          - [Handle channel exceptions](15_library-reference/3006-handle-channel-exceptions.md)
+          - [Setup a TCP socket channel](15_library-reference/3007-setup-a-tcp-socket-channel.md)
+        - [Examples](15_library-reference/3008-examples.md) — base.Channel usage examples.
+          - [Example 1: Using record-formatted data file](15_library-reference/3009-example-1-using-record-formatted-data-file.md)
+          - [Example 2: Executing UNIX™ commands](15_library-reference/3010-example-2-executing-unix-commands.md)
+          - [Example 3: Reading lines from a text file](15_library-reference/3011-example-3-reading-lines-from-a-text-file.md)
+          - [Example 4: Communicating with an HTTP server](15_library-reference/3012-example-4-communicating-with-an-http-server.md)
+          - [Example 5: Writing to STDERR](15_library-reference/3013-example-5-writing-to-stderr.md)
+          - [Example 6: Closing the output stream](15_library-reference/3014-example-6-closing-the-output-stream.md)
+      - [The SqlHandle class](15_library-reference/3015-the-sqlhandle-class.md) — The base.SqlHandle class is a built-in class providing an API to execute parameterized SQL statements, with or without result sets.
+        - [base.SqlHandle methods](15_library-reference/3016-base-sqlhandle-methods.md)
+          - [base.SqlHandle.create](15_library-reference/3017-base-sqlhandle-create.md) — Create a new base.SqlHandle object.
+          - [base.SqlHandle.close](15_library-reference/3018-base-sqlhandle-close.md) — Closes the SQL handle (cursor).
+          - [base.SqlHandle.execute](15_library-reference/3019-base-sqlhandle-execute.md) — Executes a simple SQL statement (without result set).
+          - [base.SqlHandle.fetch](15_library-reference/3020-base-sqlhandle-fetch.md) — Fetches a new row from the SQL result set.
+          - [base.SqlHandle.fetchAbsolute](15_library-reference/3021-base-sqlhandle-fetchabsolute.md) — Fetches a specified row in a scrollable SQL result set.
+          - [base.SqlHandle.fetchFirst](15_library-reference/3022-base-sqlhandle-fetchfirst.md) — Fetches the first row in a scrollable SQL result set.
+          - [base.SqlHandle.fetchLast](15_library-reference/3023-base-sqlhandle-fetchlast.md) — Fetches the last row in a scrollable SQL result set.
+          - [base.SqlHandle.fetchPrevious](15_library-reference/3024-base-sqlhandle-fetchprevious.md) — Fetches the previous row in a scrollable SQL result set.
+          - [base.SqlHandle.fetchRelative](15_library-reference/3025-base-sqlhandle-fetchrelative.md) — Fetches a row relative to the current row in a scrollable SQL result set.
+          - [base.SqlHandle.flush](15_library-reference/3026-base-sqlhandle-flush.md) — Flushes the rows from the insert cursor buffer.
+          - [base.SqlHandle.getResultCount](15_library-reference/3027-base-sqlhandle-getresultcount.md) — Returns the number of result set columns produced by the SQL statement.
+          - [base.SqlHandle.getResultName](15_library-reference/3028-base-sqlhandle-getresultname.md) — Returns the name of a column in the result set produced by the SQL statement.
+          - [base.SqlHandle.getResultType](15_library-reference/3029-base-sqlhandle-getresulttype.md) — Returns the Genero type name of a column in the result set produced by the SQL statement.
+          - [base.SqlHandle.getResultValue](15_library-reference/3030-base-sqlhandle-getresultvalue.md) — Returns the value of a column in the result set produced by the SQL statement.
+          - [base.SqlHandle.open](15_library-reference/3031-base-sqlhandle-open.md) — Opens the SQL handle (SELECT or INSERT cursor).
+          - [base.SqlHandle.openCursorWithHold](15_library-reference/3032-base-sqlhandle-opencursorwithhold.md) — Opens the SQL handle with holdable option.
+          - [base.SqlHandle.openScrollCursor](15_library-reference/3033-base-sqlhandle-openscrollcursor.md) — Opens the SQL handle (with scrollable option).
+          - [base.SqlHandle.openScrollCursorWithHold](15_library-reference/3034-base-sqlhandle-openscrollcursorwithhold.md) — Opens the SQL handle with scrollable and holdable option.
+          - [base.SqlHandle.prepare](15_library-reference/3035-base-sqlhandle-prepare.md) — Prepares an SQL statement for the SQL handle.
+          - [base.SqlHandle.put](15_library-reference/3036-base-sqlhandle-put.md) — Put a new row in the insert cursor buffer.
+          - [base.SqlHandle.setParameter](15_library-reference/3037-base-sqlhandle-setparameter.md) — Sets the value of an SQL parameter for this SQL handle.
+          - [base.SqlHandle.setParameterType](15_library-reference/3038-base-sqlhandle-setparametertype.md) — Defines the type of an SQL parameter for this SQL handle.
+        - [Usage](15_library-reference/3039-usage.md)
+        - [Examples](15_library-reference/3040-examples.md) — base.SqlHandle usage examples.
+          - [Example 1: SqlHandle with simple SQL](15_library-reference/3041-example-1-sqlhandle-with-simple-sql.md)
+          - [Example 2: SqlHandle with result set SQL](15_library-reference/3042-example-2-sqlhandle-with-result-set-sql.md)
+          - [Example 3: SqlHandle with insert cursor](15_library-reference/3043-example-3-sqlhandle-with-insert-cursor.md)
+          - [Example 4: SqlHandle with scroll cursor](15_library-reference/3044-example-4-sqlhandle-with-scroll-cursor.md)
+      - [The StringBuffer class](15_library-reference/3045-the-stringbuffer-class.md) — The base.StringBuffer class is a built-in class designed to manipulate character strings.
+        - [base.StringBuffer methods](15_library-reference/3046-base-stringbuffer-methods.md)
+          - [base.StringBuffer.create](15_library-reference/3047-base-stringbuffer-create.md) — Create a string buffer object.
+          - [base.StringBuffer.append](15_library-reference/3048-base-stringbuffer-append.md) — Append a string at the end of the current string.
+          - [base.StringBuffer.clear](15_library-reference/3049-base-stringbuffer-clear.md) — Clear the string buffer.
+          - [base.StringBuffer.equals](15_library-reference/3050-base-stringbuffer-equals.md) — Compare strings (case sensitive).
+          - [base.StringBuffer.equalsIgnoreCase](15_library-reference/3051-base-stringbuffer-equalsignorecase.md) — Compare strings (case insensitive)
+          - [base.StringBuffer.getCharAt](15_library-reference/3052-base-stringbuffer-getcharat.md) — Return the character at a specified position.
+          - [base.StringBuffer.getIndexOf](15_library-reference/3053-base-stringbuffer-getindexof.md) — Return the position of a substring.
+          - [base.StringBuffer.getLength](15_library-reference/3054-base-stringbuffer-getlength.md) — Return the length of a string.
+          - [base.StringBuffer.insertAt](15_library-reference/3055-base-stringbuffer-insertat.md) — Insert a string at a given position.
+          - [base.StringBuffer.replace](15_library-reference/3056-base-stringbuffer-replace.md) — Replace one string with another.
+          - [base.StringBuffer.replaceAt](15_library-reference/3057-base-stringbuffer-replaceat.md) — Replace part of a string with another string.
+          - [base.StringBuffer.subString](15_library-reference/3058-base-stringbuffer-substring.md) — Return the substring at the specified position.
+          - [base.StringBuffer.toLowerCase](15_library-reference/3059-base-stringbuffer-tolowercase.md) — Converts the string in the buffer to lower case.
+          - [base.StringBuffer.toString](15_library-reference/3060-base-stringbuffer-tostring.md) — Create a STRING from the string buffer.
+          - [base.StringBuffer.toUpperCase](15_library-reference/3061-base-stringbuffer-touppercase.md) — Converts the string in the buffer to upper case.
+          - [base.StringBuffer.trim](15_library-reference/3062-base-stringbuffer-trim.md) — Remove leading and trailing blank space (ASCII 32) characters.
+          - [base.StringBuffer.trimWhiteSpace](15_library-reference/3063-base-stringbuffer-trimwhitespace.md) — Remove leading and trailing whitespace characters.
+          - [base.StringBuffer.trimLeft](15_library-reference/3064-base-stringbuffer-trimleft.md) — Removes leading blank space (ASCII 32) characters.
+          - [base.StringBuffer.trimLeftWhiteSpace](15_library-reference/3065-base-stringbuffer-trimleftwhitespace.md) — Removes leading whitespace characters.
+          - [base.StringBuffer.trimRight](15_library-reference/3066-base-stringbuffer-trimright.md) — Removes trailing blank space (ASCII 32) characters.
+          - [base.StringBuffer.trimRightWhiteSpace](15_library-reference/3067-base-stringbuffer-trimrightwhitespace.md) — Removes trailing whitespace characters.
+        - [Examples](15_library-reference/3068-examples.md) — base.StringBuffer usage examples.
+          - [Example 1: Add strings to a StringBuffer](15_library-reference/3069-example-1-add-strings-to-a-stringbuffer.md)
+          - [Example 2: Modify a StringBuffer with a function](15_library-reference/3070-example-2-modify-a-stringbuffer-with-a-function.md)
+      - [The StringTokenizer class](15_library-reference/3071-the-stringtokenizer-class.md) — The base.StringTokenizer class is designed to parse a string to extract tokens based on delimiters.
+        - [base.StringTokenizer methods](15_library-reference/3072-base-stringtokenizer-methods.md)
+          - [base.StringTokenizer.create](15_library-reference/3073-base-stringtokenizer-create.md) — Create a string tokenizer object.
+          - [base.StringTokenizer.createExt](15_library-reference/3074-base-stringtokenizer-createext.md) — Create a string tokenizer object with escape char and null handling.
+          - [base.StringTokenizer.countTokens](15_library-reference/3075-base-stringtokenizer-counttokens.md) — Returns the number of tokens left to be returned.
+          - [base.StringTokenizer.hasMoreTokens](15_library-reference/3076-base-stringtokenizer-hasmoretokens.md) — Returns TRUE if there are more tokens to return.
+          - [base.StringTokenizer.nextToken](15_library-reference/3077-base-stringtokenizer-nexttoken.md) — Returns the next token found in the source string.
+        - [Examples](15_library-reference/3078-examples.md) — base.StringTokenizer usage examples.
+          - [Example 1: Split a directory path](15_library-reference/3079-example-1-split-a-directory-path.md)
+          - [Example 2: Escaped delimiters](15_library-reference/3080-example-2-escaped-delimiters.md)
+          - [Example 3: Empty tokens](15_library-reference/3081-example-3-empty-tokens.md)
+      - [The TypeInfo class](15_library-reference/3082-the-typeinfo-class.md)
+        - [base.TypeInfo methods](15_library-reference/3083-base-typeinfo-methods.md)
+          - [base.TypeInfo.create()](15_library-reference/3084-base-typeinfo-create.md) — Create a DomNode with the type information and values of a program variable.
+          - [base.TypeInfo.describe()](15_library-reference/3085-base-typeinfo-describe.md) — Display the type information and values of a program variable.
+      - [The MessageServer class](15_library-reference/3086-the-messageserver-class.md) — The base.MessageServer class allows a program to send a key action over the network to other programs using this service.
+        - [base.MessageServer methods](15_library-reference/3087-base-messageserver-methods.md)
+          - [base.MessageServer.connect](15_library-reference/3088-base-messageserver-connect.md) — Connects to the group of programs to be notified by a message.
+          - [base.MessageServer.create](15_library-reference/3089-base-messageserver-create.md) — This method is deprecated and does nothing.
+          - [base.MessageServer.listen](15_library-reference/3090-base-messageserver-listen.md) — This method is deprecated and does nothing.
+          - [base.MessageServer.send](15_library-reference/3091-base-messageserver-send.md) — Sends a key event to the group of programs connected together.
+        - [Examples](15_library-reference/3092-examples.md) — base.MessageServer usage examples.
+          - [Example 1: Simple MessageServer usage](15_library-reference/3093-example-1-simple-messageserver-usage.md)
+    - [The ui package](15_library-reference/3094-the-ui-package.md) — These topics cover the built-in classes of the ui class
+      - [The Interface class](15_library-reference/3095-the-interface-class.md) — The ui.Interface class provides methods to manipulate the user interface.
+        - [ui.Interface methods](15_library-reference/3096-ui-interface-methods.md) — Methods of the ui.Interface class
+          - [ui.Interface.frontCall](15_library-reference/3097-ui-interface-frontcall.md) — ui.Interface.frontCall performs a function call to the current front-end.
+          - [ui.Interface.filenameToURI](15_library-reference/3098-ui-interface-filenametouri.md) — Converts a filename to a URI to be used as a web component image resource.
+          - [ui.Interface.getChildCount](15_library-reference/3099-ui-interface-getchildcount.md) — Get the number of children in a parent container.
+          - [ui.Interface.getChildInstances](15_library-reference/3100-ui-interface-getchildinstances.md) — Get the number of child instances for a given program name.
+          - [ui.Interface.getContainer](15_library-reference/3101-ui-interface-getcontainer.md) — Get the parent container of the current program.
+          - [ui.Interface.getDocument](15_library-reference/3102-ui-interface-getdocument.md) — Returns the DOM document of the abstract user interface tree.
+          - [ui.Interface.getFrontEndName](15_library-reference/3103-ui-interface-getfrontendname.md) — Returns the type of the front-end currently in use.
+          - [ui.Interface.getFrontEndVersion](15_library-reference/3104-ui-interface-getfrontendversion.md) — Returns the version of the front-end currently in use.
+          - [ui.Interface.getImage](15_library-reference/3105-ui-interface-getimage.md) — Returns the icon image of the program.
+          - [ui.Interface.getName](15_library-reference/3106-ui-interface-getname.md) — Returns the name of the program.
+          - [ui.Interface.getRootNode](15_library-reference/3107-ui-interface-getrootnode.md) — Get the root DOM node of the abstract user interface.
+          - [ui.Interface.getText](15_library-reference/3108-ui-interface-gettext.md) — Returns the title of the program.
+          - [ui.Interface.getType](15_library-reference/3109-ui-interface-gettype.md) — Returns the type of the program.
+          - [ui.Interface.getUniversalClientName](15_library-reference/3110-ui-interface-getuniversalclientname.md) — Returns the name of the front-end used for Universal Rendering.
+          - [ui.Interface.getUniversalClientVersion](15_library-reference/3111-ui-interface-getuniversalclientversion.md) — Returns the version of the front-end used for Universal Rendering.
+          - [ui.Interface.loadActionDefaults](15_library-reference/3112-ui-interface-loadactiondefaults.md) — Load the default action defaults file.
+          - [ui.Interface.loadStartMenu](15_library-reference/3113-ui-interface-loadstartmenu.md) — Load the start menu file.
+          - [ui.Interface.loadStyles](15_library-reference/3114-ui-interface-loadstyles.md) — Load the presentation styles file.
+          - [ui.Interface.loadToolBar](15_library-reference/3115-ui-interface-loadtoolbar.md) — Load a default/global toolbar file for all forms of the program.
+          - [ui.Interface.loadTopMenu](15_library-reference/3116-ui-interface-loadtopmenu.md) — Load a default/global topmenu file for all forms of the program.
+          - [ui.Interface.refresh](15_library-reference/3117-ui-interface-refresh.md) — Synchronize the user interface with the front-end.
+          - [ui.Interface.setContainer](15_library-reference/3118-ui-interface-setcontainer.md) — Define the parent container for the current program.
+          - [ui.Interface.setImage](15_library-reference/3119-ui-interface-setimage.md) — Defines the icon image of the program.
+          - [ui.Interface.setName](15_library-reference/3120-ui-interface-setname.md) — Define the name of the current program for the front-end.
+          - [ui.Interface.setSize](15_library-reference/3121-ui-interface-setsize.md) — Specify the initial size of the window container.
+          - [ui.Interface.setText](15_library-reference/3122-ui-interface-settext.md) — Defines the title for the program.
+          - [ui.Interface.setType](15_library-reference/3123-ui-interface-settype.md) — Defines the type of the program for the front-end.
+        - [Examples](15_library-reference/3124-examples.md) — ui.Interface usage examples.
+          - [Example 1: Get the type and version of the front-end](15_library-reference/3125-example-1-get-the-type-and-version-of-the-front-end.md)
+          - [Example 2: Get the AUI root node and save it to a file in XML format](15_library-reference/3126-example-2-get-the-aui-root-node-and-save-it-to-a-file-in-xml.md)
+          - [Example 3: Loading custom resources](15_library-reference/3127-example-3-loading-custom-resources.md)
+      - [The Window class](15_library-reference/3128-the-window-class.md) — The ui.Window class provides an interface to the window objects created with the OPEN WINDOW instruction.
+        - [ui.Window methods](15_library-reference/3129-ui-window-methods.md) — Methods of the ui.Window class.
+          - [ui.Window.forName](15_library-reference/3130-ui-window-forname.md) — Get a window object by name.
+          - [ui.Window.createForm](15_library-reference/3131-ui-window-createform.md) — Create a new empty form in a window.
+          - [ui.Window.getCurrent](15_library-reference/3132-ui-window-getcurrent.md) — Get the current window object.
+          - [ui.Window.getForm](15_library-reference/3133-ui-window-getform.md) — Get the current form of a window.
+          - [ui.Window.getNode](15_library-reference/3134-ui-window-getnode.md) — Get the DOM node of a window.
+          - [ui.Window.findNode](15_library-reference/3135-ui-window-findnode.md) — Search for a specific element in the window.
+          - [ui.Window.getImage](15_library-reference/3136-ui-window-getimage.md) — Get the window icon.
+          - [ui.Window.getText](15_library-reference/3137-ui-window-gettext.md) — Get the window title.
+          - [ui.Window.setImage](15_library-reference/3138-ui-window-setimage.md) — Set the window icon.
+          - [ui.Window.setText](15_library-reference/3139-ui-window-settext.md) — Set the window title.
+        - [Examples](15_library-reference/3140-examples.md) — ui.Window usage examples.
+          - [Example 1: Get a window by name and change the title](15_library-reference/3141-example-1-get-a-window-by-name-and-change-the-title.md)
+          - [Example 2: Get a the current form and hide a groupbox](15_library-reference/3142-example-2-get-a-the-current-form-and-hide-a-groupbox.md)
+      - [The Form class](15_library-reference/3143-the-form-class.md) — The ui.Form class provides an interface to form objects created by an OPEN WINDOW WITH FORM or DISPLAY FORM instruction.
+        - [ui.Form methods](15_library-reference/3144-ui-form-methods.md) — Methods of the ui.Form class.
+          - [ui.Form.setDefaultInitializer](15_library-reference/3145-ui-form-setdefaultinitializer.md) — Define the default initializer for all forms.
+          - [ui.Form.setDefaultInitializerFunction](15_library-reference/3146-ui-form-setdefaultinitializerfunction.md) — Define the default initializer for all forms.
+          - [ui.Form.displayTo](15_library-reference/3147-ui-form-displayto.md) — Displays values to form fields or screen arrays.
+          - [ui.Form.ensureElementVisible](15_library-reference/3148-ui-form-ensureelementvisible.md) — Ensure the visibility of a form element.
+          - [ui.Form.ensureFieldVisible](15_library-reference/3149-ui-form-ensurefieldvisible.md) — Ensure visibility of a form field.
+          - [ui.Form.getNode](15_library-reference/3150-ui-form-getnode.md) — Get the DOM node of the form.
+          - [ui.Form.findNode](15_library-reference/3151-ui-form-findnode.md) — Search for a child node in the form.
+          - [ui.Form.loadActionDefaults](15_library-reference/3152-ui-form-loadactiondefaults.md) — Load form action defaults.
+          - [ui.Form.loadToolBar](15_library-reference/3153-ui-form-loadtoolbar.md) — Load the form toolbar.
+          - [ui.Form.loadTopMenu](15_library-reference/3154-ui-form-loadtopmenu.md) — Load the form topmenu.
+          - [ui.Form.setElementComment](15_library-reference/3155-ui-form-setelementcomment.md) — Set the comment/hint of form elements.
+          - [ui.Form.setElementHidden](15_library-reference/3156-ui-form-setelementhidden.md) — Show or hide form elements.
+          - [ui.Form.setElementImage](15_library-reference/3157-ui-form-setelementimage.md) — Change the image of form elements.
+          - [ui.Form.setElementStyle](15_library-reference/3158-ui-form-setelementstyle.md) — Change the style of form elements.
+          - [ui.Form.setElementText](15_library-reference/3159-ui-form-setelementtext.md) — Change the text of form elements.
+          - [ui.Form.setFieldComment](15_library-reference/3160-ui-form-setfieldcomment.md) — Set the comment/hint of a form field.
+          - [ui.Form.setFieldHidden](15_library-reference/3161-ui-form-setfieldhidden.md) — Show or hide a form field.
+          - [ui.Form.setFieldStyle](15_library-reference/3162-ui-form-setfieldstyle.md) — Change the style of a form field.
+        - [Usage](15_library-reference/3163-usage.md)
+          - [Identifying elements in ui.Form methods](15_library-reference/3164-identifying-elements-in-ui-form-methods.md)
+        - [Examples](15_library-reference/3165-examples.md) — ui.Form usage examples.
+          - [Example 1: Implement a global form initialization function](15_library-reference/3166-example-1-implement-a-global-form-initialization-function.md)
+          - [Example 2: Hide form elements dynamically](15_library-reference/3167-example-2-hide-form-elements-dynamically.md)
+          - [Example 3: Change the title of table column headers](15_library-reference/3168-example-3-change-the-title-of-table-column-headers.md)
+      - [The Dialog class](15_library-reference/3169-the-dialog-class.md) — The ui.Dialog class provides a set of methods to configure, query and control the current interactive instruction.
+        - [ui.Dialog methods](15_library-reference/3170-ui-dialog-methods.md) — Methods of the ui.Dialog class.
+          - [ui.Dialog.createConstructByName](15_library-reference/3171-ui-dialog-createconstructbyname.md) — Creates an ui.Dialog object to implement a dynamic CONSTRUCT BY NAME.
+          - [ui.Dialog.createDisplayArrayTo](15_library-reference/3172-ui-dialog-createdisplayarrayto.md) — Creates an ui.Dialog object to implement a dynamic DISPLAY ARRAY TO.
+          - [ui.Dialog.createInputArrayFrom](15_library-reference/3173-ui-dialog-createinputarrayfrom.md) — Creates an ui.Dialog object to implement a dynamic INPUT ARRAY FROM.
+          - [ui.Dialog.createInputByName](15_library-reference/3174-ui-dialog-createinputbyname.md) — Creates an ui.Dialog object to implement a dynamic INPUT BY NAME.
+          - [ui.Dialog.createMultipleDialog](15_library-reference/3175-ui-dialog-createmultipledialog.md) — Creates an ui.Dialog object to implement a dynamic DIALOG multiple-dialog.
+          - [ui.Dialog.getCurrent](15_library-reference/3176-ui-dialog-getcurrent.md) — Returns the current dialog object.
+          - [ui.Dialog.setDefaultUnbuffered](15_library-reference/3177-ui-dialog-setdefaultunbuffered.md) — Set the default unbuffered mode for all dialogs.
+          - [ui.Dialog.accept](15_library-reference/3178-ui-dialog-accept.md) — Validates and terminates the dialog.
+          - [ui.Dialog.addConstructByName](15_library-reference/3179-ui-dialog-addconstructbyname.md) — Adds a sub-dialog of type CONSTRUCT BY NAME to an existing ui.Dialog dynamic dialog.
+          - [ui.Dialog.addDisplayArrayTo](15_library-reference/3180-ui-dialog-adddisplayarrayto.md) — Adds a sub-dialog of type DISPLAY ARRAY TO to an existing ui.Dialog dynamic dialog.
+          - [ui.Dialog.addGroupBy](15_library-reference/3181-ui-dialog-addgroupby.md) — Appends a grouping column of a list dialog.
+          - [ui.Dialog.addInputArrayFrom](15_library-reference/3182-ui-dialog-addinputarrayfrom.md) — Adds a sub-dialog of type INPUT ARRAY FROM to an existing ui.Dialog dynamic dialog.
+          - [ui.Dialog.addInputByName](15_library-reference/3183-ui-dialog-addinputbyname.md) — Adds a sub-dialog of type INPUT BY NAME to an existing ui.Dialog dynamic dialog.
+          - [ui.Dialog.addTrigger](15_library-reference/3184-ui-dialog-addtrigger.md) — Adds an event trigger to the dynamic dialog
+          - [ui.Dialog.appendRow](15_library-reference/3185-ui-dialog-appendrow.md) — Appends a new row in the specified list.
+          - [ui.Dialog.appendNode](15_library-reference/3186-ui-dialog-appendnode.md) — Appends a new node in the specified tree-view.
+          - [ui.Dialog.arrayToVisualIndex](15_library-reference/3187-ui-dialog-arraytovisualindex.md) — Converts the program array index to the visual index for a given screen array.
+          - [ui.Dialog.cancel](15_library-reference/3188-ui-dialog-cancel.md) — Cancels a parent dialog from a sub-dialog.
+          - [ui.Dialog.close](15_library-reference/3189-ui-dialog-close.md) — Closes a dynamic dialog.
+          - [ui.Dialog.deleteAllRows](15_library-reference/3190-ui-dialog-deleteallrows.md) — Deletes all rows from the specified list.
+          - [ui.Dialog.deleteNode](15_library-reference/3191-ui-dialog-deletenode.md) — Deletes a node from the specified tree-view.
+          - [ui.Dialog.deleteRow](15_library-reference/3192-ui-dialog-deleterow.md) — Deletes a row from the specified list.
+          - [ui.Dialog.getArrayLength](15_library-reference/3193-ui-dialog-getarraylength.md) — Returns the total number of rows in the specified list.
+          - [ui.Dialog.getCurrentItem](15_library-reference/3194-ui-dialog-getcurrentitem.md) — Returns the current item having focus.
+          - [ui.Dialog.getCurrentRow](15_library-reference/3195-ui-dialog-getcurrentrow.md) — Returns the current row of the specified list.
+          - [ui.Dialog.getEventDescription](15_library-reference/3196-ui-dialog-geteventdescription.md) — Returns a detailed description of the last event that has occurred in a dynamic dialog.
+          - [ui.Dialog.getFieldBuffer](15_library-reference/3197-ui-dialog-getfieldbuffer.md) — Returns the input buffer of the specified field.
+          - [ui.Dialog.getFieldTouched](15_library-reference/3198-ui-dialog-getfieldtouched.md) — Returns the modification flag for a field.
+          - [ui.Dialog.getFieldValue](15_library-reference/3199-ui-dialog-getfieldvalue.md) — Returns the value of a field controlled by a dynamic dialog.
+          - [ui.Dialog.getForm](15_library-reference/3200-ui-dialog-getform.md) — Returns the current form used by the dialog.
+          - [ui.Dialog.getQueryFromField](15_library-reference/3201-ui-dialog-getqueryfromfield.md) — Returns the SQL condition of a field used in a query by example dialog.
+          - [ui.Dialog.getSortKey](15_library-reference/3202-ui-dialog-getsortkey.md) — Returns the name of the sort field selected by the user.
+          - [ui.Dialog.getSortKeyAt](15_library-reference/3203-ui-dialog-getsortkeyat.md) — Returns the name of field used as grouping or sorting column, for a given sort column position.
+          - [ui.Dialog.insertNode](15_library-reference/3204-ui-dialog-insertnode.md) — Inserts a new node in the specified tree.
+          - [ui.Dialog.insertRow](15_library-reference/3205-ui-dialog-insertrow.md) — Inserts a new row in the specified list.
+          - [ui.Dialog.isRowSelected](15_library-reference/3206-ui-dialog-isrowselected.md) — Queries row selection for a given list and row.
+          - [ui.Dialog.isSortReverse](15_library-reference/3207-ui-dialog-issortreverse.md) — Indicates the sort order direction (FALSE=ascending, TRUE=descending)
+          - [ui.Dialog.isSortReverseAt](15_library-reference/3208-ui-dialog-issortreverseat.md) — Indicates the sort order direction (FALSE=ascending, TRUE=descending), for a given sort column position.
+          - [ui.Dialog.nextEvent](15_library-reference/3209-ui-dialog-nextevent.md) — Waits for a dialog event.
+          - [ui.Dialog.nextField](15_library-reference/3210-ui-dialog-nextfield.md) — Registers the next field to go to.
+          - [ui.Dialog.resetSort](15_library-reference/3211-ui-dialog-resetsort.md) — Resets the sort columns of a list dialog.
+          - [ui.Dialog.selectionToString](15_library-reference/3212-ui-dialog-selectiontostring.md) — Serializes data of the selected rows.
+          - [ui.Dialog.setActionActive](15_library-reference/3213-ui-dialog-setactionactive.md) — Enabling and disabling dialog actions.
+          - [ui.Dialog.setActionAttribute](15_library-reference/3214-ui-dialog-setactionattribute.md) — Set an action attribute to configure a dynamic dialog.
+          - [ui.Dialog.setActionComment](15_library-reference/3215-ui-dialog-setactioncomment.md) — Set the comment/hint of a default action view.
+          - [ui.Dialog.setActionHidden](15_library-reference/3216-ui-dialog-setactionhidden.md) — Showing or hiding a default action view.
+          - [ui.Dialog.setActionImage](15_library-reference/3217-ui-dialog-setactionimage.md) — Set the image of a default action view.
+          - [ui.Dialog.setActionText](15_library-reference/3218-ui-dialog-setactiontext.md) — Defining the text of a default action view.
+          - [ui.Dialog.setArrayAttributes](15_library-reference/3219-ui-dialog-setarrayattributes.md) — Define cell decoration attributes array for the specified list (singular or multiple dialogs).
+          - [ui.Dialog.setArrayLength](15_library-reference/3220-ui-dialog-setarraylength.md) — Sets the number of rows in a DISPLAY ARRAY using paged mode.
+          - [ui.Dialog.setCellAttributes](15_library-reference/3221-ui-dialog-setcellattributes.md) — Define cell decoration attributes array for the specified list (singular dialog only).
+          - [ui.Dialog.setColumnComparisonFunction](15_library-reference/3222-ui-dialog-setcolumncomparisonfunction.md) — Associates a comparison function to a form field of a list dialog.
+          - [ui.Dialog.setCompleterItems](15_library-reference/3223-ui-dialog-setcompleteritems.md) — Define autocompletion items for a field defined with COMPLETER attribute.
+          - [ui.Dialog.setCurrentRow](15_library-reference/3224-ui-dialog-setcurrentrow.md) — Sets the current row in the specified list.
+          - [ui.Dialog.setDialogAttribute](15_library-reference/3225-ui-dialog-setdialogattribute.md) — Set an attribute to configure a dynamic dialog.
+          - [ui.Dialog.setFieldActive](15_library-reference/3226-ui-dialog-setfieldactive.md) — Enable and disable form fields.
+          - [ui.Dialog.setFieldTouched](15_library-reference/3227-ui-dialog-setfieldtouched.md) — Sets the modification flag of the specified field.
+          - [ui.Dialog.setFieldValue](15_library-reference/3228-ui-dialog-setfieldvalue.md) — Sets the value of a field controlled by the dialog object.
+          - [ui.Dialog.setGroupBy](15_library-reference/3229-ui-dialog-setgroupby.md) — Defines the grouping column of a list dialog.
+          - [ui.Dialog.setGroupByDesc](15_library-reference/3230-ui-dialog-setgroupbydesc.md) — Defines sort order for a grouping column of a list dialog.
+          - [ui.Dialog.setSelectionMode](15_library-reference/3231-ui-dialog-setselectionmode.md) — Defines the row selection mode for the specified list.
+          - [ui.Dialog.setSelectionRange](15_library-reference/3232-ui-dialog-setselectionrange.md) — Sets the row selection flags for a range of rows.
+          - [ui.Dialog.validate](15_library-reference/3233-ui-dialog-validate.md) — Checks form level validation rules.
+          - [ui.Dialog.visualToArrayIndex](15_library-reference/3234-ui-dialog-visualtoarrayindex.md) — Converts the visual index to the program array index for a given screen array.
+        - [Usage](15_library-reference/3235-usage.md)
+          - [Referencing the current dialog](15_library-reference/3236-referencing-the-current-dialog.md)
+          - [Passing a dialog reference to functions](15_library-reference/3237-passing-a-dialog-reference-to-functions.md)
+          - [Identifying actions in ui.Dialog methods](15_library-reference/3238-identifying-actions-in-ui-dialog-methods.md)
+          - [Identifying fields in ui.Dialog methods](15_library-reference/3239-identifying-fields-in-ui-dialog-methods.md)
+          - [Identifying screen-arrays in ui.Dialog methods](15_library-reference/3240-identifying-screen-arrays-in-ui-dialog-methods.md)
+          - [Field definition for Dynamic Dialogs](15_library-reference/3241-field-definition-for-dynamic-dialogs.md)
+        - [Examples](15_library-reference/3242-examples.md) — ui.Dialog usage examples.
+          - [Example 1: Disable fields dynamically](15_library-reference/3243-example-1-disable-fields-dynamically.md)
+          - [Example 2: Get the form and hide fields](15_library-reference/3244-example-2-get-the-form-and-hide-fields.md)
+          - [Example 3: Pass a dialog object to a function](15_library-reference/3245-example-3-pass-a-dialog-object-to-a-function.md)
+          - [Example 4: Set display attributes for cells](15_library-reference/3246-example-4-set-display-attributes-for-cells.md)
+      - [The ComboBox class](15_library-reference/3247-the-combobox-class.md) — The ui.ComboBox class provides an interface to the COMBOBOX form field view in the abstract user interface tree.
+        - [ui.ComboBox methods](15_library-reference/3248-ui-combobox-methods.md) — Methods of the ui.ComboBox class.
+          - [ui.ComboBox.setDefaultInitializer](15_library-reference/3249-ui-combobox-setdefaultinitializer.md) — Define the default initializer for combobox form items.
+          - [ui.ComboBox.setDefaultInitializerFunction](15_library-reference/3250-ui-combobox-setdefaultinitializerfunction.md) — Define the default initializer for combobox form items.
+          - [ui.ComboBox.forName](15_library-reference/3251-ui-combobox-forname.md) — Search for a combobox in the current form.
+          - [ui.ComboBox.addItem](15_library-reference/3252-ui-combobox-additem.md) — Add an element to the item list.
+          - [ui.ComboBox.clear](15_library-reference/3253-ui-combobox-clear.md) — Clear the item list of a combobox.
+          - [ui.ComboBox.getColumnName](15_library-reference/3254-ui-combobox-getcolumnname.md) — Get the column name of the form field.
+          - [ui.ComboBox.getIndexOf](15_library-reference/3255-ui-combobox-getindexof.md) — Get an item position by name.
+          - [ui.ComboBox.getItemCount](15_library-reference/3256-ui-combobox-getitemcount.md) — Get the number of items.
+          - [ui.ComboBox.getItemName](15_library-reference/3257-ui-combobox-getitemname.md) — Get an item name by position.
+          - [ui.ComboBox.getItemText](15_library-reference/3258-ui-combobox-getitemtext.md) — Get the item text by position.
+          - [ui.ComboBox.getTableName](15_library-reference/3259-ui-combobox-gettablename.md) — Get the table prefix of the form field.
+          - [ui.ComboBox.getTag](15_library-reference/3260-ui-combobox-gettag.md) — Get the combobox tag value.
+          - [ui.ComboBox.getTextOf](15_library-reference/3261-ui-combobox-gettextof.md) — Get the item text by name.
+          - [ui.ComboBox.removeItem](15_library-reference/3262-ui-combobox-removeitem.md) — Remove an item by name.
+        - [Examples](15_library-reference/3263-examples.md) — ui.ComboBox usage examples.
+          - [Example Get a ComboBox form field view and fill the item list](15_library-reference/3264-example-get-a-combobox-form-field-view-and-fill-the-item-lis.md)
+          - [Example Using the INITIALIZER attribute in the form file](15_library-reference/3265-example-using-the-initializer-attribute-in-the-form-file.md)
+      - [The DragDrop class](15_library-reference/3266-the-dragdrop-class.md) — The ui.DragDrop class is used to control the events related to drag & drop events.
+        - [ui.DragDrop methods](15_library-reference/3267-ui-dragdrop-methods.md) — Methods of the ui.DragDrop class.
+          - [ui.DragDrop.addPossibleOperation](15_library-reference/3268-ui-dragdrop-addpossibleoperation.md) — Add a possible operation.
+          - [ui.DragDrop.dropInternal](15_library-reference/3269-ui-dragdrop-dropinternal.md) — Perform built-in row drop in trees.
+          - [ui.DragDrop.getBuffer](15_library-reference/3270-ui-dragdrop-getbuffer.md) — Get drag & drop data from the buffer.
+          - [ui.DragDrop.getLocationParent](15_library-reference/3271-ui-dragdrop-getlocationparent.md) — Get the index of the parent node where the object was dropped.
+          - [ui.DragDrop.getLocationRow](15_library-reference/3272-ui-dragdrop-getlocationrow.md) — Get the index of the target row where the object was dropped.
+          - [ui.DragDrop.getSelectedMimeType](15_library-reference/3273-ui-dragdrop-getselectedmimetype.md) — Get the previously selected MIME type.
+          - [ui.DragDrop.getOperation](15_library-reference/3274-ui-dragdrop-getoperation.md) — Identify the type of operation on drop.
+          - [ui.DragDrop.selectMimeType](15_library-reference/3275-ui-dragdrop-selectmimetype.md) — Select the MIME type before getting the data.
+          - [ui.DragDrop.setBuffer](15_library-reference/3276-ui-dragdrop-setbuffer.md) — Set the text data of the dragged object.
+          - [ui.DragDrop.setFeedback](15_library-reference/3277-ui-dragdrop-setfeedback.md) — Define the appearance of the target during Drag & Drop.
+          - [ui.DragDrop.setMimeType](15_library-reference/3278-ui-dragdrop-setmimetype.md) — Define the MIME type of the dragged object.
+          - [ui.DragDrop.setOperation](15_library-reference/3279-ui-dragdrop-setoperation.md) — Define the type of Drag & Drop operation.
+    - [The om package](15_library-reference/3280-the-om-package.md) — These topics cover the built-in classes of the om package
+      - [The DomDocument class](15_library-reference/3281-the-domdocument-class.md) — The om.DomDocument class provides methods to manipulate a data tree, following the DOM standards.
+        - [om.DomDocument methods](15_library-reference/3282-om-domdocument-methods.md) — Methods of the om.DomDocument class.
+          - [om.DomDocument.create](15_library-reference/3283-om-domdocument-create.md) — Create a new empty om.DomDocument object.
+          - [om.DomDocument.createFromString](15_library-reference/3284-om-domdocument-createfromstring.md) — Create a new om.DomDocument object from an XML string.
+          - [om.DomDocument.createFromXmlFile](15_library-reference/3285-om-domdocument-createfromxmlfile.md) — Create a new om.DomDocument object from a XML file.
+          - [om.DomDocument.getDocumentElement](15_library-reference/3286-om-domdocument-getdocumentelement.md) — Returns the root node element of the DOM document.
+          - [om.DomDocument.getElementById](15_library-reference/3287-om-domdocument-getelementbyid.md) — Returns a node element ID based on the internal AUI tree id.
+          - [om.DomDocument.createChars](15_library-reference/3288-om-domdocument-createchars.md) — Create a new text node in the DOM document.
+          - [om.DomDocument.createElement](15_library-reference/3289-om-domdocument-createelement.md) — Create a new element node in the DOM document.
+          - [om.DomDocument.createEntity](15_library-reference/3290-om-domdocument-createentity.md) — Create a new entity node in the DOM document.
+          - [om.DomDocument.copy](15_library-reference/3291-om-domdocument-copy.md) — Create a new element node by copying an existing node.
+          - [om.DomDocument.removeElement](15_library-reference/3292-om-domdocument-removeelement.md) — Remove a DomNode object and all its descendants.
+        - [Examples](15_library-reference/3293-examples.md) — om.DomDocument usage examples.
+          - [Example 1: Creating a DOM document](15_library-reference/3294-example-1-creating-a-dom-document.md)
+      - [The DomNode class](15_library-reference/3295-the-domnode-class.md) — The om.DomNode class provides methods to manipulate a DOM node of a data tree.
+        - [om.DomNode methods](15_library-reference/3296-om-domnode-methods.md) — Methods of the om.DomNode class.
+          - [om.DomNode.appendChild](15_library-reference/3297-om-domnode-appendchild.md) — Adds an existing node at the end of the list of children in the current node.
+          - [om.DomNode.createChild](15_library-reference/3298-om-domnode-createchild.md) — Creates and adds a node at the end of the list of children in the current node.
+          - [om.DomNode.insertBefore](15_library-reference/3299-om-domnode-insertbefore.md) — Inserts an existing node before the existing node specified.
+          - [om.DomNode.loadXml](15_library-reference/3300-om-domnode-loadxml.md) — Load an XML file into the current node.
+          - [om.DomNode.parse](15_library-reference/3301-om-domnode-parse.md) — Parses an XML formatted string and creates the DOM structure in the current node.
+          - [om.DomNode.getAttribute](15_library-reference/3302-om-domnode-getattribute.md) — Returns the value of a DOM node attribute.
+          - [om.DomNode.getAttributeInteger](15_library-reference/3303-om-domnode-getattributeinteger.md) — Returns the value of a DOM node attribute, with default integer value.
+          - [om.DomNode.getAttributesCount](15_library-reference/3304-om-domnode-getattributescount.md) — Returns the number of attributes in the DOM node.
+          - [om.DomNode.getAttributeString](15_library-reference/3305-om-domnode-getattributestring.md) — Returns the value of a DOM node attribute, with default string value.
+          - [om.DomNode.getAttributeName](15_library-reference/3306-om-domnode-getattributename.md) — Returns the name of a DOM node attribute by position.
+          - [om.DomNode.getAttributeValue](15_library-reference/3307-om-domnode-getattributevalue.md) — Returns the value of a DOM node attribute by position.
+          - [om.DomNode.getChildByIndex](15_library-reference/3308-om-domnode-getchildbyindex.md) — Returns a child DOM node by position.
+          - [om.DomNode.getChildCount](15_library-reference/3309-om-domnode-getchildcount.md) — Returns the number of children nodes.
+          - [om.DomNode.getFirstChild](15_library-reference/3310-om-domnode-getfirstchild.md) — Returns the first child DOM node.
+          - [om.DomNode.getId](15_library-reference/3311-om-domnode-getid.md) — Returns the internal AUI tree id of a DOM node.
+          - [om.DomNode.getLastChild](15_library-reference/3312-om-domnode-getlastchild.md) — Returns the last child DOM node.
+          - [om.DomNode.getNext](15_library-reference/3313-om-domnode-getnext.md) — Returns the next sibling DOM node of this node.
+          - [om.DomNode.getParent](15_library-reference/3314-om-domnode-getparent.md) — Returns the parent DOM node.
+          - [om.DomNode.getPrevious](15_library-reference/3315-om-domnode-getprevious.md) — Returns previous sibling DOM node of this node.
+          - [om.DomNode.getTagName](15_library-reference/3316-om-domnode-gettagname.md) — Returns the XML tag name of a DOM node.
+          - [om.DomNode.removeAttribute](15_library-reference/3317-om-domnode-removeattribute.md) — Delete the specified attribute from the DOM node.
+          - [om.DomNode.removeChild](15_library-reference/3318-om-domnode-removechild.md) — Deletes the specified child node from the current node.
+          - [om.DomNode.replaceChild](15_library-reference/3319-om-domnode-replacechild.md) — Replaces a node by another in the child nodes of the current node.
+          - [om.DomNode.selectByPath](15_library-reference/3320-om-domnode-selectbypath.md) — Finds descendant DOM nodes from an XPath-like pattern.
+          - [om.DomNode.selectByTagName](15_library-reference/3321-om-domnode-selectbytagname.md) — Finds descendant DOM nodes based on a tag name.
+          - [om.DomNode.setAttribute](15_library-reference/3322-om-domnode-setattribute.md) — Sets the value of a DOM node attribute.
+          - [om.DomNode.toString](15_library-reference/3323-om-domnode-tostring.md) — Serializes the current node into an XML formatted string.
+          - [om.DomNode.write](15_library-reference/3324-om-domnode-write.md) — Processes a DOM document with a SAX document handler.
+          - [om.DomNode.writeXml](15_library-reference/3325-om-domnode-writexml.md) — Creates an XML file from the current DOM node.
+        - [Examples](15_library-reference/3326-examples.md) — om.DomNode usage examples.
+          - [Example 1: Creating a DOM tree](15_library-reference/3327-example-1-creating-a-dom-tree.md)
+          - [Example 2: Displaying a DOM tree recursively](15_library-reference/3328-example-2-displaying-a-dom-tree-recursively.md)
+          - [Example 3: Writing a DOM tree to a SAX handler](15_library-reference/3329-example-3-writing-a-dom-tree-to-a-sax-handler.md)
+      - [The NodeList class](15_library-reference/3330-the-nodelist-class.md) — A om.NodeList object hold a list of DOM nodes.
+        - [om.NodeList methods](15_library-reference/3331-om-nodelist-methods.md) — Methods of the om.NodeList class.
+          - [om.NodeList.getLength](15_library-reference/3332-om-nodelist-getlength.md) — Returns the number of elements in the node list.
+          - [om.NodeList.item](15_library-reference/3333-om-nodelist-item.md) — Returns a DOM node element by position in the node list.
+        - [Examples](15_library-reference/3334-examples.md) — om.NodeList usage examples.
+          - [Example 1: Search nodes by tag name](15_library-reference/3335-example-1-search-nodes-by-tag-name.md)
+          - [Example 2: Search nodes by XPath](15_library-reference/3336-example-2-search-nodes-by-xpath.md)
+      - [The SaxAttributes class](15_library-reference/3337-the-saxattributes-class.md) — The om.SaxAttributes class holds a set of attributes to process with a SAX reader or writer.
+        - [om.SaxAttributes methods](15_library-reference/3338-om-saxattributes-methods.md) — Methods of the om.SaxAttributes class.
+          - [om.SaxAttributes.addAttribute](15_library-reference/3339-om-saxattributes-addattribute.md) — Appends a new attribute to the end of the list.
+          - [om.SaxAttributes.copy](15_library-reference/3340-om-saxattributes-copy.md) — Clones an existing SAX attributes object.
+          - [om.SaxAttributes.create](15_library-reference/3341-om-saxattributes-create.md) — Create a new SAX attributes object.
+          - [om.SaxAttributes.clear](15_library-reference/3342-om-saxattributes-clear.md) — Clears the SAX attribute list.
+          - [om.SaxAttributes.getLength](15_library-reference/3343-om-saxattributes-getlength.md) — Returns the number of attributes in the list.
+          - [om.SaxAttributes.getName](15_library-reference/3344-om-saxattributes-getname.md) — Returns the name of an attribute by position.
+          - [om.SaxAttributes.getValue](15_library-reference/3345-om-saxattributes-getvalue.md) — Returns the value of an attribute by name.
+          - [om.SaxAttributes.getValueByIndex](15_library-reference/3346-om-saxattributes-getvaluebyindex.md) — Returns an attribute value by position.
+          - [om.SaxAttributes.removeAttribute](15_library-reference/3347-om-saxattributes-removeattribute.md) — Delete an attribute by position.
+          - [om.SaxAttributes.setAttributes](15_library-reference/3348-om-saxattributes-setattributes.md) — Clears the list and copies the attributes passed.
+        - [Examples](15_library-reference/3349-examples.md) — om.SaxAttributes usage examples.
+          - [Example 1: Displaying SAX attributes of an XML node](15_library-reference/3350-example-1-displaying-sax-attributes-of-an-xml-node.md)
+          - [Example 2: Creating a SAX attributes object](15_library-reference/3351-example-2-creating-a-sax-attributes-object.md)
+      - [The SaxDocumentHandler class](15_library-reference/3352-the-saxdocumenthandler-class.md) — The om.SaxDocumentHandler class provides an interface to write an XML filter with events.
+        - [om.SaxDocumentHandler methods](15_library-reference/3353-om-saxdocumenthandler-methods.md) — Methods of the om.SaxDocumentHandler class.
+          - [om.SaxDocumentHandler.createForName](15_library-reference/3354-om-saxdocumenthandler-createforname.md) — Creates a new SAX document handler object for the given .4gl module.
+          - [om.SaxDocumentHandler.characters](15_library-reference/3355-om-saxdocumenthandler-characters.md) — Processes a text node.
+          - [om.SaxDocumentHandler.endDocument](15_library-reference/3356-om-saxdocumenthandler-enddocument.md) — Processes the end of the document.
+          - [om.SaxDocumentHandler.endElement](15_library-reference/3357-om-saxdocumenthandler-endelement.md) — Processes the end of an element.
+          - [om.SaxDocumentHandler.processingInstruction](15_library-reference/3358-om-saxdocumenthandler-processinginstruction.md) — Processes a processing instruction.
+          - [om.SaxDocumentHandler.readXmlFile](15_library-reference/3359-om-saxdocumenthandler-readxmlfile.md) — Reads and processes an XML file with the SAX document handler.
+          - [om.SaxDocumentHandler.setIndent](15_library-reference/3360-om-saxdocumenthandler-setindent.md) — Controls indentation in XML output.
+          - [om.SaxDocumentHandler.startDocument](15_library-reference/3361-om-saxdocumenthandler-startdocument.md) — Processes the beginning of the document.
+          - [om.SaxDocumentHandler.startElement](15_library-reference/3362-om-saxdocumenthandler-startelement.md) — Processes the beginning of an element.
+          - [om.SaxDocumentHandler.skippedEntity](15_library-reference/3363-om-saxdocumenthandler-skippedentity.md) — Processes an unresolved entity.
+        - [Examples](15_library-reference/3364-examples.md) — om.SaxDocumentHandler usage examples.
+          - [Example 1: Extracting phone numbers from a directory](15_library-reference/3365-example-1-extracting-phone-numbers-from-a-directory.md)
+          - [Example 2: Producing an XML file with om.SaxDocumentHandler](15_library-reference/3366-example-2-producing-an-xml-file-with-om-saxdocumenthandler.md)
+      - [The XmlReader class](15_library-reference/3367-the-xmlreader-class.md) — The om.XmlReader class provides methods to read and process a file written in XML format.
+        - [om.XmlReader methods](15_library-reference/3368-om-xmlreader-methods.md) — Methods of the om.XmlReader class.
+          - [om.XmlReader.createFileReader](15_library-reference/3369-om-xmlreader-createfilereader.md) — Creates an XML reader object from a file.
+          - [om.XmlReader.getAttributes](15_library-reference/3370-om-xmlreader-getattributes.md) — Builds an attribute list for the current processed element.
+          - [om.XmlReader.getCharacters](15_library-reference/3371-om-xmlreader-getcharacters.md) — Returns the character data of the current processed element.
+          - [om.XmlReader.getTagName](15_library-reference/3372-om-xmlreader-gettagname.md) — Returns the tag name of the current processed element.
+          - [om.XmlReader.read](15_library-reference/3373-om-xmlreader-read.md) — Reads the next SAX event to process.
+          - [om.XmlReader.skippedEntity](15_library-reference/3374-om-xmlreader-skippedentity.md) — Returns the name of an unresolved entity.
+        - [Examples](15_library-reference/3375-examples.md) — om.XmlReader usage examples.
+          - [Example 1: Parsing an XML file](15_library-reference/3376-example-1-parsing-an-xml-file.md)
+      - [The XmlWriter class](15_library-reference/3377-the-xmlwriter-class.md) — The om.XmlWriter class implements methods to write XML to a stream.
+        - [om.XmlWriter methods](15_library-reference/3378-om-xmlwriter-methods.md) — Methods of the om.XmlWriter class.
+          - [om.XmlWriter.createChannelWriter](15_library-reference/3379-om-xmlwriter-createchannelwriter.md) — Creates an om.SaxDocumentHandler object writing to a channel object.
+          - [om.XmlWriter.createFileWriter](15_library-reference/3380-om-xmlwriter-createfilewriter.md) — Creates an om.SaxDocumentHandler object writing to a file.
+          - [om.XmlWriter.createPipeWriter](15_library-reference/3381-om-xmlwriter-createpipewriter.md) — Creates an om.SaxDocumentHandler object writing to a pipe created for a process.
+          - [om.XmlWriter.createSocketWriter](15_library-reference/3382-om-xmlwriter-createsocketwriter.md) — Creates an om.SaxDocumentHandler object writing to a socket.
+        - [Examples](15_library-reference/3383-examples.md) — om.XmlWriter usage examples.
+          - [Example 1: Writing XML to a file](15_library-reference/3384-example-1-writing-xml-to-a-file.md)
+  - [Built-in front calls](15_library-reference/3385-built-in-front-calls.md) — This section contains the description of all built-in front calls.
+    - [Built-in front calls summary](15_library-reference/3386-built-in-front-calls-summary.md) — Various front-end functions are implemented within Genero front-ends.
+    - [Standard front calls](15_library-reference/3387-standard-front-calls.md) — Standard front call functions provide common utility APIs to control the front-end.
+      - [standard.cbAdd](15_library-reference/3388-standard-cbadd.md) — Adds to the content of the clipboard.
+      - [standard.cbClear](15_library-reference/3389-standard-cbclear.md) — Clears the content of the clipboard.
+      - [standard.cbGet](15_library-reference/3390-standard-cbget.md) — Gets the content of the clipboard.
+      - [standard.cbPaste](15_library-reference/3391-standard-cbpaste.md) — Pastes the content of the clipboard to the current field.
+      - [standard.cbSet](15_library-reference/3392-standard-cbset.md) — Set the content of the clipboard.
+      - [standard.clearFileCache](15_library-reference/3393-standard-clearfilecache.md) — Clears the local file cache.
+      - [standard.clearNotifications](15_library-reference/3394-standard-clearnotifications.md) — Drops notifications displayed on the host system of the front end.
+      - [standard.composeMail](15_library-reference/3395-standard-composemail.md) — Invokes the user's default mail application for a new mail to send.
+      - [standard.connectivity](15_library-reference/3396-standard-connectivity.md) — Returns the type of network available for the device.
+      - [standard.createNotification](15_library-reference/3397-standard-createnotification.md) — Creates a new local notification to be displayed on the host system of the front end.
+      - [standard.execute](15_library-reference/3398-standard-execute.md) — Executes a command on the front-end platform, with or without waiting.
+      - [standard.feInfo](15_library-reference/3399-standard-feinfo.md) — Queries general front-end properties.
+      - [standard.getEnv](15_library-reference/3400-standard-getenv.md) — Returns an environment variable set in the user session on the front end platform.
+      - [standard.getGeolocation](15_library-reference/3401-standard-getgeolocation.md) — Returns the Global Positioning System (GPS) location of a device.
+      - [standard.getLastNotificationInteractions](15_library-reference/3402-standard-getlastnotificationinteractions.md) — Report all user interactions with notifications since last call to this function.
+      - [standard.getWindowId](15_library-reference/3403-standard-getwindowid.md) — Returns the local window manager identifier of the window corresponding to the AUI window id passed as parameter.
+      - [standard.hardCopy](15_library-reference/3404-standard-hardcopy.md) — Prints a screenshot of the current window
+      - [standard.isForeground](15_library-reference/3405-standard-isforeground.md) — Indicates if the app is in foreground mode.
+      - [standard.launchURL](15_library-reference/3406-standard-launchurl.md) — Opens a URL with the default URL handler of the front-end.
+      - [standard.mdClose](15_library-reference/3407-standard-mdclose.md) — Unloads a DLL or shared library front call module.
+      - [standard.openDir](15_library-reference/3408-standard-opendir.md) — Displays a file dialog window to get a directory path on the local file system.
+      - [standard.openFile](15_library-reference/3409-standard-openfile.md) — Displays a file dialog window to let the user select a single file path on the local file system.
+      - [standard.openFiles](15_library-reference/3410-standard-openfiles.md) — Displays a file dialog window to let the user select a list of file paths on the local file system.
+      - [standard.playSound](15_library-reference/3411-standard-playsound.md) — Plays the sound file passed as parameter on the front-end platform.
+      - [standard.restoreSize](15_library-reference/3412-standard-restoresize.md) — Asks GDC to restore the stored window container size.
+      - [standard.saveFile](15_library-reference/3413-standard-savefile.md) — Displays a file dialog window to get a path to save a file on the local file system.
+      - [standard.setReportFont](15_library-reference/3414-standard-setreportfont.md) — Override the font used for GDC report generation for the current application (DBPRINT=FGLSERVER).
+      - [standard.setReportPrinter](15_library-reference/3415-standard-setreportprinter.md) — Override the GDC printer configuration used for report generation for the current application (DBPRINT=FGLSERVER).
+      - [standard.setWebComponentPath](15_library-reference/3416-standard-setwebcomponentpath.md) — Defines the base path where web components are located.
+      - [standard.shellExec](15_library-reference/3417-standard-shellexec.md) — Opens a file on the front-end platform with the program associated to the file extension.
+      - [standard.storeSize](15_library-reference/3418-standard-storesize.md) — Asks GDC to store the size of the current window container.
+    - [Table front calls](15_library-reference/3419-table-front-calls.md) — This section describes TABLE specific front calls.
+      - [table.autoFitAllColumns](15_library-reference/3420-table-autofitallcolumns.md) — Adapts the width of table columns to the displayed data.
+      - [table.fitToViewAllColumns](15_library-reference/3421-table-fittoviewallcolumns.md) — Adapts the width of table columns to show all columns.
+    - [Web component front calls](15_library-reference/3422-web-component-front-calls.md) — This section describes web component specific front calls.
+      - [webcomponent.call](15_library-reference/3423-webcomponent-call.md) — Calls a JavaScript function through the web component.
+      - [webcomponent.frontCallAPIVersion](15_library-reference/3424-webcomponent-frontcallapiversion.md) — Returns the API version of web component front-end calls.
+      - [webcomponent.getTitle](15_library-reference/3425-webcomponent-gettitle.md) — Returns the title of the HTML doc rendered by a web component.
+    - [GDC Monitor Front Calls](15_library-reference/3426-gdc-monitor-front-calls.md) — This section describes front calls specific to the GDC monitor.
+      - [monitor.update](15_library-reference/3427-monitor-update.md) — Starts the GDC update.
+    - [Theme front calls](15_library-reference/3428-theme-front-calls.md) — This section describes theme handling front calls.
+      - [theme.setTheme](15_library-reference/3429-theme-settheme.md) — Activates a specific theme.
+      - [theme.getCurrentTheme](15_library-reference/3430-theme-getcurrenttheme.md) — Gets the active theme.
+      - [theme.listThemes](15_library-reference/3431-theme-listthemes.md) — Lists all available themes.
+    - [Browser front calls](15_library-reference/3432-browser-front-calls.md) — This section describes browser handling front calls.
+      - [browser.setApplicationState](15_library-reference/3433-browser-setapplicationstate.md) — Sets the # anchor of the URL in the browser address bar.
+      - [browser.getApplicationState](15_library-reference/3434-browser-getapplicationstate.md) — Gets the # anchor of the current URL in the browser address bar.
+    - [Local storage front calls](15_library-reference/3435-local-storage-front-calls.md) — This section describes front calls to store data on the front-end platform.
+      - [localStorage.setItem](15_library-reference/3436-localstorage-setitem.md) — Sets a value for local storage key.
+      - [localStorage.getItem](15_library-reference/3437-localstorage-getitem.md) — Returns the current value of local storage key.
+      - [localStorage.removeItem](15_library-reference/3438-localstorage-removeitem.md) — Deletes the specified local storage key.
+      - [localStorage.keys](15_library-reference/3439-localstorage-keys.md) — Returns the list of defined local storage keys.
+      - [localStorage.clear](15_library-reference/3440-localstorage-clear.md) — Removes all local storage key/value pairs.
+    - [Genero Mobile common front calls](15_library-reference/3441-genero-mobile-common-front-calls.md) — This section describes common front calls provided by all mobile front-ends.
+      - [mobile.chooseContact](15_library-reference/3442-mobile-choosecontact.md) — Lets the user choose a contact from the mobile device contact list and returns the vCard.
+      - [mobile.choosePhoto](15_library-reference/3443-mobile-choosephoto.md) — Lets the user select a picture from the mobile device's photo gallery and returns a picture identifier.
+      - [mobile.chooseVideo](15_library-reference/3444-mobile-choosevideo.md) — Lets the user select a video from the mobile device's video gallery and returns a video identifier.
+      - [mobile.composeMail](15_library-reference/3445-mobile-composemail.md) — Invokes the user's default mail application for a new mail to send.
+      - [mobile.composeSMS](15_library-reference/3446-mobile-composesms.md) — Sends an SMS text to one or more phone numbers.
+      - [mobile.connectivity](15_library-reference/3447-mobile-connectivity.md) — Returns the type of network available for the mobile device.
+      - [mobile.clearNotifications](15_library-reference/3448-mobile-clearnotifications.md) — Drops notifications displayed on the mobile device.
+      - [mobile.createNotification](15_library-reference/3449-mobile-createnotification.md) — Creates or updates a local notification to be displayed on the mobile device.
+      - [mobile.getLastNotificationInteractions](15_library-reference/3450-mobile-getlastnotificationinteractions.md) — Get the last user interactions on mobile app notifications.
+      - [mobile.getGeolocation](15_library-reference/3451-mobile-getgeolocation.md) — Returns the Global Positioning System (GPS) location of a mobile device.
+      - [mobile.getRemoteNotifications](15_library-reference/3452-mobile-getremotenotifications.md) — This front call retrieves push notification messages.
+      - [mobile.importContact](15_library-reference/3453-mobile-importcontact.md) — Creates a new contact, or merges to an existing entry, the contact details passed in a vCard string.
+      - [mobile.isEmulator](15_library-reference/3454-mobile-isemulator.md) — Indicates if the mobile app runs or displays forms on an emulator/simulator.
+      - [mobile.isForeground](15_library-reference/3455-mobile-isforeground.md) — Indicates if the mobile app is in foreground mode.
+      - [mobile.newContact](15_library-reference/3456-mobile-newcontact.md) — Opens contact input form to create a new entry in the contact database.
+      - [mobile.registerForRemoteNotifications](15_library-reference/3457-mobile-registerforremotenotifications.md) — This front call registers a mobile device for push notifications.
+      - [mobile.runOnServer](15_library-reference/3458-mobile-runonserver.md) — Run an application from the Genero Application Server using the specified URL.
+      - [mobile.scanBarCode](15_library-reference/3459-mobile-scanbarcode.md) — Allow the user to scan a barcode with a mobile device
+      - [mobile.takePhoto](15_library-reference/3460-mobile-takephoto.md) — Lets the user take a picture with the mobile device and returns the corresponding picture identifier.
+      - [mobile.takeVideo](15_library-reference/3461-mobile-takevideo.md) — Lets the user take a video with the mobile device and returns the corresponding video identifier.
+      - [mobile.unregisterFromRemoteNotifications](15_library-reference/3462-mobile-unregisterfromremotenotifications.md) — This front call unregisters the mobile device from push notifications.
+    - [Genero Mobile Android™ front calls](15_library-reference/3463-genero-mobile-android-front-calls.md) — This section describes front calls specific to the Android™ platform.
+      - [android.askForPermission](15_library-reference/3464-android-askforpermission.md) — Ask the user to enable a dangerous feature on the Android device.
+      - [android.showAbout](15_library-reference/3465-android-showabout.md) — Shows the GMA about box displaying version information.
+      - [android.showSettings](15_library-reference/3466-android-showsettings.md) — Shows the GMA settings box controlling debug options.
+      - [android.startActivity](15_library-reference/3467-android-startactivity.md) — Starts an external Android™ application (activity), and returns to the GMA application immediately.
+      - [android.startActivityForResult](15_library-reference/3468-android-startactivityforresult.md) — Starts an external application (Android™ activity) and waits until the activity is closed.
+    - [Genero Mobile iOS front calls](15_library-reference/3469-genero-mobile-ios-front-calls.md) — This section describes front calls specific to the iOS platform.
+      - [ios.getBadgeNumber](15_library-reference/3470-ios-getbadgenumber.md) — Returns the current badge number associated to the app.
+      - [ios.setBadgeNumber](15_library-reference/3471-ios-setbadgenumber.md) — Sets the current badge number associated to the app.
+    - [Cordova plugin front calls](15_library-reference/3472-cordova-plugin-front-calls.md) — Genero provides a set of Cordova plugin front calls that make use of the Cordova plugins.
+      - [cordova.call](15_library-reference/3473-cordova-call.md) — Calls a function in a Cordova plugin and returns a result.
+      - [cordova.callWithoutWaiting](15_library-reference/3474-cordova-callwithoutwaiting.md) — Calls a function asynchronously in a Cordova plugin, without waiting for a result.
+      - [cordova.getAllCallbackData](15_library-reference/3475-cordova-getallcallbackdata.md) — Returns all results for asynchronous Cordova plugin front calls, based on a callback ID filter.
+      - [cordova.getCallbackDataCount](15_library-reference/3476-cordova-getcallbackdatacount.md) — Returns the number of pending Cordova plugin results.
+      - [cordova.getCallbackData](15_library-reference/3477-cordova-getcallbackdata.md) — Returns the first Cordova plugin result from the result queue of all asynchronous Cordova plugin front calls, and removes it from the queue.
+      - [cordova.getPluginInfo](15_library-reference/3478-cordova-getplugininfo.md) — Returns details about a specific Cordova plugin.
+      - [cordova.listPlugins](15_library-reference/3479-cordova-listplugins.md) — Returns the list of available Cordova plugins.
+  - [Extension packages](15_library-reference/3480-extension-packages.md) — Several utility classes and functions are provided in additional packages.
+    - [The util package](15_library-reference/3481-the-util-package.md) — These topics cover the classes for the util package.
+      - [The util.Date class](15_library-reference/3482-the-util-date-class.md) — The util.Date class provides DATE data-type related utility methods.
+        - [util.Date methods](15_library-reference/3483-util-date-methods.md) — Methods for the util.Date class.
+          - [util.Date.isLeapYear](15_library-reference/3484-util-date-isleapyear.md) — Checks if the year passed as parameter is a leap year.
+          - [util.Date.parse](15_library-reference/3485-util-date-parse.md) — Converts a string to a DATE value based on a format specification.
+      - [The util.Datetime class](15_library-reference/3486-the-util-datetime-class.md) — The util.Datetime class provides DATETIME data-type related utility methods.
+        - [util.Datetime methods](15_library-reference/3487-util-datetime-methods.md) — Methods for the util.Datetime class.
+          - [util.Datetime.format](15_library-reference/3488-util-datetime-format.md) — Formats a date/time value based on a specified format.
+          - [util.Datetime.fromSecondsSinceEpoch](15_library-reference/3489-util-datetime-fromsecondssinceepoch.md) — Converts a number of seconds since Epoch to a date/time.
+          - [util.Datetime.getCurrentAsUTC](15_library-reference/3490-util-datetime-getcurrentasutc.md) — Returns the current date/time in UTC.
+          - [util.Datetime.parse](15_library-reference/3491-util-datetime-parse.md) — Converts a string to a DATETIME value based on a specified format.
+          - [util.Datetime.toLocalTime](15_library-reference/3492-util-datetime-tolocaltime.md) — Converts a UTC date/time to the local time.
+          - [util.Datetime.toSecondsSinceEpoch](15_library-reference/3493-util-datetime-tosecondssinceepoch.md) — Converts a date/time to a number of seconds since Epoch.
+          - [util.Datetime.toUTC](15_library-reference/3494-util-datetime-toutc.md) — Converts a date/time value to the UTC date/time.
+      - [The util.Channels class](15_library-reference/3495-the-util-channels-class.md) — The util.Channels class provides utility functions for base.Channel objects.
+        - [util.Channels methods](15_library-reference/3496-util-channels-methods.md) — Methods for the util.ChannelsDate class.
+          - [util.Channels.accept](15_library-reference/3497-util-channels-accept.md) — Returns the accepted base.Channel object for a given a server-socket.
+          - [util.Channels.copyN](15_library-reference/3498-util-channels-copyn.md) — Copies a given number of bytes from one base.Channel to another.
+          - [util.Channels.select](15_library-reference/3499-util-channels-select.md) — Waits for activity on a set of TCP socket listening base.Channel objects.
+          - [util.Channels.selectWithTimeout](15_library-reference/3500-util-channels-selectwithtimeout.md) — Waits for activity on a set of TCP socket listening base.Channel objects and returns after a given period of inactivity.
+          - [util.Channels.readBinaryString](15_library-reference/3501-util-channels-readbinarystring.md) — Reads a given number of bytes from a base.Channel as a character string.
+          - [util.Channels.readNetInt16](15_library-reference/3502-util-channels-readnetint16.md) — Reads next two bytes from a base.Channel as a 16 bit integer, in network byte order.
+          - [util.Channels.readNetInt32](15_library-reference/3503-util-channels-readnetint32.md) — Reads next four bytes from a base.Channel as a 32 bit integer, in network byte order.
+          - [util.Channels.readNetInt8](15_library-reference/3504-util-channels-readnetint8.md) — Reads next byte from a base.Channel as a 8 bit integer.
+          - [util.Channels.writeBinaryString](15_library-reference/3505-util-channels-writebinarystring.md) — Writes a character string to a base.Channel, without the trailing zero.
+          - [util.Channels.writeNetInt16](15_library-reference/3506-util-channels-writenetint16.md) — Writes two bytes of a 16 bit integer to a base.Channel, in network byte order.
+          - [util.Channels.writeNetInt32](15_library-reference/3507-util-channels-writenetint32.md) — Writes four bytes of a 32 bit integer to a base.Channel, in network byte order.
+          - [util.Channels.writeNetInt8](15_library-reference/3508-util-channels-writenetint8.md) — Writes the byte of an 8 bit integer to a base.Channel.
+      - [The util.Integer class](15_library-reference/3509-the-util-integer-class.md) — The util.Integer class provides INTEGER data-type related utility methods.
+        - [util.Integer methods](15_library-reference/3510-util-integer-methods.md) — Methods for the util.Integer class.
+          - [util.Integer.abs](15_library-reference/3511-util-integer-abs.md) — Returns the absolute value of an integer.
+          - [util.Integer.and](15_library-reference/3512-util-integer-and.md) — Returns the result of a bitwise AND on two INTEGER values.
+          - [util.Integer.andNot](15_library-reference/3513-util-integer-andnot.md) — Returns the result of a bitwise AND of the 1st INTEGER and the inverted 2nd INTEGER.
+          - [util.Integer.clearBit](15_library-reference/3514-util-integer-clearbit.md) — Returns the INTEGER parameter with the bit at the designated position set to 0.
+          - [util.Integer.not](15_library-reference/3515-util-integer-not.md) — Returns the INTEGER value with all bits inverted.
+          - [util.Integer.or](15_library-reference/3516-util-integer-or.md) — Returns the result of a bitwise OR on two INTEGER values.
+          - [util.Integer.parseBinaryString](15_library-reference/3517-util-integer-parsebinarystring.md) — Returns an INTEGER from its binary (base 2) string representation
+          - [util.Integer.parseHexString](15_library-reference/3518-util-integer-parsehexstring.md) — Returns an INTEGER from its hexadecimal (base 16) string representation.
+          - [util.Integer.setBit](15_library-reference/3519-util-integer-setbit.md) — Returns the INTEGER parameter with the bit at the designated position set to 1.
+          - [util.Integer.shiftLeft](15_library-reference/3520-util-integer-shiftleft.md) — Returns the INTEGER value left-shifted by the given bit places.
+          - [util.Integer.shiftRight](15_library-reference/3521-util-integer-shiftright.md) — Returns the INTEGER value right-shifted by the given bit places.
+          - [util.Integer.testBit](15_library-reference/3522-util-integer-testbit.md) — Returns TRUE, if in the INTEGER value, the bit at the designed position is set.
+          - [util.Integer.toBinaryString](15_library-reference/3523-util-integer-tobinarystring.md) — Returns the string representation of an INTEGER, as an unsigned integer in base 2.
+          - [util.Integer.toHexString](15_library-reference/3524-util-integer-tohexstring.md) — Returns the string representation of an INTEGER, as an unsigned integer in base 16.
+          - [util.Integer.xor](15_library-reference/3525-util-integer-xor.md) — Returns the result of a bitwise XOR on two INTEGER values.
+      - [The util.Interval class](15_library-reference/3526-the-util-interval-class.md) — The util.Interval class provides INTERVAL data-type related utility methods.
+        - [util.Interval methods](15_library-reference/3527-util-interval-methods.md) — Methods for the util.Interval class.
+          - [util.Interval.format](15_library-reference/3528-util-interval-format.md) — Formats an interval value based on a specified format.
+          - [util.Interval.parse](15_library-reference/3529-util-interval-parse.md) — Converts a string to an INTERVAL value based on a specified format.
+      - [The util.Regexp class](15_library-reference/3530-the-util-regexp-class.md) — The util.Regexp class provides character string pattern matching and replacements based on regular expressions.
+        - [util.Regexp methods](15_library-reference/3531-util-regexp-methods.md) — Methods for the util.Regexp class.
+          - [util.Regexp.compile](15_library-reference/3532-util-regexp-compile.md) — Compiles a regular expression and returns a util.Regexp object.
+          - [util.Regexp.getMatch](15_library-reference/3533-util-regexp-getmatch.md) — Returns the text of the first (leftmost) match of the regular expression in the subject.
+          - [util.Regexp.getMatchAll](15_library-reference/3534-util-regexp-getmatchall.md) — Returns an array with all matches of the regular expression in the subject.
+          - [util.Regexp.getMatchIndex](15_library-reference/3535-util-regexp-getmatchindex.md) — Returns the starting and ending position of the first (leftmost) match of the regular expression in the subject.
+          - [util.Regexp.getMatchIndexAll](15_library-reference/3536-util-regexp-getmatchindexall.md) — Returns an array with indexes to all matches of the regular expression in the subject.
+          - [util.Regexp.getSubmatch](15_library-reference/3537-util-regexp-getsubmatch.md) — Returns an array with the sub-matches of the first match of regular expression in the subject.
+          - [util.Regexp.getSubmatchAll](15_library-reference/3538-util-regexp-getsubmatchall.md) — Returns 2-dimensional array with the sub-matches of all matches of regular expression in the subject.
+          - [util.Regexp.getSubmatchIndex](15_library-reference/3539-util-regexp-getsubmatchindex.md) — Returns an array with the indexes of the sub-matches of the first match of regular expression in the subject.
+          - [util.Regexp.getSubmatchIndexAll](15_library-reference/3540-util-regexp-getsubmatchindexall.md) — Returns a 2-dimensional array with the indexes of the sub-matches of all matches of regular expression in the subject.
+          - [util.Regexp.matches](15_library-reference/3541-util-regexp-matches.md) — Tests if a string contains any match of this regular expression.
+          - [util.Regexp.replaceAll](15_library-reference/3542-util-regexp-replaceall.md) — Substitutes all matches of the regular expression with the replacement string.
+          - [util.Regexp.replaceFirst](15_library-reference/3543-util-regexp-replacefirst.md) — Substitutes the match of the regular expression with the replacement string.
+          - [util.Regexp.split](15_library-reference/3544-util-regexp-split.md) — Splits a string around matches of the current regular expression.
+        - [Regular expression patterns](15_library-reference/3545-regular-expression-patterns.md) — Summary of util.Regexp.compile() pattern syntax.
+        - [Examples](15_library-reference/3546-examples.md) — util.Regexp usage examples.
+          - [Example 1: Check for valid identifiers](15_library-reference/3547-example-1-check-for-valid-identifiers.md)
+          - [Example 2: Check emails and phone numbers](15_library-reference/3548-example-2-check-emails-and-phone-numbers.md)
+      - [The util.Strings class](15_library-reference/3549-the-util-strings-class.md) — The util.Strings class provides STRING data-type related utility methods.
+        - [util.Strings methods](15_library-reference/3550-util-strings-methods.md) — Methods for the util.Strings class.
+          - [util.Strings.base64Decode](15_library-reference/3551-util-strings-base64decode.md) — Decodes a Base64 encoded string and writes the bytes to a file.
+          - [util.Strings.base64DecodeToHexString](15_library-reference/3552-util-strings-base64decodetohexstring.md) — Decodes a base64 encoded string and returns the corresponding hexadecimal string.
+          - [util.Strings.base64DecodeToString](15_library-reference/3553-util-strings-base64decodetostring.md) — Decodes a base64 encoded string and returns the corresponding string.
+          - [util.Strings.base64Encode](15_library-reference/3554-util-strings-base64encode.md) — Converts the content of a file to a Base64 encoded string.
+          - [util.Strings.base64EncodeFromHexString](15_library-reference/3555-util-strings-base64encodefromhexstring.md) — Converts the hexadecimal string passed as parameter to a Base64 encoded string.
+          - [util.Strings.base64EncodeFromString](15_library-reference/3556-util-strings-base64encodefromstring.md) — Converts the string passed as parameter to a Base64 encoded string.
+          - [util.Strings.collate](15_library-reference/3557-util-strings-collate.md) — Compares two strings using locale collation rules.
+          - [util.Strings.collateNumeric](15_library-reference/3558-util-strings-collatenumeric.md) — Compares two strings using locale collation rules and sequences of numerical digits.
+          - [util.Strings.urlDecode](15_library-reference/3559-util-strings-urldecode.md) — Converts the URL-encoded string to a string in the current application locale.
+          - [util.Strings.urlEncode](15_library-reference/3560-util-strings-urlencode.md) — Converts a string from the current codeset to a URL-encoded string.
+      - [The util.Math class](15_library-reference/3561-the-util-math-class.md) — The util.Math class provides basic mathematical functions based on floating point numbers (FLOAT).
+        - [util.Math methods](15_library-reference/3562-util-math-methods.md) — Methods for the util.Math class.
+          - [util.Math.acos](15_library-reference/3563-util-math-acos.md) — Computes the arc cosine of the passed value, measured in radians.
+          - [util.Math.asin](15_library-reference/3564-util-math-asin.md) — Computes the arc sine of the passed value, measured in radians.
+          - [util.Math.atan](15_library-reference/3565-util-math-atan.md) — Computes the arc tangent of the passed value, measured in radians.
+          - [util.Math.atan2](15_library-reference/3566-util-math-atan2.md) — Computes the principal value of the arc tangent of y/x
+          - [util.Math.cos](15_library-reference/3567-util-math-cos.md) — Computes the cosine of the passed value, measured in radians.
+          - [util.Math.exp](15_library-reference/3568-util-math-exp.md) — Computes the base-e exponential of the value passed as parameter.
+          - [util.Math.pi](15_library-reference/3569-util-math-pi.md) — Returns the FLOAT value of PI.
+          - [util.Math.pow](15_library-reference/3570-util-math-pow.md) — Computes the value of x raised to the power y.
+          - [util.Math.rand](15_library-reference/3571-util-math-rand.md) — Returns a positive pseudo-random number.
+          - [util.Math.sin](15_library-reference/3572-util-math-sin.md) — Computes the sine of the passed value, measured in radians.
+          - [util.Math.sqrt](15_library-reference/3573-util-math-sqrt.md) — Returns the square root of the argument provided.
+          - [util.Math.srand](15_library-reference/3574-util-math-srand.md) — Initializes the pseudo-random numbers generator.
+          - [util.Math.tan](15_library-reference/3575-util-math-tan.md) — Computes the tangent of the passed value, measured in radians.
+          - [util.Math.log](15_library-reference/3576-util-math-log.md) — Computes the natural logarithm of the passed value.
+          - [util.Math.toDegrees](15_library-reference/3577-util-math-todegrees.md) — Converts an angle measured in radians to an approximately equivalent angle measured in degrees.
+          - [util.Math.toRadians](15_library-reference/3578-util-math-toradians.md) — Converts an angle measured in degrees to an approximately equivalent angle measured in radians.
+      - [The util.JSON class](15_library-reference/3579-the-util-json-class.md) — The util.JSON class provides a basic interface to convert program variable values to/from JSON data.
+        - [util.JSON methods](15_library-reference/3580-util-json-methods.md) — Methods for the util.JSON class.
+          - [util.JSON.format](15_library-reference/3581-util-json-format.md) — Formats a JSON string with indentation.
+          - [util.JSON.parse](15_library-reference/3582-util-json-parse.md) — Parses a JSON string and fills program variables with the values.
+          - [util.JSON.proposeType](15_library-reference/3583-util-json-proposetype.md) — Describes the record structure that can hold a given JSON data string.
+          - [util.JSON.setDatetimeSerializationMode](15_library-reference/3584-util-json-setdatetimeserializationmode.md) — Defines the JSON formatting mode for DATETIME values.
+          - [util.JSON.setIntervalSerializationMode](15_library-reference/3585-util-json-setintervalserializationmode.md) — Defines the JSON formatting mode for INTERVAL values.
+          - [util.JSON.stringify](15_library-reference/3586-util-json-stringify.md) — Produces a JSON formatted string from the input, by including empty records and empty arrays.
+          - [util.JSON.stringifyOmitNulls](15_library-reference/3587-util-json-stringifyomitnulls.md) — Produces a JSON formatted string from the input, by excluding empty records and empty arrays.
+        - [Examples](15_library-reference/3588-examples.md) — util.JSON usage examples.
+          - [Example 1: Reading a JSON file](15_library-reference/3589-example-1-reading-a-json-file.md)
+      - [The util.JSONObject class](15_library-reference/3590-the-util-jsonobject-class.md) — The util.JSONObject class provides methods to handle an structured data object following the JSON string syntax.
+        - [util.JSONObject methods](15_library-reference/3591-util-jsonobject-methods.md) — Methods for the util.JSONObject class.
+          - [util.JSONObject.create](15_library-reference/3592-util-jsonobject-create.md) — Creates a new JSON object.
+          - [util.JSONObject.fromFGL](15_library-reference/3593-util-jsonobject-fromfgl.md) — Creates a new JSON object from a RECORD.
+          - [util.JSONObject.parse](15_library-reference/3594-util-jsonobject-parse.md) — Parses a JSON string and creates a JSON object from it.
+          - [util.JSONObject.get](15_library-reference/3595-util-jsonobject-get.md) — Returns the value corresponding to the specified entry name.
+          - [util.JSONObject.getLength](15_library-reference/3596-util-jsonobject-getlength.md) — Returns the number of name-value pairs in the JSON object.
+          - [util.JSONObject.getType](15_library-reference/3597-util-jsonobject-gettype.md) — Returns the type of a JSON object element.
+          - [util.JSONObject.has](15_library-reference/3598-util-jsonobject-has.md) — Checks if the JSON object contains a specific entry name.
+          - [util.JSONObject.name](15_library-reference/3599-util-jsonobject-name.md) — Returns the name of a JSON object entry by position.
+          - [util.JSONObject.put](15_library-reference/3600-util-jsonobject-put.md) — Sets a name-value pair in the JSON object.
+          - [util.JSONObject.remove](15_library-reference/3601-util-jsonobject-remove.md) — Removes the specified element in the JSON object.
+          - [util.JSONObject.toFGL](15_library-reference/3602-util-jsonobject-tofgl.md) — Fills a record variable with the entries contained in the JSON object.
+          - [util.JSONObject.toString](15_library-reference/3603-util-jsonobject-tostring.md) — Builds a JSON string from the values contained in the JSON object.
+      - [The util.JSONArray class](15_library-reference/3604-the-util-jsonarray-class.md) — The util.JSONArray class provides methods to handle an array of values, following the JSON string syntax.
+        - [util.JSONArray methods](15_library-reference/3605-util-jsonarray-methods.md) — Methods for the util.JSONArray class.
+          - [util.JSONArray.create](15_library-reference/3606-util-jsonarray-create.md) — Creates a new JSON array object.
+          - [util.JSONArray.fromFGL](15_library-reference/3607-util-jsonarray-fromfgl.md) — Creates a new JSON array object from a DYNAMIC ARRAY.
+          - [util.JSONArray.parse](15_library-reference/3608-util-jsonarray-parse.md) — Parses a JSON string and creates a JSON array object from it.
+          - [util.JSONArray.get](15_library-reference/3609-util-jsonarray-get.md) — Returns the value of a JSON array element.
+          - [util.JSONArray.getLength](15_library-reference/3610-util-jsonarray-getlength.md) — Returns the number of elements in the JSON array object.
+          - [util.JSONArray.getType](15_library-reference/3611-util-jsonarray-gettype.md) — Returns the type of a JSON array element.
+          - [util.JSONArray.put](15_library-reference/3612-util-jsonarray-put.md) — Sets an element by position in the JSON array object.
+          - [util.JSONArray.remove](15_library-reference/3613-util-jsonarray-remove.md) — Removes the specified entry in the JSON array object.
+          - [util.JSONArray.toFGL](15_library-reference/3614-util-jsonarray-tofgl.md) — Fills a dynamic array variable with the elements contained in the JSON array object.
+          - [util.JSONArray.toString](15_library-reference/3615-util-jsonarray-tostring.md) — Builds a JSON string from the elements contained in the JSON array object.
+    - [The json package](15_library-reference/3616-the-json-package.md) — The Genero Web Services JSON package provides classes and methods to process JSON documents.
+      - [The streaming API for JSON classes](15_library-reference/3617-the-streaming-api-for-json-classes.md) — The streaming API for JSON uses streaming to process JSON documents. These topics cover the classes for the API.
+        - [The json.JSONWriter class](15_library-reference/3618-the-json-jsonwriter-class.md) — The json.JSONWriter class provides an interface compatible with JSON streaming that writes data in a JSON format to an output source.
+          - [json.JSONWriter methods](15_library-reference/3619-json-jsonwriter-methods.md) — Methods for the json.JSONWriter class.
+            - [json.JSONWriter.Create](15_library-reference/3620-json-jsonwriter-create.md) — Constructor of a JSONWriter object.
+            - [json.JSONWriter.close](15_library-reference/3621-json-jsonwriter-close.md) — Closes the JSONWriter streaming, and releases all associated resources.
+            - [json.JSONWriter.endArray](15_library-reference/3622-json-jsonwriter-endarray.md) — Writes a JSON end array tag to the JSONWriter stream.
+            - [json.JSONWriter.endJSON](15_library-reference/3623-json-jsonwriter-endjson.md) — Closes any open tokens and writes the corresponding end JSON document token.
+            - [json.JSONWriter.endObject](15_library-reference/3624-json-jsonwriter-endobject.md) — Writes a JSON end object token to the JSONWriter stream.
+            - [json.JSONWriter.getSize](15_library-reference/3625-json-jsonwriter-getsize.md) — Returns the number of bytes written by the JSONWriter in the current stream.
+            - [json.JSONWriter.setBooleanValue](15_library-reference/3626-json-jsonwriter-setbooleanvalue.md) — Sets a boolean value of a JSONWriter object.
+            - [json.JSONWriter.setNullValue](15_library-reference/3627-json-jsonwriter-setnullvalue.md) — Sets the null value of a JSONWriter object.
+            - [json.JSONWriter.setOutputCharset](15_library-reference/3628-json-jsonwriter-setoutputcharset.md) — Defines the charset used on the output stream.
+            - [json.JSONWriter.setProperty](15_library-reference/3629-json-jsonwriter-setproperty.md) — Sets a property of a JSONWriter object.
+            - [json.JSONWriter.setValue](15_library-reference/3630-json-jsonwriter-setvalue.md) — Sets the value of a JSONWriter object.
+            - [json.JSONWriter.startArray](15_library-reference/3631-json-jsonwriter-startarray.md) — Writes a JSON start array token to the JSONWriter stream.
+            - [json.JSONWriter.startJSON](15_library-reference/3632-json-jsonwriter-startjson.md) — Begins JSON encoding to the JSONWriter stream.
+            - [json.JSONWriter.startObject](15_library-reference/3633-json-jsonwriter-startobject.md) — Writes a JSON start object token to the JSONWriter stream.
+            - [json.JSONWriter.writeTo](15_library-reference/3634-json-jsonwriter-writeto.md) — Sets the output stream of the JSONWriter object to a file or an URL, and starts streaming data.
+            - [json.JSONWriter.writeToPipe](15_library-reference/3635-json-jsonwriter-writetopipe.md) — Sets the output stream of the JSONWriter object to a PIPE, and starts the streaming.
+            - [json.JSONWriter.writeToText](15_library-reference/3636-json-jsonwriter-writetotext.md) — Sets the output stream of the JSONWriter object to a TEXT large object, and starts the streaming.
+          - [Examples](15_library-reference/3637-examples.md) — json.JSONWriter usage examples.
+            - [Example 1: Writing to a JSON file](15_library-reference/3638-example-1-writing-to-a-json-file.md) — This example shows two ways to write a JSON file.
+        - [The json.JSONReader class](15_library-reference/3639-the-json-jsonreader-class.md) — The json.JSONReader class provides an interface compatible with JSON streaming that reads data in a JSON format from an input source.
+          - [json.JSONReader methods](15_library-reference/3640-json-jsonreader-methods.md) — Methods for the json.JSONReader class.
+            - [json.JSONReader.Create](15_library-reference/3641-json-jsonreader-create.md) — Constructor of a JSONReader object.
+            - [json.JSONReader.close](15_library-reference/3642-json-jsonreader-close.md) — Closes the JSONReader streaming, and releases all associated resources.
+            - [json.JSONReader.getBooleanValue](15_library-reference/3643-json-jsonreader-getbooleanvalue.md) — Gets a boolean value of a JSONReader object.
+            - [json.JSONReader.getByteValue](15_library-reference/3644-json-jsonreader-getbytevalue.md) — Gets a byte value of a JSONReader object.
+            - [json.JSONReader.getDateTimeValue](15_library-reference/3645-json-jsonreader-getdatetimevalue.md) — Gets a datetime value of the current JSON node.
+            - [json.JSONReader.getDecimalValue](15_library-reference/3646-json-jsonreader-getdecimalvalue.md) — Gets a decimal value of a JSONReader object.
+            - [json.JSONReader.getEventType](15_library-reference/3647-json-jsonreader-geteventtype.md) — Returns a string that indicates the type of event the cursor of the JSONReader object is pointing to.
+            - [json.JSONReader.getIntervalValue](15_library-reference/3648-json-jsonreader-getintervalvalue.md) — Gets a datetime value of the current JSON node.
+            - [json.JSONReader.getProperty](15_library-reference/3649-json-jsonreader-getproperty.md) — Gets a property of a JSONReader object.
+            - [json.JSONReader.getSize](15_library-reference/3650-json-jsonreader-getsize.md) — Returns the number of bytes read by the JSONReader in the current stream.
+            - [json.JSONReader.getTextValue](15_library-reference/3651-json-jsonreader-gettextvalue.md) — Gets a text value of the current JSON node.
+            - [json.JSONReader.getValue](15_library-reference/3652-json-jsonreader-getvalue.md) — Gets the value of a JSONReader object.
+            - [json.JSONReader.hasNext](15_library-reference/3653-json-jsonreader-hasnext.md) — Checks whether the JSONReader cursor can be moved to a node next to it.
+            - [json.JSONReader.next](15_library-reference/3654-json-jsonreader-next.md) — Moves the JSONReader cursor to the next node.
+            - [json.JSONReader.readFrom](15_library-reference/3655-json-jsonreader-readfrom.md) — Sets the input stream of the JSONReader object to a file or an URL.
+            - [json.JSONReader.readFromPipe](15_library-reference/3656-json-jsonreader-readfrompipe.md) — Sets the input stream of the JSONReader object to a PIPE.
+            - [json.JSONReader.readFromText](15_library-reference/3657-json-jsonreader-readfromtext.md) — Sets the output stream of the JSONReader object to a TEXT large object.
+            - [json.JSONReader.setInputCharset](15_library-reference/3658-json-jsonreader-setinputcharset.md) — Defines the charset used on the input stream.
+          - [JSONReader Event Types](15_library-reference/3659-jsonreader-event-types.md) — Event types of the json.JSONReader class.
+          - [Examples](15_library-reference/3660-examples.md) — json.JSONReader usage examples.
+            - [Example: Reading a JSON file](15_library-reference/3661-example-reading-a-json-file.md) — This example shows two ways to read a JSON file.
+        - [The json.Serializer class](15_library-reference/3662-the-json-serializer-class.md) — The json.Serializer class provides methods to serialize Genero BDL variable to JSON objects and vice versa.
+          - [Implicit and explicit conversion](15_library-reference/3663-implicit-and-explicit-conversion.md) — This topic provides an overview of implicit and explicit JSON conversion behavior in json.Serializer and util.JSON, highlighting the differences between strict and permissive conversion models.
+            - [Primitive type conversion](15_library-reference/3664-primitive-type-conversion.md) — This topic describes how primitive 4GL values are converted during JSON serialization and deserialization, and compares the behavior of json.Serializer and util.JSON.
+            - [Complex type conversion](15_library-reference/3665-complex-type-conversion.md) — This topic describes how complex 4GL structures such as RECORD, DICTIONARY, arrays, and util.JSONObject are converted during JSON serialization and deserialization, and compares the behavior of json.Serializer and util.JSON.
+            - [Null and empty value handling in json.Serializer and util.JSON](15_library-reference/3666-null-and-empty-value-handling-in-json-serializer-and-util-js.md) — This topic compares how json.Serializer and util.JSON handle null and empty values during JSON serialization and deserialization.
+              - [json_null handling differences](15_library-reference/3667-json-null-handling-differences.md) — This topic compares how json.Serializer and util.JSON interpret the json_null attribute during serialization and deserialization.
+              - [json_null attribute](15_library-reference/3668-json-null-attribute.md) — This attribute controls the representation of null or empty values. json.Serializer uses it during both serialization and deserialization, but util.JSON applies it only when serializing.
+            - [Best practices](15_library-reference/3669-best-practices.md) — Recommended practices for using json.Serializer to enhance performance and avoid common pitfalls.
+            - [Limitations](15_library-reference/3670-limitations.md) — This section outlines the serialization features that are not supported or have limited support in json.Serializer.
+          - [json.Serializer methods](15_library-reference/3671-json-serializer-methods.md) — Methods for the json.Serializer class.
+            - [json.Serializer.JSONToVariable](15_library-reference/3672-json-serializer-jsontovariable.md) — Serializes entries contained in a JSONReader object into a Genero BDL variable.
+            - [json.Serializer.VariableToJSON](15_library-reference/3673-json-serializer-variabletojson.md) — Serializes a Genero BDL variable into JSON using a JSONWriter object.
+            - [json.Serializer.getOption](15_library-reference/3674-json-serializer-getoption.md) — Returns the current value of a JSON serializer option.
+            - [json.Serializer.setOption](15_library-reference/3675-json-serializer-setoption.md) — Sets an option on the JSON serializer.
+            - [json.Serializer.getLastErrorDescription](15_library-reference/3676-json-serializer-getlasterrordescription.md) — Retrieves the most recent error generated during serialization.
+          - [json.Serializer attributes](15_library-reference/3677-json-serializer-attributes.md)
+            - [JSONAdditionalProperties](15_library-reference/3678-jsonadditionalproperties.md) — Allows a record to accept JSON properties not explicitly listed in its schema definition.
+            - [JSONAllOf](15_library-reference/3679-jsonallof.md) — Combine multiple record schemas into a single type using the JSONAllOf attribute in Genero BDL.
+            - [JSONEnum](15_library-reference/3680-jsonenum.md) — Defines an explicit, typed list of acceptable values for a field and maps to the enum keyword in JSON Schema.
+            - [JSONOneOf](15_library-reference/3681-jsononeof.md) — Defines a record that matches exactly one of several possible JSON schemas during serialization or deserialization.
+            - [JSONPattern](15_library-reference/3682-jsonpattern.md) — Specify a regular expression pattern for string values in a JSON schema.
+            - [JSONRequired](15_library-reference/3683-jsonrequired.md) — Specify properties that are required in a JSON schema.
+            - [JSONSelector](15_library-reference/3684-jsonselector.md) — Identifies the variant member of a JSONOneOf record to use during serialization or deserialization.
+          - [json.Serializer options](15_library-reference/3685-json-serializer-options.md) — Options for controlling serialization and deserialization behavior, set using the json.Serializer class.
+            - [allowImplicitConversion](15_library-reference/3686-allowimplicitconversion.md) — Allow implicit type conversions during JSON deserialization when the JSON property specifies one type, but the values suggest another.
+            - [allowNullAsDefault](15_library-reference/3687-allownullasdefault.md) — Allow NULL values to be accepted during deserialization when the json_null="null" attribute is not explicitly specified.
+            - [datetimeSerializationMode](15_library-reference/3688-datetimeserializationmode.md) — Controls the JSON output format for DATETIME values during serialization.
+            - [intervalSerializationMode](15_library-reference/3689-intervalserializationmode.md) — Controls the JSON output format for INTERVAL values during serialization.
+            - [serializeNullAsDefault](15_library-reference/3690-serializenullasdefault.md) — Allow NULL values during serialization even when constraints are set, such as when JSONRequired is defined or when json_null="null" is not defined.
+            - [Examples](15_library-reference/3691-examples.md) — Options of the json.Serializer class usage examples.
+              - [allowNullAsDefault example](15_library-reference/3692-allownullasdefault-example.md) — Use the allowNullAsDefault option to accept JSON null values during JSON to BDL deserialization.
+              - [serializeNullAsDefault example](15_library-reference/3693-serializenullasdefault-example.md) — Use the serializeNullAsDefault option to accept BDL NULL values during JSON serialization.
+              - [allowImplicitConversion example](15_library-reference/3694-allowimplicitconversion-example.md) — Use the allowImplicitConversion option to accept JSON values that require implicit type conversion during deserialization.
+              - [DATETIME and INTERVAL serialization example](15_library-reference/3695-datetime-and-interval-serialization-example.md) — Use the datetimeSerializationMode and intervalSerializationMode options to output DATETIME values in RFC 3339 format and INTERVAL values in ISO 8601 duration format.
+    - [The os package](15_library-reference/3696-the-os-package.md) — These topics cover the classes of the os package.
+      - [The os.Path class](15_library-reference/3697-the-os-path-class.md) — The os.Path class provides functions to manipulate files and directories on the machine where the program executes.
+        - [os.Path methods](15_library-reference/3698-os-path-methods.md)
+          - [os.Path.atime](15_library-reference/3699-os-path-atime.md) — Returns the time of the last file access.
+          - [os.Path.baseName](15_library-reference/3700-os-path-basename.md) — Returns the last element of a path.
+          - [os.Path.chDir](15_library-reference/3701-os-path-chdir.md) — Changes the current working directory.
+          - [os.Path.chRwx](15_library-reference/3702-os-path-chrwx.md) — Changes the UNIX™ permissions of a file.
+          - [os.Path.chOwn](15_library-reference/3703-os-path-chown.md) — Changes the UNIX™ owner and group of a file.
+          - [os.Path.chVolume](15_library-reference/3704-os-path-chvolume.md) — Changes the current working volume.
+          - [os.Path.copy](15_library-reference/3705-os-path-copy.md) — Creates a new file by copying an existing file.
+          - [os.Path.delete](15_library-reference/3706-os-path-delete.md) — Deletes a file or a directory.
+          - [os.Path.describeLastError](15_library-reference/3707-os-path-describelasterror.md) — Returns a description of the last error thrown by an os.Path method.
+          - [os.Path.dirClose](15_library-reference/3708-os-path-dirclose.md) — Closes the directory referenced by the directory opened by os.Path.diropen().
+          - [os.Path.dirFMask](15_library-reference/3709-os-path-dirfmask.md) — Defines a filter mask for os.Path.dirOpen().
+          - [os.Path.dirName](15_library-reference/3710-os-path-dirname.md) — Returns all components of a path excluding the last one.
+          - [os.Path.dirNext](15_library-reference/3711-os-path-dirnext.md) — Reads the next entry in the directory opened with os.Path.dirOpen().
+          - [os.Path.dirOpen](15_library-reference/3712-os-path-diropen.md) — Opens a directory and returns an integer handle to this directory.
+          - [os.Path.dirSort](15_library-reference/3713-os-path-dirsort.md) — Defines the sort criteria and sort order for os.Path.dirOpen().
+          - [os.Path.executable](15_library-reference/3714-os-path-executable.md) — Checks if a file is executable.
+          - [os.Path.exists](15_library-reference/3715-os-path-exists.md) — Checks if a file exists.
+          - [os.Path.extension](15_library-reference/3716-os-path-extension.md) — Returns the file extension.
+          - [os.Path.fullPath](15_library-reference/3717-os-path-fullpath.md) — Returns the canonical equivalent of a path.
+          - [os.Path.getAccessTime](15_library-reference/3718-os-path-getaccesstime.md) — Returns the last time the file was accessed.
+          - [os.Path.getModificationTime](15_library-reference/3719-os-path-getmodificationtime.md) — Returns the last time the file was modified.
+          - [os.Path.gid](15_library-reference/3720-os-path-gid.md) — Returns the UNIX™ group id of a file.
+          - [os.Path.glob](15_library-reference/3721-os-path-glob.md) — Returns a list of files matching the specified pattern.
+          - [os.Path.homeDir](15_library-reference/3722-os-path-homedir.md) — Returns the path to the HOME directory of the current user.
+          - [os.Path.isDirectory](15_library-reference/3723-os-path-isdirectory.md) — Checks if a file is a directory.
+          - [os.Path.isFile](15_library-reference/3724-os-path-isfile.md) — Checks if a file is a regular file.
+          - [os.Path.isHidden](15_library-reference/3725-os-path-ishidden.md) — Checks if a file is hidden.
+          - [os.Path.isLink](15_library-reference/3726-os-path-islink.md) — Checks if a file is an UNIX™ symbolic link.
+          - [os.Path.isRoot](15_library-reference/3727-os-path-isroot.md) — Checks if a file path is a root path.
+          - [os.Path.isSameFile](15_library-reference/3728-os-path-issamefile.md) — Checks if two file paths point to the same file.
+          - [os.Path.join](15_library-reference/3729-os-path-join.md) — Joins two path segments adding the platform-dependent separator.
+          - [os.Path.makeTempName](15_library-reference/3730-os-path-maketempname.md) — Generates a new file path to be used to create a temporary file or directory.
+          - [os.Path.mtime](15_library-reference/3731-os-path-mtime.md) — Returns the time of the last file modification.
+          - [os.Path.mkDir](15_library-reference/3732-os-path-mkdir.md) — Creates a new directory.
+          - [os.Path.pathSeparator](15_library-reference/3733-os-path-pathseparator.md) — Returns the character used in environment variables to separate path elements.
+          - [os.Path.pathType](15_library-reference/3734-os-path-pathtype.md) — Checks if a path is a relative path or an absolute path.
+          - [os.Path.pwd](15_library-reference/3735-os-path-pwd.md) — Returns the current working directory.
+          - [os.Path.readable](15_library-reference/3736-os-path-readable.md) — Checks if a file is readable.
+          - [os.Path.rename](15_library-reference/3737-os-path-rename.md) — Renames a file or a directory.
+          - [os.Path.rootDir](15_library-reference/3738-os-path-rootdir.md) — Returns the root directory of the current working path.
+          - [os.Path.rootName](15_library-reference/3739-os-path-rootname.md) — Returns the file path without the file extension of the last element of the file path.
+          - [os.Path.rwx](15_library-reference/3740-os-path-rwx.md) — Returns the UNIX™ file permissions of a file.
+          - [os.Path.separator](15_library-reference/3741-os-path-separator.md) — Returns the character used to separate path segments.
+          - [os.Path.setAccessTime](15_library-reference/3742-os-path-setaccesstime.md) — Sets the access time of a file.
+          - [os.Path.setModificationTime](15_library-reference/3743-os-path-setmodificationtime.md) — Sets the modification time of a file.
+          - [os.Path.size](15_library-reference/3744-os-path-size.md) — Returns the size of a file.
+          - [os.Path.type](15_library-reference/3745-os-path-type.md) — Returns the file type as a string.
+          - [os.Path.uid](15_library-reference/3746-os-path-uid.md) — Returns the UNIX™ user id of a file.
+          - [os.Path.volumes](15_library-reference/3747-os-path-volumes.md) — Returns the available volumes.
+          - [os.Path.writable](15_library-reference/3748-os-path-writable.md) — Checks if a file is writable.
+        - [Examples](15_library-reference/3749-examples.md) — os.Path usage examples.
+          - [Example 1: Filename parts](15_library-reference/3750-example-1-filename-parts.md)
+          - [Example 2: Browsing directories](15_library-reference/3751-example-2-browsing-directories.md)
+    - [The com package](15_library-reference/3752-the-com-package.md) — The Genero Web Services com package provides classes and methods that allow you to perform tasks associated with creating Services and Clients, and managing the services.
+      - [Web services classes](15_library-reference/3753-web-services-classes.md) — The Web services classes manage Web Services servers.
+        - [The WebService class](15_library-reference/3754-the-webservice-class.md) — The com.WebService class provides an interface to create and manage Genero Web Services.
+          - [WebService methods](15_library-reference/3755-webservice-methods.md) — Methods for the com.WebService class.
+            - [com.WebService.createFault](15_library-reference/3756-com-webservice-createfault.md) — Creates a global fault for a Web Service object.
+            - [com.WebService.createHeader](15_library-reference/3757-com-webservice-createheader.md) — Defines the header for the Web Service object.
+            - [com.WebService.CreateWebService](15_library-reference/3758-com-webservice-createwebservice.md) — Creates a new object to implement a Web Service.
+            - [com.WebService.CreateStatefulWebService](15_library-reference/3759-com-webservice-createstatefulwebservice.md) — Creates a new object to implement a stateful Web service.
+            - [com.WebService.generateWSDL](15_library-reference/3760-com-webservice-generatewsdl.md) — Creates an xml.DomDocument object with the WSDL corresponding to the Web Service object.
+            - [com.WebService.publishOperation](15_library-reference/3761-com-webservice-publishoperation.md) — Publishes a Web Operation.
+            - [com.WebService.registerInputHttpVariable](15_library-reference/3762-com-webservice-registerinputhttpvariable.md) — Registers the record variable for HTTP input.
+            - [com.WebService.registerInputRequestHandler](15_library-reference/3763-com-webservice-registerinputrequesthandler.md) — Registers the function to be executed on incoming SOAP requests.
+            - [com.WebService.registerOutputHttpVariable](15_library-reference/3764-com-webservice-registeroutputhttpvariable.md) — Registers the record variable for HTTP output.
+            - [com.WebService.registerOutputRequestHandler](15_library-reference/3765-com-webservice-registeroutputrequesthandler.md) — Registers the function to be executed just before the SOAP response is forwarded to the client.
+            - [com.WebService.registerWSDLHandler](15_library-reference/3766-com-webservice-registerwsdlhandler.md) — Registers the function to be executed when a WSDL is generated.
+            - [com.WebService.saveWSDL](15_library-reference/3767-com-webservice-savewsdl.md) — Writes to a file the WSDL corresponding to the Web Service object.
+            - [com.WebService.setComment](15_library-reference/3768-com-webservice-setcomment.md) — Defines the comment for the Web Service object.
+            - [com.WebService.setFeature](15_library-reference/3769-com-webservice-setfeature.md) — Defines a feature for the current Web Service object.
+        - [The WebOperation class](15_library-reference/3770-the-weboperation-class.md) — The com.WebOperation class provides an interface to create and manage the operations of a Genero Web Service.
+          - [WebOperation methods](15_library-reference/3771-weboperation-methods.md) — Methods for the com.WebOperation class.
+            - [com.WebOperation.addFault](15_library-reference/3772-com-weboperation-addfault.md) — Adds a fault to the current Web Operation definition.
+            - [com.WebOperation.addInputHeader](15_library-reference/3773-com-weboperation-addinputheader.md) — Adds an input header for the current Web Operation definition.
+            - [com.WebOperation.addOutputHeader](15_library-reference/3774-com-weboperation-addoutputheader.md) — Adds an output header for the current Web Operation definition.
+            - [com.WebOperation.CreateDOCStyle](15_library-reference/3775-com-weboperation-createdocstyle.md) — Creates a new Web Operation object with Document style.
+            - [com.WebOperation.CreateRPCStyle](15_library-reference/3776-com-weboperation-createrpcstyle.md) — Creates a new Web Operation object with RPC style.
+            - [com.WebOperation.CreateOneWayDOCStyle](15_library-reference/3777-com-weboperation-createonewaydocstyle.md) — Creates a new Web Operation object with One-Way Document style.
+            - [com.WebOperation.CreateOneWayRPCStyle](15_library-reference/3778-com-weboperation-createonewayrpcstyle.md) — Creates a new Web Operation object with One-Way RPC style.
+            - [com.WebOperation.initiateSession](15_library-reference/3779-com-weboperation-initiatesession.md) — Defines the Web Operation as session initiator.
+            - [com.WebOperation.setComment](15_library-reference/3780-com-weboperation-setcomment.md) — Sets the comment for the Web Operation object.
+            - [com.WebOperation.setInputAction](15_library-reference/3781-com-weboperation-setinputaction.md) — Sets the WS-Addressing action identifier of the input operation.
+            - [com.WebOperation.setInputEncoded](15_library-reference/3782-com-weboperation-setinputencoded.md) — Defines the encoding mechanism for Web Operation input parameters.
+            - [com.WebOperation.setOutputAction](15_library-reference/3783-com-weboperation-setoutputaction.md) — Sets the WS-Addressing action identifier of the output operation.
+            - [com.WebOperation.setOutputEncoded](15_library-reference/3784-com-weboperation-setoutputencoded.md) — Defines the encoding mechanism for Web Operation output parameters.
+        - [The WebServiceEngine class](15_library-reference/3785-the-webserviceengine-class.md) — The com.WebServiceEngine class provides an interface to manage the Web Services engine.
+          - [WebServiceEngine methods](15_library-reference/3786-webserviceengine-methods.md) — Methods for the com.WebServiceEngine class.
+            - [com.WebServiceEngine.Flush](15_library-reference/3787-com-webserviceengine-flush.md) — Forces the Web Service engine to immediately flush the response of the web service operation.
+            - [com.WebServiceEngine.GetHTTPServiceRequest](15_library-reference/3788-com-webserviceengine-gethttpservicerequest.md) — Get a handle for an incoming HTTP service request.
+            - [com.WebServiceEngine.GetOption](15_library-reference/3789-com-webserviceengine-getoption.md) — Returns the value of a Web Service engine option.
+            - [com.WebServiceEngine.HandleRequest](15_library-reference/3790-com-webserviceengine-handlerequest.md) — Wait for an HTTP input request to process an operation of one of the registered SOAP or REST Web Services, or return an HttpServiceRequest object to handle a low-level request not registered at all.
+            - [com.WebServiceEngine.ProcessServices](15_library-reference/3791-com-webserviceengine-processservices.md) — Wait for an HTTP input request to process an operation of one of the registered SOAP or REST Web Services.
+            - [com.WebServiceEngine.RegisterRestResources](15_library-reference/3792-com-webserviceengine-registerrestresources.md) — Registers the resources of a REST service in the engine.
+            - [com.WebServiceEngine.RegisterRestService](15_library-reference/3793-com-webserviceengine-registerrestservice.md) — Registers a REST service in the engine.
+            - [com.WebServiceEngine.RegisterRestOpenAPIHandler](15_library-reference/3794-com-webserviceengine-registerrestopenapihandler.md) — Registers a callback function that dynamically modifies OpenAPI documentation for a REST service.
+            - [com.WebServiceEngine.RegisterService](15_library-reference/3795-com-webserviceengine-registerservice.md) — Registers a SOAP service in the engine.
+            - [com.WebServiceEngine.SetFaultCode](15_library-reference/3796-com-webserviceengine-setfaultcode.md) — Get a handle for an incoming HTTP service request.
+            - [com.WebServiceEngine.SetFaultDetail](15_library-reference/3797-com-webserviceengine-setfaultdetail.md) — Defines the published SOAP Fault.
+            - [com.WebServiceEngine.SetFaultString](15_library-reference/3798-com-webserviceengine-setfaultstring.md) — Defines the description of a SOAP Fault.
+            - [com.WebServiceEngine.SetOption](15_library-reference/3799-com-webserviceengine-setoption.md) — Sets an option for the Web Service engine.
+            - [com.WebServiceEngine.SetRestError](15_library-reference/3800-com-webserviceengine-setresterror.md) — Manages error handling for a REST high-level Web Service function.
+            - [com.WebServiceEngine.SetRestStatus](15_library-reference/3801-com-webserviceengine-setreststatus.md) — Manages HTTP response status codes (200 - 299) for a REST high-level web service function.
+            - [com.WebServiceEngine.Start](15_library-reference/3802-com-webserviceengine-start.md) — Starts the Web Service engine.
+          - [WSDL generation options notes](15_library-reference/3803-wsdl-generation-options-notes.md) — If you are planning to work with WSDL generation, you are advised to review these notes.
+          - [WebServiceEngine options](15_library-reference/3804-webserviceengine-options.md)
+          - [Error codes of com.WebServicesEngine](15_library-reference/3805-error-codes-of-com-webservicesengine.md) — Error codes returned by com.WebServiceEngine methods.
+        - [The HttpServiceRequest class](15_library-reference/3806-the-httpservicerequest-class.md) — The com.HttpServiceRequest class provides an interface to process incoming XML and TEXT requests over HTTP on the server side, with an access to the HTTP layer and additional XML streaming possibilities.
+          - [HttpServiceRequest methods](15_library-reference/3807-httpservicerequest-methods.md) — Methods of the com.HttpServiceRequest class.
+            - [com.HttpServiceRequest.addResponsePart](15_library-reference/3808-com-httpservicerequest-addresponsepart.md) — Adds a new part to the HTTP root part response.
+            - [com.HttpServiceRequest.beginXmlRequest](15_library-reference/3809-com-httpservicerequest-beginxmlrequest.md) — Starts an HTTP streaming request.
+            - [com.HttpServiceRequest.beginXmlResponse](15_library-reference/3810-com-httpservicerequest-beginxmlresponse.md) — Starts an HTTP streaming response.
+            - [com.HttpServiceRequest.endXmlRequest](15_library-reference/3811-com-httpservicerequest-endxmlrequest.md) — Terminates an HTTP streaming request.
+            - [com.HttpServiceRequest.endXmlResponse](15_library-reference/3812-com-httpservicerequest-endxmlresponse.md) — Terminates an HTTP streaming response.
+            - [com.HttpServiceRequest.findRequestCookie](15_library-reference/3813-com-httpservicerequest-findrequestcookie.md) — Enables the server to retrieve a cookie sent by the client by name.
+            - [com.HttpServiceRequest.getMethod](15_library-reference/3814-com-httpservicerequest-getmethod.md) — Returns the HTTP method of the service request.
+            - [com.HttpServiceRequest.getRequestHeader](15_library-reference/3815-com-httpservicerequest-getrequestheader.md) — Returns the value of an HTTP header.
+            - [com.HttpServiceRequest.getRequestHeaderCount](15_library-reference/3816-com-httpservicerequest-getrequestheadercount.md) — Returns the number of request headers.
+            - [com.HttpServiceRequest.getRequestHeaderName](15_library-reference/3817-com-httpservicerequest-getrequestheadername.md) — Returns a request header name by position.
+            - [com.HttpServiceRequest.getRequestHeaderValue](15_library-reference/3818-com-httpservicerequest-getrequestheadervalue.md) — Returns a request header value by position.
+            - [com.HttpServiceRequest.getRequestMultipartType](15_library-reference/3819-com-httpservicerequest-getrequestmultiparttype.md) — Returns the multipart type of an incoming request.
+            - [com.HttpServiceRequest.getRequestPart](15_library-reference/3820-com-httpservicerequest-getrequestpart.md) — Returns the HttpPart object at the specified index position.
+            - [com.HttpServiceRequest.getRequestPartCount](15_library-reference/3821-com-httpservicerequest-getrequestpartcount.md) — Returns the number of additional multipart elements.
+            - [com.HttpServiceRequest.getRequestPartFromID](15_library-reference/3822-com-httpservicerequest-getrequestpartfromid.md) — Returns the HttpPart object of the given Content-ID value.
+            - [com.HttpServiceRequest.getRequestVersion](15_library-reference/3823-com-httpservicerequest-getrequestversion.md) — Returns the HTTP version of the service request.
+            - [com.HttpServiceRequest.getUrl](15_library-reference/3824-com-httpservicerequest-geturl.md) — Returns the URL of the HTTP service request. The URL may consists of a host name, a port number, a path, and a query.
+            - [com.HttpServiceRequest.getUrlHost](15_library-reference/3825-com-httpservicerequest-geturlhost.md) — Returns the host name contained in the URL of an HTTP service request.
+            - [com.HttpServiceRequest.getUrlPath](15_library-reference/3826-com-httpservicerequest-geturlpath.md) — Returns the path contained in the URL of an HTTP service request.
+            - [com.HttpServiceRequest.getUrlPort](15_library-reference/3827-com-httpservicerequest-geturlport.md) — Returns the port number contained in the URL of an HTTP service request.
+            - [com.HttpServiceRequest.getUrlQuery](15_library-reference/3828-com-httpservicerequest-geturlquery.md) — Takes a dynamic array of RECORD of two strings and fills that array with the decoded query string of an HTTP service request.
+            - [com.HttpServiceRequest.hasRequestKeepConnection](15_library-reference/3829-com-httpservicerequest-hasrequestkeepconnection.md) — Returns TRUE if the connection remains open after sending a response.
+            - [com.HttpServiceRequest.readDataRequest](15_library-reference/3830-com-httpservicerequest-readdatarequest.md) — Returns the body of a request in a BYTE.
+            - [com.HttpServiceRequest.readFileRequest](15_library-reference/3831-com-httpservicerequest-readfilerequest.md) — Returns the body of the request to a file on disk and returns the filename.
+            - [com.HttpServiceRequest.readFormEncodedRequest](15_library-reference/3832-com-httpservicerequest-readformencodedrequest.md) — Returns the string of a GET request with UTF-8 conversion option.
+            - [com.HttpServiceRequest.readTextRequest](15_library-reference/3833-com-httpservicerequest-readtextrequest.md) — Returns the request body as a plain string.
+            - [com.HttpServiceRequest.readXmlRequest](15_library-reference/3834-com-httpservicerequest-readxmlrequest.md) — Returns the request body as an XML document.
+            - [com.HttpServiceRequest.sendDataResponse](15_library-reference/3835-com-httpservicerequest-senddataresponse.md) — Sends an HTTP response with data of a BYTE variable.
+            - [com.HttpServiceRequest.sendFileResponse](15_library-reference/3836-com-httpservicerequest-sendfileresponse.md) — Sends an HTTP response with the data contained in a file.
+            - [com.HttpServiceRequest.sendResponse](15_library-reference/3837-com-httpservicerequest-sendresponse.md) — Sends an HTTP response without body.
+            - [com.HttpServiceRequest.sendTextResponse](15_library-reference/3838-com-httpservicerequest-sendtextresponse.md) — Sends an HTTP response with data from a plain string.
+            - [com.HttpServiceRequest.sendXmlResponse](15_library-reference/3839-com-httpservicerequest-sendxmlresponse.md) — Sends an HTTP response with data from a XML document object.
+            - [com.HttpServiceRequest.setResponseCharset](15_library-reference/3840-com-httpservicerequest-setresponsecharset.md) — Defines the HTTP response character set.
+            - [com.HttpServiceRequest.setResponseCookies](15_library-reference/3841-com-httpservicerequest-setresponsecookies.md) — Allows the server to return cookies to be set on the client application sending the request.
+            - [com.HttpServiceRequest.setResponseHeader](15_library-reference/3842-com-httpservicerequest-setresponseheader.md) — Defines a header for the HTTP response.
+            - [com.HttpServiceRequest.setResponseMultipartType](15_library-reference/3843-com-httpservicerequest-setresponsemultiparttype.md) — Sets HTTP response in multipart mode of given type.
+            - [com.HttpServiceRequest.setResponseVersion](15_library-reference/3844-com-httpservicerequest-setresponseversion.md) — Defines the HTTP response version.
+          - [Examples (HttpServiceRequest)](15_library-reference/3845-examples-httpservicerequest.md) — These examples use methods of the com.HttpServiceRequest class.
+      - [HTTP classes](15_library-reference/3846-http-classes.md) — The HTTP classes manage HTTP client network operations on the client side.
+        - [The HttpRequest class](15_library-reference/3847-the-httprequest-class.md) — The com.HttpRequest class provides an interface to perform asynchronous XML and TEXT requests over HTTP for a specified URL, with additional XML streaming possibilities, on the client side.
+          - [HttpRequest methods](15_library-reference/3848-httprequest-methods.md) — Methods for the com.HttpRequest class.
+            - [com.HttpRequest.addPart](15_library-reference/3849-com-httprequest-addpart.md) — Adds a new part to the HTTP root part request.
+            - [com.HttpRequest.beginJSONRequest](15_library-reference/3850-com-httprequest-beginjsonrequest.md) — Starts a HTTP request streaming JSON.
+            - [com.HttpRequest.beginXmlRequest](15_library-reference/3851-com-httprequest-beginxmlrequest.md) — Starts a streaming HTTP request.
+            - [com.HttpRequest.clearAuthentication](15_library-reference/3852-com-httprequest-clearauthentication.md) — Removes user-defined authentication.
+            - [com.HttpRequest.clearCertificateAndKey](15_library-reference/3853-com-httprequest-clearcertificateandkey.md) — Removes the client certificate and key set by setCertificateAndKey().
+            - [com.HttpRequest.clearCipher](15_library-reference/3854-com-httprequest-clearcipher.md) — Removes the cipher set by setCipher().
+            - [com.HttpRequest.clearHeaders](15_library-reference/3855-com-httprequest-clearheaders.md) — Removes all user-defined HTTP request headers.
+            - [com.HttpRequest.clearVerifyServer](15_library-reference/3856-com-httprequest-clearverifyserver.md) — Removes the value set by setVerifyServer.
+            - [com.HttpRequest.Create](15_library-reference/3857-com-httprequest-create.md) — Creates a new HttpRequest object from a URL.
+            - [com.HttpRequest.doDataRequest](15_library-reference/3858-com-httprequest-dodatarequest.md) — Performs the request by sending binary data.
+            - [com.HttpRequest.doFileRequest](15_library-reference/3859-com-httprequest-dofilerequest.md) — Performs the request by sending data contained in a file.
+            - [com.HttpRequest.doFormEncodedRequest](15_library-reference/3860-com-httprequest-doformencodedrequest.md) — Performs an "application/x-www-form-urlencoded forms" encoded query.
+            - [com.HttpRequest.doRequest](15_library-reference/3861-com-httprequest-dorequest.md) — Performs the HTTP request.
+            - [com.HttpRequest.doTextRequest](15_library-reference/3862-com-httprequest-dotextrequest.md) — Performs the request by sending an entire string at once.
+            - [com.HttpRequest.doXmlRequest](15_library-reference/3863-com-httprequest-doxmlrequest.md) — Performs the request by sending an entire XML document at once.
+            - [com.HttpRequest.endJSONRequest](15_library-reference/3864-com-httprequest-endjsonrequest.md) — Terminates a streaming HTTP request.
+            - [com.HttpRequest.endXmlRequest](15_library-reference/3865-com-httprequest-endxmlrequest.md) — Terminates a streaming HTTP request.
+            - [com.HttpRequest.getAsyncResponse](15_library-reference/3866-com-httprequest-getasyncresponse.md) — Retrieves an asynchronous response produced by one of the request methods.
+            - [com.HttpRequest.getResponse](15_library-reference/3867-com-httprequest-getresponse.md) — Waits for and returns the response produced by one of request methods.
+            - [com.HttpRequest.removeHeader](15_library-reference/3868-com-httprequest-removeheader.md) — Removes a named HTTP request header.
+            - [com.HttpRequest.setAuthentication](15_library-reference/3869-com-httprequest-setauthentication.md) — Defines the user login and password to authenticate to the server.
+            - [com.HttpRequest.setAutoCookies](15_library-reference/3870-com-httprequest-setautocookies.md) — Enables automatic cookie management for a given request.
+            - [com.HttpRequest.setAutoReply](15_library-reference/3871-com-httprequest-setautoreply.md) — Defines the auto reply option for response methods.
+            - [com.HttpRequest.setBodyChunk()](15_library-reference/3872-com-httprequest-setbodychunk.md) — Disable chunk mode in HTTP 1.1 if request body size is greater than 32 KB.
+            - [com.HttpRequest.setCertificateAndKey](15_library-reference/3873-com-httprequest-setcertificateandkey.md) — Specifies the certificate and key to use for the HttpRequest request.
+            - [com.HttpRequest.setCharset](15_library-reference/3874-com-httprequest-setcharset.md) — Defines the charset used when sending text or XML.
+            - [com.HttpRequest.setCipher](15_library-reference/3875-com-httprequest-setcipher.md) — Defines the type of cipher to use for encryption and decryption.
+            - [com.HttpRequest.setConnectionTimeOut](15_library-reference/3876-com-httprequest-setconnectiontimeout.md) — Defines the timeout for the establishment of the connection.
+            - [com.HttpRequest.setHeader](15_library-reference/3877-com-httprequest-setheader.md) — Sets an HTTP header for the request.
+            - [com.HttpRequest.setKeepConnection](15_library-reference/3878-com-httprequest-setkeepconnection.md) — Defines whether a connection is kept open if a new request occurs.
+            - [com.HttpRequest.setMaximumResponseLength](15_library-reference/3879-com-httprequest-setmaximumresponselength.md) — Defines the maximum size in Kbytes of a response.
+            - [com.HttpRequest.setMethod](15_library-reference/3880-com-httprequest-setmethod.md) — Sets the HTTP method of the request.
+            - [com.HttpRequest.setMultipartType](15_library-reference/3881-com-httprequest-setmultiparttype.md) — Switch HttpRequest in multipart mode of a given type.
+            - [com.HttpRequest.setProxy](15_library-reference/3882-com-httprequest-setproxy.md) — Configure the proxy URL.
+            - [com.HttpRequest.setProxyAuthentication](15_library-reference/3883-com-httprequest-setproxyauthentication.md) — Define the login and password to use for proxy authentication.
+            - [com.HttpRequest.setTimeOut](15_library-reference/3884-com-httprequest-settimeout.md) — Defines the timeout for a reading or writing operation.
+            - [com.HttpRequest.setVerifyServer](15_library-reference/3885-com-httprequest-setverifyserver.md) — Defines if certificates for applications or services are validated on each request.
+            - [com.HttpRequest.setVersion](15_library-reference/3886-com-httprequest-setversion.md) — Sets the HTTP version of the request.
+          - [Examples (HttpRequest)](15_library-reference/3887-examples-httprequest.md) — These examples use methods of the com.HttpRequest class.
+        - [The HttpResponse class](15_library-reference/3888-the-httpresponse-class.md) — The com.HttpResponse class provides an interface to perform XML and TEXT responses over HTTP, with additional XML streaming possibilities, on the client side.
+          - [HttpResponse methods](15_library-reference/3889-httpresponse-methods.md) — Methods for the com.HttpResponse class.
+            - [com.HttpResponse.beginJSONResponse](15_library-reference/3890-com-httpresponse-beginjsonresponse.md) — Starts a HTTP response streaming JSON.
+            - [com.HttpResponse.beginXmlResponse](15_library-reference/3891-com-httpresponse-beginxmlresponse.md) — Starts a streaming HTTP response.
+            - [com.HttpResponse.endJSONResponse](15_library-reference/3892-com-httpresponse-endjsonresponse.md) — Performs the HTTP request.
+            - [com.HttpResponse.endXmlResponse](15_library-reference/3893-com-httpresponse-endxmlresponse.md) — Performs the HTTP request.
+            - [com.HttpResponse.getDataResponse](15_library-reference/3894-com-httpresponse-getdataresponse.md) — Returns the entire HTTP response in a BYTE.
+            - [com.HttpResponse.getFileResponse](15_library-reference/3895-com-httpresponse-getfileresponse.md) — Returns the entire HTTP response to a file on the disk.
+            - [com.HttpResponse.getHeader](15_library-reference/3896-com-httpresponse-getheader.md) — Returns the value of an HTTP header.
+            - [com.HttpResponse.getHeaderCount](15_library-reference/3897-com-httpresponse-getheadercount.md) — Returns the number of headers.
+            - [com.HttpResponse.getHeaderName](15_library-reference/3898-com-httpresponse-getheadername.md) — Returns the name of a header by position.
+            - [com.HttpResponse.getHeaderValue](15_library-reference/3899-com-httpresponse-getheadervalue.md) — Returns the value of a header by position.
+            - [com.HttpResponse.getMultipartType](15_library-reference/3900-com-httpresponse-getmultiparttype.md) — Returns whether a response is multipart or not, and the kind of multipart if any.
+            - [com.HttpResponse.getPart](15_library-reference/3901-com-httpresponse-getpart.md) — Returns the HTTP part object at the specified index of the current HTTP response.
+            - [com.HttpResponse.getPartCount](15_library-reference/3902-com-httpresponse-getpartcount.md) — Returns the number of additional parts in the HTTP response.
+            - [com.HttpResponse.getPartFromID](15_library-reference/3903-com-httpresponse-getpartfromid.md) — Returns the HTTP part object marked with the given Content-ID value as identifier, or NULL if none.
+            - [com.HttpResponse.getServerCookies](15_library-reference/3904-com-httpresponse-getservercookies.md) — Returns all cookies set as response from a server.
+            - [com.HttpResponse.getStatusCode](15_library-reference/3905-com-httpresponse-getstatuscode.md) — Returns the HTTP status code.
+            - [com.HttpResponse.getStatusDescription](15_library-reference/3906-com-httpresponse-getstatusdescription.md) — Returns the HTTP status description.
+            - [com.HttpResponse.getTextResponse](15_library-reference/3907-com-httpresponse-gettextresponse.md) — Returns the entire HTTP response in a string.
+            - [com.HttpResponse.getXmlResponse](15_library-reference/3908-com-httpresponse-getxmlresponse.md) — Returns the entire HTTP response in a DOM document.
+          - [Examples (HttpResponse)](15_library-reference/3909-examples-httpresponse.md) — Examples using methods of the com.HttpResponse class.
+        - [The HttpPart class](15_library-reference/3910-the-httppart-class.md) — The com.HttpPart class provides an interface to manage the HTTP attachment sent or received in HTTP.
+          - [HttpPart methods](15_library-reference/3911-httppart-methods.md) — Methods for the com.HttpPart class.
+            - [com.HttpPart.CreateFromString](15_library-reference/3912-com-httppart-createfromstring.md) — Creates a new HttpPart object based on given string.
+            - [com.HttpPart.CreateFromDomDocument](15_library-reference/3913-com-httppart-createfromdomdocument.md) — Creates a new HttpPart object based on given XML document.
+            - [com.HttpPart.CreateFromData](15_library-reference/3914-com-httppart-createfromdata.md) — Creates a new HttpPart object based on given BYTE located in memory.
+            - [com.HttpPart.CreateAttachment](15_library-reference/3915-com-httppart-createattachment.md) — Creates a new HttpPart object based on a given filename located on disk.
+            - [com.HttpPart.clearHeaders](15_library-reference/3916-com-httppart-clearheaders.md) — Remove all headers from the HTTP part.
+            - [com.HttpPart.getAttachment](15_library-reference/3917-com-httppart-getattachment.md) — Returns the absolute path to the HTTP part.
+            - [com.HttpPart.getContentAsData](15_library-reference/3918-com-httppart-getcontentasdata.md) — Returns the HTTP part as a BYTE.
+            - [com.HttpPart.getContentAsDomDocument](15_library-reference/3919-com-httppart-getcontentasdomdocument.md) — Returns the HTTP part as an XML document.
+            - [com.HttpPart.getContentAsString](15_library-reference/3920-com-httppart-getcontentasstring.md) — Returns the HTTP part as a string.
+            - [com.HttpPart.getHeader](15_library-reference/3921-com-httppart-getheader.md) — Returns a named HTTP multipart header as a string.
+            - [com.HttpPart.getHeaderCount](15_library-reference/3922-com-httppart-getheadercount.md) — Retrieve the number of headers for the current HTTP part.
+            - [com.HttpPart.getHeaderName](15_library-reference/3923-com-httppart-getheadername.md) — Retrieve the name of an HTTP multipart header as a string, where the multipart header is specified by its position.
+            - [com.HttpPart.getHeaderValue](15_library-reference/3924-com-httppart-getheadervalue.md) — Retrieve the value of an HTTP multipart header as a string, where the multipart header is specified by its position.
+            - [com.HttpPart.removeHeader](15_library-reference/3925-com-httppart-removeheader.md) — Remove the header of given name from the current HttpPart object.
+            - [com.HttpPart.setHeader](15_library-reference/3926-com-httppart-setheader.md) — Sets a named HTTP multipart header using a string value.
+          - [Examples (HttpPart)](15_library-reference/3927-examples-httppart.md) — Examples using methods of the com.HttpPart class.
+            - [Send form data in multipart](15_library-reference/3928-send-form-data-in-multipart.md) — Example of client using methods of the com.HttpPart class to send form data in multipart.
+            - [Send/receive files in multipart](15_library-reference/3929-send-receive-files-in-multipart.md) — Example of client and server applications using methods of the com.HttpPart class to send and receive files in multipart.
+      - [TCP classes](15_library-reference/3930-tcp-classes.md) — The TCP classes manage TCP client network operations.
+        - [The TcpRequest class](15_library-reference/3931-the-tcprequest-class.md) — The com.TcpRequest class provides an interface to perform asynchronous XML and TEXT requests over TCP, with additional XML streaming possibilities.
+          - [TcpRequest methods](15_library-reference/3932-tcprequest-methods.md) — Methods of the com.TcpRequest class.
+            - [com.TcpRequest.beginXmlRequest](15_library-reference/3933-com-tcprequest-beginxmlrequest.md) — Starts a streaming XML request.
+            - [com.TcpRequest.Create](15_library-reference/3934-com-tcprequest-create.md) — Creates a new TCP request object.
+            - [com.TcpRequest.doDataRequest](15_library-reference/3935-com-tcprequest-dodatarequest.md) — Performs the request by sending binary data.
+            - [com.TcpRequest.doRequest](15_library-reference/3936-com-tcprequest-dorequest.md) — Performs a TCP request.
+            - [com.TcpRequest.doTextRequest](15_library-reference/3937-com-tcprequest-dotextrequest.md) — Performs a request with a string.
+            - [com.TcpRequest.doXmlRequest](15_library-reference/3938-com-tcprequest-doxmlrequest.md) — Performs a request with a DOM document.
+            - [com.TcpRequest.endXmlRequest](15_library-reference/3939-com-tcprequest-endxmlrequest.md) — Terminates a streaming TCP request.
+            - [com.TcpRequest.getAsyncResponse](15_library-reference/3940-com-tcprequest-getasyncresponse.md) — Returns the response after performing a TCP request, asynchronously.
+            - [com.TcpRequest.getResponse](15_library-reference/3941-com-tcprequest-getresponse.md) — Returns the response after performing a TCP request.
+            - [com.TcpRequest.setConnectionTimeOut](15_library-reference/3942-com-tcprequest-setconnectiontimeout.md) — Defines the connection time out.
+            - [com.TcpRequest.setKeepConnection](15_library-reference/3943-com-tcprequest-setkeepconnection.md) — Defines if the TCP connection is kept open after sending a request.
+            - [com.TcpRequest.setMaximumResponseLength](15_library-reference/3944-com-tcprequest-setmaximumresponselength.md) — Defines the maximum size in Kbyte of the response.
+            - [com.TcpRequest.setTimeOut](15_library-reference/3945-com-tcprequest-settimeout.md) — Defines the time out for read/write operations.
+        - [The TcpResponse class](15_library-reference/3946-the-tcpresponse-class.md) — The com.TcpResponse class provides an interface to perform XML and TEXT responses over TCP, with additional XML streaming possibilities.
+          - [TcpResponse methods](15_library-reference/3947-tcpresponse-methods.md) — Methods of the com.TcpResponse class.
+            - [com.TcpResponse.beginXmlResponse](15_library-reference/3948-com-tcpresponse-beginxmlresponse.md) — Starts a streaming TCP response.
+            - [com.TcpResponse.endXmlResponse](15_library-reference/3949-com-tcpresponse-endxmlresponse.md) — Ends a streaming TCP response.
+            - [com.TcpResponse.getDataResponse](15_library-reference/3950-com-tcpresponse-getdataresponse.md) — Returns a TCP response in binary format.
+            - [com.TcpResponse.getTextResponse](15_library-reference/3951-com-tcpresponse-gettextresponse.md) — Returns a TCP response in string format.
+            - [com.TcpResponse.getXmlResponse](15_library-reference/3952-com-tcpresponse-getxmlresponse.md) — Returns an entire DOM document as TCP response.
+      - [Helper classes](15_library-reference/3953-helper-classes.md) — The Helper classes provide utility classes.
+        - [The Util class](15_library-reference/3954-the-util-class.md) — The com.Util class provides static helper methods.
+          - [Util methods](15_library-reference/3955-util-methods.md) — Methods of the com.Util class.
+            - [com.Util.UniqueApplicationInstance](15_library-reference/3956-com-util-uniqueapplicationinstance.md) — Checks that the calling application is the only one to run.
+    - [The xml package](15_library-reference/3957-the-xml-package.md) — The Genero Web Services XML package provides classes and methods to handle any kind of XML documents, including documents with namespaces.
+      - [The Document Object Modeling (DOM) classes](15_library-reference/3958-the-document-object-modeling-dom-classes.md) — The Document Object Modeling (DOM) classes manage XML documents entirely in memory with support for XML Schema and DTD validation.
+        - [The DomDocument class](15_library-reference/3959-the-domdocument-class.md) — The xml.DomDocument class provides methods to manipulate a data tree, following the DOM standards.
+          - [xml.DomDocument methods](15_library-reference/3960-xml-domdocument-methods.md) — Methods for the xml.DomDocument class.
+            - [xml.DomDocument.appendDocumentNode](15_library-reference/3961-xml-domdocument-appenddocumentnode.md) — Adds a child DomNode object to the end of the DomNode children for this DomDocument object.
+            - [xml.DomDocument.clone](15_library-reference/3962-xml-domdocument-clone.md) — Returns a copy of this xml.DomDocument object.
+            - [xml.DomDocument.Create](15_library-reference/3963-xml-domdocument-create.md) — Constructor of an empty xml.DomDocument object.
+            - [xml.DomDocument.createAttribute](15_library-reference/3964-xml-domdocument-createattribute.md) — Creates a XML Attribute xml.DomNode object for an xml.DomDocument object.
+            - [xml.DomDocument.createAttributeNS](15_library-reference/3965-xml-domdocument-createattributens.md) — Creates a XML namespace-qualified Attribute xml.DomNode object for this xml.DomDocument object.
+            - [xml.DomDocument.createCDATASection](15_library-reference/3966-xml-domdocument-createcdatasection.md) — Creates an XML CData xml.DomNode object for an xml.DomDocument object.
+            - [xml.DomDocument.createComment](15_library-reference/3967-xml-domdocument-createcomment.md) — Creates a XML Comment xml.DomNode object for an xml.DomDocument object.
+            - [xml.DomDocument.CreateDocument](15_library-reference/3968-xml-domdocument-createdocument.md) — Constructor of an xml.DomDocument with an XML root element.
+            - [xml.DomDocument.createDocumentFragment](15_library-reference/3969-xml-domdocument-createdocumentfragment.md) — Creates a XML Document Fragment xml.DomNode object for this xml.DomDocument object.
+            - [xml.DomDocument.CreateDocumentNS](15_library-reference/3970-xml-domdocument-createdocumentns.md) — Constructor of a xml.DomDocument with a root namespace-qualified XML root element
+            - [xml.DomDocument.createDocumentType](15_library-reference/3971-xml-domdocument-createdocumenttype.md) — Creates a XML Document Type (DTD) xml.DomNode object for this xml.DomDocument object.
+            - [xml.DomDocument.createElement](15_library-reference/3972-xml-domdocument-createelement.md) — Creates a XML Element xml.DomNode object for an xml.DomDocument object
+            - [xml.DomDocument.createElementNS](15_library-reference/3973-xml-domdocument-createelementns.md) — Creates a XML namespace-qualified Element xml.DomNode object for an xml.DomDocument object.
+            - [xml.DomDocument.createEntityReference](15_library-reference/3974-xml-domdocument-createentityreference.md) — Creates a XML EntityReference xml.DomNode object for this xml.DomDocument object
+            - [xml.DomDocument.createNode](15_library-reference/3975-xml-domdocument-createnode.md) — Creates an xml.DomNode object from a string for this xml.DomDocument object.
+            - [xml.DomDocument.createProcessingInstruction](15_library-reference/3976-xml-domdocument-createprocessinginstruction.md) — Creates a XML Processing Instruction xml.DomNode object for this xml.DomDocument object.
+            - [xml.DomDocument.createTextNode](15_library-reference/3977-xml-domdocument-createtextnode.md) — Creates a XML Text xml.DomNode object for this xml.DomDocument object.
+            - [xml.DomDocument.declareNamespace](15_library-reference/3978-xml-domdocument-declarenamespace.md) — Forces namespace declaration to a XML Element xml.DomNode for this xml.DomDocument object.
+            - [xml.DomDocument.getDocumentElement](15_library-reference/3979-xml-domdocument-getdocumentelement.md) — Returns the root XML Element xml.DomNode object for this xml.DomDocument object.
+            - [xml.DomDocument.getDocumentNodeItem](15_library-reference/3980-xml-domdocument-getdocumentnodeitem.md) — Returns the child xml.DomNode object at a given position for this xml.DomDocument object.
+            - [xml.DomDocument.getDocumentNodesCount](15_library-reference/3981-xml-domdocument-getdocumentnodescount.md) — Returns the number of child xml.DomNode objects for this xml.DomDocument object.
+            - [xml.DomDocument.getElementById](15_library-reference/3982-xml-domdocument-getelementbyid.md) — Returns the xml.DomNode element that has an attribute of type ID with the given value.
+            - [xml.DomDocument.getElementsByTagName](15_library-reference/3983-xml-domdocument-getelementsbytagname.md) — Returns a xml.DomNodeList object containing all XML Element xml.DomNode objects with the same tag name in the document.
+            - [xml.DomDocument.getElementsByTagNameNS](15_library-reference/3984-xml-domdocument-getelementsbytagnamens.md) — Returns an xml.DomNodeList object containing all namespace qualified XML Element xml.DomNode objects with the same tag name and namespace in the entire document
+            - [xml.DomDocument.getErrorDescription](15_library-reference/3985-xml-domdocument-geterrordescription.md) — Returns the error description at the given position.
+            - [xml.DomDocument.getErrorsCount](15_library-reference/3986-xml-domdocument-geterrorscount.md) — Returns the number of errors encountered during the loading, saving or validation of a XML document.
+            - [xml.DomDocument.getFeature](15_library-reference/3987-xml-domdocument-getfeature.md) — Gets a feature for an xml.DomDocument object.
+            - [xml.DomDocument.getFirstDocumentNode](15_library-reference/3988-xml-domdocument-getfirstdocumentnode.md) — Returns the first child xml.DomNode object for this xml.DomDocument object.
+            - [xml.DomDocument.getLastDocumentNode](15_library-reference/3989-xml-domdocument-getlastdocumentnode.md) — Returns the last child xml.DomNode object in this xml.DomDocument object.
+            - [xml.DomDocument.getXmlEncoding](15_library-reference/3990-xml-domdocument-getxmlencoding.md) — Returns the document encoding as defined in the XML document declaration.
+            - [xml.DomDocument.getXmlVersion](15_library-reference/3991-xml-domdocument-getxmlversion.md) — Returns the document version as defined in the XML document declaration.
+            - [xml.DomDocument.importNode](15_library-reference/3992-xml-domdocument-importnode.md) — Imports a xml.DomNode from a xml.DomDocument object into its new context (attached to a xml.DomDocument object).
+            - [xml.DomDocument.insertAfterDocumentNode](15_library-reference/3993-xml-domdocument-insertafterdocumentnode.md) — Inserts a child xml.DomNode object after another child DomNode in this xml.DomDocument object.
+            - [xml.DomDocument.insertBeforeDocumentNode](15_library-reference/3994-xml-domdocument-insertbeforedocumentnode.md) — Inserts a child DomNode object before another child xml.DomNode for this xml.DomDocument object.
+            - [xml.DomDocument.isXmlStandalone](15_library-reference/3995-xml-domdocument-isxmlstandalone.md) — Checks whether the XML standalone attribute is set in the XML declaration.
+            - [xml.DomDocument.load](15_library-reference/3996-xml-domdocument-load.md) — Loads a XML Document into a DomDocument object from a file or an URL.
+            - [xml.DomDocument.loadFromPipe](15_library-reference/3997-xml-domdocument-loadfrompipe.md) — Loads a XML Document into this xml.DomDocument object from a PIPE.
+            - [xml.DomDocument.loadFromString](15_library-reference/3998-xml-domdocument-loadfromstring.md) — Loads a XML Document into a xml.DomDocument object from a string.
+            - [xml.DomDocument.normalize](15_library-reference/3999-xml-domdocument-normalize.md) — Normalizes the entire Document.
+            - [xml.DomDocument.prependDocumentNode](15_library-reference/4000-xml-domdocument-prependdocumentnode.md) — Adds a child xml.DomNode object to the beginning of the xml.DomNode children of this xml.DomDocument object.
+            - [xml.DomDocument.removeDocumentNode](15_library-reference/4001-xml-domdocument-removedocumentnode.md) — Removes a child xml.DomNode object from the xml.DomNode children in this xml.DomDocument object.
+            - [xml.DomDocument.save](15_library-reference/4002-xml-domdocument-save.md) — Saves this xml.DomDocument object as a XML Document to a file or URL.
+            - [xml.DomDocument.saveToPipe](15_library-reference/4003-xml-domdocument-savetopipe.md) — Saves this xml.DomDocument object as an XML Document via a PIPE.
+            - [xml.DomDocument.saveToString](15_library-reference/4004-xml-domdocument-savetostring.md) — Saves this xml.DomDocument object as a XML Document to a string.
+            - [xml.DomDocument.selectByXPath](15_library-reference/4005-xml-domdocument-selectbyxpath.md) — Returns a xml.DomNodeList object containing all xml.DomNode objects matching an XPath 1.0 expression.
+            - [xml.DomDocument.setFeature](15_library-reference/4006-xml-domdocument-setfeature.md) — Sets a feature for this xml.DomDocument object.
+            - [xml.DomDocument.setXmlEncoding](15_library-reference/4007-xml-domdocument-setxmlencoding.md) — Sets the XML document encoding in the XML declaration of this xml.DomDocument.
+            - [xml.DomDocument.setXmlStandalone](15_library-reference/4008-xml-domdocument-setxmlstandalone.md) — Sets the XML standalone attribute in the XML declaration to "yes" or "no" in the XML declaration, or removes the standalone attribute.
+            - [xml.DomDocument.validate](15_library-reference/4009-xml-domdocument-validate.md) — Performs a DTD or XML Schema validation for this xml.DomDocument object.
+            - [xml.DomDocument.validateOneElement](15_library-reference/4010-xml-domdocument-validateoneelement.md) — Performs a DTD or XML Schema validation of a XML Element xml.DomNode object.
+          - [Navigation methods usage examples](15_library-reference/4011-navigation-methods-usage-examples.md) — Examples using the navigation methods of the xml.DomDocument class.
+          - [Node creation methods usage examples](15_library-reference/4012-node-creation-methods-usage-examples.md) — Node creation methods usage examples for the xml.DomDocument class.
+          - [HTML document usage example](15_library-reference/4013-html-document-usage-example.md) — The HTML language provides tags that allow the user to provide an embedded style sheet (the "style" tag) and to write embedded client side script (the "script" tag). According to the HTML 4.0 specification, the content of these tags must be managed as CDATA section.
+          - [Load and save methods usage examples](15_library-reference/4014-load-and-save-methods-usage-examples.md) — Load and save method usage examples for the xml.DomDocument class.
+          - [Cautions](15_library-reference/4015-cautions.md) — Some things you need to be aware of when working with the xml.DomDocument class.
+          - [DomDocument Features](15_library-reference/4016-domdocument-features.md) — A list of features for the xml.DomDocument class.
+          - [Examples](15_library-reference/4017-examples.md) — xml.DomDocument usage examples.
+            - [Example 1 : Create a namespace qualified document with processing instructions](15_library-reference/4018-example-1-create-a-namespace-qualified-document-with-process.md)
+            - [Example 2 : Validating a document against XML schemas or a DTD](15_library-reference/4019-example-2-validating-a-document-against-xml-schemas-or-a-dtd.md)
+        - [The DomNode class](15_library-reference/4020-the-domnode-class.md) — The xml.DomNode class provides methods to manipulate a node of a DomDocument object.
+          - [xml.DomNode methods](15_library-reference/4021-xml-domnode-methods.md) — Methods for the xml.DomNode class.
+            - [xml.DomNode.addNextSibling](15_library-reference/4022-xml-domnode-addnextsibling.md) — Adds a DomNode object as the next sibling of a DomNode object.
+            - [xml.DomNode.addPreviousSibling](15_library-reference/4023-xml-domnode-addprevioussibling.md) — Adds a DomNode object as the previous sibling of a DomNode object.
+            - [xml.DomNode.appendChild](15_library-reference/4024-xml-domnode-appendchild.md) — Adds a child DomNode object to the end of the child list for a DomNode object
+            - [xml.DomNode.appendChildElement](15_library-reference/4025-xml-domnode-appendchildelement.md) — Creates and adds a child XML Element node to the end of the list of child nodes for an XML Element DomNode object.
+            - [xml.DomNode.appendChildElementNS](15_library-reference/4026-xml-domnode-appendchildelementns.md) — Creates and adds a child namespace qualified XML Element node to the end of the list of child nodes for an XML Element DomNode object.
+            - [xml.DomNode.clone](15_library-reference/4027-xml-domnode-clone.md) — Returns a duplicate DomNode object of a node.
+            - [xml.DomNode.getAttribute](15_library-reference/4028-xml-domnode-getattribute.md) — Returns the value of a XML Attribute for an xml.DomNode object
+            - [xml.DomNode.getAttributeNS](15_library-reference/4029-xml-domnode-getattributens.md) — Returns the value of a namespace qualified XML Attribute for an xml.DomNode object
+            - [xml.DomNode.getAttributeNode](15_library-reference/4030-xml-domnode-getattributenode.md) — Returns an XML Attribute DomNode object for an XML Element DomNode object
+            - [xml.DomNode.getAttributeNodeItem](15_library-reference/4031-xml-domnode-getattributenodeitem.md) — Returns the XML Attribute DomNode object at a given position on this XML Element DomNode object.
+            - [xml.DomNode.getAttributeNodeNS](15_library-reference/4032-xml-domnode-getattributenodens.md) — Returns a namespace-qualified XML Attribute DomNode object for an XML Element DomNode object
+            - [xml.DomNode.getAttributesCount](15_library-reference/4033-xml-domnode-getattributescount.md) — Returns the number of XML Attribute DomNode objects on this XML Element DomNode object.
+            - [xml.DomNode.getChildNodeItem](15_library-reference/4034-xml-domnode-getchildnodeitem.md) — Returns the child DomNode object at a given position for a DomNode object.
+            - [xml.DomNode.getChildrenCount](15_library-reference/4035-xml-domnode-getchildrencount.md) — Returns the number of child DomNode objects for a DomNode object.
+            - [xml.DomNode.getElementsByTagName](15_library-reference/4036-xml-domnode-getelementsbytagname.md) — Returns a DomNodeList object containing all XML Element DomNode objects with the same tag name.
+            - [xml.DomNode.getElementsByTagNameNS](15_library-reference/4037-xml-domnode-getelementsbytagnamens.md) — Returns a DomNodeList object containing all namespace-qualified XML Element DomNode objects with the same tag name and namespace.
+            - [xml.DomNode.getFirstChild](15_library-reference/4038-xml-domnode-getfirstchild.md) — Returns the first child DomNode object for this XML Element DomNode object.
+            - [xml.DomNode.getFirstChildElement](15_library-reference/4039-xml-domnode-getfirstchildelement.md) — Returns the first XML Element child DomNode object for this DomNode object.
+            - [xml.DomNode.getLastChild](15_library-reference/4040-xml-domnode-getlastchild.md) — Returns the last child DomNode object for a XML Element DomNode object.
+            - [xml.DomNode.getLastChildElement](15_library-reference/4041-xml-domnode-getlastchildelement.md) — Returns the last child XML element DomNode object for this DomNode object.
+            - [xml.DomNode.getLocalName](15_library-reference/4042-xml-domnode-getlocalname.md) — Gets the local name for a DomNode object.
+            - [xml.DomNode.getNamespaceURI](15_library-reference/4043-xml-domnode-getnamespaceuri.md) — Returns the namespace URI for a DomNode object.
+            - [xml.DomNode.getNextSibling](15_library-reference/4044-xml-domnode-getnextsibling.md) — Returns the DomNode object immediately following a DomNode object.
+            - [xml.DomNode.getNextSiblingElement](15_library-reference/4045-xml-domnode-getnextsiblingelement.md) — Returns the XML Element DomNode object immediately following a DomNode object.
+            - [xml.DomNode.getNodeName](15_library-reference/4046-xml-domnode-getnodename.md) — Gets the name for a DomNode object.
+            - [xml.DomNode.getNodeType](15_library-reference/4047-xml-domnode-getnodetype.md) — Gets the XML type for this DomNode object.
+            - [xml.DomNode.getNodeValue](15_library-reference/4048-xml-domnode-getnodevalue.md) — Returns the value for a DomNode object.
+            - [xml.DomNode.getOwnerDocument](15_library-reference/4049-xml-domnode-getownerdocument.md) — Returns the DomDocument object containing this DomNode object.
+            - [xml.DomNode.getParentNode](15_library-reference/4050-xml-domnode-getparentnode.md) — Returns the parent DomNode object for this DomNode object.
+            - [xml.DomNode.getPrefix](15_library-reference/4051-xml-domnode-getprefix.md) — Returns the prefix for a DomNode object.
+            - [xml.DomNode.getPreviousSibling](15_library-reference/4052-xml-domnode-getprevioussibling.md) — Returns the DomNode object immediately preceding a DomNode object.
+            - [xml.DomNode.getPreviousSiblingElement](15_library-reference/4053-xml-domnode-getprevioussiblingelement.md) — Returns the XML Element DomNode object immediately preceding a DomNode object.
+            - [xml.DomNode.hasAttribute](15_library-reference/4054-xml-domnode-hasattribute.md) — Checks whether an XML Element DomNode object has the XML Attribute specified by a specified name.
+            - [xml.DomNode.hasAttributeNS](15_library-reference/4055-xml-domnode-hasattributens.md) — Checks whether a namespace qualified XML Attribute of a given name is carried by an XML Element DomNode object.
+            - [xml.DomNode.hasAttributes](15_library-reference/4056-xml-domnode-hasattributes.md) — Identifies whether a node has XML Attribute nodes.
+            - [xml.DomNode.hasChildNodes](15_library-reference/4057-xml-domnode-haschildnodes.md) — Returns TRUE if a node has child nodes.
+            - [xml.DomNode.insertAfterChild](15_library-reference/4058-xml-domnode-insertafterchild.md) — Inserts a DomNode object after an existing child DomNode object.
+            - [xml.DomNode.insertBeforeChild](15_library-reference/4059-xml-domnode-insertbeforechild.md) — Inserts a DomNode object before an existing child DomNode object.
+            - [xml.DomNode.isAttached](15_library-reference/4060-xml-domnode-isattached.md) — Returns whether the node is attached to the XML document.
+            - [xml.DomNode.isDefaultNamespace](15_library-reference/4061-xml-domnode-isdefaultnamespace.md) — Checks whether the specified namespace URI is the default namespace.
+            - [xml.DomNode.lookupNamespaceURI](15_library-reference/4062-xml-domnode-lookupnamespaceuri.md) — Looks up the namespace URI associated to a prefix, starting from a specified node.
+            - [xml.DomNode.lookupPrefix](15_library-reference/4063-xml-domnode-lookupprefix.md) — Looks up the prefix associated to a namespace URI, starting from the specified node.
+            - [xml.DomNode.prependChild](15_library-reference/4064-xml-domnode-prependchild.md) — Adds a child DomNode object to the beginning of the child list for a DomNode object.
+            - [xml.DomNode.prependChildElement](15_library-reference/4065-xml-domnode-prependchildelement.md) — Creates and adds a child XML Element node to the beginning of the list of child nodes for this XML Element DomNode object.
+            - [xml.DomNode.prependChildElementNS](15_library-reference/4066-xml-domnode-prependchildelementns.md) — Creates and adds a child namespace-qualified XML Element node to the beginning of the list of child nodes for an XML Element DomNode object.
+            - [xml.DomNode.removeAllChildren](15_library-reference/4067-xml-domnode-removeallchildren.md) — Removes all child DomNode objects from a DomNode object.
+            - [xml.DomNode.removeAttribute](15_library-reference/4068-xml-domnode-removeattribute.md) — Removes an XML Attribute for an XML Element DomNode object.
+            - [xml.DomNode.removeAttributeNS](15_library-reference/4069-xml-domnode-removeattributens.md) — Removes a namespace qualified XML Attribute for an XML Element DomNode object
+            - [xml.DomNode.removeChild](15_library-reference/4070-xml-domnode-removechild.md) — Removes a child DomNode object from the list of child DomNode objects.
+            - [xml.DomNode.replaceChild](15_library-reference/4071-xml-domnode-replacechild.md) — Replaces an existing child DomNode with another child DomNode object.
+            - [xml.DomNode.selectByXPath](15_library-reference/4072-xml-domnode-selectbyxpath.md) — Returns an xml.DomNodeList object containing all xml.DomNode objects matching an XPath 1.0 expression.
+            - [xml.DomNode.setAttribute](15_library-reference/4073-xml-domnode-setattribute.md) — Sets (or resets) an XML Attribute for an XML Element DomNode object.
+            - [xml.DomNode.setAttributeNS](15_library-reference/4074-xml-domnode-setattributens.md) — Sets (or resets) a namespace-qualified XML Attribute for an XML Element DomNode object.
+            - [xml.DomNode.setAttributeNode](15_library-reference/4075-xml-domnode-setattributenode.md) — Sets (or resets) an XML Attribute DomNode object to an XML Element DomNode object.
+            - [xml.DomNode.setAttributeNodeNS](15_library-reference/4076-xml-domnode-setattributenodens.md) — Sets (or resets) a namespace-qualified XML Attribute DomNode object to an XML Element DomNode object.
+            - [xml.DomNode.setIdAttribute](15_library-reference/4077-xml-domnode-setidattribute.md) — Set the XML Attribute of given name to be of type ID. Declare (or undeclare) the ID as user-determined.
+            - [xml.DomNode.setIdAttributeNS](15_library-reference/4078-xml-domnode-setidattributens.md) — Set the namespace-qualified XML Attribute of given name and namespace to be of type ID. Declare (or undeclare) the ID as user-determined.
+            - [xml.DomNode.setNodeValue](15_library-reference/4079-xml-domnode-setnodevalue.md) — Sets the node value for a DomNode object.
+            - [xml.DomNode.setPrefix](15_library-reference/4080-xml-domnode-setprefix.md) — Sets the prefix for a DomNode object.
+            - [xml.DomNode.toString](15_library-reference/4081-xml-domnode-tostring.md) — Returns a string representation of a DomNode object.
+          - [DomNode types](15_library-reference/4082-domnode-types.md) — List of types for the xml.DomNode class.
+          - [Examples](15_library-reference/4083-examples.md) — xml.DomNode usage examples.
+            - [Example Counting the number of nodes in an XML document](15_library-reference/4084-example-counting-the-number-of-nodes-in-an-xml-document.md)
+        - [The DomNodeList class](15_library-reference/4085-the-domnodelist-class.md) — The xml.DomNodeList class provides methods to manipulate a list of DomNode objects.
+          - [xml.DomNodeList methods](15_library-reference/4086-xml-domnodelist-methods.md) — Methods for the xml.DomNodeList class.
+            - [xml.DomNodeList.getCount](15_library-reference/4087-xml-domnodelist-getcount.md) — Returns the number of DomNode objects in a DomNodeList object.
+            - [xml.DomNodeList.getItem](15_library-reference/4088-xml-domnodelist-getitem.md) — Returns the DomNode object at a given position in a DomNodeList object.
+      - [The streaming API for XML (StAX) classes](15_library-reference/4089-the-streaming-api-for-xml-stax-classes.md) — The streaming API for XML (StAX) classes use streaming while managing XML documents.
+        - [The StaxWriter class](15_library-reference/4090-the-staxwriter-class.md) — The xml.StaxWriter class provides methods compatible with Streaming API for XML(StAX) for writing XML documents.
+          - [xml.StaxWriter methods](15_library-reference/4091-xml-staxwriter-methods.md) — Methods for the xml.StaxWriter class.
+            - [xml.StaxWriter.attribute](15_library-reference/4092-xml-staxwriter-attribute.md) — Writes a XML attribute to the StaxWriter stream.
+            - [xml.StaxWriter.attributeNS](15_library-reference/4093-xml-staxwriter-attributens.md) — Writes a XML namespace qualified attribute to the StaxWriter stream.
+            - [xml.StaxWriter.cdata](15_library-reference/4094-xml-staxwriter-cdata.md) — Writes a XML CData to the StaxWriter stream.
+            - [xml.StaxWriter.characters](15_library-reference/4095-xml-staxwriter-characters.md) — Writes a XML text to the StaxWriter stream.
+            - [xml.StaxWriter.close](15_library-reference/4096-xml-staxwriter-close.md) — Closes the StaxWriter streaming, and releases all associated resources.
+            - [xml.StaxWriter.comment](15_library-reference/4097-xml-staxwriter-comment.md) — Writes a XML comment to the StaxWriter stream.
+            - [xml.StaxWriter.Create](15_library-reference/4098-xml-staxwriter-create.md) — Constructor of a StaxWriter object.
+            - [xml.StaxWriter.declareDefaultNamespace](15_library-reference/4099-xml-staxwriter-declaredefaultnamespace.md) — Binds a namespace URI to the default namespace, and forces the output to the StaxWriter stream.
+            - [xml.StaxWriter.declareNamespace](15_library-reference/4100-xml-staxwriter-declarenamespace.md) — Binds a namespace URI to a prefix, and forces the output of the XML namespace definition to the StaxWriter stream.
+            - [xml.StaxWriter.dtd](15_library-reference/4101-xml-staxwriter-dtd.md) — Writes a DTD to the StaxWriter stream.
+            - [xml.StaxWriter.emptyElement](15_library-reference/4102-xml-staxwriter-emptyelement.md) — Writes an empty XML element to the StaxWriter stream.
+            - [xml.StaxWriter.emptyElementNS](15_library-reference/4103-xml-staxwriter-emptyelementns.md) — Writes an empty namespace qualified XML element to the StaxWriter stream.
+            - [xml.StaxWriter.endDocument](15_library-reference/4104-xml-staxwriter-enddocument.md) — Closes any open tags and writes corresponding end tags.
+            - [xml.StaxWriter.endElement](15_library-reference/4105-xml-staxwriter-endelement.md) — Writes an end tag to the StaxWriter stream.
+            - [xml.StaxWriter.entityRef](15_library-reference/4106-xml-staxwriter-entityref.md) — Writes a XML EntityReference to the StaxWriter stream.
+            - [xml.StaxWriter.getFeature](15_library-reference/4107-xml-staxwriter-getfeature.md) — Gets a feature of a StaxWriter object.
+            - [xml.StaxWriter.processingInstruction](15_library-reference/4108-xml-staxwriter-processinginstruction.md) — Writes a XML ProcessingInstruction to the StaxWriter stream
+            - [xml.StaxWriter.setDefaultNamespace](15_library-reference/4109-xml-staxwriter-setdefaultnamespace.md) — Binds a namespace URI to the default namespace.
+            - [xml.StaxWriter.setFeature](15_library-reference/4110-xml-staxwriter-setfeature.md) — Sets a feature of a StaxWriter object.
+            - [xml.StaxWriter.setPrefix](15_library-reference/4111-xml-staxwriter-setprefix.md) — Binds a namespace URI to a prefix.
+            - [xml.StaxWriter.startDocument](15_library-reference/4112-xml-staxwriter-startdocument.md) — Writes a XML declaration to the StaxWriter stream.
+            - [xml.StaxWriter.startElement](15_library-reference/4113-xml-staxwriter-startelement.md) — Writes a XML start element to the StaxWriter stream.
+            - [xml.StaxWriter.startElementNS](15_library-reference/4114-xml-staxwriter-startelementns.md) — Writes a namespace-qualified XML start element to the StaxWriter stream.
+            - [xml.StaxWriter.writeTo](15_library-reference/4115-xml-staxwriter-writeto.md) — Sets the output stream of the StaxWriter object to a file or an URL, and starts the streaming.
+            - [xml.StaxWriter.writeToDocument](15_library-reference/4116-xml-staxwriter-writetodocument.md) — Sets the output stream of the StaxWriter object to an xml.DomDocument object, and starts the streaming.
+            - [xml.StaxWriter.writeToPipe](15_library-reference/4117-xml-staxwriter-writetopipe.md) — Sets the output stream of the StaxWriter object to a PIPE, and starts the streaming.
+            - [xml.StaxWriter.writeToText](15_library-reference/4118-xml-staxwriter-writetotext.md) — Sets the output stream of the StaxWriter object to a TEXT large object, and starts the streaming.
+          - [StaxWriter Features](15_library-reference/4119-staxwriter-features.md) — Features of the xml.StaxWriter class.
+          - [Example](15_library-reference/4120-example.md) — This example uses methods from the xml.StaxWriter class.
+        - [The StaxReader class](15_library-reference/4121-the-staxreader-class.md) — The StaxReader class provides methods compatible with Streaming API for XML(StAX) for reading XML documents.
+          - [xml.StaxReader methods](15_library-reference/4122-xml-staxreader-methods.md) — Methods for the xml.StaxReader class.
+            - [xml.StaxReader.close](15_library-reference/4123-xml-staxreader-close.md) — Closes the StaxReader streaming and releases all associated resources.
+            - [xml.StaxReader.Create](15_library-reference/4124-xml-staxreader-create.md) — Constructor of a StaxReader object.
+            - [xml.StaxReader.findAttributeValue](15_library-reference/4125-xml-staxreader-findattributevalue.md) — Returns the value of an XML attribute of a given name and/or namespace.
+            - [xml.StaxReader.getAttributeCount](15_library-reference/4126-xml-staxreader-getattributecount.md) — Returns the number of XML attributes defined on the current XML node, or zero.
+            - [xml.StaxReader.getAttributeLocalName](15_library-reference/4127-xml-staxreader-getattributelocalname.md) — Returns the local name of a XML attribute defined at a given position on the current XML node, or NULL.
+            - [xml.StaxReader.getAttributeNamespace](15_library-reference/4128-xml-staxreader-getattributenamespace.md) — Returns the namespace URI of a XML attribute defined at a given position on the current XML node, or NULL.
+            - [xml.StaxReader.getAttributePrefix](15_library-reference/4129-xml-staxreader-getattributeprefix.md) — Returns the prefix of a XML attribute defined at a given position on the current XML node, or NULL.
+            - [xml.StaxReader.getAttributeValue](15_library-reference/4130-xml-staxreader-getattributevalue.md) — Returns the value of a XML attribute defined at a given position on the current XML node, or NULL.
+            - [xml.StaxReader.getBytesRead](15_library-reference/4131-xml-staxreader-getbytesread.md) — Returns the number of bytes read by the StaxReader from the current XML document.
+            - [xml.StaxReader.getEncoding](15_library-reference/4132-xml-staxreader-getencoding.md) — Returns the document encoding defined in the XML Document declaration, or NULL.
+            - [xml.StaxReader.getEventType](15_library-reference/4133-xml-staxreader-geteventtype.md) — Returns a string that indicates the type of event the cursor of the StaxReader object is pointing to.
+            - [xml.StaxReader.getFeature](15_library-reference/4134-xml-staxreader-getfeature.md) — Gets a feature of a StaxReader object.
+            - [xml.StaxReader.getLocalName](15_library-reference/4135-xml-staxreader-getlocalname.md) — Returns the local name of the current XML node, or NULL.
+            - [xml.StaxReader.getName](15_library-reference/4136-xml-staxreader-getname.md) — Returns the qualified name of the current XML node, or NULL.
+            - [xml.StaxReader.getNamespace](15_library-reference/4137-xml-staxreader-getnamespace.md) — Returns the namespace URI of the current XML node, or NULL.
+            - [xml.StaxReader.getNamespaceCount](15_library-reference/4138-xml-staxreader-getnamespacecount.md) — Returns the number of namespace declarations defined on the current XML node, or zero.
+            - [xml.StaxReader.getNamespacePrefix](15_library-reference/4139-xml-staxreader-getnamespaceprefix.md) — Returns the prefix of a namespace declaration defined at a given position on the current XML node, or NULL.
+            - [xml.StaxReader.getNamespaceURI](15_library-reference/4140-xml-staxreader-getnamespaceuri.md) — Returns the URI of a namespace declaration defined at a given position on the current XML node, or NULL.
+            - [xml.StaxReader.getPIData](15_library-reference/4141-xml-staxreader-getpidata.md) — Returns the data part of a XML Processing Instruction node, or NULL.
+            - [xml.StaxReader.getPITarget](15_library-reference/4142-xml-staxreader-getpitarget.md) — Returns the target part of a XML Processing Instruction node, or NULL.
+            - [xml.StaxReader.getPrefix](15_library-reference/4143-xml-staxreader-getprefix.md) — Returns the prefix of the current XML node, or NULL.
+            - [xml.StaxReader.getText](15_library-reference/4144-xml-staxreader-gettext.md) — Returns as a string the value of the current XML node, or NULL.
+            - [xml.StaxReader.getVersion](15_library-reference/4145-xml-staxreader-getversion.md) — Returns the document version defined in the XML Document declaration, or NULL.
+            - [xml.StaxReader.hasName](15_library-reference/4146-xml-staxreader-hasname.md) — Checks whether the StaxReader cursor points to a node with a name.
+            - [xml.StaxReader.hasNext](15_library-reference/4147-xml-staxreader-hasnext.md) — Checks whether the StaxReader cursor can be moved to a XML node next to it.
+            - [xml.StaxReader.hasText](15_library-reference/4148-xml-staxreader-hastext.md) — Checks whether the StaxReader cursor points to a node with a text value.
+            - [xml.StaxReader.isCharacters](15_library-reference/4149-xml-staxreader-ischaracters.md) — Checks whether the StaxReader cursor points to a text node.
+            - [xml.StaxReader.isEmptyElement](15_library-reference/4150-xml-staxreader-isemptyelement.md) — Checks whether the StaxReader cursor points to an empty element node.
+            - [xml.StaxReader.isEndElement](15_library-reference/4151-xml-staxreader-isendelement.md) — Checks whether the StaxReader cursor points to an end element node.
+            - [xml.StaxReader.isIgnorableWhitespace](15_library-reference/4152-xml-staxreader-isignorablewhitespace.md) — Checks whether the StaxReader cursor points to ignorable whitespace.
+            - [xml.StaxReader.isStandalone](15_library-reference/4153-xml-staxreader-isstandalone.md) — Checks whether the document standalone attribute defined in the XML Document declaration is set to yes.
+            - [xml.StaxReader.isStartElement](15_library-reference/4154-xml-staxreader-isstartelement.md) — Checks whether the StaxReader cursor points to a start element node.
+            - [xml.StaxReader.lookupNamespace](15_library-reference/4155-xml-staxreader-lookupnamespace.md) — Looks up the namespace URI associated with a given prefix starting from the current XML node the StaxReader cursor is pointing to.
+            - [xml.StaxReader.lookupPrefix](15_library-reference/4156-xml-staxreader-lookupprefix.md) — Looks up the prefix associated with a given namespace URI, starting from the current XML node the StaxReader cursor is pointing to.
+            - [xml.StaxReader.next](15_library-reference/4157-xml-staxreader-next.md) — Moves the StaxReader cursor to the next XML node.
+            - [xml.StaxReader.nextSibling](15_library-reference/4158-xml-staxreader-nextsibling.md) — Moves the StaxReader cursor to the immediate next sibling XML Element of the current node, skipping all its child nodes.
+            - [xml.StaxReader.nextTag](15_library-reference/4159-xml-staxreader-nexttag.md) — Moves the StaxReader cursor to the next XML open or end tag
+            - [xml.StaxReader.readFrom](15_library-reference/4160-xml-staxreader-readfrom.md) — Sets the input stream of the StaxReader object to a file or a URL and starts the streaming
+            - [xml.StaxReader.readFromDocument](15_library-reference/4161-xml-staxreader-readfromdocument.md) — Sets the input stream of the StaxReader object to a DomDocument object and starts the streaming.
+            - [xml.StaxReader.readFromPipe](15_library-reference/4162-xml-staxreader-readfrompipe.md) — Sets the input stream of the StaxReader object to a PIPE and starts the streaming.
+            - [xml.StaxReader.readFromText](15_library-reference/4163-xml-staxreader-readfromtext.md) — Sets the input stream of the StaxReader object to a TEXT large object and starts the streaming.
+            - [xml.StaxReader.setFeature](15_library-reference/4164-xml-staxreader-setfeature.md) — Sets a feature of a StaxReader object.
+            - [xml.StaxReader.standaloneSet](15_library-reference/4165-xml-staxreader-standaloneset.md) — Checks whether the document standalone attribute is defined in the XML Document declaration.
+          - [StaxReader Features](15_library-reference/4166-staxreader-features.md) — Features of the xml.StaxReader class.
+          - [StaxReader Event Types](15_library-reference/4167-staxreader-event-types.md) — Event types of the xml.StaxReader class.
+          - [Example](15_library-reference/4168-example.md) — Example using methods of the xml.StaxReader class.
+      - [XML serialization classes](15_library-reference/4169-xml-serialization-classes.md) — The XML serialization classes convert BDL variables to XML and XML to BDL variables.
+        - [The Serializer class](15_library-reference/4170-the-serializer-class.md) — The xml.Serializer class provides methods to manage options for the serializer engine, and to use the serializer engine to serialize variables and XML element nodes.
+          - [xml.Serializer methods](15_library-reference/4171-xml-serializer-methods.md) — Methods for the xml.Serializer class.
+            - [xml.Serializer.CreateXmlSchemas](15_library-reference/4172-xml-serializer-createxmlschemas.md) — Creates XML schemas corresponding to the given variable, and fills a dynamic array with xml.DomDocument objects each representing a XML schema.
+            - [xml.Serializer.DomToStax](15_library-reference/4173-xml-serializer-domtostax.md) — Serializes a XML DomNode object to a StaxWriter object.
+            - [xml.Serializer.DomToVariable](15_library-reference/4174-xml-serializer-domtovariable.md) — Serializes a XML element node into a BDL variable using a DomNode object.
+            - [xml.Serializer.GetOption](15_library-reference/4175-xml-serializer-getoption.md) — Gets a global option value from the serializer engine.
+            - [xml.Serializer.OptimizedDomToVariable](15_library-reference/4176-xml-serializer-optimizeddomtovariable.md) — Serializes a XML element node into a BDL variable using a DomNode object.
+            - [xml.Serializer.OptimizedSoapSection5ToVariable](15_library-reference/4177-xml-serializer-optimizedsoapsection5tovariable.md) — Serializes an XML element node into a BDL variable in Soap Section 5 encoding.
+            - [xml.Serializer.OptimizedStaxToVariable](15_library-reference/4178-xml-serializer-optimizedstaxtovariable.md) — Serializes an XML element node into a BDL variable using a StaxReader object.
+            - [xml.Serializer.OptimizedVariableToDom](15_library-reference/4179-xml-serializer-optimizedvariabletodom.md) — Serializes a BDL variable into a XML element node using a DomNode object.
+            - [xml.Serializer.OptimizedVariableToSoapSection5](15_library-reference/4180-xml-serializer-optimizedvariabletosoapsection5.md) — Serializes a BDL variable into a XML element node in Soap Section 5 encoding.
+            - [xml.Serializer.OptimizedVariableToStax](15_library-reference/4181-xml-serializer-optimizedvariabletostax.md) — Serializes a BDL variable into a XML element node using a StaxWriter object.
+            - [xml.Serializer.SetOption](15_library-reference/4182-xml-serializer-setoption.md) — Sets a global option value for the serializer engine
+            - [xml.Serializer.SoapSection5ToVariable](15_library-reference/4183-xml-serializer-soapsection5tovariable.md) — Serializes an XML element node into a BDL variable in Soap Section 5 encoding.
+            - [xml.Serializer.StaxToDom](15_library-reference/4184-xml-serializer-staxtodom.md) — Serializes an XML element node into a DomNode object using a StaxReader object.
+            - [xml.Serializer.StaxToVariable](15_library-reference/4185-xml-serializer-staxtovariable.md) — Serializes an XML element node into a BDL variable using a StaxReader object.
+            - [xml.Serializer.VariableToDom](15_library-reference/4186-xml-serializer-variabletodom.md) — Serializes a BDL variable into a XML element node using a DomNode object.
+            - [xml.Serializer.VariableToSoapSection5](15_library-reference/4187-xml-serializer-variabletosoapsection5.md) — Serializes a BDL variable into a XML element node in Soap Section 5 encoding.
+            - [xml.Serializer.VariableToStax](15_library-reference/4188-xml-serializer-variabletostax.md) — Serializes a BDL variable into a XML element node using a StaxWriter object.
+          - [Serialization option flags](15_library-reference/4189-serialization-option-flags.md) — Serialization option flags for the xml.Serializer class.
+      - [XML security classes](15_library-reference/4190-xml-security-classes.md) — XML Security classes handle encryption and signature of XML documents entirely in memory with keys and certificates.
+        - [The CryptoKey class](15_library-reference/4191-the-cryptokey-class.md) — The xml.CryptoKey class provides methods to manipulate HMAC, symmetric and asymmetric keys needed for signing, verifying, encrypting and decrypting XML documents or document fragments.
+          - [CryptoKey methods](15_library-reference/4192-cryptokey-methods.md) — Methods for the xml.CryptoKey class.
+            - [xml.CryptoKey.compareTo](15_library-reference/4193-xml-cryptokey-compareto.md) — Compares a CryptoKey object to a second key.
+            - [xml.CryptoKey.computeKey](15_library-reference/4194-xml-cryptokey-computekey.md) — Computes the shared secret based on the given modulus, generator, the private key, and the other peer's public key. The returned key can be any symmetric/HMAC or symmetric/encryption key type. It can be used for symmetric signature or symmetric encryption.
+            - [xml.CryptoKey.Create](15_library-reference/4195-xml-cryptokey-create.md) — Initializes a xml.CryptoKey object. Constructor of an empty CryptoKey object based on a URL.
+            - [xml.CryptoKey.CreateDerivedKey](15_library-reference/4196-xml-cryptokey-createderivedkey.md) — Constructor of an empty CryptoKey object based on a URL. The crypto key must be derived before use.
+            - [xml.CryptoKey.CreateFromNode](15_library-reference/4197-xml-cryptokey-createfromnode.md) — Constructor of a new CryptoKey object based on a URL, from a XML node based on the XML-Signature and XML-Encryption specification.
+            - [xml.CryptoKey.deriveKey](15_library-reference/4198-xml-cryptokey-derivekey.md) — Derives the symmetric or HMAC CryptoKey object using the given method identifier and concatenating the optional label, the mandatory seed value and the optional created date as initial random value.
+            - [xml.CryptoKey.generateEllipticCurveKey](15_library-reference/4199-xml-cryptokey-generateellipticcurvekey.md) — Generates a new ECDSA key for the specified named elliptic curve.
+            - [xml.CryptoKey.generateKey](15_library-reference/4200-xml-cryptokey-generatekey.md) — Generates a random key of given size (in bits).
+            - [xml.CryptoKey.getEllipticCurveName](15_library-reference/4201-xml-cryptokey-getellipticcurvename.md) — Returns the name of the elliptic curve for an ECDSA key, if available.
+            - [xml.CryptoKey.getFeature](15_library-reference/4202-xml-cryptokey-getfeature.md) — Returns the value of the given feature for this CryptoKey object, or NULL.
+            - [xml.CryptoKey.getSHA1](15_library-reference/4203-xml-cryptokey-getsha1.md) — Returns the SHA1 encoded key identifier in a base64 encoded STRING.
+            - [xml.CryptoKey.getSize](15_library-reference/4204-xml-cryptokey-getsize.md) — Returns the size of the key in bits.
+            - [xml.CryptoKey.getType](15_library-reference/4205-xml-cryptokey-gettype.md) — Returns the type of key.
+            - [xml.CryptoKey.getURL](15_library-reference/4206-xml-cryptokey-geturl.md) — Returns the key identifier as a URL.
+            - [xml.CryptoKey.getUsage](15_library-reference/4207-xml-cryptokey-getusage.md) — Returns the usage of the key.
+            - [xml.CryptoKey.loadBin](15_library-reference/4208-xml-cryptokey-loadbin.md) — Loads a symmetric or HMAC key from a file in raw format.
+            - [xml.CryptoKey.loadEllipticCurve](15_library-reference/4209-xml-cryptokey-loadellipticcurve.md) — Loads an ECDSA key using a specific public point.
+            - [xml.CryptoKey.loadDER](15_library-reference/4210-xml-cryptokey-loadder.md) — Loads an asymmetric DSA key, an asymmetric RSA key, an asymmetric ECDSA key or Diffie-Hellman parameters from a file in DER format.
+            - [xml.CryptoKey.loadFromString](15_library-reference/4211-xml-cryptokey-loadfromstring.md) — Loads the given key in BASE64 string format into a CryptoKey object.
+            - [xml.CryptoKey.loadPEM](15_library-reference/4212-xml-cryptokey-loadpem.md) — Loads an asymmetric DSA key, an asymmetric RSA key, an asymmetric ECDSA key or Diffie-Hellman parameters from a file in PEM format.
+            - [xml.CryptoKey.loadPrivate](15_library-reference/4213-xml-cryptokey-loadprivate.md) — Loads the private asymmetric RSA key from the given XML document.
+            - [xml.CryptoKey.loadPublic](15_library-reference/4214-xml-cryptokey-loadpublic.md) — Loads the public part of an asymmetric RSA, ECDSA or DSA CryptoKey object, or the parameters and the public key of the Diffie-Hellman object from a XML document.
+            - [xml.CryptoKey.loadPublicFromString](15_library-reference/4215-xml-cryptokey-loadpublicfromstring.md) — Populate the current CryptoKey object with the passed public key.
+            - [xml.CryptoKey.savePrivate](15_library-reference/4216-xml-cryptokey-saveprivate.md) — Saves the private key part of an asymmetric RSA CryptoKey object into a XML document according to the XKMS2.0 specification.
+            - [xml.CryptoKey.savePublic](15_library-reference/4217-xml-cryptokey-savepublic.md) — Saves the public part of an asymmetric RSA, DSA or ECDSA CryptoKey object, or the parameters and the public key of the Diffie-Hellman object into a XML document.
+            - [xml.CryptoKey.savePublicToString](15_library-reference/4218-xml-cryptokey-savepublictostring.md) — Save the current xml.CryptoKey's public part in the returned base64 string.
+            - [xml.CryptoKey.saveToString](15_library-reference/4219-xml-cryptokey-savetostring.md) — Saves the CryptoKey object into a BASE64 string format.
+            - [xml.CryptoKey.setFeature](15_library-reference/4220-xml-cryptokey-setfeature.md) — Sets or resets the value of a feature for a CryptoKey object.
+            - [xml.CryptoKey.setKey](15_library-reference/4221-xml-cryptokey-setkey.md) — Defines the value of a HMAC or Symmetric key.
+          - [Supported kind of keys](15_library-reference/4222-supported-kind-of-keys.md) — Types of keys supported by the xml.CryptoKey class.
+          - [Derived keys](15_library-reference/4223-derived-keys.md)
+          - [CryptoKey Features](15_library-reference/4224-cryptokey-features.md) — Features of the xml.CryptoKey class.
+          - [Examples](15_library-reference/4225-examples.md) — xml.CryptoKey usage examples.
+            - [Loading an asymmetric RSA key](15_library-reference/4226-loading-an-asymmetric-rsa-key.md) — In this example, RSA keys are loaded from PEM files. Code samples show how to load the key file from the PEM file or from FGLPROFILE entries.
+            - [Encrypting with an RSA key](15_library-reference/4227-encrypting-with-an-rsa-key.md) — When encrypting data with an RSA key, this example shows how to use a PEM key file or a key referenced from FGLPROFILE entries to perform the encryption.
+            - [Decrypting with an RSA key](15_library-reference/4228-decrypting-with-an-rsa-key.md) — When decrypting data with an RSA key, this example shows how to use a PEM key file or a key referenced from FGLPROFILE entries to perform the decryption.
+            - [Generating a symmetric AES256 key](15_library-reference/4229-generating-a-symmetric-aes256-key.md) — This example demonstrates how to generate a symmetric AES256 key using the xml.CryptoKey class. It shows key creation, generation, and displays key properties such as size, type, and usage.
+            - [Setting a HMAC key](15_library-reference/4230-setting-a-hmac-key.md) — This example demonstrates how to create and set an HMAC key using the xml.CryptoKey class. It shows key initialization, setting the key value, and retrieving key properties such as size, type, and usage.
+            - [Deriving a HMAC key](15_library-reference/4231-deriving-a-hmac-key.md) — This example demonstrates how to derive an HMAC key using the xml.CryptoKey class. It shows generating a random seed, setting a base password, and deriving a key suitable for encryption or signature functions.
+            - [Computing the shared secret with Diffie-Hellman](15_library-reference/4232-computing-the-shared-secret-with-diffie-hellman.md) — In this example, Diffie-Hellman parameters are loaded from a PEM file and the peer's public key is loaded from an XML file. A private key is generated, and the shared secret is computed for secure communication.
+            - [Create an ECDSA public key from coordinates](15_library-reference/4233-create-an-ecdsa-public-key-from-coordinates.md)
+        - [The CryptoX509 class](15_library-reference/4234-the-cryptox509-class.md) — The xml.CryptoX509 class provides methods to manipulate X509 certificates needed for identification of individual persons, groups or any entities during XML encryption or signature process.
+          - [CryptoX509 methods](15_library-reference/4235-cryptox509-methods.md) — Methods for the xml.CryptoX509 class.
+            - [xml.CryptoX509.Create](15_library-reference/4236-xml-cryptox509-create.md) — Constructor of an empty CryptoX509 object.
+            - [xml.CryptoX509.CreateFromNode](15_library-reference/4237-xml-cryptox509-createfromnode.md) — Constructor of a new CryptoX509 object from a XML X509 certificate node.
+            - [xml.CryptoX509.createPublicKey](15_library-reference/4238-xml-cryptox509-createpublickey.md) — Creates a new public CryptoKey object for the given URL.
+            - [xml.CryptoX509.getCount](15_library-reference/4239-xml-cryptox509-getcount.md) — Returns the number of X509 certificates contained in one CryptoX509 object.
+            - [xml.CryptoX509.getFeature](15_library-reference/4240-xml-cryptox509-getfeature.md) — Get the value of a given feature of a CryptoX509 object.
+            - [xml.CryptoX509.getIdentifier](15_library-reference/4241-xml-cryptox509-getidentifier.md) — Gets the identification part of a X509 certificate
+            - [xml.CryptoX509.getThumbprintSHA1](15_library-reference/4242-xml-cryptox509-getthumbprintsha1.md) — Gets the SHA1 encoded thumbprint identifying the X509 certificate.
+            - [xml.CryptoX509.load](15_library-reference/4243-xml-cryptox509-load.md) — Loads the given XML document with ds:X509Data as root node in a CryptoX509 object.
+            - [xml.CryptoX509.loadDER](15_library-reference/4244-xml-cryptox509-loadder.md) — Loads a X509 certificate from a file in DER format.
+            - [xml.CryptoX509.loadFromString](15_library-reference/4245-xml-cryptox509-loadfromstring.md) — Loads the given X509 certificate in BASE64 string format into this CryptoX509 object.
+            - [xml.CryptoX509.loadPEM](15_library-reference/4246-xml-cryptox509-loadpem.md) — Loads a X509 certificate from a file in PEM format.
+            - [xml.CryptoX509.save](15_library-reference/4247-xml-cryptox509-save.md) — Saves the CryptoX509 certificate into a XML document with ds:X509Data element as root node.
+            - [xml.CryptoX509.saveToString](15_library-reference/4248-xml-cryptox509-savetostring.md) — Saves the CryptoX509 certificate into a BASE64 string format.
+            - [xml.CryptoX509.setFeature](15_library-reference/4249-xml-cryptox509-setfeature.md) — Sets or resets the given feature for this CryptoX509 object.
+          - [CryptoX509 Features](15_library-reference/4250-cryptox509-features.md) — Features of the xml.CryptoX509 class.
+          - [Examples](15_library-reference/4251-examples.md) — xml.CryptoX509 usage examples.
+            - [Loading a certificate from a PEM file](15_library-reference/4252-loading-a-certificate-from-a-pem-file.md) — Examples of how to load X.509 certificates from PEM files or FGLPROFILE entries in Genero.
+            - [Creating a public key for signature verification from a certificate](15_library-reference/4253-creating-a-public-key-for-signature-verification-from-a-cert.md)
+            - [Saving the subjectName of a certificate in XML](15_library-reference/4254-saving-the-subjectname-of-a-certificate-in-xml.md)
+        - [The Signature class](15_library-reference/4255-the-signature-class.md) — The xml.Signature class provides methods to create detached, enveloped or enveloping XML signatures of one or more references of XML documents or document fragments, and to determine whether a signed referenced document has been modified afterwards.
+          - [Signature methods](15_library-reference/4256-signature-methods.md) — Methods for the xml.Signature class.
+            - [xml.Signature.appendObjectData](15_library-reference/4257-xml-signature-appendobjectdata.md) — Appends a copy of a XML DomNode to the signature object index.
+            - [xml.Signature.appendReferenceTransformation](15_library-reference/4258-xml-signature-appendreferencetransformation.md) — Appends transformations related to the specified reference index.
+            - [xml.Signature.compute](15_library-reference/4259-xml-signature-compute.md) — Computes the signature of all references set in this Signature object.
+            - [xml.Signature.Create](15_library-reference/4260-xml-signature-create.md) — Constructor of a blank Signature object.
+            - [xml.Signature.CreateFromNode](15_library-reference/4261-xml-signature-createfromnode.md) — Constructor of a new Signature object from a XML Signature node, based on the XML-Signature specification.
+            - [xml.Signature.createObject](15_library-reference/4262-xml-signature-createobject.md) — Creates a new object that will embed additional XML nodes.
+            - [xml.Signature.createReference](15_library-reference/4263-xml-signature-createreference.md) — Creates a new reference that will be signed with the compute() method
+            - [xml.Signature.getCanonicalization](15_library-reference/4264-xml-signature-getcanonicalization.md) — Returns the canonicalization identifier of the signature.
+            - [xml.Signature.getDocument](15_library-reference/4265-xml-signature-getdocument.md) — Returns a new DomDocument object representing the signature in XML.
+            - [xml.Signature.getID](15_library-reference/4266-xml-signature-getid.md) — Returns the ID value of the signature.
+            - [xml.Signature.getObjectCount](15_library-reference/4267-xml-signature-getobjectcount.md) — Returns the number of objects in this Signature object.
+            - [xml.Signature.getObjectId](15_library-reference/4268-xml-signature-getobjectid.md) — Returns the ID value of the signature object.
+            - [xml.Signature.getReferenceCount](15_library-reference/4269-xml-signature-getreferencecount.md) — Returns the number of references in this Signature object.
+            - [xml.Signature.getReferenceDigest](15_library-reference/4270-xml-signature-getreferencedigest.md) — Returns the digest algorithm identifier of the reference.
+            - [xml.Signature.getReferenceID](15_library-reference/4271-xml-signature-getreferenceid.md) — Returns the ID value of the reference in this signature object.
+            - [xml.Signature.getReferenceTransformation](15_library-reference/4272-xml-signature-getreferencetransformation.md) — Gets the transformation identifier related to the reference of index referenceIndex.
+            - [xml.Signature.getReferenceTransformationCount](15_library-reference/4273-xml-signature-getreferencetransformationcount.md) — Returns the number of transformations referenced in this signature object.
+            - [xml.Signature.getReferenceURI](15_library-reference/4274-xml-signature-getreferenceuri.md) — Returns the URI of the reference in this signature object.
+            - [xml.Signature.getSignatureMethod](15_library-reference/4275-xml-signature-getsignaturemethod.md) — Returns the algorithm method of the signature.
+            - [xml.Signature.getType](15_library-reference/4276-xml-signature-gettype.md) — Returns a string with the type of the signature object.
+            - [xml.Signature.RetrieveObjectDataListFromSignatureNode](15_library-reference/4277-xml-signature-retrieveobjectdatalistfromsignaturenode.md) — Returns a DomNodeList containing all embedded XML nodes related to the signature object
+            - [xml.Signature.setCanonicalization](15_library-reference/4278-xml-signature-setcanonicalization.md) — Sets the canonicalization method to use for the signature.
+            - [xml.Signature.setCertificate](15_library-reference/4279-xml-signature-setcertificate.md) — Defines the X509 certificate to be added to the signature object when signing a document.
+            - [xml.Signature.setID](15_library-reference/4280-xml-signature-setid.md) — Sets an ID value for the signature.
+            - [xml.Signature.setKey](15_library-reference/4281-xml-signature-setkey.md) — Defines the key used for signing or validation.
+            - [xml.Signature.setObjectID](15_library-reference/4282-xml-signature-setobjectid.md) — Sets an ID for the signature object.
+            - [xml.Signature.setReferenceID](15_library-reference/4283-xml-signature-setreferenceid.md) — Sets an ID for the signature reference in the specified signature object.
+            - [xml.Signature.SignString](15_library-reference/4284-xml-signature-signstring.md) — Sign the passed string according to the specified key.
+            - [xml.Signature.verify](15_library-reference/4285-xml-signature-verify.md) — Verifies that all references in this signature object have not changed.
+            - [xml.Signature.VerifyString](15_library-reference/4286-xml-signature-verifystring.md) — Verify the signature is consistent with the given key and the original message.
+          - [XML Signature concepts](15_library-reference/4287-xml-signature-concepts.md) — The purpose of a signature is to guarantee the integrity of a XML document, that it was not altered, and that it still contains the same data as when it was created. An additional purpose of a signature is to authenticate the author of the document. There are different ways to achieve this guarantee.
+            - [Sign and verify with a common shared HMAC key](15_library-reference/4288-sign-and-verify-with-a-common-shared-hmac-key.md) — Use if the sender of the XML document and the receiver share a common secret key.
+            - [Sign with the originator private RSA or DSA key, and verify with the originator public RSA or DSA key](15_library-reference/4289-sign-with-the-originator-private-rsa-or-dsa-key-and-verify-w.md) — Use if the receiver of the XML document has the RSA or DSA public key of the sender.
+            - [Sign with the originator private RSA or DSA key, and verify with a RSA or DSA retrieval method](15_library-reference/4290-sign-with-the-originator-private-rsa-or-dsa-key-and-verify-w.md) — Use if the sender of the XML document provides the public RSA or DSA key in XML form (and via http, tcp or a file protocol).
+            - [Sign with the originator private RSA or DSA key, and verify with the originator X509 certificate associated to the private RSA or DSA key](15_library-reference/4291-sign-with-the-originator-private-rsa-or-dsa-key-and-verify-w.md) — Use if the receiver of the XML document has the X509 certificate associated to the RSA or DSA private key.
+            - [Sign with the originator private RSA or DSA key, and verify with trusted X509 certificates](15_library-reference/4292-sign-with-the-originator-private-rsa-or-dsa-key-and-verify-w.md) — Use if the sender of the XML document adds a X509 certificate that was signed by another trusted X509 certificate.
+            - [Sign with the originator private RSA or DSA key, and verify with a X509 certificate retrieval method and trusted X509 certificates](15_library-reference/4293-sign-with-the-originator-private-rsa-or-dsa-key-and-verify-w.md) — Use if the sender of the XML document adds a X509 retrieval method that was signed by another trusted X509 certificate.
+            - [Sign with a named key and verify using the keystore](15_library-reference/4294-sign-with-a-named-key-and-verify-using-the-keystore.md) — Use if the sender and the receiver exchange multiple XML documents signed with different keys.
+          - [Digest identifier](15_library-reference/4295-digest-identifier.md)
+          - [Transformation identifier](15_library-reference/4296-transformation-identifier.md)
+          - [Examples](15_library-reference/4297-examples.md) — xml.Signature usage examples.
+            - [Create a detached signature using a HMAC key](15_library-reference/4298-create-a-detached-signature-using-a-hmac-key.md) — In the example, an XML document ("MyDocument.xml") is loaded and signed with a HMAC key.
+            - [Verify a detached signature using a HMAC key](15_library-reference/4299-verify-a-detached-signature-using-a-hmac-key.md) — In the example, you verify the document signed with an HMAC key.
+            - [Create an enveloping signature using a DSA key](15_library-reference/4300-create-an-enveloping-signature-using-a-dsa-key.md) — Use this example to digitally sign an XML document with a DSA key, producing an enveloping signature that guarantees the document has not been tampered with.
+            - [Verify an enveloping signature using a X509 certificate](15_library-reference/4301-verify-an-enveloping-signature-using-a-x509-certificate.md) — In this example, you verify the document (MyDocumentEnvelopingSignature.xml) signed with a DSA key.
+            - [Create an enveloped signature using a RSA key](15_library-reference/4302-create-an-enveloped-signature-using-a-rsa-key.md) — In this code sample, a XML document ("MyDocument.xml") is loaded and signed with a RSA key.
+            - [Verify an enveloped signature using a RSA key](15_library-reference/4303-verify-an-enveloped-signature-using-a-rsa-key.md) — In this example, you verify the document (MyDocumentEnvelopedSignature.xml) signed with a RSA key.
+            - [Sample: XML and signed documents](15_library-reference/4304-sample-xml-and-signed-documents.md) — Sample XML and signed documents used in xml.Signature usage examples.
+              - [XML document (unsigned)](15_library-reference/4305-xml-document-unsigned.md) — Sample content provided for the purpose of testing examples.
+              - [XML document (signed with HMAC key)](15_library-reference/4306-xml-document-signed-with-hmac-key.md) — The sample content provided here is for the purpose of demonstrating what a signed document (a document signed with a HMAC key) might look like.
+              - [XML document (signed with DSA key)](15_library-reference/4307-xml-document-signed-with-dsa-key.md) — The sample content provided here is for the purpose of demonstrating what a signed document (a document signed with a DSA key) might look like.
+              - [XML document (signed with RSA key)](15_library-reference/4308-xml-document-signed-with-rsa-key.md) — The sample content provided here is for the purpose of demonstrating what a signed document (a document signed with a RSA key) might look like.
+        - [The Encryption class](15_library-reference/4309-the-encryption-class.md) — The xml.Encryption class provides methods to encrypt and decrypt XML documents, nodes or symmetric keys.
+          - [Encryption methods](15_library-reference/4310-encryption-methods.md) — Methods for the xml.Encryption class.
+            - [xml.Encryption.Create](15_library-reference/4311-xml-encryption-create.md) — Constructor of an Encryption object.
+            - [xml.Encryption.decryptElement](15_library-reference/4312-xml-encryption-decryptelement.md) — Decrypts the encrypted data DomNode using the symmetric key.
+            - [xml.Encryption.decryptElementContent](15_library-reference/4313-xml-encryption-decryptelementcontent.md) — Decrypts the encrypted data DomNode using the symmetric key.
+            - [xml.Encryption.decryptElementContentDetached](15_library-reference/4314-xml-encryption-decryptelementcontentdetached.md) — Decrypts the encrypted data DomNode using the symmetric key, and returns all its children in one new document fragment type xml.DomNode.
+            - [xml.Encryption.decryptElementDetached](15_library-reference/4315-xml-encryption-decryptelementdetached.md) — Decrypts the specified encrypted data DomNode using the symmetric key, and returns it in a new element xml.DomNode.
+            - [xml.Encryption.decryptKey](15_library-reference/4316-xml-encryption-decryptkey.md) — Decrypts the EncryptedKey as root in the given XML document, and returns a new CryptoKey of the given kind.
+            - [xml.Encryption.DecryptString](15_library-reference/4317-xml-encryption-decryptstring.md) — Decrypts an encrypted string encoded in BASE64, using the specified symmetric key, and returns the string in clear text.
+            - [xml.Encryption.encryptElement](15_library-reference/4318-xml-encryption-encryptelement.md) — Encrypts the element DomNode and all its children using the symmetric key.
+            - [xml.Encryption.encryptElementContent](15_library-reference/4319-xml-encryption-encryptelementcontent.md) — Encrypts all child nodes of the element DomNode using the symmetric key.
+            - [xml.Encryption.encryptElementContentDetached](15_library-reference/4320-xml-encryption-encryptelementcontentdetached.md) — Encrypts all child nodes of the element DomNode using the symmetric key, and returns them as one new encrypted-data node.
+            - [xml.Encryption.encryptElementDetached](15_library-reference/4321-xml-encryption-encryptelementdetached.md) — Encrypts the element DomNode and all its children using the symmetric key, and returns them as one new encrypted-data node.
+            - [xml.Encryption.encryptKey](15_library-reference/4322-xml-encryption-encryptkey.md) — Encrypts the given symmetric or HMAC key as an encrypted-key node and returns it as root node of a new XML document.
+            - [xml.Encryption.EncryptString](15_library-reference/4323-xml-encryption-encryptstring.md) — Encrypts the specified string using the symmetric key, and returns the encrypted string encoded in BASE64.
+            - [xml.Encryption.getEmbeddedKey](15_library-reference/4324-xml-encryption-getembeddedkey.md) — Get a copy of the embedded symmetric key that was used in the last decryption operation.
+            - [xml.Encryption.RSADecrypt](15_library-reference/4325-xml-encryption-rsadecrypt.md) — Decrypts the BASE64 encrypted string using the RSA key and returns it in clear text
+            - [xml.Encryption.RSAEncrypt](15_library-reference/4326-xml-encryption-rsaencrypt.md) — Encrypts the specified string using the RSA key and returns it encoded in BASE64.
+            - [xml.Encryption.setCertificate](15_library-reference/4327-xml-encryption-setcertificate.md) — Assigns a copy of the X509 certificate to this encryption object.
+            - [xml.Encryption.setKey](15_library-reference/4328-xml-encryption-setkey.md) — Assigns a copy of the symmetric key to this encryption object.
+            - [xml.Encryption.setKeyEncryptionKey](15_library-reference/4329-xml-encryption-setkeyencryptionkey.md) — Assigns a copy of the key-encryption key to this encryption object.
+          - [Examples](15_library-reference/4330-examples.md) — xml.Encryption usage examples.
+            - [Encrypt a XML node with a symmetric AES128 key](15_library-reference/4331-encrypt-a-xml-node-with-a-symmetric-aes128-key.md)
+            - [Decrypt a XML node with a symmetric AES128 key](15_library-reference/4332-decrypt-a-xml-node-with-a-symmetric-aes128-key.md)
+            - [Encrypt a XML node with a generated symmetric key protected with the public RSA key within a X509 certificate](15_library-reference/4333-encrypt-a-xml-node-with-a-generated-symmetric-key-protected.md)
+            - [Decrypt a XML node encrypted with a symmetric key protected with a private RSA key](15_library-reference/4334-decrypt-a-xml-node-encrypted-with-a-symmetric-key-protected.md)
+        - [The KeyStore class](15_library-reference/4335-the-keystore-class.md) — The xml.KeyStore class handles a key store for your application.
+          - [KeyStore methods](15_library-reference/4336-keystore-methods.md) — Methods for the xml.KeyStore class.
+            - [xml.KeyStore.AddCertificate](15_library-reference/4337-xml-keystore-addcertificate.md) — Registers in the keystore the given X509 certificate as a certificate for the application.
+            - [xml.KeyStore.AddKey](15_library-reference/4338-xml-keystore-addkey.md) — Registers in the keystore the given key by name for the application.
+            - [xml.KeyStore.AddTrustedCertificate](15_library-reference/4339-xml-keystore-addtrustedcertificate.md) — Registers in the keystore the given X509 certificate as a trusted certificate for the application.
+      - [XML transformation classes](15_library-reference/4340-xml-transformation-classes.md) — The XML transformation classes transform XML.
+        - [The XsltTransformer class](15_library-reference/4341-the-xslttransformer-class.md) — The xml.XsltTransformer class handles XML transformation following the XSLT version 1.0 specification.
+          - [XsltTransformer methods](15_library-reference/4342-xslttransformer-methods.md) — Methods for the xml.XSLTtransfomer class.
+            - [xml.XsltTransformer.clearParameters](15_library-reference/4343-xml-xslttransformer-clearparameters.md) — Clear all parameters in an instance of an XSLTTransformer object.
+            - [xml.XsltTransformer.CreateFromDocument](15_library-reference/4344-xml-xslttransformer-createfromdocument.md) — Returns a new instance of a XsltTransformer object to be used to transform a XML document based on a given style sheet.
+            - [xml.XsltTransformer.doTransform](15_library-reference/4345-xml-xslttransformer-dotransform.md) — Transforms the input source based on the XSLT style sheet used to create the XsltTransformer instance and returns the transformed document.
+            - [xml.XsltTransformer.getErrorDescription](15_library-reference/4346-xml-xslttransformer-geterrordescription.md) — Returns the exact description of the error referenced by the index.
+            - [xml.XsltTransformer.getErrorsCount](15_library-reference/4347-xml-xslttransformer-geterrorscount.md) — Returns the number of errors.
+            - [xml.XsltTransformer.getParameter](15_library-reference/4348-xml-xslttransformer-getparameter.md) — Get the value of a given parameter in an instance of an XSLTTransformer corresponding to the XSLT entry named by param.
+            - [xml.XsltTransformer.setParameter](15_library-reference/4349-xml-xslttransformer-setparameter.md) — Set parameters in an instance of an XSLTTransformer corresponding to the XSLT entries named by param.
+          - [Example](15_library-reference/4350-example.md) — This Genero application provides a working example using methods from the XsltTransformer class.
+      - [OM to XML Migration](15_library-reference/4351-om-to-xml-migration.md) — Code using the OM classes can be converted to XML classes in most cases.
+        - [OM - XML Mapping](15_library-reference/4352-om-xml-mapping.md) — A reference guide to the DOM APIs of the om and xml classes.
+    - [The reflect package](15_library-reference/4353-the-reflect-package.md) — These topics cover the classes for the reflect package.
+      - [The reflect.Value class](15_library-reference/4354-the-reflect-value-class.md) — The reflect.Value class is a generic API to inspect and modify variables.
+        - [reflect.Value methods](15_library-reference/4355-reflect-value-methods.md) — Methods for the reflect.Value class.
+          - [reflect.Value.copyOf](15_library-reference/4356-reflect-value-copyof.md) — Creates a new reflect.Value object from a copy of an expression.
+          - [reflect.Value.valueOf](15_library-reference/4357-reflect-value-valueof.md) — Creates a new reflect.Value object as a reference to the original variable.
+          - [reflect.Value.appendArrayElement](15_library-reference/4358-reflect-value-appendarrayelement.md) — Appends a new element to an array.
+          - [reflect.Value.assignToVariable](15_library-reference/4359-reflect-value-assigntovariable.md) — Assigns this reflect.Value to a variable.
+          - [reflect.Value.canAssignToVariable](15_library-reference/4360-reflect-value-canassigntovariable.md) — Checks if this reflect.Value can be assigned to a variable.
+          - [reflect.Value.clear](15_library-reference/4361-reflect-value-clear.md) — Removes all elements of the reflect.Value referencing a collection.
+          - [reflect.Value.deleteArrayElement](15_library-reference/4362-reflect-value-deletearrayelement.md) — Deletes an element of an array.
+          - [reflect.Value.getArrayElement](15_library-reference/4363-reflect-value-getarrayelement.md) — Returns an element of an array.
+          - [reflect.Value.getCurrentValue](15_library-reference/4364-reflect-value-getcurrentvalue.md) — Returns the actual (typed) value of this value object.
+          - [reflect.Value.getDictionaryElement](15_library-reference/4365-reflect-value-getdictionaryelement.md) — Returns an element of a dictionary.
+          - [reflect.Value.getDictionaryKeys](15_library-reference/4366-reflect-value-getdictionarykeys.md) — Returns the keys of a dictionary.
+          - [reflect.Value.getField](15_library-reference/4367-reflect-value-getfield.md) — Returns a field by index for a record.
+          - [reflect.Value.getFieldByName](15_library-reference/4368-reflect-value-getfieldbyname.md) — Returns a field of a record, from the member name.
+          - [reflect.Value.getInterfaceValue](15_library-reference/4369-reflect-value-getinterfacevalue.md) — Returns the value record referenced by this interface variable.
+          - [reflect.Value.getLength](15_library-reference/4370-reflect-value-getlength.md) — Returns the number of elements in an array.
+          - [reflect.Value.getType](15_library-reference/4371-reflect-value-gettype.md) — Returns the reflect.Type object of a reflect.Value object.
+          - [reflect.Value.hasKey](15_library-reference/4372-reflect-value-haskey.md) — Checks if existence of an element in a dictionary.
+          - [reflect.Value.initializeToNull](15_library-reference/4373-reflect-value-initializetonull.md) — Initializes this reflect.Value to NULL.
+          - [reflect.Value.insertArrayElement](15_library-reference/4374-reflect-value-insertarrayelement.md) — Inserts a new element into an array.
+          - [reflect.Value.isNull](15_library-reference/4375-reflect-value-isnull.md) — Checks if this reflect.Value is NULL.
+          - [reflect.Value.removeDictionaryElement](15_library-reference/4376-reflect-value-removedictionaryelement.md) — Deletes an element of a dictionary.
+          - [reflect.Value.set](15_library-reference/4377-reflect-value-set.md) — Assigns the specified value to this value object.
+          - [reflect.Value.toString](15_library-reference/4378-reflect-value-tostring.md) — Converts this reflect.Value to a character string.
+      - [The reflect.Type class](15_library-reference/4379-the-reflect-type-class.md) — The reflect.Type class is a generic API to inspect types.
+        - [reflect.Type methods](15_library-reference/4380-reflect-type-methods.md) — Methods for the reflect.Type class.
+          - [reflect.Type.typeOf](15_library-reference/4381-reflect-type-typeof.md) — Creates a new reflect.Type object representing a type.
+          - [reflect.Type.getAttribute](15_library-reference/4382-reflect-type-getattribute.md) — Returns the value of a definition attribute.
+          - [reflect.Type.getElementType](15_library-reference/4383-reflect-type-getelementtype.md) — Returns the type of the elements in an array or in a dictionary.
+          - [reflect.Type.getFieldCount](15_library-reference/4384-reflect-type-getfieldcount.md) — Returns the number of fields of record type.
+          - [reflect.Type.getFieldName](15_library-reference/4385-reflect-type-getfieldname.md) — Returns the name of a member of a record type.
+          - [reflect.Type.getFieldType](15_library-reference/4386-reflect-type-getfieldtype.md) — Returns the type of a member of a record type.
+          - [reflect.Type.getFieldTypeByName](15_library-reference/4387-reflect-type-getfieldtypebyname.md) — Returns the type of a member of a record type, from the member name.
+          - [reflect.Type.getKind](15_library-reference/4388-reflect-type-getkind.md) — Returns the kind of a type.
+          - [reflect.Type.getMethod](15_library-reference/4389-reflect-type-getmethod.md) — Returns a reflect.Method object of record with methods or an interface.
+          - [reflect.Type.getMethodCount](15_library-reference/4390-reflect-type-getmethodcount.md) — Returns the number of methods in a record with methods or in an interface.
+          - [reflect.Type.hasAttribute](15_library-reference/4391-reflect-type-hasattribute.md) — Indicates if a definition attribute exists in a type.
+          - [reflect.Type.isAssignableFrom](15_library-reference/4392-reflect-type-isassignablefrom.md) — Checks if this type can be assigned from another type.
+          - [reflect.Type.toString](15_library-reference/4393-reflect-type-tostring.md) — Returns the name of a type.
+      - [The reflect.Method class](15_library-reference/4394-the-reflect-method-class.md) — The reflect.Method class is a generic API to inspect methods.
+        - [reflect.Method methods](15_library-reference/4395-reflect-method-methods.md) — Methods for the reflect.Method class.
+          - [reflect.Method.getName](15_library-reference/4396-reflect-method-getname.md) — Returns the name of the method.
+          - [reflect.Method.getParameterCount](15_library-reference/4397-reflect-method-getparametercount.md) — Returns the number of parameters of a method.
+          - [reflect.Method.getParameterType](15_library-reference/4398-reflect-method-getparametertype.md) — Returns the type of a parameter of a method represented by this reflect.Method object.
+          - [reflect.Method.getReturnCount](15_library-reference/4399-reflect-method-getreturncount.md) — Returns the number of values returned by a method.
+          - [reflect.Method.getReturnType](15_library-reference/4400-reflect-method-getreturntype.md) — Returns the type of a return value of a method.
+          - [reflect.Method.getSignature](15_library-reference/4401-reflect-method-getsignature.md) — Returns the signature of a method, as a string.
+      - [Usage](15_library-reference/4402-usage.md)
+      - [Examples](15_library-reference/4403-examples.md) — Reflection API examples.
+        - [Example 1: Record introspection and modification](15_library-reference/4404-example-1-record-introspection-and-modification.md)
+        - [Example 2: Finding rows in an array](15_library-reference/4405-example-2-finding-rows-in-an-array.md)
+        - [Example 3: Generic SQL UPDATE](15_library-reference/4406-example-3-generic-sql-update.md)
+    - [The security package](15_library-reference/4407-the-security-package.md) — The Genero Web Services security package provides classes and methods to support basic cryptographic features.
+      - [The RandomGenerator class](15_library-reference/4408-the-randomgenerator-class.md) — The security.RandomGenerator class includes methods for creating random strings or numbers.
+        - [RandomGenerator methods](15_library-reference/4409-randomgenerator-methods.md) — Methods of the security.RandomGenerator class.
+          - [security.RandomGenerator.CreateRandomNumber](15_library-reference/4410-security-randomgenerator-createrandomnumber.md) — Generates an 8-byte strong random number.
+          - [security.RandomGenerator.CreateRandomString](15_library-reference/4411-security-randomgenerator-createrandomstring.md) — Creates a random base64 string.
+          - [security.RandomGenerator.CreateUUIDString](15_library-reference/4412-security-randomgenerator-createuuidstring.md) — Creates a new universal unique identifier (UUID).
+      - [The Base64 class](15_library-reference/4413-the-base64-class.md) — The security.Base64 class includes methods for encoding to base64 or decoding from base64.
+        - [Base64 methods](15_library-reference/4414-base64-methods.md) — Methods of the security.Base64 class.
+          - [security.Base64.FromByte](15_library-reference/4415-security-base64-frombyte.md) — Encodes the given BYTE data in base64.
+          - [security.Base64.FromHexBinary](15_library-reference/4416-security-base64-fromhexbinary.md) — Decodes the given hexadecimal string to base64.
+          - [security.Base64.FromString](15_library-reference/4417-security-base64-fromstring.md) — Encodes the given string in base64.
+          - [security.Base64.FromStringWithCharset](15_library-reference/4418-security-base64-fromstringwithcharset.md) — Encodes the given string in base64, based on a given charset.
+          - [security.Base64.LoadBinary](15_library-reference/4419-security-base64-loadbinary.md) — Reads data from a file and encodes to base64.
+          - [security.Base64.SaveBinary](15_library-reference/4420-security-base64-savebinary.md) — Decodes the given base64 string and writes the data to a file.
+          - [security.Base64.ToByte](15_library-reference/4421-security-base64-tobyte.md) — Decodes the given base64 string into a BYTE.
+          - [security.Base64.ToHexBinary](15_library-reference/4422-security-base64-tohexbinary.md) — Decodes the given base64 string to hexadecimal.
+          - [security.Base64.ToString](15_library-reference/4423-security-base64-tostring.md) — Decodes the given base64 string.
+          - [security.Base64.ToStringWithCharset](15_library-reference/4424-security-base64-tostringwithcharset.md) — Decodes the given base64 string, based on a given charset.
+          - [security.Base64.Xor](15_library-reference/4425-security-base64-xor.md) — Computes the exclusive disjunction between two base64 encoded strings.
+      - [The HexBinary class](15_library-reference/4426-the-hexbinary-class.md) — The security.HexBinary class includes methods for encoding to hexadecimal or decoding from hexadecimal.
+        - [HexBinary methods](15_library-reference/4427-hexbinary-methods.md) — Methods of the security.HexBinary class.
+          - [security.HexBinary.FromBase64](15_library-reference/4428-security-hexbinary-frombase64.md) — Converts a base64 string to the hexadecimal equivalent.
+          - [security.HexBinary.FromByte](15_library-reference/4429-security-hexbinary-frombyte.md) — Encodes BYTE data in hexadecimal.
+          - [security.HexBinary.FromString](15_library-reference/4430-security-hexbinary-fromstring.md) — Encodes a given string in hexadecimal.
+          - [security.HexBinary.FromStringWithCharset](15_library-reference/4431-security-hexbinary-fromstringwithcharset.md) — Encodes a given string in hexadecimal, based on a given charset.
+          - [security.HexBinary.LoadBinary](15_library-reference/4432-security-hexbinary-loadbinary.md) — Reads binary data from a file and converts it to hexadecimal.
+          - [security.HexBinary.SaveBinary](15_library-reference/4433-security-hexbinary-savebinary.md) — Decodes an hexadecimal strings and writes the binary data to a file.
+          - [security.HexBinary.ToBase64](15_library-reference/4434-security-hexbinary-tobase64.md) — Converts an hexadecimal string to the base64 equivalent
+          - [security.HexBinary.ToByte](15_library-reference/4435-security-hexbinary-tobyte.md) — Decodes an hexadecimal string into a BYTE variable.
+          - [security.HexBinary.ToString](15_library-reference/4436-security-hexbinary-tostring.md) — Decodes an hexadecimal string to a clear, human-readable string.
+          - [security.HexBinary.ToStringWithCharset](15_library-reference/4437-security-hexbinary-tostringwithcharset.md) — Decodes an hexadecimal string to a clear, human-readable string, based on a given charset.
+          - [security.HexBinary.Xor](15_library-reference/4438-security-hexbinary-xor.md) — Computes the exclusive disjunction between two hexadecimal encoded strings.
+      - [The Digest class](15_library-reference/4439-the-digest-class.md) — The security.Digest class implements digest algorithms to process data.
+        - [Digest methods](15_library-reference/4440-digest-methods.md) — Methods of the security.Digest class.
+          - [security.Digest.AddBase64Data](15_library-reference/4441-security-digest-addbase64data.md) — Adds data in base64 format to the digest buffer.
+          - [security.Digest.AddData](15_library-reference/4442-security-digest-adddata.md) — Adds data from a BYTE variable to the digest buffer.
+          - [security.Digest.AddHexBinaryData](15_library-reference/4443-security-digest-addhexbinarydata.md) — Adds data in hexadecimal format to the digest buffer.
+          - [security.Digest.AddStringData](15_library-reference/4444-security-digest-addstringdata.md) — Adds a data string to the digest buffer.
+          - [security.Digest.AddStringDataWithCharset](15_library-reference/4445-security-digest-addstringdatawithcharset.md) — Adds a data string to the digest buffer, after converting to the specified character set.
+          - [security.Digest.CreateDigest](15_library-reference/4446-security-digest-createdigest.md) — Defines a new digest context by specifying the algorithm to be used.
+          - [security.Digest.CreateDigestString](15_library-reference/4447-security-digest-createdigeststring.md) — Creates a SHA1 digest from the given string.
+          - [security.Digest.DoBase64Digest](15_library-reference/4448-security-digest-dobase64digest.md) — Creates a digest of the buffered data and returns the result in base64 format.
+          - [security.Digest.DoHexBinaryDigest](15_library-reference/4449-security-digest-dohexbinarydigest.md) — Creates a digest of the buffered data and returns the result in hexadecimal format.
+        - [Example](15_library-reference/4450-example.md) — Computing a hash value of a string.
+      - [The PBKDF2 class](15_library-reference/4451-the-pbkdf2-class.md) — The security.PBKDF2 class generates passwords using the Password-Based Key Derivation Function 2 (PBKDF2).
+        - [PBKDF2 methods](15_library-reference/4452-pbkdf2-methods.md) — Methods of the security.PBKDF2 class.
+          - [security.PBKDF2.CheckKey](15_library-reference/4453-security-pbkdf2-checkkey.md) — Validates a hashed key.
+          - [security.PBKDF2.GenerateKey](15_library-reference/4454-security-pbkdf2-generatekey.md) — Generates a password of a given size based on a human readable password using Password-Based Key Derivation Function 2 (PBKDF2)
+        - [PBKDF2 example](15_library-reference/4455-pbkdf2-example.md) — This example generates a key size of 128-bits based on a given password.
+      - [The BCrypt class](15_library-reference/4456-the-bcrypt-class.md) — The security.BCrypt class lets you save passwords as BCrypt results instead of clear text.
+        - [BCrypt methods](15_library-reference/4457-bcrypt-methods.md) — Methods of the security.BCrypt class.
+          - [security.BCrypt.CheckPassword](15_library-reference/4458-security-bcrypt-checkpassword.md) — Checks the hash password.
+          - [security.BCrypt.HashPassword](15_library-reference/4459-security-bcrypt-hashpassword.md) — Creates a hash password.
+          - [security.BCrypt.GenerateSalt](15_library-reference/4460-security-bcrypt-generatesalt.md) — Generates the encoded value needed as input to the HashPassword method.
+        - [BCrypt example](15_library-reference/4461-bcrypt-example.md) — This example creates (and checks) a hash password as BCrypt results.
+    - [The prometheus package](15_library-reference/4462-the-prometheus-package.md) — These topics cover the classes for the prometheus package.
+      - [Prometheus FGLPROFILE configuration](15_library-reference/4463-prometheus-fglprofile-configuration.md) — Prometheus is configured in the GAS, and runtime activation can be controlled via the fglprofile entry prometheus.enabled.
+      - [The prometheus.Counter class](15_library-reference/4464-the-prometheus-counter-class.md) — The prometheus.Counter class provides methods for recording cumulative metrics that can only increase, such as total requests and timeout errors.
+        - [Prometheus Counter methods](15_library-reference/4465-prometheus-counter-methods.md) — Methods for the prometheus.Counter class.
+          - [prometheus.Counter.create()](15_library-reference/4466-prometheus-counter-create.md) — Creates a new counter metric with the specified name, description, and labels.
+          - [prometheus.Counter.inc()](15_library-reference/4467-prometheus-counter-inc.md) — Increases the counter by one for the specified label values.
+          - [prometheus.Counter.add()](15_library-reference/4468-prometheus-counter-add.md) — Adds a float value to the counter for the specified label values.
+      - [The prometheus.Gauge class](15_library-reference/4469-the-prometheus-gauge-class.md) — The prometheus.Gauge class provides methods for recording metrics that can increase or decrease, such as current memory usage.
+        - [Prometheus Gauge methods](15_library-reference/4470-prometheus-gauge-methods.md) — The Gauge class provides a metric that can increase or decrease.
+          - [prometheus.Gauge.create()](15_library-reference/4471-prometheus-gauge-create.md) — Creates a new gauge metric with the specified name, description, and labels.
+          - [prometheus.Gauge.inc()](15_library-reference/4472-prometheus-gauge-inc.md) — Increases the gauge by one for the specified label values.
+          - [prometheus.Gauge.dec()](15_library-reference/4473-prometheus-gauge-dec.md) — Decreases the gauge by one for the specified label values.
+          - [prometheus.Gauge.add()](15_library-reference/4474-prometheus-gauge-add.md) — Adds a float value to the gauge for the specified label values.
+          - [prometheus.Gauge.sub()](15_library-reference/4475-prometheus-gauge-sub.md) — Subtracts a float value from the gauge for the specified label values.
+          - [prometheus.Gauge.set()](15_library-reference/4476-prometheus-gauge-set.md) — Sets the gauge to a specific float value for the specified label values.
+      - [The prometheus.Histogram class](15_library-reference/4477-the-prometheus-histogram-class.md) — The prometheus.Histogram class provides methods for recording distributions of observed values, such as request duration or response sizes.
+        - [Prometheus Histogram methods](15_library-reference/4478-prometheus-histogram-methods.md) — The Histogram class provides a metric for observing value distributions.
+          - [prometheus.Histogram.create()](15_library-reference/4479-prometheus-histogram-create.md) — Creates a new histogram metric with the specified name, description, buckets, and labels.
+          - [prometheus.Histogram.observe()](15_library-reference/4480-prometheus-histogram-observe.md) — Records a single observation (or measurement) for a histogram metric in the appropriate bucket for the specified label values.
+      - [Example prometheus](15_library-reference/4481-example-prometheus.md) — Example usage of the prometheus package, demonstrating how to create and use Counter, Gauge, and Histogram metrics.
+  - [File extensions](15_library-reference/4482-file-extensions.md) — This page describes the file extensions used by the language.
+  - [Genero BDL errors](15_library-reference/4483-genero-bdl-errors.md) — System error messages sorted by error number.
+- [Web services](16_web-services/4484-web-services.md) — Create a web service client or server with Genero BDL.
+  - [General](16_web-services/4485-general.md) — These topics provide you with an introduction to Genero Web Services and the information needed to get working with the latest version of the software.
+    - [Introduction to Web services](16_web-services/4486-introduction-to-web-services.md) — Web services are a standard way of communicating between applications over an intranet or Internet.
+      - [Service Oriented Architecture (SOA)](16_web-services/4487-service-oriented-architecture-soa.md) — Service Oriented Architecture (SOA) is based on a philosophy of how to connect systems and exchange data to solve business problems.
+      - [Migrating to SOA and Web services](16_web-services/4488-migrating-to-soa-and-web-services.md) — To migrate your application from an existing integration method to a Service Oriented Architecture (SOA) one and move to Web services requires an iterative and evolutionary approach.
+      - [Planning a Web service](16_web-services/4489-planning-a-web-service.md) — Creating a Web service application requires planning for the future use and reuse of the service.
+      - [Genero Web Services extension](16_web-services/4490-genero-web-services-extension.md) — Applications providing Web services use special libraries of the Genero Business Development Language.
+      - [Web services standards](16_web-services/4491-web-services-standards.md) — Web services standards are defined by the World Wide Web and other organizations.
+        - [XML](16_web-services/4492-xml.md) — XML (eXtensible Markup Language) defines a machine-independent way of exchanging data.
+        - [JSON](16_web-services/4493-json.md) — JavaScript Object Notation (JSON) defines a machine-independent way of exchanging data.
+        - [XML schema](16_web-services/4494-xml-schema.md) — XML Schema defines the elements, entities, and content model of an XML document.
+        - [SOAP](16_web-services/4495-soap.md) — Simple Object Access Protocol (SOAP) is a communication protocol that defines an XML data flow between a server and a client.
+        - [REST](16_web-services/4496-rest.md) — Representational State Transfer (REST) is a Web standard architecture that provides a method for communication between a Web service and a client over HTTP.
+        - [WSDL](16_web-services/4497-wsdl.md) — Web Services Description Language (WSDL) is an XML-based language that describes the services offered by a SOAP server.
+        - [HTTP](16_web-services/4498-http.md) — Hypertext Transfer Protocol (HTTP).
+      - [Web services style options](16_web-services/4499-web-services-style-options.md) — Information on Web services Style options available for SOAP Genero Web services. There is no style concept in REST.
+    - [GWS demos and examples](16_web-services/4500-gws-demos-and-examples.md) — Demos and examples are provided for both SOAP and RESTful Web services.
+    - [Debugging](16_web-services/4501-debugging.md) — Turn on the debug mode to log the data sent or received by your Web service application.
+    - [Platform-specific notes](16_web-services/4502-platform-specific-notes.md) — Some platforms have specific requirements.
+      - [Web Services on IBM® AIX®](16_web-services/4503-web-services-on-ibm-aix.md) — Requirements for IBM® AIX®.
+      - [Web Services on GMI (iOS)](16_web-services/4504-web-services-on-gmi-ios.md) — Requirements to use Web services on iOS platforms (GMI).
+      - [Web Services on GMA (Android™)](16_web-services/4505-web-services-on-gma-android.md) — Requirements to use Web services on Android™ platforms.
+    - [Known issues](16_web-services/4506-known-issues.md) — There are some known issues when working with Web services.
+    - [Legal Notices](16_web-services/4507-legal-notices.md) — Legal notices relevant to Web services.
+  - [Concepts](16_web-services/4508-concepts.md) — These topics cover various Genero Web Services concepts.
+    - [Web Services APIs](16_web-services/4509-web-services-apis.md) — This section provides overview information on the Web services Application Program Interfaces (APIs).
+      - [SOAP Web services APIs](16_web-services/4510-soap-web-services-apis.md) — Genero provides high-level and low-level APIs for creating SOAP Web services.
+      - [REST Web services APIs](16_web-services/4511-rest-web-services-apis.md) — Genero provides BDL function attributes to define high-level REST Web services. Low-level REST web services are implemented using standard HTTP classes.
+    - [SOAP features](16_web-services/4512-soap-features.md) — The GWS provides support for SOAP versions and for managing SOAP fault.
+      - [SOAP 1.1 and 1.2](16_web-services/4513-soap-1-1-and-1-2.md) — GWS is able to communicate with Web services provided with SOAP 1.1 or SOAP 1.2.
+      - [SOAP Fault](16_web-services/4514-soap-fault.md) — Genero Web Services supports SOAP's built-in error handling.
+        - [Server side](16_web-services/4515-server-side.md) — A Genero Web Services server can throw a SOAP fault when a processing error is encountered.
+        - [Client side](16_web-services/4516-client-side.md) — A Genero Web Services client can receive a SOAP fault number in the operation status and act accordingly.
+    - [Stateful SOAP Web services](16_web-services/4517-stateful-soap-web-services.md) — The GWS provides support for stateful service. Different options for implementing SOAP stateful services are described.
+      - [Concept](16_web-services/4518-concept.md) — A stateful service is a service that maintains a context between a Web services client and server.
+      - [WS-Addressing 1.0 stateful services](16_web-services/4519-ws-addressing-1-0-stateful-services.md) — WS-Addressing 1.0 uses the WS-Addressing EndpointReference type as a state variable to maintain a stateful service.
+        - [Server side](16_web-services/4520-server-side.md) — Perform these steps to create a WS-Addressing stateful service.
+          - [Step 1: Declare a W3CEndpointReference record](16_web-services/4521-step-1-declare-a-w3cendpointreference-record.md)
+          - [Step 2: Create a stateful WS-Addressing enabled Web service](16_web-services/4522-step-2-create-a-stateful-ws-addressing-enabled-web-service.md)
+          - [Step 3: Publish a Web service operation](16_web-services/4523-step-3-publish-a-web-service-operation.md)
+          - [Step 4: Create the BDL session initiator function](16_web-services/4524-step-4-create-the-bdl-session-initiator-function.md)
+          - [Step 5: Restore the session](16_web-services/4525-step-5-restore-the-session.md)
+        - [Client side](16_web-services/4526-client-side.md) — Perform these steps to communicate with a stateful Web service based on WS-Addressing 1.0.
+          - [Step 1: Generate the client stub](16_web-services/4527-step-1-generate-the-client-stub.md)
+          - [Step 2: Create the MAIN application](16_web-services/4528-step-2-create-the-main-application.md)
+          - [Step 3: Instantiate a new session](16_web-services/4529-step-3-instantiate-a-new-session.md)
+          - [Step 4: Call any web service operation](16_web-services/4530-step-4-call-any-web-service-operation.md)
+      - [Stateful services based on HTTP cookies](16_web-services/4531-stateful-services-based-on-http-cookies.md) — A stateful service based on HTTP cookies uses the HTTP transport protocol and its ability to transmit cookies, used as session context.
+        - [Server side](16_web-services/4532-server-side.md) — Perform these steps to create an HTTP cookie based stateful service.
+          - [Step 1: Declare a BDL simple variable](16_web-services/4533-step-1-declare-a-bdl-simple-variable.md)
+          - [Step 2: Create a stateful Web service](16_web-services/4534-step-2-create-a-stateful-web-service.md)
+          - [Step 3: Publish a Web service operation](16_web-services/4535-step-3-publish-a-web-service-operation.md)
+          - [Step 4: Create the BDL session initiator function](16_web-services/4536-step-4-create-the-bdl-session-initiator-function.md)
+          - [Step 5: Restore the session](16_web-services/4537-step-5-restore-the-session.md)
+          - [Step 6: Deployment recommendation](16_web-services/4538-step-6-deployment-recommendation.md)
+        - [Client side](16_web-services/4539-client-side.md) — Perform the following steps to communicate with a stateful Web service based on HTTP cookies.
+          - [Step 1: Generate the client stub](16_web-services/4540-step-1-generate-the-client-stub.md)
+          - [Step 2: Create the MAIN application](16_web-services/4541-step-2-create-the-main-application.md)
+          - [Step 3: Instantiate a new session](16_web-services/4542-step-3-instantiate-a-new-session.md)
+          - [Step 4: Call any Web service operation](16_web-services/4543-step-4-call-any-web-service-operation.md)
+          - [Step 5: Troubleshooting](16_web-services/4544-step-5-troubleshooting.md)
+    - [Data compression in GWS](16_web-services/4545-data-compression-in-gws.md) — GWS SOAP and RESTful web services support data compression.
+      - [GWS uses zlib to compress data](16_web-services/4546-gws-uses-zlib-to-compress-data.md) — GWS support data compression by using the zlib library.
+      - [HTTP compression in SOAP Web services](16_web-services/4547-http-compression-in-soap-web-services.md) — HTTP compression is a capability that can be built into Web servers and Web clients to make better use of available bandwidth, and provide greater transmission speeds between both.
+        - [Compression in a SOAP Web services client](16_web-services/4548-compression-in-a-soap-web-services-client.md) — Send and receive compressed requests from a SOAP Web services client.
+        - [Compression in a SOAP Web services server](16_web-services/4549-compression-in-a-soap-web-services-server.md) — Send and receive compressed requests from a Web services server.
+      - [HTTP compression in REST Web services](16_web-services/4550-http-compression-in-rest-web-services.md) — HTTP compression is a capability that can be built into Web servers and Web clients to make better use of available bandwidth, and provide greater transmission speeds between both.
+        - [Compression in a REST web services client](16_web-services/4551-compression-in-a-rest-web-services-client.md) — Send and receive compressed requests from a REST web services client.
+        - [Compression in a REST Web services server](16_web-services/4552-compression-in-a-rest-web-services-server.md) — Send and receive compressed requests from a Web services server.
+    - [SOAP multipart style requests in GWS](16_web-services/4553-soap-multipart-style-requests-in-gws.md) — This topic describes multipart support with SOAP Genero Web Services
+    - [MTOM](16_web-services/4554-mtom.md) — Use MTOM to efficiently send binary data to and from SOAP Web services.
+    - [swaRef](16_web-services/4555-swaref.md) — swaRef is a specific way for sending and receiving attachments in SOAP. It is used when you have to transfer files as attachment and locate on disk.
+  - [Security](16_web-services/4556-security.md) — These topics cover security for Genero Web Services.
+    - [Encryption, BASE64 and password agent with fglpass tool](16_web-services/4557-encryption-base64-and-password-agent-with-fglpass-tool.md) — Genero Web Services supports password encryption with fglpass as password agent.
+      - [The fglpass tool](16_web-services/4558-the-fglpass-tool.md) — Use fglpass to encrypt passwords (output as BASE64), run a protected password agent that supplies private-key passphrases to applications, and encode or decode files in BASE64.
+      - [Encrypt password in FGLPROFILE file](16_web-services/4559-encrypt-password-in-fglprofile-file.md) — Use the fglpass tool to encrypt a password for storing in the FGLPROFILE file.
+      - [Encrypt password for Windows key store](16_web-services/4560-encrypt-password-for-windows-key-store.md) — Use the fglpass tool to encrypt a password to store in the Windows® key store.
+      - [Using the password agent](16_web-services/4561-using-the-password-agent.md) — Run fglpass in agent mode to securely hold private-key passphrases entered at startup and provide them to BDL applications on demand.
+      - [Encrypt a password from RSA key](16_web-services/4562-encrypt-a-password-from-rsa-key.md) — This task shows how to encrypt a password with an RSA key using the fglpass tool.
+      - [Decrypt a password from BASE64](16_web-services/4563-decrypt-a-password-from-base64.md) — This task shows how to decrypt an RSA-encrypted password using the fglpass tool.
+      - [Encode a file in BASE64 form](16_web-services/4564-encode-a-file-in-base64-form.md) — The fglpass tool can encode a file in BASE64 form.
+      - [Decode a file encoded in BASE64 form](16_web-services/4565-decode-a-file-encoded-in-base64-form.md) — The fglpass tool can decode a BASE64 encoded file.
+    - [Encryption and authentication](16_web-services/4566-encryption-and-authentication.md) — A scenario involving a person (Georges) and his bank guides you through the concepts of secured communication, certificates, and certificate authorities.
+    - [OpenSSL requirements](16_web-services/4567-openssl-requirements.md) — FGLGWS uses OpenSSL 3 libraries for security and encryption.
+    - [Accessing secured services](16_web-services/4568-accessing-secured-services.md) — Security and authentication are important. Genero Web Services provides various communications options for a client to connect to a Web service.
+    - [HTTPS configuration](16_web-services/4569-https-configuration.md) — If no client certificate is provided, Genero Web Services (GWS) does the HTTPS request transparently.
+    - [Configure a WS client to access an HTTPS server](16_web-services/4570-configure-a-ws-client-to-access-an-https-server.md) — Configuration steps to access a server in HTTPS.
+      - [Set FGLPROFILE entries for the client certificate](16_web-services/4571-set-fglprofile-entries-for-the-client-certificate.md) — Configure your application to use the certificate and the associated private key used by the client's Genero Web Services during HTTPS communication. For production systems, you add the configuration details to your FGLPROFILE file.
+      - [Set FGLPROFILE entries for the CA list](16_web-services/4572-set-fglprofile-entries-for-the-ca-list.md) — Clients need to check to see if the server's certificate is trusted. This is done using a certificate authority list.
+      - [Set FGLPROFILE entries for the server URL](16_web-services/4573-set-fglprofile-entries-for-the-server-url.md) — Add a set of configuration entries that specify the URL and the identity for the HTTPS server.
+    - [Enable OCSP](16_web-services/4574-enable-ocsp.md) — To enable Online Certificate Status Protocol (OCSP), set the security.global.ocsp.enable and security.global.ocsp.url entries in FGLPROFILE.
+    - [Troubleshoot certificate issues](16_web-services/4575-troubleshoot-certificate-issues.md) — You may encounter known (and common) issues when completing the Genero Web Services tutorials or when adding Web services of your own. These issues and their solutions are presented in the following topics.
+      - [Error: Peer certificate is issued by a company not in our CA list](16_web-services/4576-error-peer-certificate-is-issued-by-a-company-not-in-our-ca.md) — When a client connects to a server using HTTPS, the client needs to trust the server it is in communication with. So the client needs to add the server's CAs (certificate authorities lists) to its trusted CAs.
+      - [Missing certificates](16_web-services/4577-missing-certificates.md) — Identifying missing certificates.
+    - [Certificates in practice](16_web-services/4578-certificates-in-practice.md) — Procedures and tools for creating, importing, and viewing certificates and keys.
+      - [The OpenSSL tool](16_web-services/4579-the-openssl-tool.md) — The openssl command line tool creates certificates for the configuration of secured communications.
+      - [Create a root certificate authority](16_web-services/4580-create-a-root-certificate-authority.md) — Create a local root certificate authority for signing test certificates.
+      - [Create a certificate](16_web-services/4581-create-a-certificate.md) — Create a server or client certificate for use with SSL/TLS, and optionally a self-signed certificate for testing.
+      - [Create a certificate authority list](16_web-services/4582-create-a-certificate-authority-list.md) — Create a CA list file containing the trusted certificate authorities used to verify certificates.
+      - [Import a certificate into the Windows® key store](16_web-services/4583-import-a-certificate-into-the-windows-key-store.md) — Import a certificate and its private key into the Windows key store as a PKCS12 file.
+      - [Import a CA into the Windows® key store](16_web-services/4584-import-a-ca-into-the-windows-key-store.md) — Import a Certificate Authority (CA) into the Windows key store so that Windows trusts certificates signed by that CA.
+      - [View a certificate](16_web-services/4585-view-a-certificate.md) — View the details of a certificate using the openssl command.
+    - [Examining certificates](16_web-services/4586-examining-certificates.md) — When you receive a URL in HTTPS, you are prompted to either accept a certificate or the certificate has already been accepted. In the second case, you can still check the server certificate.
+      - [Check the server certificate using FireFox](16_web-services/4587-check-the-server-certificate-using-firefox.md) — Check the server certificate using FireFox.
+      - [Check the server certificate using Microsoft Edge](16_web-services/4588-check-the-server-certificate-using-microsoft-edge.md) — This procedure allows you to check the server certificate using Microsoft Edge.
+      - [Selecting the certificate to add](16_web-services/4589-selecting-the-certificate-to-add.md) — The certificate authority (CA) is the authority that validates the server. The certificate to add to the CA list is the authority certificate, not the server certificate.
+    - [Troubleshoot common issues](16_web-services/4590-troubleshoot-common-issues.md) — You may encounter known (and common) issues when completing the Genero Web Services tutorials or when adding Web services of your own. These issues and their solutions are presented in the following topics.
+      - [HTTP 401 error message](16_web-services/4591-http-401-error-message.md) — An HTTP 401 error message means the server is requesting, but not receiving, user authentication (login and password).
+    - [The Diffie-Hellman key agreement algorithm](16_web-services/4592-the-diffie-hellman-key-agreement-algorithm.md) — Understand how Genero Web Services supports different key encryption methods for shared secret communication using the Diffie-Hellman key-agreement algorithm and the GWS XML security classes.
+  - [SOAP Web Services](16_web-services/4593-soap-web-services.md) — Write a Web Services client or server using the SOAP protocol.
+    - [Writing a Web Services client application](16_web-services/4594-writing-a-web-services-client-application.md) — Create, configure and deploy a Genero Web Services client using the SOAP protocol.
+      - [Steps to write a GWS client](16_web-services/4595-steps-to-write-a-gws-client.md) — A SOAP Web service contains functions that you need to call. Create a Genero BDL application that requests the functions of the service.
+        - [Generate the client stub file](16_web-services/4596-generate-the-client-stub-file.md) — To access a SOAP Web service, retrieve the WSDL from the service provider to learn about the functions provided by the Web service. The fglwsdl command-line tool can use the WSDL to generate much of the client code for you.
+          - [Generate client stub files (legacy)](16_web-services/4597-generate-client-stub-files-legacy.md) — Use the fglwsdl tool to generate legacy client stub files (.inc and .4gl) compatible with apps created with Genero 3.20 or prior.
+        - [Call the web service](16_web-services/4598-call-the-web-service.md) — Import the required libraries and write the program to call a SOAP Web Service.
+          - [Step 1: Import the COM library of the GWS package](16_web-services/4599-step-1-import-the-com-library-of-the-gws-package.md)
+          - [Step 2: Import the stub file](16_web-services/4600-step-2-import-the-stub-file.md)
+            - [Step 2: Import the stub file (legacy)](16_web-services/4601-step-2-import-the-stub-file-legacy.md)
+          - [Step 3: Write the MAIN program block](16_web-services/4602-step-3-write-the-main-program-block.md)
+        - [Set a time period for the response](16_web-services/4603-set-a-time-period-for-the-response.md) — To protect against remote server failure or unavailability, set a timeout value that indicates how long you are willing to wait for the server to respond to your request.
+        - [Handle GWS server errors](16_web-services/4604-handle-gws-server-errors.md) — When a Genero Web Services service operation returns a status that is non-zero, you can get a more detailed error description from the record wsError.
+          - [Handle GWS server errors (legacy)](16_web-services/4605-handle-gws-server-errors-legacy.md) — When a Genero Web Services service operation returns a status that is non-zero, you can get a more detailed error description from the record wsError.
+        - [Compile the client application](16_web-services/4606-compile-the-client-application.md) — Compiling the client and the stub file.
+      - [Change WS client behavior at runtime](16_web-services/4607-change-ws-client-behavior-at-runtime.md) — Various aspects of access to a Web Service may be implemented on the client side at runtime using global endpoint records.
+        - [Global Endpoint type definition](16_web-services/4608-global-endpoint-type-definition.md) — The client stub references a global endpoint user-defined type, WSHelper.tGlobalEndpointType.
+        - [WS-Addressing 1.0 Global Endpoint type definition](16_web-services/4609-ws-addressing-1-0-global-endpoint-type-definition.md) — The client stub references a global endpoint type for WS-Addressing, WSHelper.tGlobalWSAEndpointType.
+        - [Change server location](16_web-services/4610-change-server-location.md) — If the Web service server location changes, you can update the address in the global endpoint record.
+        - [Change the HTTP protocol version](16_web-services/4611-change-the-http-protocol-version.md) — The version parameter allows you to change the HTTP version binding if required.
+        - [Set an HTTP cookie](16_web-services/4612-set-an-http-cookie.md) — Manage the cookie binding at runtime using the global endpoint record parameter.
+        - [Set the connection timeout for a service](16_web-services/4613-set-the-connection-timeout-for-a-service.md) — A default connection timeout value is set, but you can configure the value at runtime, if required.
+        - [Set the read and write timeout for a service](16_web-services/4614-set-the-read-and-write-timeout-for-a-service.md) — Set the ReadWriteTimeout value to indicate how long you are willing to wait for the server to respond to requests.
+        - [Access HTTP request and response headers for a service](16_web-services/4615-access-http-request-and-response-headers-for-a-service.md) — Configure additional headers for requests and responses by adding them to the global endpoint record.
+      - [WS client stubs and handlers](16_web-services/4616-ws-client-stubs-and-handlers.md) — To access a remote Web Service, you first must get the WSDL information from the service provider.
+        - [Generate the stub file](16_web-services/4617-generate-the-stub-file.md) — Use the fglwsdl tool to generate the Genero BDL stub from a WSDL URL or file.
+          - [Generate the stub files (legacy)](16_web-services/4618-generate-the-stub-files-legacy.md) — Use the fglwsdl tool to generate legacy client stub files (.inc and .4gl) compatible with apps created with Genero 3.20 or prior.
+            - [Example globals file](16_web-services/4619-example-globals-file.md) — The example WSDL file for the Calculator Web Service provides information about the service.
+        - [Handle GWS server errors](16_web-services/4620-handle-gws-server-errors.md) — When a Genero Web Services service operation returns a status that is non-zero, you can get a more detailed error description from the record wsError.
+        - [Global Endpoint user-defined type definition](16_web-services/4621-global-endpoint-user-defined-type-definition.md) — Bindings defined for the Web service can be changed at runtime.
+        - [The generated functions](16_web-services/4622-the-generated-functions.md) — Defines the requirements for Genero Web Services (GWS) client functions.
+        - [The generated callback handlers](16_web-services/4623-the-generated-callback-handlers.md) — Understand the function of callback handlers, and how to generate them in your client stub.
+          - [Handler definition](16_web-services/4624-handler-definition.md) — Describes the various callback handlers and how they are defined.
+          - [The generated callback handlers (legacy)](16_web-services/4625-the-generated-callback-handlers-legacy.md) — Understand how to generate legacy stub files (.inc and .4gl) for compatibility with legacy code (Genero 3.20 or prior) in your client stub.
+        - [Multipart in the client stub](16_web-services/4626-multipart-in-the-client-stub.md) — You can generate a client stub for a Web service that has multiple parts.
+        - [Use the generated functions](16_web-services/4627-use-the-generated-functions.md) — Learn how to use the functions and records in the stub file to write client applications that use the Web service.
+          - [Using functions generated with globals](16_web-services/4628-using-functions-generated-with-globals.md) — Learn how to use the functions and global records in the stub file to write client applications that use the Web service.
+      - [Use logical names for service locations](16_web-services/4629-use-logical-names-for-service-locations.md) — Using a logical reference for the Web service, instead of the real URL, in your client application URL binding has advantages for working with and deploying applications.
+      - [Configure a WS client to access an HTTPS server](16_web-services/4630-configure-a-ws-client-to-access-an-https-server.md) — Configuration steps to access a server in HTTPS.
+        - [Set FGLPROFILE entries for the client certificate](16_web-services/4631-set-fglprofile-entries-for-the-client-certificate.md) — Configure your application to use the certificate and the associated private key used by the client's Genero Web Services during HTTPS communication. For production systems, you add the configuration details to your FGLPROFILE file.
+        - [Set FGLPROFILE entries for the CA list](16_web-services/4632-set-fglprofile-entries-for-the-ca-list.md) — Clients need to check to see if the server's certificate is trusted. This is done using a certificate authority list.
+        - [Set FGLPROFILE entries for the server URL](16_web-services/4633-set-fglprofile-entries-for-the-server-url.md) — Add a set of configuration entries that specify the URL and the identity for the HTTPS server.
+      - [Configure a WS client to connect via an HTTP Proxy](16_web-services/4634-configure-a-ws-client-to-connect-via-an-http-proxy.md) — Configuration steps to connect via a HTTP proxy.
+      - [Configure a WS client to use IPv6](16_web-services/4635-configure-a-ws-client-to-use-ipv6.md) — Configuration steps to customize IPv6 for a WS client.
+      - [Authenticate the WS client to a proxy](16_web-services/4636-authenticate-the-ws-client-to-a-proxy.md) — Configuration steps to authenticate the client to a proxy (proxy authentication).
+      - [Authenticate the WS client to a server](16_web-services/4637-authenticate-the-ws-client-to-a-server.md) — Configuration steps to authenticate the client to a server.
+      - [Create a WSSecurityUserName token](16_web-services/4638-create-a-wssecurityusername-token.md) — Creating a WSSecurityUserName token requires you to generate a client stub using the --domHandler option and using methods from the securityHelper module to create a WSSecurityUserName token.
+    - [Writing a Web Services server application](16_web-services/4639-writing-a-web-services-server-application.md) — Create a Genero Web Services server using the SOAP protocol.
+      - [Writing a Web services server function](16_web-services/4640-writing-a-web-services-server-function.md) — You create a standard Genero function and publish it as a Web function (Web services operation) using methods from the classes in the COM library.
+        - [Import the libraries](16_web-services/4641-import-the-libraries.md)
+        - [Define the input parameters](16_web-services/4642-define-the-input-parameters.md) — Define a record for the input message of the Web function.
+        - [Define the output parameters](16_web-services/4643-define-the-output-parameters.md) — Define a record for the output message of the function.
+        - [Define HTTP variables](16_web-services/4644-define-http-variables.md) — Define variables for the HTTP request and response communication of the service.
+        - [Write the BDL function](16_web-services/4645-write-the-bdl-function.md) — Your function defines an operation of the service.
+        - [Create and publish the Web services operation](16_web-services/4646-create-and-publish-the-web-services-operation.md) — Provide your Web service and its operation to users who can access it on the net.
+      - [WS server stubs and handlers](16_web-services/4647-ws-server-stubs-and-handlers.md) — Describes using a server stub from a compatible Web service that you can use in your GWS server application.
+        - [Generating stub file for a GWS server](16_web-services/4648-generating-stub-file-for-a-gws-server.md) — Use the fglwsdl -s tool server option to generate the BDL server stub from a WSDL.
+          - [Generating globals file for compatibility](16_web-services/4649-generating-globals-file-for-compatibility.md) — Use the fglwsdl -legacy tool option to generate legacy code (Genero 3.20 or prior) for the server stub from a WSDL.
+        - [Server handlers](16_web-services/4650-server-handlers.md) — Create and register your callback handlers (request, and response) to modify the WSDL.
+        - [Example output](16_web-services/4651-example-output.md) — What you can expect to find in the server stub files.
+        - [Writing your functions](16_web-services/4652-writing-your-functions.md) — Write functions that implement the functions in the stub modules. It allows you to create your own version of the function.
+      - [Writing a Web server application](16_web-services/4653-writing-a-web-server-application.md) — Follow examples showing you how to write a complete Web service application for the SOAP protocol. .
+        - [Including the web services library](16_web-services/4654-including-the-web-services-library.md) — Import the com class.
+        - [Example 1: Writing the entire server application](16_web-services/4655-example-1-writing-the-entire-server-application.md) — Design a simple Web service.
+          - [Step 1: Define input and output records](16_web-services/4656-step-1-define-input-and-output-records.md) — Define records for the input and output messages of the Web function.
+          - [Step 2: Write a BDL function for each service operation](16_web-services/4657-step-2-write-a-bdl-function-for-each-service-operation.md) — Each function defines an operation of the service.
+          - [Step 3: Create the service and operations](16_web-services/4658-step-3-create-the-service-and-operations.md) — Describes how you provide your Web service and its operations to users who can access it on the net.
+          - [Step 4: Register the service](16_web-services/4659-step-4-register-the-service.md) — Register the service with the Genero Web Services (GWS) server.
+          - [Step 5: Start the GWS server and process requests](16_web-services/4660-step-5-start-the-gws-server-and-process-requests.md) — Code to start the Genero Web Services (GWS) Server.
+        - [Example 2: Writing a server using third-party WSDL (the fglwsdl tool)](16_web-services/4661-example-2-writing-a-server-using-third-party-wsdl-the-fglwsd.md) — Describes using a server stub from a third-party Web service in your GWS server application.
+          - [Step 1: Get the WSDL description and generate server stub](16_web-services/4662-step-1-get-the-wsdl-description-and-generate-server-stub.md) — Use the fglwsdl tool to generate the BDL server stub from a WSDL.
+            - [Get the WSDL description and generate legacy files](16_web-services/4663-get-the-wsdl-description-and-generate-legacy-files.md) — Use the fglwsdl tool legacy option to generate legacy code (Genero 3.20 or prior) for the server stub from a WSDL.
+          - [Step 2: Write a BDL function for your service operation](16_web-services/4664-step-2-write-a-bdl-function-for-your-service-operation.md) — Write functions that implement the functions in the stub file. This allows you to create your own version of the function.
+            - [Write a BDL function for your service operation (legacy)](16_web-services/4665-write-a-bdl-function-for-your-service-operation-legacy.md) — Write functions that use the generated legacy code (Genero 3.20 or prior) for the server stub of the WSDL. This allows you to create your own version of the function.
+          - [Step 3: Create service, start server and process requests](16_web-services/4666-step-3-create-service-start-server-and-process-requests.md) — Code to start the Genero Web Services (GWS) Server.
+        - [Enabling MTOM on the server side](16_web-services/4667-enabling-mtom-on-the-server-side.md) — Enable the Message Transmission Optimization Mechanism (MTOM) feature to efficiently send binary data to and from Web services.
+        - [Compiling GWS server applications](16_web-services/4668-compiling-gws-server-applications.md) — When compiling, remember to include the WSHelper library.
+        - [Testing the GWS service in stand-alone mode](16_web-services/4669-testing-the-gws-service-in-stand-alone-mode.md) — Test that your service is reachable and that it can generate the WSDL.
+        - [Configuring the GAS for the GWS Application](16_web-services/4670-configuring-the-gas-for-the-gws-application.md) — Prepare for a production environment.
+        - [Making the GWS service available](16_web-services/4671-making-the-gws-service-available.md) — Provide your Web service to users who can access it on the net.
+      - [Get HTTP headers information at WS server side](16_web-services/4672-get-http-headers-information-at-ws-server-side.md) — To work with HTTP headers exchanged between the Genero client and a web service, you must register variables to receive and send them.
+      - [Choosing a web services style](16_web-services/4673-choosing-a-web-services-style.md) — Genero Web Services contains style options for creating SOAP Web services. Your choice is dependent on the type of service, (Document or RPC), and the encoding mechanism (literal or encoded) required.
+    - [How Do I ... ?](16_web-services/4674-how-do-i.md) — These topics provide you with the information needed to perform specific tasks related to Genero Web Services using the SOAP protocol.
+      - [Fix Genero 2.10 to 2.11 WSDL generation issue](16_web-services/4675-fix-genero-2-10-to-2-11-wsdl-generation-issue.md) — How to convert a WSDL generated from a Genero 2.11 (or later) application to a WSDL as generated by Genero 2.10.
+      - [How to handle WS security](16_web-services/4676-how-to-handle-ws-security.md) — The Genero Web Services engine does not entirely manage WS-Security; however, Genero BDL provides XML APIs to help the development of Web Services with security. Exploring the demo Web Service included with the FGLGWS installation will help you handle security in your own SOAP Web service.
+        - [Server side](16_web-services/4677-server-side.md) — Learn the steps the server uses to process messages it sends and receives. Identify the Genero handlers that help implement the security policy on the server side.
+        - [Client side](16_web-services/4678-client-side.md) — From the client side, identify the steps that need to be performed to send and receive secure messages.
+        - [SOAP security standards](16_web-services/4679-soap-security-standards.md) — In this section read about the security policy standards, such as bindings, and the options for signing and encryption.
+          - [Security bindings](16_web-services/4680-security-bindings.md) — Understand the mechanism of bindings that allows the secure exchange of SOAP messages over HTTP. The demo application security policy is referenced to illustrate this.
+          - [SOAP message security options](16_web-services/4681-soap-message-security-options.md) — Describes the Wss10 SOAP Message Security 1.0 options that are supported.
+          - [SignedParts](16_web-services/4682-signedparts.md) — The SignedParts section of the policy specifies which part of the message should be signed.
+          - [EncryptedParts](16_web-services/4683-encryptedparts.md) — The EncryptedParts section of the policy specifies which part of the message should be encrypted.
+        - [Useful links](16_web-services/4684-useful-links.md) — For more information on SOAP message security, follow the links to the policy standards.
+      - [How to migrate I4GL web service to Genero](16_web-services/4685-how-to-migrate-i4gl-web-service-to-genero.md) — Provides instructions for migrating Web Services and client application from I4GL to Genero BDL.
+        - [Migrate an I4GL web service provider to Genero](16_web-services/4686-migrate-an-i4gl-web-service-provider-to-genero.md) — Migrate a Web service from I4GL to Genero BDL using the SOAP protocol.
+          - [Step 1: Use the I4GL function and the I4GL.4cf configuration file](16_web-services/4687-step-1-use-the-i4gl-function-and-the-i4gl-4cf-configuration.md) — The I4GL .4cf configuration file has all the information you need about the I4GL Web service.
+          - [Step 2: Create a BDL RECORD for the input parameters](16_web-services/4688-step-2-create-a-bdl-record-for-the-input-parameters.md) — Define a BDL record for the input message of the Web function.
+          - [Step 3: Create a BDL RECORD for the output parameters](16_web-services/4689-step-3-create-a-bdl-record-for-the-output-parameters.md) — Define a BDL record for the output message of the Web function.
+          - [Step 4: Create a BDL wrapper function](16_web-services/4690-step-4-create-a-bdl-wrapper-function.md) — Create the wrapper function that uses BDL records to call the I4GL function.
+          - [Step 5: Publish the wrapper function as a Genero web service](16_web-services/4691-step-5-publish-the-wrapper-function-as-a-genero-web-service.md) — Based on the details in the configuration file (.4cf) file, create a function that registers your Web service with the Genero Web Service server.
+          - [Step 6: Create the server](16_web-services/4692-step-6-create-the-server.md) — Provide a file with a BDL function that starts your Web service with the Genero Web Service server instead of Axis.
+          - [Step 7: Configure the database](16_web-services/4693-step-7-configure-the-database.md) — Based on the DATABASE entry in the I4GL .4cf configuration file, use the Genero instruction to connect to the Informix® database at server startup.
+          - [Step 8: Compile and run the Genero service](16_web-services/4694-step-8-compile-and-run-the-genero-service.md) — Describes how to compile and run the service to test it.
+        - [Migrate an I4GL web service consumer to Genero](16_web-services/4695-migrate-an-i4gl-web-service-consumer-to-genero.md) — Migrate a client application from I4GL to a Genero BDL application using the SOAP protocol.
+          - [Step 1: Generate the Genero web service stub from an I4GL WSDL](16_web-services/4696-step-1-generate-the-genero-web-service-stub-from-an-i4gl-wsd.md) — Use the fglwsdl tool to get the WSDL information from the service provider.
+          - [Step 2: Modify the Genero .inc stubs to fix wrong I4GL WSDL](16_web-services/4697-step-2-modify-the-genero-inc-stubs-to-fix-wrong-i4gl-wsdl.md) — Remove the namespace attributes in the .inc file stub.
+          - [Step 3: Include the generated stub in your I4GL application](16_web-services/4698-step-3-include-the-generated-stub-in-your-i4gl-application.md) — Use a GLOBALS statement to specify the Web service your application uses.
+          - [Step 4: Modify the I4GL web service function call](16_web-services/4699-step-4-modify-the-i4gl-web-service-function-call.md) — Rename I4GL function name names to Genero Web service function names.
+          - [Step 5: Handle Genero Web Services errors](16_web-services/4700-step-5-handle-genero-web-services-errors.md) — Describes how to code to check the error status returned by the I4GL Web service, and get details of the error.
+          - [Step 6: Compile and run the Genero client](16_web-services/4701-step-6-compile-and-run-the-genero-client.md) — Describes how to compile and run the client to test it.
+          - [Standalone Axis server is buggy](16_web-services/4702-standalone-axis-server-is-buggy.md) — Describes a bug you can expect using the I4GL standalone axis server.
+  - [RESTful web services](16_web-services/4703-restful-web-services.md) — Create RESTful Web service applications (server and/or client) with Genero Web Services. RESTful Web services conform to the REST architectural style.
+    - [Designing REST Web services](16_web-services/4704-designing-rest-web-services.md) — Identifying the resources to expose to a RESTful Web service client is an essential step in designing a RESTful Web service server.
+    - [RESTful Web services (high-level framework)](16_web-services/4705-restful-web-services-high-level-framework.md) — These topics give you the information you need to begin working with RESTful Web services applications using BDL function with support for attributes.
+      - [Quick starts](16_web-services/4706-quick-starts.md) — These quick starts take you through the steps for creating a RESTful Web service server and client application using the high-level framework.
+        - [Quick start 1: RESTful server application](16_web-services/4707-quick-start-1-restful-server-application.md) — This quick start provides step-by-step instruction for creating a RESTful Web service server application using the high-level framework. The application will manage access to customers stored in a database.
+          - [Prepare a database](16_web-services/4708-prepare-a-database.md) — In preparation for working with the Web service, create a database with data from the code provided and extract the schema file.
+          - [Create a web service module](16_web-services/4709-create-a-web-service-module.md) — Resources are identified as a set of functions within the Web services module that provides the service.
+          - [Create the server module](16_web-services/4710-create-the-server-module.md) — The server module registers the Web Service application with the Genero Web Services (GWS) server that starts the Web service.
+          - [Set up and test your environment](16_web-services/4711-set-up-and-test-your-environment.md) — Before running the server make sure that the environment variables FGLAPPSERVER and FGLWSDEBUG are properly set.
+          - [Compile and run the service](16_web-services/4712-compile-and-run-the-service.md) — Compile and execute a REST Web Services server in direct mode.
+          - [Access the resources](16_web-services/4713-access-the-resources.md) — Access the resources of your GWS RESTful Web service, including the OpenAPI documentation of the Web service through your browser.
+        - [Quick start 2: RESTful server application, part 2](16_web-services/4714-quick-start-2-restful-server-application-part-2.md) — This quick start provides step-by-step instruction for adding functionality to the RESTful Web service server application created by the previous quick start.
+          - [Add functions to the service module](16_web-services/4715-add-functions-to-the-service-module.md) — Define resources to create, update, and delete customers.
+          - [Compile and start the service](16_web-services/4716-compile-and-start-the-service.md) — This describes the steps to setup the service.
+        - [Quick start 3: RESTful client application](16_web-services/4717-quick-start-3-restful-client-application.md) — This is a quick step-by-step guide to creating a RESTful Web service client app using the high-level framework.
+          - [Generate the stub file](16_web-services/4718-generate-the-stub-file.md) — Use the fglrestful tool to generate the client stub from a REST Web service URL.
+          - [Create the client module](16_web-services/4719-create-the-client-module.md) — Create a client app that interacts with the Genero Web service through calls to functions in the stub file.
+          - [Compile and run the client](16_web-services/4720-compile-and-run-the-client.md) — Run your Genero RESTful Web service client app to display to the Genero Desktop Client (GDC).
+      - [Code a RESTful server application](16_web-services/4721-code-a-restful-server-application.md) — To create a RESTful Genero Web server application, you need to create a Genero BDL module that defines the service functions. When you publish it, a service description is available when required.
+        - [Set up and test your environment](16_web-services/4722-set-up-and-test-your-environment.md)
+        - [Define functions in a module](16_web-services/4723-define-functions-in-a-module.md) — A GWS REST service is defined in a module.
+          - [Define your resource operations](16_web-services/4724-define-your-resource-operations.md) — Operations are the HTTP verbs used to manipulate the resources of your Web service.
+            - [Get resource data with WSGet](16_web-services/4725-get-resource-data-with-wsget.md) — Example of methods you can use to get data from a resource with the WSGet attribute.
+            - [Create a resource with WSPost](16_web-services/4726-create-a-resource-with-wspost.md) — Create a new resource with the WSPost attribute.
+            - [Update a resource with WSPut](16_web-services/4727-update-a-resource-with-wsput.md) — Update a resource with the WSPut attribute.
+            - [Delete a resource with WSDelete](16_web-services/4728-delete-a-resource-with-wsdelete.md) — Delete a resource with the WSDelete attribute.
+          - [Set resource path with WSParam and WSPath](16_web-services/4729-set-resource-path-with-wsparam-and-wspath.md) — Path parameters allow you to specify variables in the resource URL.
+          - [Set query, header, or cookie parameters](16_web-services/4730-set-query-header-or-cookie-parameters.md) — Define the WSQuery, WSHeader, or WSCookie parameters in your function if the resource needs data passed as a query, cookie, or header.
+          - [Set a request body](16_web-services/4731-set-a-request-body.md) — Functions that create or update a resource need to set a request body for the incoming payload. You specify the request body in an input parameter.
+          - [Set a response body and header](16_web-services/4732-set-a-response-body-and-header.md) — You specify a response body in a return parameter without an attribute. Other return values can be sent in headers, using the WSHeader attribute.
+          - [Retrieve HTTP headers](16_web-services/4733-retrieve-http-headers.md) — You can retrieve HTTP headers in your REST operation. There are two methods for doing this.
+          - [Handling file attachments and data transfer](16_web-services/4734-handling-file-attachments-and-data-transfer.md) — The Genero REST high-level framework provides two mechanisms for handling attachments.
+            - [Attach files with WSAttachment and WSMedia](16_web-services/4735-attach-files-with-wsattachment-and-wsmedia.md) — In GWS REST attachments are handled via the WSAttachment and WSMedia attributes.
+              - [Download file in response](16_web-services/4736-download-file-in-response.md) — This example demonstrates how to return a file as an attachment using the WSAttachment attribute
+              - [Upload file in request](16_web-services/4737-upload-file-in-request.md) — Upload files by adding WSAttachment to an input parameter.
+            - [Transfer data in large objects](16_web-services/4738-transfer-data-in-large-objects.md) — Use the BYTE and TEXT data types to transfer large objects (LOBs) with a Genero RESTful web service.
+              - [Download large object in response body](16_web-services/4739-download-large-object-in-response-body.md) — This example demonstrates how to send a large object in the message response body.
+              - [Upload large object in request body](16_web-services/4740-upload-large-object-in-request-body.md) — This example demonstrates how to upload a large object in the message request body.
+          - [Set data format with WSMedia](16_web-services/4741-set-data-format-with-wsmedia.md) — It is important to set the correct MIME type for a Web service request or response. You can specify the data format via the WSMedia attribute.
+            - [Customize XML data output](16_web-services/4742-customize-xml-data-output.md) — Use XML serialization attributes to customize serialization at runtime and improve the readability of the XML output.
+          - [Multipart requests or responses](16_web-services/4743-multipart-requests-or-responses.md) — In GWS REST there is support for the standard multiple part message, in which more than one different sets of data are combined in a single body.
+            - [Download file and data (response)](16_web-services/4744-download-file-and-data-response.md) — This example demonstrates how to return a file in a form-data type HTTP multipart response while also transferring data of other types in the same message response.
+            - [Upload file and data (request)](16_web-services/4745-upload-file-and-data-request.md) — Shows an example of a method you might use from a client to upload an image along with other data in a function using a form-data type HTTP multipart request.
+          - [Handling application level errors](16_web-services/4746-handling-application-level-errors.md) — There are many situations in which you need to notify an error to a client using your REST web service.
+            - [Handling expected errors](16_web-services/4747-handling-expected-errors.md) — Error handling is supported with the WSThrows, WSError, and WSErrorHeader attributes.
+            - [Handling unexpected errors](16_web-services/4748-handling-unexpected-errors.md) — Example of a method you can use to code for unexpected errors.
+          - [Handling security](16_web-services/4749-handling-security.md) — You handle security in GWS high-level REST via scopes.
+            - [Set security with WSScope](16_web-services/4750-set-security-with-wsscope.md) — You can set security using the WSScope attribute either at the function level or at the service level.
+          - [Using preprocessing and postprocessing callbacks](16_web-services/4751-using-preprocessing-and-postprocessing-callbacks.md) — Preprocessing and postprocessing in Genero REST web services allow you to customize how requests and responses are handled.
+            - [Examples of callback functions](16_web-services/4752-examples-of-callback-functions.md) — These examples show the structure of preprocessing and postprocessing callback functions you can use in your REST web service module.
+        - [Provide service information](16_web-services/4753-provide-service-information.md) — Provide information about the service, such as title, version, contact details, etc., that is generated in the OpenAPI documentation.
+        - [Resource URI naming](16_web-services/4754-resource-uri-naming.md) — The URI of your REST Web service using the high-level API; check that the best practice in URI naming conventions are being followed.
+        - [Publish a REST service](16_web-services/4755-publish-a-rest-service.md) — In publishing the service you provide your service to users who can access it on the net.
+          - [REST service with one module](16_web-services/4756-rest-service-with-one-module.md) — Publish a service with one resource.
+          - [REST service with several modules](16_web-services/4757-rest-service-with-several-modules.md) — Publish a service with several resources.
+        - [REST API catalog](16_web-services/4758-rest-api-catalog.md) — A Genero application that publishes REST services automatically provides an RFC 9727 API catalog at /.well-known/api-catalog, listing each service and its OpenAPI description.
+        - [Version a REST service](16_web-services/4759-version-a-rest-service.md) — Versioning your REST web service is important, especially when changes to the service would impact existing clients.
+          - [How to name versions](16_web-services/4760-how-to-name-versions.md) — There are no absolute rules to naming versions, but there are best practices.
+          - [Advanced REST API versioning](16_web-services/4761-advanced-rest-api-versioning.md) — Advanced REST API versioning lets you manage multiple versions of a REST web service with minimal coding.
+            - [Service-level versioning](16_web-services/4762-service-level-versioning.md) — Overview of settings that control versioning for an entire REST web service.
+              - [Set the default service version for OpenAPI documentation](16_web-services/4763-set-the-default-service-version-for-openapi-documentation.md) — Define which version of a service is shown by default in the OpenAPI documentation.
+              - [Version access modes](16_web-services/4764-version-access-modes.md) — Specify how clients access service versions in REST operations.
+            - [Operation-level versioning](16_web-services/4765-operation-level-versioning.md) — Overview of settings that control versioning for individual REST operations.
+              - [Create a new version of an operation](16_web-services/4766-create-a-new-version-of-an-operation.md) — Specify the version in which the operation is available by setting the WSVersion attribute.
+              - [Define multiple versions for an operation](16_web-services/4767-define-multiple-versions-for-an-operation.md) — Specify which API versions an operation applies to using the WSVersion attribute.
+              - [Set the default version for an operation](16_web-services/4768-set-the-default-version-for-an-operation.md) — Define which version of an operation is shown by default in the OpenAPI documentation.
+          - [Hand-coding REST versioning](16_web-services/4769-hand-coding-rest-versioning.md) — Hand-coding versioning is the alternative to using the advanced REST API versioning. You must hand-code for each REST operation.
+            - [Versioning with URI](16_web-services/4770-versioning-with-uri.md) — You can version a resource using the WSPath attribute. The version is included in the resource URI.
+            - [Versioning with custom header](16_web-services/4771-versioning-with-custom-header.md) — You can set version using a custom header.
+        - [Setting MIME type at runtime](16_web-services/4772-setting-mime-type-at-runtime.md) — Override the GWS default media format for messages.
+      - [Code a RESTful client application](16_web-services/4773-code-a-restful-client-application.md) — Create, configure and deploy a Web service client application using the Genero high-level framework.
+        - [Understanding the OpenAPI description of a Genero RESTful service](16_web-services/4774-understanding-the-openapi-description-of-a-genero-restful-se.md) — The OpenAPI description provides a structured view of your RESTful web service, including service information, paths, parameters, and the request and response bodies generated from your Genero BDL code.
+          - [How GWS maps BDL types into the OpenAPI description](16_web-services/4775-how-gws-maps-bdl-types-into-the-openapi-description.md) — GWS maps Genero BDL types to JSON schema objects in the OpenAPI description. The mapping depends on the content type and whether the data type is named or anonymous.
+          - [Get the OpenAPI description](16_web-services/4776-get-the-openapi-description.md) — Retrieve the OpenAPI description for a RESTful web service in JSON or YAML.
+          - [Get OpenAPI description for a version](16_web-services/4777-get-openapi-description-for-a-version.md) — Retrieve the OpenAPI description for a specific version of a RESTful web service.
+          - [Get available versions of a service](16_web-services/4778-get-available-versions-of-a-service.md) — Retrieve the list of available versions of a REST service and identify the default version if defined.
+          - [Get OpenAPI (secure)](16_web-services/4779-get-openapi-secure.md) — Retrieve the OpenAPI description from a secure RESTful service by obtaining an access token and including it in the service URL.
+          - [Get OpenAPI (non-secure)](16_web-services/4780-get-openapi-non-secure.md) — Retrieve the OpenAPI description from a non-secure RESTful service using the service URL with the ?openapi.json query string.
+        - [Before generating the stub file](16_web-services/4781-before-generating-the-stub-file.md) — You need the OpenAPI description of the RESTful service before generating the stub file or implementing client-side calls.
+          - [REST stub file overview](16_web-services/4782-rest-stub-file-overview.md) — The stub file provides client-side functions that call the operations of a RESTful Web service. It acts as a proxy layer between your client application and the service.
+          - [Generate stub file](16_web-services/4783-generate-stub-file.md) — Use the fglrestful tool to generate a client stub file from a REST service URL or an OpenAPI description file.
+          - [Troubleshooting](16_web-services/4784-troubleshooting.md) — Errors or warnings reported during stub file creation indicate issues in the OpenAPI description or in the data types defined by the service. This topic describes how to interpret and resolve these messages.
+        - [Create the client application](16_web-services/4785-create-the-client-application.md) — Prepare the client application that uses the generated stub to call the REST service.
+          - [Write the MAIN program code block](16_web-services/4786-write-the-main-program-code-block.md) — Create the MAIN program block that imports the client stub and calls its functions.
+            - [Access to secure web service](16_web-services/4787-access-to-secure-web-service.md) — To access a secure RESTful Web service, the client application must have a valid access token.
+            - [Code to access secure service](16_web-services/4788-code-to-access-secure-service.md) — Code to get an access token for a secure RESTful Web service from a Genero application also secured.
+          - [Call the stub functions](16_web-services/4789-call-the-stub-functions.md) — Call the functions defined in the client stub to interact with the REST service from your application code.
+          - [Handle REST server errors](16_web-services/4790-handle-rest-server-errors.md) — Handle the status code returned by a REST service call and process expected and unexpected errors in the client application.
+          - [Troubleshooting](16_web-services/4791-troubleshooting.md) — Understanding how the GWS finds an operation to use for a request can help in troubleshooting unexpected errors.
+        - [Change REST client behavior at runtime](16_web-services/4792-change-rest-client-behavior-at-runtime.md) — Use the global endpoint record to change the REST client behavior at runtime without modifying the generated client stub.
+          - [tGlobalEndpointType record](16_web-services/4793-tglobalendpointtype-record.md) — Use the tGlobalEndpointType record to change the REST client behavior at runtime, such as updating the server address or connection settings.
+          - [Set server endpoint](16_web-services/4794-set-server-endpoint.md) — Set the REST Web service location from client app at runtime.
+      - [Reference](16_web-services/4795-reference.md) — The reference information provided in this section allow you to create RESTful Web service server and client applications using the Genero Web Services high-level framework.
+        - [Query string parameters](16_web-services/4796-query-string-parameters.md) — You can append query string parameters to a REST service URL to request OpenAPI documents or retrieve version information about the service.
+        - [REST function syntax with RESTful attributes](16_web-services/4797-rest-function-syntax-with-restful-attributes.md) — A RESTful FUNCTION definition is specified with a set of input parameter attributes, function definition attributes, and return attributes that define it as an operation for a REST web service.
+        - [Using RESTful attributes in functions](16_web-services/4798-using-restful-attributes-in-functions.md) — RESTful attributes define functions for your RESTful web service.
+          - [HTTP verbs and attributes](16_web-services/4799-http-verbs-and-attributes.md) — HTTP verbs are defined by the high-level RESTful attributes. Some verbs have requirements for request or response body and others do not.
+          - [Input parameter attributes](16_web-services/4800-input-parameter-attributes.md) — A RESTful web service function can have input parameters.
+          - [Return value attributes](16_web-services/4801-return-value-attributes.md) — A RESTful web service function can have return values.
+        - [High-level RESTful Web service attributes](16_web-services/4802-high-level-restful-web-service-attributes.md) — Attributes for high-level RESTful Genero Web Services.
+          - [Attributes set at the module level](16_web-services/4803-attributes-set-at-the-module-level.md) — Attributes that apply to the whole Web service (at the module level).
+            - [WSInfo](16_web-services/4804-wsinfo.md) — Defines general metadata about the REST service.
+            - [WSError](16_web-services/4805-wserror.md) — Defines a description for an HTTP status code returned by the service.
+            - [WSContext](16_web-services/4806-wscontext.md) — Provides a dictionary of request‑specific context values for the current REST request, available to all operations in the module.
+            - [WSScope (module)](16_web-services/4807-wsscope-module.md) — Defines the access scope required to call any REST operation in the module.
+            - [WSVersion (module)](16_web-services/4808-wsversion-module.md) — Sets the version of the REST service for OpenAPI documentation.
+            - [WSVersionMode](16_web-services/4809-wsversionmode.md) — Specifies how the service version is selected for OpenAPI generation (URI, header, or query).
+            - [WSTypeDescription](16_web-services/4810-wstypedescription.md) — Provides a description for a user‑defined type in the REST service.
+            - [WSPreProcessing](16_web-services/4811-wspreprocessing.md) — Specify functions in a REST web service module that are used as preprocessing request handlers.
+            - [WSPostProcessing](16_web-services/4812-wspostprocessing.md) — Specify functions in a REST web service module that are used as postprocessing request handlers.
+          - [Attributes set at the function level](16_web-services/4813-attributes-set-at-the-function-level.md) — Attributes applied to the function that affect the Web service operation (the function).
+            - [HTTP operation attributes (Verbs)](16_web-services/4814-http-operation-attributes-verbs.md) — Attributes that map an HTTP operation or verb action in a function to a REST resource.
+              - [WSDelete](16_web-services/4815-wsdelete.md) — In order to remove an existing resource, you set the WSDelete attribute.
+              - [WSGet](16_web-services/4816-wsget.md) — In order to retrieve a resource, you set the WSGet attribute.
+              - [WSHead](16_web-services/4817-wshead.md) — In order to retrieve resource headers, you define the WSHead attribute.
+              - [WSOptions](16_web-services/4818-wsoptions.md) — In order to retrieve the HTTP request methods supported by the server or the resource, you define the WSOptions attribute.
+              - [WSPatch](16_web-services/4819-wspatch.md) — In order to partially update an existing resource, you define the WSPatch attribute.
+              - [WSPost](16_web-services/4820-wspost.md) — In order to create a new resource, you set the WSPost attribute.
+              - [WSPut](16_web-services/4821-wsput.md) — Update an existing resource with the WSPut attribute.
+              - [WSTrace](16_web-services/4822-wstrace.md) — You define the WSTrace attribute for debugging purposes.
+            - [WSPath](16_web-services/4823-wspath.md) — Specifies a path to a REST web service resource that identifies its function and allows parameters to be passed in the URL.
+            - [WSScope (function)](16_web-services/4824-wsscope-function.md) — Specifies the security scope required to access this REST function. Use this attribute to restrict access at the function level.
+            - [WSVersion (function)](16_web-services/4825-wsversion-function.md) — Specifies the version or versions in which the REST function is available.
+            - [WSTags](16_web-services/4826-wstags.md) — Assign one or more tags to a REST operation. The value corresponds to the "tags" keyword in the OpenAPI specification and is used for grouping and documentation.
+            - [WSOperationId](16_web-services/4827-wsoperationid.md) — Specifies a unique string to identify the operation. It corresponds to the operationId keyword in the OpenAPI specification.
+            - [Error handling attributes](16_web-services/4828-error-handling-attributes.md) — Attributes that define error handling in REST services and functions.
+              - [WSThrows](16_web-services/4829-wsthrows.md) — Defines the list of error codes the REST function may return.
+              - [WSRetCode](16_web-services/4830-wsretcode.md) — Sets the HTTP success status code returned by the REST function.
+              - [WSErrorHeader](16_web-services/4831-wserrorheader.md) — Defines a custom HTTP header to include in an error response.
+          - [Attributes set on parameters and returns](16_web-services/4832-attributes-set-on-parameters-and-returns.md) — Attributes that affect the input parameters and return values of the function.
+            - [Attributes set on input parameters only](16_web-services/4833-attributes-set-on-input-parameters-only.md) — REST attributes set on parameters handling path templating and cookies in REST functions.
+              - [WSParam](16_web-services/4834-wsparam.md) — Maps a parameter to a value in the resource path template.
+              - [WSCookie](16_web-services/4835-wscookie.md) — Maps a parameter to a cookie value in the HTTP request.
+              - [WSQuery](16_web-services/4836-wsquery.md) — Maps a parameter to a query string value in the request URL.
+            - [Attributes set on both input and output](16_web-services/4837-attributes-set-on-both-input-and-output.md) — Attributes defining parameters or return values handling headers and file attachment in REST functions.
+              - [WSHeader](16_web-services/4838-wsheader.md) — Defines a custom HTTP header for a parameter or return value.
+              - [WSAttachment](16_web-services/4839-wsattachment.md) — Defines file attachments in the REST message.
+            - [Attributes related to function parameters](16_web-services/4840-attributes-related-to-function-parameters.md) — Various attributes you use in conjunction with other attributes to specify methods for naming and describing parameters and functions. If the parameter is optional, this is set using the optional attribute (with certain parameter types only).
+              - [WSMedia](16_web-services/4841-wsmedia.md) — Defines the supported media (MIME) types for a parameter or return value.
+              - [WSDescription](16_web-services/4842-wsdescription.md) — Describes the REST function, parameters, return values, and members of user-defined types.
+              - [WSSummary](16_web-services/4843-wssummary.md) — Specifies a short, human-readable summary of a REST operation. It corresponds to the summary keyword in the OpenAPI specification.
+              - [WSName](16_web-services/4844-wsname.md) — Specifies an alternative name for a parameter or return value in the REST message.
+              - [WSOptional](16_web-services/4845-wsoptional.md) — Marks a parameter or return value as optional in the REST message.
+        - [Default media types](16_web-services/4846-default-media-types.md) — For RESTful Web services developed using the high-level framework, you can specify the MIME type or you can accept the default. The default MIME type is based on the data type.
+        - [OpenAPI types mapping: BDL](16_web-services/4847-openapi-types-mapping-bdl.md) — Conversion mapping for Genero BDL data types in OpenAPI documentation.
+          - [CHAR, VARCHAR, and DECIMAL conversions](16_web-services/4848-char-varchar-and-decimal-conversions.md) — GWS refines CHAR, VARCHAR, and DECIMAL data types in high-level RESTful web services by applying JSON Schema restriction keywords.
+          - [Null value conversions](16_web-services/4849-null-value-conversions.md) — These examples show how null values are handled during data type conversion.
+            - [Primitive and complex types with null values](16_web-services/4850-primitive-and-complex-types-with-null-values.md) — This example shows how null values are handled for primitive and complex data types during serialization.
+            - [Arrays with null values](16_web-services/4851-arrays-with-null-values.md) — This example shows how null values in arrays are handled during serialization.
+          - [DATE, DATETIME, and INTERVAL conversions](16_web-services/4852-date-datetime-and-interval-conversions.md) — GWS serializes DATE, DATETIME, and INTERVAL values as JSON strings using either the Genero BDL native format or standard RFC 3339 / ISO 8601 formats.
+        - [REST limitations (high-level APIs)](16_web-services/4853-rest-limitations-high-level-apis.md) — Be aware of the limitations of the RESTful Web Services high-level framework.
+    - [RESTful Web services (low-level APIs)](16_web-services/4854-restful-web-services-low-level-apis.md) — With Genero Business Development Language, you can code a RESTful Web Services client or server application using low-level APIs.
+      - [Writing a Web services client application](16_web-services/4855-writing-a-web-services-client-application.md) — Create, configure and deploy a RESTful Genero Web Services (GWS) client.
+        - [Step 1: Obtain information about resources](16_web-services/4856-step-1-obtain-information-about-resources.md) — To access a RESTful Web services server, you must first get information about the services offered by a server from the service provider.
+        - [Step 2: Import extension packages (com, xml, util)](16_web-services/4857-step-2-import-extension-packages-com-xml-util.md) — The functions you need to create a REST Web Service client application are contained in the classes that make up the com package of the Genero Web Services (GWS). Use the IMPORT statement to include the required packages.
+        - [Step 3: Define the records](16_web-services/4858-step-3-define-the-records.md) — In this step you define the records you need for the HTTP Request and Response and the processing of the data.
+        - [Step 4: Build the HTTP request](16_web-services/4859-step-4-build-the-http-request.md) — In this step you code the HTTP request and perform the request to the server to add two numbers.
+        - [Step 5: Process the HTTP response](16_web-services/4860-step-5-process-the-http-response.md) — In the final step you process the HTTP response; check for errors, and process the data.
+        - [Configure a WS client to access an HTTPS server](16_web-services/4861-configure-a-ws-client-to-access-an-https-server.md) — Configuration steps to access a server in HTTPS.
+          - [Set FGLPROFILE entries for the client certificate](16_web-services/4862-set-fglprofile-entries-for-the-client-certificate.md) — Configure your application to use the certificate and the associated private key used by the client's Genero Web Services during HTTPS communication. For production systems, you add the configuration details to your FGLPROFILE file.
+          - [Set FGLPROFILE entries for the CA list](16_web-services/4863-set-fglprofile-entries-for-the-ca-list.md) — Clients need to check to see if the server's certificate is trusted. This is done using a certificate authority list.
+          - [Set FGLPROFILE entries for the server URL](16_web-services/4864-set-fglprofile-entries-for-the-server-url.md) — Add a set of configuration entries that specify the URL and the identity for the HTTPS server.
+        - [Configure a WS client to connect via an HTTP Proxy](16_web-services/4865-configure-a-ws-client-to-connect-via-an-http-proxy.md) — Configuration steps to connect via a HTTP proxy.
+        - [Configure a WS client to use IPv6](16_web-services/4866-configure-a-ws-client-to-use-ipv6.md) — Configuration steps to customize IPv6 for a WS client.
+        - [Authenticate the WS client to a server](16_web-services/4867-authenticate-the-ws-client-to-a-server.md) — Configuration steps to authenticate the client to a server.
+        - [Authenticate the WS client to a proxy](16_web-services/4868-authenticate-the-ws-client-to-a-proxy.md) — Configuration steps to authenticate the client to a proxy (proxy authentication).
+      - [Writing a Web Services server application](16_web-services/4869-writing-a-web-services-server-application.md) — To create a RESTful Genero Web services server application, there are a minimum of five steps that the server application must handle.
+        - [Step 1: Import extension packages](16_web-services/4870-step-1-import-extension-packages.md) — Extension packages include classes and functions necessary for your Web services server application. Use the IMPORT statement to include these packages.
+        - [Step 2: Listen for requests](16_web-services/4871-step-2-listen-for-requests.md) — Listen for an incoming request.
+        - [Step 3: Parse the request](16_web-services/4872-step-3-parse-the-request.md) — Using methods of the com.HttpServiceRequest class (among others), parse the details of the request.
+        - [Step 4: Process the request](16_web-services/4873-step-4-process-the-request.md) — Having parsed the HttpServiceRequest object into its parts, you can now process the request.
+        - [Step 5: Send response](16_web-services/4874-step-5-send-response.md) — Having completed the processing, the server sends the response back to the client.
+        - [Step 6: Provide information about your service](16_web-services/4875-step-6-provide-information-about-your-service.md) — You must provide information about the services offered by your application to the developers of the Web services client applications that will interact with your server.
+      - [The RESTful calculator demo source](16_web-services/4876-the-restful-calculator-demo-source.md) — This calculator demo provides a sample RESTful Web services, demonstrating how to create a server and client application using low-level APIs.
+        - [Calculator server source](16_web-services/4877-calculator-server-source.md) — The source code for the server-side application included in the RESTful Web services calculator demo.
+        - [Calculator client source](16_web-services/4878-calculator-client-source.md) — The source code for the client-side application included in the RESTful Web services calculator demo.
+        - [Comparing the client to the server](16_web-services/4879-comparing-the-client-to-the-server.md) — Comparing the code between the RESTful calculator client and server.
+  - [How Do I ... ?](16_web-services/4880-how-do-i.md) — These topics provide you with the information needed to perform specific tasks related to Genero Web Services (SOAP or RESTful).
+    - [Call Java APIs from Genero in a SOA environment](16_web-services/4881-call-java-apis-from-genero-in-a-soa-environment.md) — How to call a Java library from Genero in a SOA environment, using Genero and Java Web services.
+      - [Recommendation](16_web-services/4882-recommendation.md)
+      - [Prerequisites](16_web-services/4883-prerequisites.md)
+      - [Using the barcode library](16_web-services/4884-using-the-barcode-library.md)
+      - [Calling Java from Genero](16_web-services/4885-calling-java-from-genero.md)
+        - [Step 1: Write a new java class](16_web-services/4886-step-1-write-a-new-java-class.md)
+        - [Step 2: Transform the Java class in a Web service](16_web-services/4887-step-2-transform-the-java-class-in-a-web-service.md)
+        - [Step 3: Start the service](16_web-services/4888-step-3-start-the-service.md)
+        - [Step 4: Generate BDL stub to access the Java library](16_web-services/4889-step-4-generate-bdl-stub-to-access-the-java-library.md)
+        - [Step 5: Modify your BDL application](16_web-services/4890-step-5-modify-your-bdl-application.md)
+      - [Example program](16_web-services/4891-example-program.md)
+      - [Conclusion](16_web-services/4892-conclusion.md)
+    - [Call .NET APIs from Genero in a SOA environment](16_web-services/4893-call-net-apis-from-genero-in-a-soa-environment.md) — How to call a .NET library from Genero in a SOA environment, using Genero and Web services, and IIS and Visual Studio .NET.
+      - [Prerequisites](16_web-services/4894-prerequisites.md)
+      - [Using the barcode library](16_web-services/4895-using-the-barcode-library.md)
+      - [Calling .NET from Genero](16_web-services/4896-calling-net-from-genero.md)
+        - [Step 1: Create an ASP.NET Web Service Application](16_web-services/4897-step-1-create-an-asp-net-web-service-application.md)
+        - [Step 2: Rename the generated files](16_web-services/4898-step-2-rename-the-generated-files.md)
+        - [Step 3: Add the barcode library as a reference](16_web-services/4899-step-3-add-the-barcode-library-as-a-reference.md)
+        - [Step 4: Add the buildImage method](16_web-services/4900-step-4-add-the-buildimage-method.md)
+        - [Step 5: Publish the service](16_web-services/4901-step-5-publish-the-service.md)
+        - [Step 6: Generate .4gl stub to access the .NET library](16_web-services/4902-step-6-generate-4gl-stub-to-access-the-net-library.md)
+        - [Step 7: Modify your BDL application](16_web-services/4903-step-7-modify-your-bdl-application.md)
+      - [Example BDL program](16_web-services/4904-example-bdl-program.md)
+      - [Conclusion](16_web-services/4905-conclusion.md)
+    - [Compute a hash value from a BDL string](16_web-services/4906-compute-a-hash-value-from-a-bdl-string.md) — How to compute a hash value of a BDL string using the security.Digest API.
+  - [Deploy a Web Service](16_web-services/4907-deploy-a-web-service.md) — Genero Web services need to be deployed on a Genero Application Server that plugs into a Web server, such as Apache. Understand what you need to implement for configuration and security.
+    - [Web services server program deployment](16_web-services/4908-web-services-server-program-deployment.md) — The Genero Application Server (GAS) manages web services. You must consider GAS configuration when deploying your web service in a production environment.
+    - [Configuring the Apache web server for HTTPS](16_web-services/4909-configuring-the-apache-web-server-for-https.md) — Configuration steps to secure a web service for Apache server in HTTPS.
+      - [Step 1: Create the server's certificate authority list](16_web-services/4910-step-1-create-the-server-s-certificate-authority-list.md) — Create the certificate authority list and add the root certificate authority certificate.
+      - [Step 2: Register the server as a Web service in the GAS](16_web-services/4911-step-2-register-the-server-as-a-web-service-in-the-gas.md) — Web services registered on the GAS are started automatically when the GAS starts.
+      - [Step 3: Configure Apache for HTTPS](16_web-services/4912-step-3-configure-apache-for-https.md) — Add the locations of your certificates to the Apache configuration file.
+      - [Step 4: Configure Apache for HTTP basic authentication](16_web-services/4913-step-4-configure-apache-for-http-basic-authentication.md) — Create login details for an authenticated user for the Apache web server, and add the location of your authentication file to the Apache configuration file.
+  - [Reference](16_web-services/4914-reference.md) — These topics are the reference guides for Genero Web Services.
+    - [Web services FGLPROFILE configuration](16_web-services/4915-web-services-fglprofile-configuration.md) — The configuration for the Genero Web Services is defined from entries in the FGLPROFILE file.
+      - [FGLPROFILE entries for web services](16_web-services/4916-fglprofile-entries-for-web-services.md) — The FGLPROFILE entries relating to Genero Web Services are divided between five categories: security, basic or digest HTTP authentication, proxy configuration, web server configuration, and XML cryptography.
+        - [HTTPS and password encryption](16_web-services/4916-fglprofile-entries-for-web-services.md)
+        - [Basic or digest HTTP authentication](16_web-services/4916-fglprofile-entries-for-web-services.md)
+        - [Proxy configuration](16_web-services/4916-fglprofile-entries-for-web-services.md)
+        - [IPv6 configuration](16_web-services/4916-fglprofile-entries-for-web-services.md)
+        - [Server configuration](16_web-services/4916-fglprofile-entries-for-web-services.md)
+        - [XML configuration](16_web-services/4916-fglprofile-entries-for-web-services.md)
+        - [HTTP configuration](16_web-services/4916-fglprofile-entries-for-web-services.md)
+      - [Examples](16_web-services/4917-examples.md) — SSL/TLS configuration examples.
+        - [Windows® BAT script for private key password](16_web-services/4918-windows-bat-script-for-private-key-password.md) — Windows® BAT script sample returning a password, depending on the .pem file passed as parameter.
+        - [UNIX™ shell script for private key password](16_web-services/4919-unix-shell-script-for-private-key-password.md) — UNIX® shell script sample returning a password, depending on the .pem file passed as parameter.
+        - [FGLPROFILE: HTTP(S) Proxy Authentication](16_web-services/4920-fglprofile-http-s-proxy-authentication.md) — FGLPROFILE entries can be used to define a connection to an HTTPS server via a proxy, and with HTTP and Proxy Authentication.
+        - [FGLPROFILE: XML cryptography](16_web-services/4921-fglprofile-xml-cryptography.md) — Use FGLPROFILE file entries to define XML cryptography and use the fglpass agent to get the private key passwords.
+        - [FGLPROFILE: Server URL patterns](16_web-services/4922-fglprofile-server-url-patterns.md) — FGLPROFILE entries can be used to define multiple server URLs, by using URL patterns.
+    - [WSHelper library](16_web-services/4923-wshelper-library.md) — The WSHelper library provides a set of functions to help with web services.
+      - [WSHelper: library](16_web-services/4924-wshelper-library.md) — The WSHelper library provides functions and types for working with URLs.
+        - [WSHelper.WSQueryType](16_web-services/4925-wshelper-wsquerytype.md) — The WSQueryType defines a dynamic array of key-value pairs that stores the query string of a URL.
+        - [WSHelper.WSServerCookiesType](16_web-services/4926-wshelper-wsservercookiestype.md) — The WSHelper.WSServerCookiesType defines a dynamic array for storing cookies.
+        - [WSHelper.FindQueryStringValue()](16_web-services/4927-wshelper-findquerystringvalue.md) — Get a query string value by name.
+        - [WSHelper.SplitQueryString()](16_web-services/4928-wshelper-splitquerystring.md) — Splits the query string of a URL into an array or key-value pairs.
+        - [WSHelper.SplitUrl()](16_web-services/4929-wshelper-spliturl.md) — Splits a complete URL string into pieces.
+    - [OAuthAPI library](16_web-services/4930-oauthapi-library.md) — The OAuthAPI library provides a set of functions for working with access to web services using the OAuth protocol.
+      - [Overview](16_web-services/4931-overview.md) — The OAuthAPI library supports the OAuth protocol that authenticates user access and issues access tokens.
+        - [Authenticate with GAS](16_web-services/4932-authenticate-with-gas.md) — To authenticate an application that is behind Genero Application Server, OAuth is implemented through delegation.
+        - [Authenticate without GAS](16_web-services/4933-authenticate-without-gas.md) — To authenticate an application that is not behind GAS, for example applications that include mobile, desktop, and Text User Interface (TUI) , you need to implement OAuth in a specific way.
+        - [Authenticate a service to a service](16_web-services/4934-authenticate-a-service-to-a-service.md) — To successfully authenticate a service (server side) to connect (as a service client) to another service protected by an access token, you will need to implement OAuth this way.
+      - [OAuthAPI: library](16_web-services/4935-oauthapi-library.md) — The OAuthAPI library provides functions and types for working with OAuth such as initializing OAuth, getting metadata, and managing requests using access tokens for web services in different situations.
+        - [OAuthAPI.RegisterRequestType](16_web-services/4936-oauthapi-registerrequesttype.md) — The RegisterRequestType record stores authorization credentials for the request.
+        - [OAuthAPI.RegisterResponseType](16_web-services/4937-oauthapi-registerresponsetype.md) — The RegisterResponseType record stores authorization credentials for the response.
+        - [OAuthAPI.OpenIDMetadataType](16_web-services/4938-oauthapi-openidmetadatatype.md) — The OpenIDMetadataType record stores metadata retrieved in a request to the IdP.
+        - [OAuthAPI.OpenIdCResponseType](16_web-services/4939-oauthapi-openidcresponsetype.md) — The OpenIdCResponseType record stores the access token, refresh token, and token expiry date retrieved in a request to the IdP.
+        - [OAuthAPI.init()](16_web-services/4940-oauthapi-init.md) — To be called in a Genero application accessing a secure RESTful web service started behind a Genero Application Server.
+        - [OAuthAPI.InitService()](16_web-services/4941-oauthapi-initservice.md) — To be called in a Genero web service started via OpenID Connect/OAuth2 accessing another secure RESTful web service as a client.
+        - [OAuthAPI.InitNativeApp()](16_web-services/4942-oauthapi-initnativeapp.md) — To be called in a Genero application accessing a secure RESTful web service directly (not behind a Genero Application Server).
+        - [OAuthAPI.GetOpenIDMetadata()](16_web-services/4943-oauthapi-getopenidmetadata.md) — Get metadata from the Identity Provider for a service running on a Genero Application Server (GAS).
+        - [OAuthAPI.GetIDPIssuer()](16_web-services/4944-oauthapi-getidpissuer.md) — Get endpoint of the Identity Provider.
+        - [OAuthAPI.GetIdRoles()](16_web-services/4945-oauthapi-getidroles.md) — Get OAuth ID Token authorization roles.
+        - [OAuthAPI.GetIDScopes()](16_web-services/4946-oauthapi-getidscopes.md) — Get OAuth ID Token authorization scopes.
+        - [OAuthAPI.GetIDSubject()](16_web-services/4947-oauthapi-getidsubject.md) — Get OAuth subject identifier of ID Token.
+        - [OAuthAPI.GetMyAccessToken()](16_web-services/4948-oauthapi-getmyaccesstoken.md) — Get a valid access token.
+        - [OAuthAPI.CreateHTTPAuthorizationRequest()](16_web-services/4949-oauthapi-createhttpauthorizationrequest.md) — Create an HttpRequest with OAuth access token.
+        - [OAuthAPI.RetryHTTPRequest()](16_web-services/4950-oauthapi-retryhttprequest.md) — Retry an HttpRequest with OAuth access token to check if the access token has expired.
+        - [OAuthAPI.ExtractTokenFromHTTPRequest()](16_web-services/4951-oauthapi-extracttokenfromhttprequest.md) — Return the OAuth access token from a HTTP request service object.
+        - [OAuthAPI.FetchOpenIDMetadata()](16_web-services/4952-oauthapi-fetchopenidmetadata.md) — Fetch metadata from the Identity Provider at the URL provided.
+        - [OAuthAPI.RetrievePasswordToken()](16_web-services/4953-oauthapi-retrievepasswordtoken.md) — Return the OAuth service access token via user name and password.
+        - [OAuthAPI.RetrievePasswordTokenForNativeApp()](16_web-services/4954-oauthapi-retrievepasswordtokenfornativeapp.md) — Returns the OAuth service access token via user credentials (username/password) and client credentials (client_id/secret_id). A refresh token allows the access token to be refreshed when it expires.
+        - [OAuthAPI.RetrieveServiceToken()](16_web-services/4955-oauthapi-retrieveservicetoken.md) — Return the OAuth service access token via client app credentials.
+        - [Examples](16_web-services/4956-examples.md) — OAuthAPI Helper function examples.
+          - [Get OAuth access without GAS](16_web-services/4957-get-oauth-access-without-gas.md) — This example illustrates how to obtain OAuth access to a web service when the application is not operating behind a Genero Application Server (GAS), specifically for applications that include mobile, desktop, Genero Web Applications, and Text User Interface (TUI) apps.
+    - [XML serialization rules and customization](16_web-services/4958-xml-serialization-rules-and-customization.md)
+      - [BDL to/from XML type mappings](16_web-services/4959-bdl-to-from-xml-type-mappings.md) — Map BDL variable types to specific XML data types for web service serialization using optional attributes. For example, use XSDBoolean to map a BDL SMALLINT to an XML boolean, and assign custom XML names as needed.
+      - [Default BDL/XML mapping](16_web-services/4960-default-bdl-xml-mapping.md) — By default, Genero Web Services converts BDL variables to standard XML Schema (XSD) data types for use in web service messages.
+      - [XML type mapping attributes](16_web-services/4961-xml-type-mapping-attributes.md)
+        - [XSDAnySimpleType](16_web-services/4962-xsdanysimpletype.md)
+        - [XSDAnyType](16_web-services/4963-xsdanytype.md)
+        - [XSDAnyURI](16_web-services/4964-xsdanyuri.md)
+        - [XSDBase64binary](16_web-services/4965-xsdbase64binary.md)
+        - [XSDBoolean](16_web-services/4966-xsdboolean.md)
+        - [XSDByte](16_web-services/4967-xsdbyte.md)
+        - [XSDDate](16_web-services/4968-xsddate.md)
+        - [XSDDateTime](16_web-services/4969-xsddatetime.md)
+        - [XSDDecimal](16_web-services/4970-xsddecimal.md)
+        - [XSDDouble](16_web-services/4971-xsddouble.md)
+        - [XSDDuration](16_web-services/4972-xsdduration.md)
+        - [XSDEntities](16_web-services/4973-xsdentities.md)
+        - [XSDEntity](16_web-services/4974-xsdentity.md)
+        - [XSDFloat](16_web-services/4975-xsdfloat.md)
+        - [XSDGDay](16_web-services/4976-xsdgday.md)
+        - [XSDGMonth](16_web-services/4977-xsdgmonth.md)
+        - [XSDGMonthDay](16_web-services/4978-xsdgmonthday.md)
+        - [XSDGYear](16_web-services/4979-xsdgyear.md)
+        - [XSDGYearMonth](16_web-services/4980-xsdgyearmonth.md)
+        - [XSDHexBinary](16_web-services/4981-xsdhexbinary.md)
+        - [XSDID](16_web-services/4982-xsdid.md)
+        - [XSDIDREF](16_web-services/4983-xsdidref.md)
+        - [XSDIDREFS](16_web-services/4984-xsdidrefs.md)
+        - [XSDInt](16_web-services/4985-xsdint.md)
+        - [XSDInteger](16_web-services/4986-xsdinteger.md)
+        - [XSDLanguage](16_web-services/4987-xsdlanguage.md)
+        - [XSDLong](16_web-services/4988-xsdlong.md)
+        - [XSDNCName](16_web-services/4989-xsdncname.md)
+        - [XSDName](16_web-services/4990-xsdname.md)
+        - [XSDNegativeInteger](16_web-services/4991-xsdnegativeinteger.md)
+        - [XSDNMTOKEN](16_web-services/4992-xsdnmtoken.md)
+        - [XSDNMTOKENS](16_web-services/4993-xsdnmtokens.md)
+        - [XSDNonNegativeInteger](16_web-services/4994-xsdnonnegativeinteger.md)
+        - [XSDNonPositiveInteger](16_web-services/4995-xsdnonpositiveinteger.md)
+        - [XSDNormalizedString](16_web-services/4996-xsdnormalizedstring.md)
+        - [XSDnotation](16_web-services/4997-xsdnotation.md)
+        - [XSDPositiveInteger](16_web-services/4998-xsdpositiveinteger.md)
+        - [XSDQName](16_web-services/4999-xsdqname.md)
+        - [XSDShort](16_web-services/5000-xsdshort.md)
+        - [XSDString](16_web-services/5001-xsdstring.md)
+        - [XSDTime](16_web-services/5002-xsdtime.md)
+        - [XSDToken](16_web-services/5003-xsdtoken.md)
+        - [XSDUnsignedByte](16_web-services/5004-xsdunsignedbyte.md)
+        - [XSDUnsignedInt](16_web-services/5005-xsdunsignedint.md)
+        - [XSDUnsignedLong](16_web-services/5006-xsdunsignedlong.md)
+        - [XSDUnsignedShort](16_web-services/5007-xsdunsignedshort.md)
+      - [XML facet constraint attributes](16_web-services/5008-xml-facet-constraint-attributes.md)
+        - [XSDLength](16_web-services/5009-xsdlength.md)
+        - [XSDMinLength](16_web-services/5010-xsdminlength.md)
+        - [XSDMaxLength](16_web-services/5011-xsdmaxlength.md)
+        - [XSDEnumeration](16_web-services/5012-xsdenumeration.md)
+        - [XSDWhiteSpace](16_web-services/5013-xsdwhitespace.md)
+        - [XSDPattern](16_web-services/5014-xsdpattern.md)
+        - [XSDMinInclusive](16_web-services/5015-xsdmininclusive.md)
+        - [XSDMaxInclusive](16_web-services/5016-xsdmaxinclusive.md)
+        - [XSDMinExclusive](16_web-services/5017-xsdminexclusive.md)
+        - [XSDMaxExclusive](16_web-services/5018-xsdmaxexclusive.md)
+        - [XSDTotalDigits](16_web-services/5019-xsdtotaldigits.md)
+        - [XSDFractionDigits](16_web-services/5020-xsdfractiondigits.md)
+      - [XML serialization attributes](16_web-services/5021-xml-serialization-attributes.md)
+        - [XMLOptional](16_web-services/5022-xmloptional.md)
+        - [XMLNillable](16_web-services/5023-xmlnillable.md)
+        - [XMLElement (Optional)](16_web-services/5024-xmlelement-optional.md)
+        - [XMLElementNillable](16_web-services/5025-xmlelementnillable.md)
+        - [XMLAttribute](16_web-services/5026-xmlattribute.md)
+        - [XMLBase](16_web-services/5027-xmlbase.md)
+        - [XMLALL](16_web-services/5028-xmlall.md)
+        - [XMLChoice](16_web-services/5029-xmlchoice.md)
+        - [XMLSequence (Optional)](16_web-services/5030-xmlsequence-optional.md)
+        - [XMLSimpleContent](16_web-services/5031-xmlsimplecontent.md)
+        - [XSComplexType](16_web-services/5032-xscomplextype.md)
+        - [XMLList](16_web-services/5033-xmllist.md)
+        - [XMLSelector](16_web-services/5034-xmlselector.md)
+        - [XMLAny](16_web-services/5035-xmlany.md)
+        - [XMLAnyAttribute](16_web-services/5036-xmlanyattribute.md)
+        - [XMLName](16_web-services/5037-xmlname.md)
+        - [XMLNamespace](16_web-services/5038-xmlnamespace.md)
+        - [XMLType](16_web-services/5039-xmltype.md)
+        - [XMLTypenamespace](16_web-services/5040-xmltypenamespace.md)
+        - [XSTypename](16_web-services/5041-xstypename.md)
+        - [XSTypenamespace](16_web-services/5042-xstypenamespace.md)
+        - [XMLElementNamespace](16_web-services/5043-xmlelementnamespace.md)
+        - [XMLAttributeNamespace](16_web-services/5044-xmlattributenamespace.md)
+        - [XMLOptimizedContent](16_web-services/5045-xmloptimizedcontent.md) — Set on STRING or BYTE data type so that such string content represents a file on disk to be transmitted as base64 binary in SOAP via HTTP attachment.
+      - [Serialize XML from a dynamic array](16_web-services/5046-serialize-xml-from-a-dynamic-array.md) — The XMLList and XMLName attributes can be used to serialize dynamic arrays to XML and vice versa.
+      - [XML-to-BDL conversion options](16_web-services/5047-xml-to-bdl-conversion-options.md) — This topic describes the options that relax XML-to-BDL deserialization by allowing the serializer to ignore unexpected XML attributes or elements.
+    - [JSON serialization rules and customization](16_web-services/5048-json-serialization-rules-and-customization.md) — This section describes the rules, attributes, and options used when converting BDL values to and from JSON in GWS applications.
+      - [Implicit and explicit conversion](16_web-services/5049-implicit-and-explicit-conversion.md) — This topic provides an overview of implicit and explicit JSON conversion behavior in json.Serializer and util.JSON, highlighting the differences between strict and permissive conversion models.
+        - [Primitive type conversion](16_web-services/5050-primitive-type-conversion.md) — This topic describes how primitive 4GL values are converted during JSON serialization and deserialization, and compares the behavior of json.Serializer and util.JSON.
+        - [Complex type conversion](16_web-services/5051-complex-type-conversion.md) — This topic describes how complex 4GL structures such as RECORD, DICTIONARY, arrays, and util.JSONObject are converted during JSON serialization and deserialization, and compares the behavior of json.Serializer and util.JSON.
+        - [Null and empty value handling in json.Serializer and util.JSON](16_web-services/5052-null-and-empty-value-handling-in-json-serializer-and-util-js.md) — This topic compares how json.Serializer and util.JSON handle null and empty values during JSON serialization and deserialization.
+          - [json_null handling differences](16_web-services/5053-json-null-handling-differences.md) — This topic compares how json.Serializer and util.JSON interpret the json_null attribute during serialization and deserialization.
+          - [json_null attribute](16_web-services/5054-json-null-attribute.md) — This attribute controls the representation of null or empty values. json.Serializer uses it during both serialization and deserialization, but util.JSON applies it only when serializing.
+      - [json.Serializer attributes](16_web-services/5055-json-serializer-attributes.md)
+        - [JSONAdditionalProperties](16_web-services/5056-jsonadditionalproperties.md) — Allows a record to accept JSON properties not explicitly listed in its schema definition.
+        - [JSONAllOf](16_web-services/5057-jsonallof.md) — Combine multiple record schemas into a single type using the JSONAllOf attribute in Genero BDL.
+        - [JSONEnum](16_web-services/5058-jsonenum.md) — Defines an explicit, typed list of acceptable values for a field and maps to the enum keyword in JSON Schema.
+        - [JSONOneOf](16_web-services/5059-jsononeof.md) — Defines a record that matches exactly one of several possible JSON schemas during serialization or deserialization.
+        - [JSONPattern](16_web-services/5060-jsonpattern.md) — Specify a regular expression pattern for string values in a JSON schema.
+        - [JSONRequired](16_web-services/5061-jsonrequired.md) — Specify properties that are required in a JSON schema.
+        - [JSONSelector](16_web-services/5062-jsonselector.md) — Identifies the variant member of a JSONOneOf record to use during serialization or deserialization.
+      - [json.Serializer options](16_web-services/5063-json-serializer-options.md) — Options for controlling serialization and deserialization behavior, set using the json.Serializer class.
+    - [Error handling in GWS calls (status)](16_web-services/5064-error-handling-in-gws-calls-status.md) — When errors are encountered, the methods of GWS classes can throw exceptions and set the status variable with the appropriate error number.
+    - [Interruption handling in GWS calls (int_flag)](16_web-services/5065-interruption-handling-in-gws-calls-int-flag.md) — Genero Web Services (GWS) tests int_flag to check if an application has been interrupted.
+    - [Server API functions - version 1.3 only](16_web-services/5066-server-api-functions-version-1-3-only.md) — Server API functions can create a Web Services server in Genero BDL.
+      - [fgl_ws_server_setNamespace() (version 1.3)](16_web-services/5067-fgl-ws-server-setnamespace-version-1-3.md) — Defines the namespace of the service on the Web and must be called first, before all other functions of the API.
+      - [fgl_ws_server_start() (version 1.3)](16_web-services/5068-fgl-ws-server-start-version-1-3.md) — Creates and starts the Web services server.
+      - [fgl_ws_server_publishFunction() (version 1.3)](16_web-services/5069-fgl-ws-server-publishfunction-version-1-3.md) — Publishes the given BDL function as a Web-Function on the Web.
+      - [fgl_ws_server_generateWSDL() (version 1.3)](16_web-services/5070-fgl-ws-server-generatewsdl-version-1-3.md) — Generates the WSDL file based on the BDL-server program.
+      - [fgl_ws_server_process() (version 1.3)](16_web-services/5071-fgl-ws-server-process-version-1-3.md) — Waits for an incoming SOAP request for a given time (in seconds) and then processes the request, or returns, if there has been no request during the given time.
+      - [fgl_ws_server_setFault() (version 1.3)](16_web-services/5072-fgl-ws-server-setfault-version-1-3.md) — Return a SOAP fault string to the client at the end of the function's execution.
+      - [fgl_ws_server_getFault() (version 1.3)](16_web-services/5073-fgl-ws-server-getfault-version-1-3.md) — Retrieves the last fault string the user has set in a Web-Function, or an empty string if there is none.
+    - [Configuration API functions - version 1.3 only](16_web-services/5074-configuration-api-functions-version-1-3-only.md) — Configuration API functions can modify the behavior of the Web Services engine for the client and/or server.
+      - [fgl_ws_setOption()](16_web-services/5075-fgl-ws-setoption.md) — Sets an option flag with a given value, changing the global behavior of the Web Services engine.
+      - [fgl_ws_getOption()](16_web-services/5076-fgl-ws-getoption.md) — Returns the value of an option flag.
+      - [Option flags](16_web-services/5077-option-flags.md)
+      - [WSDL generation option notes](16_web-services/5078-wsdl-generation-option-notes.md)
+    - [Using fglwsdl to generate code from WSDL or XSD schemas](16_web-services/5079-using-fglwsdl-to-generate-code-from-wsdl-or-xsd-schemas.md) — The fglwsdl tool generates Genero (.4gl) code from WSDL / XSD schemas.
+      - [Generate TYPE definitions from global XML elements or attributes](16_web-services/5080-generate-type-definitions-from-global-xml-elements-or-attrib.md)
+- [Mobile applications](17_mobile-applications/5081-mobile-applications.md) — These topics cover programming subjects about mobile applications
+  - [Types of Genero Mobile apps](17_mobile-applications/5082-types-of-genero-mobile-apps.md) — Genero supports different types of mobile app architectures: development mode, standalone apps, partially-connected apps, and client-server apps.
+  - [Mobile development mode](17_mobile-applications/5083-mobile-development-mode.md) — Set up a development environment to display app forms on a mobile front-end.
+    - [Genero Mobile Development Client for Android™](17_mobile-applications/5084-genero-mobile-development-client-for-android.md) — Set up a development environment to display app forms on an Android™ device.
+    - [Genero Mobile Development Client for iOS](17_mobile-applications/5085-genero-mobile-development-client-for-ios.md) — Set up a development environment to display app forms on an iOS device.
+  - [Language limitations](17_mobile-applications/5086-language-limitations.md) — Genero language features not supported on mobile devices.
+  - [Environment variables](17_mobile-applications/5087-environment-variables.md) — You may need to set environment variables for your app.
+  - [App localization](17_mobile-applications/5088-app-localization.md) — Mobile apps can be designed to display localized texts based on the language selected on the device.
+  - [File management](17_mobile-applications/5089-file-management.md) — Specific APIs are available to manipulate file resources in mobile apps.
+    - [Handling files on Android™ devices](17_mobile-applications/5090-handling-files-on-android-devices.md) — How to manipulate file resources with GMA?
+    - [Handling files on iOS devices](17_mobile-applications/5091-handling-files-on-ios-devices.md) — How to manipulate file resources with GMI?
+  - [App execution](17_mobile-applications/5092-app-execution.md) — Mobile apps are started and stopped, and can switch between foreground and background states when running.
+    - [Mobile app execution modes](17_mobile-applications/5093-mobile-app-execution-modes.md) — Mobile apps can be fully embeeded as a standalone or can execute on a server and display forms on the mobile device.
+    - [Background/foreground modes](17_mobile-applications/5094-background-foreground-modes.md) — Describes how to handle background or foreground modes in mobile apps.
+  - [Color and theming](17_mobile-applications/5095-color-and-theming.md) — Mobile applications must follow the platform colors and theming.
+  - [Screen orientation](17_mobile-applications/5096-screen-orientation.md) — Detecting screen orientation changes with the mobile device.
+  - [Database support on mobile devices](17_mobile-applications/5097-database-support-on-mobile-devices.md) — On the device, a Genero app can use SQL for data management.
+    - [Using SQLite database in mobile apps](17_mobile-applications/5098-using-sqlite-database-in-mobile-apps.md) — On the device, Genero Mobile uses the SQLite database only.
+  - [Accessing device functions](17_mobile-applications/5099-accessing-device-functions.md) — Mobile apps can access device functions by using front calls.
+  - [Web Services on mobile devices](17_mobile-applications/5100-web-services-on-mobile-devices.md) — Web Services can be used within mobile applications.
+  - [Debugging a mobile app](17_mobile-applications/5101-debugging-a-mobile-app.md) — Different solutions are available to debug a mobile app.
+  - [Deploying mobile apps](17_mobile-applications/5102-deploying-mobile-apps.md) — This section describes how to build and deploy mobile apps with Genero.
+    - [Deploying mobile apps on Android™ devices](17_mobile-applications/5103-deploying-mobile-apps-on-android-devices.md) — This section contains information to create a mobile application to be deployed on Android™ devices.
+      - [Directory structure for GMA apps](17_mobile-applications/5104-directory-structure-for-gma-apps.md) — Platform-specific rules need to be considered when deploying on Android™ devices (GMA).
+      - [Building Android™ apps with Genero](17_mobile-applications/5105-building-android-apps-with-genero.md) — Genero provides a command-line tool to create applications for Android™ devices.
+      - [gmabuildtool](17_mobile-applications/5106-gmabuildtool.md) — The gmabuildtool is a utility to create app packages for an Android™ device.
+    - [Deploying mobile apps on iOS devices](17_mobile-applications/5107-deploying-mobile-apps-on-ios-devices.md) — This section contains information to create a mobile application to be deployed on iOS devices.
+      - [Directory structure for GMI apps](17_mobile-applications/5108-directory-structure-for-gmi-apps.md) — Platform-specific rules need to be considered when deploying on iOS devices (GMI).
+      - [Building iOS apps with Genero](17_mobile-applications/5109-building-ios-apps-with-genero.md) — Genero provides a command-line tool to build applications for iOS devices.
+      - [gmibuildtool](17_mobile-applications/5110-gmibuildtool.md) — The gmibuildtool is a utility to create and test applications for an iOS devices.
+    - [Running mobile apps on an application server](17_mobile-applications/5111-running-mobile-apps-on-an-application-server.md) — From the mobile device, programs can be started remotely on an application server, and displayed on the device.
+  - [Push notifications](17_mobile-applications/5112-push-notifications.md) — This section describes how to implement push notification with Genero.
+    - [Firebase Cloud Messaging (FCM)](17_mobile-applications/5113-firebase-cloud-messaging-fcm.md) — Follow this procedure to implement push notification with FCM.
+    - [Apple Push Notification Service (APNs)](17_mobile-applications/5114-apple-push-notification-service-apns.md) — Follow this procedure to implement push notification with APNs.
+    - [Implementing a token maintainer](17_mobile-applications/5115-implementing-a-token-maintainer.md) — The token maintainer is a BDL Web Services server program that handles push token registration from mobile apps.
+    - [Handling notifications in the mobile app](17_mobile-applications/5116-handling-notifications-in-the-mobile-app.md) — This topic describes how to handle push notification in the app running on mobile devices.
+  - [Cordova plugins](17_mobile-applications/5117-cordova-plugins.md) — This section describes how to use Cordova plugins.
+    - [Understanding Cordova plugins](17_mobile-applications/5118-understanding-cordova-plugins.md) — Cordova plugins allow you to access specific mobile device functionalities.
+    - [Installing Cordova plugins](17_mobile-applications/5119-installing-cordova-plugins.md) — Before usage, Cordova plugins need to be installed in the GMA or GMI development environment.
+    - [Using a Cordova plugin API](17_mobile-applications/5120-using-a-cordova-plugin-api.md) — Cordova plugin features can be used by invoking cordova front calls.
+    - [Embed Cordova plugins in a GMA app](17_mobile-applications/5121-embed-cordova-plugins-in-a-gma-app.md) — To be included in your app, Cordova plugins need to be specified in the build process.
+    - [Embed Cordova plugins in a GMI app](17_mobile-applications/5122-embed-cordova-plugins-in-a-gmi-app.md) — To be included in your app, Cordova plugins need to be specified in the build process.
+- [Genero Web applications](18_genero-web-applications/5123-genero-web-applications.md) — These topics cover programming subjects about Genero Web applications
+  - [Overview](18_genero-web-applications/5124-overview.md) — Genero Web Application (GWA) is a browser-based solution that combines Genero Browser Client, p-code modules, and a WebAssembly-based runtime for executing applications offline as progressive web apps. It supports full Genero GUI features, requires HTTPS for secure deployment, and is ideal for scalable use cases, including offline functionality and large user bases.
+  - [File system](18_genero-web-applications/5125-file-system.md) — When the GWA application is launched in the browser, a virtual UNIX-like file system emulation of your GWA application is created in memory.
+    - [Manage persistence in the file system](18_genero-web-applications/5125-file-system.md) — As directories in a GWA application are in memory, this means the lifetime of those directories is the same as the lifetime of the application. Understanding the file system will help you develop a strategy for making data persistent.
+  - [Creating GWA apps with Genero](18_genero-web-applications/5126-creating-gwa-apps-with-genero.md) — Prepare the environment to build GWA applications.
+    - [Create a program directory](18_genero-web-applications/5127-create-a-program-directory.md) — To build a GWA application, you must create a directory.
+    - [Set environment with fglprofile](18_genero-web-applications/5128-set-environment-with-fglprofile.md) — Configure environment settings with FGLPROFILE entries.
+    - [Specify the GBC](18_genero-web-applications/5129-specify-the-gbc.md) — A GBC must be bundled with the GWA.
+    - [Package web components](18_genero-web-applications/5130-package-web-components.md) — Web components must be packaged with the GWA application because they are preloaded and must also be available offline.
+    - [Specify the start-up module](18_genero-web-applications/5131-specify-the-start-up-module.md) — Specify the module you want to use as the main entry point.
+    - [Customizing GWA apps](18_genero-web-applications/5132-customizing-gwa-apps.md) — This section describes ways you may customize your GWA apps, such as adding a favicon, customizing the index page, and internationalizing your app.
+      - [Add a favicon](18_genero-web-applications/5133-add-a-favicon.md) — This procedure shows you how to add a favicon image.
+      - [Customize the index page](18_genero-web-applications/5134-customize-the-index-page.md) — The GWA allows customization of index.html using custom CSS and HTML files.
+      - [Internationalize your app](18_genero-web-applications/5135-internationalize-your-app.md) — GWA applications can be translated and modified for international markets.
+        - [Customize translation text](18_genero-web-applications/5136-customize-translation-text.md) — This procedure shows you how custom translation text is provided in a locale file and referenced in the HTML code in the template file.
+  - [Deploying GWA apps](18_genero-web-applications/5137-deploying-gwa-apps.md) — This section describes how to build and deploy GWA apps with Genero.
+    - [Build and test the application](18_genero-web-applications/5138-build-and-test-the-application.md) — Build a GWA application.
+    - [Deploy the application on GAS](18_genero-web-applications/5139-deploy-the-application-on-gas.md) — Deploy the application on your GAS.
+    - [Add GWA app to iPhone® home screen (Safari® Mobile)](18_genero-web-applications/5140-add-gwa-app-to-iphone-home-screen-safari-mobile.md) — There are special considerations when adding a Genero Web Application to the home screen from Safari® Mobile.
+  - [Executing programs with RUN](18_genero-web-applications/5141-executing-programs-with-run.md) — Sub-programs can be executed from a parent program with the RUN instruction.
+  - [Troubleshooting GWA apps](18_genero-web-applications/5142-troubleshooting-gwa-apps.md) — What steps can you take if you have trouble with a Genero web application (GWA)?
+  - [Debugging GWA apps](18_genero-web-applications/5143-debugging-gwa-apps.md) — Different solutions are available to debug a GWA application.
+  - [Application updates](18_genero-web-applications/5144-application-updates.md) — The GWA API queries the status of the application and can update it automatically even when not active.
+  - [Secure the app with Single sign-on (SSO)](18_genero-web-applications/5145-secure-the-app-with-single-sign-on-sso.md) — Enable SSO for your Genero Web Application (GWA) to increase security and makes it easier for users to sign in.
+  - [Start a GAS app from GWA](18_genero-web-applications/5146-start-a-gas-app-from-gwa.md) — The runOnServer front call allows you to start an application via the Genero Application Server (GAS) from a Genero Web application (GWA).
+  - [File transfer support in GWA deployment](18_genero-web-applications/5147-file-transfer-support-in-gwa-deployment.md) — File transfer operations are supported in Genero Web Application (GWA) deployments using fgl_putfile and fgl_getfile.
+  - [GWA Reference](18_genero-web-applications/5148-gwa-reference.md) — The GWA reference, to include tools and commands, demos and examples, the GWA API reference, and more.
+    - [Tools and commands](18_genero-web-applications/5149-tools-and-commands.md) — Command line tools provided for GWA
+      - [gwabuildtool](18_genero-web-applications/5150-gwabuildtool.md) — The gwabuildtool is a utility to build a GWA application with all the necessary files to run on a browser.
+      - [gwadb](18_genero-web-applications/5151-gwadb.md) — The gwadb is a debug tool that allows you to debug GWA applications generated by gwabuildtool in the browser on your desktop.
+      - [Helper tools](18_genero-web-applications/5152-helper-tools.md) — Tools that may help you work with Genero Web Applications in development.
+        - [gwarun](18_genero-web-applications/5152-helper-tools.md) — The gwarun tool runs a GWA program in the browser on your desktop.
+        - [gwasrv](18_genero-web-applications/5152-helper-tools.md) — The gwasrv is a mini web server written in Genero that allows you to run applications generated by gwabuildtool in the browser on your desktop.
+    - [gwa.webmanifest file](18_genero-web-applications/5153-gwa-webmanifest-file.md) — Example of a customized gwa.webmanifest file, providing information about a Genero Web Application (GWA).
+    - [index_tpl.html file](18_genero-web-applications/5154-index-tpl-html-file.md) — Customizing the index_tpl.html file.
+    - [GWA environment variables](18_genero-web-applications/5155-gwa-environment-variables.md) — Use the BROWSER and GWA_TARGET environment variables to control how and where GWA applications are launched.
+    - [GWA demos and examples](18_genero-web-applications/5156-gwa-demos-and-examples.md) — Demos and examples are provided for Genero Web Application.
+    - [Genero Web Application API](18_genero-web-applications/5157-genero-web-application-api.md) — The Genero Web Application API is a package included with GWA installations, offering modules like gwa.location and gwa.app to assist with application development.
+      - [Finding modules with FGLLDPATH](18_genero-web-applications/5158-finding-modules-with-fglldpath.md) — For compilation, you may need to set the FGLLDPATH environment variable to find the modules in the GWA API package.
+      - [The gwa.location module](18_genero-web-applications/5159-the-gwa-location-module.md) — The gwa.location module provides methods and types for interfacing GWA applications with HTML DOM API location object.
+        - [gwa.location module](18_genero-web-applications/5160-gwa-location-module.md) — Functions and types of the gwa.location module for interfacing GWA applications with HTML DOM API location object.
+          - [gwa.location.TGWALocation type](18_genero-web-applications/5161-gwa-location-tgwalocation-type.md) — The TGWALocation type defines a record for a Genero wrapper around the JavaScript window.location object.
+          - [gwa.location.get](18_genero-web-applications/5162-gwa-location-get.md) — Returns the location description of the application window.
+          - [gwa.location.reload](18_genero-web-applications/5163-gwa-location-reload.md) — Reloads the application page.
+      - [The gwa.app module](18_genero-web-applications/5164-the-gwa-app-module.md) — The gwa.app module provides methods and types for querying version numbers and for working with application updates.
+        - [gwa.app module](18_genero-web-applications/5165-gwa-app-module.md) — Functions and types of the gwa.app module for querying version numbers and for working with application updates.
+          - [gwa.app.TAppInformation type](18_genero-web-applications/5166-gwa-app-tappinformation-type.md) — The TAppInformation type defines a record for returning application information.
+          - [gwa.app.TAppVersions type](18_genero-web-applications/5167-gwa-app-tappversions-type.md) — The TAppVersions type defines a record for describing server and application version information.
+          - [gwa.app.TBuildDateTime type](18_genero-web-applications/5168-gwa-app-tbuilddatetime-type.md) — The TBuildDateTime type defines a record for the build date time stamp.
+          - [gwa.app.TCheckUpToDateResult type](18_genero-web-applications/5169-gwa-app-tcheckuptodateresult-type.md) — The TCheckUpToDateResult type defines a record for checking the up-to-date status of the application.
+          - [gwa.app.TServerVersionAndBuildResult type](18_genero-web-applications/5170-gwa-app-tserverversionandbuildresult-type.md) — The TServerVersionAndBuildResult type defines a record for checking the up-to-date status of the application on the server.
+          - [gwa.app.TUpdateDialogResult type](18_genero-web-applications/5171-gwa-app-tupdatedialogresult-type.md) — The TUpdateDialogResult type defines a record for returning the result of the up-to-date status of the application on the server.
+          - [gwa.app.checkUpToDate](18_genero-web-applications/5172-gwa-app-checkuptodate.md) — Checks if the application is up to date by comparing versions and date time stamps.
+          - [gwa.app.getBuild](18_genero-web-applications/5173-gwa-app-getbuild.md) — Returns the date time stamp of when the application was built.
+          - [gwa.app.getGBCVersion](18_genero-web-applications/5174-gwa-app-getgbcversion.md) — Returns the version of the GBC embedded in the application.
+          - [gwa.app.getInformation](18_genero-web-applications/5175-gwa-app-getinformation.md) — Returns the application version information.
+          - [gwa.app.getServerVersionAndBuild](18_genero-web-applications/5176-gwa-app-getserverversionandbuild.md) — Returns server application version information.
+          - [gwa.app.getTitle](18_genero-web-applications/5177-gwa-app-gettitle.md) — Returns the application title set by gwabuildtool --title.
+          - [gwa.app.getVersion](18_genero-web-applications/5178-gwa-app-getversion.md) — Returns the application version set by gwabuildtool --app-version.
+          - [gwa.app.performUpdate](18_genero-web-applications/5179-gwa-app-performupdate.md) — Update the application.
+          - [gwa.app.set_href_to_new_index](18_genero-web-applications/5180-gwa-app-set-href-to-new-index.md) — Set the href of the index page.
+          - [gwa.app.simulateBrowserUpdate](18_genero-web-applications/5181-gwa-app-simulatebrowserupdate.md) — Simulate a browser update (service worker update).
+          - [gwa.app.updateDialog](18_genero-web-applications/5182-gwa-app-updatedialog.md) — Checks the version of the loaded application against the server version and prompts the user to update if required.
+          - [gwa.app.versionsAndBuildsEqual](18_genero-web-applications/5183-gwa-app-versionsandbuildsequal.md) — Checks if the versions and build date-time stamps are equal. If versions are NULL, only build date-time stamps are compared for equality.
+      - [The base.Application.isGWA method](18_genero-web-applications/5184-the-base-application-isgwa-method.md) — The base.Application.isGWA method can be called to check if the program code is running in a browser as a GWA application.
+  - [BDL language limitations](18_genero-web-applications/5185-bdl-language-limitations.md) — Genero language features not supported or with limited support on GWA.
+- [Copyrights and Trademarks](19_copyrights-and-trademarks/5186-copyrights-and-trademarks.md) — The Copyright and trademark page is shared amongst all Four Js documentation. Appearance in this page does not guarantee a mention within the current document.
