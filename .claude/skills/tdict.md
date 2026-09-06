@@ -204,7 +204,30 @@ tdict msg aoo-00120 --conn 恒烁正式区
 
 返回：**文本**（`gzze003`）、**建议处理**（`gzze004`）、**建议作业**（`gzze005`，名称取 `gzzal_t`）、**技术细节**（`gzze006`，程式人员用）、**类型**（`gzze007`：0警告/1错误/2资讯）、状态（`gzzestus` Y=启用）。语言策略与源系统一致：精确 `(编号, 语言)` 匹配、无自动回退 —— 默认只显示 `--lang`（zh_CN）行，该编号无此语言时命令会列出可用语言。数据来源 `gzze_t gzzal_t`（已并入 `tdict db sync` 全量表清单）。
 
-### `tdict install [目录]`
+### `tdict sysp <编号>` / `tdict docp <编号>`
+
+查询**参数定义**（`gzsz_t` + 多语言 `gzszl_t`）。代码里看到参数编号（形如 `A-SYS-0040`、`E-CIR-0001`、`S-BAS-0028`、`D-MFG-0076`）或想了解某系统/单据参数时使用：
+
+- `tdict sysp`：azzi990 视域 —— 系统级 (A, gzsa_t)/ 企业级 (E, ooaa_t)/ 据点级 (S, ooab_t) 参数定义与说明；
+- `tdict docp`：azzi991 视域 —— 单据别参数 (D, ooac_t),附绑定单据性质清单（`gzsy_t`）。
+
+```bash
+# 查系统参数(默认 zh_CN 说明)
+tdict sysp A-SYS-0040
+
+# 繁体语言
+tdict sysp S-FIN-3014 --lang zh_TW
+
+# 单据别参数 + 单据性质绑定
+tdict docp D-MFG-0101
+
+# 多编号 / JSON
+tdict docp "D-MFG-0076,D-BAS-0058" --json
+```
+
+返回定义与说明（名称/说明/型态/领域/预设值/值域/校核开窗引用等），不查运行时当前值（值在客户化值表）。数据来源 `gzsz_t gzszl_t gzsy_t`（已并入 `tdict db sync` 全量表清单）。
+
+### `tdict install [目录]`### `tdict install [目录]`
 
 将 TDict 的 Claude Code 技能文件（`tdict`、`erp-code-reader`、`erp-modify`）安装到目标项目的 `.claude/skills/` 目录，使 AI Agent 能自动理解和使用本工具。技能内容内嵌于二进制中。
 
@@ -218,10 +241,10 @@ tdict install /path/to/project
 
 ### `tdict db sync`
 
-从 ERP 数据库拉取 26 张表（9 张基础字典 + 校验带值 5 张 `dzcd_t dzcdl_t dzce_t dzcel_t dzch_t` + 系统分类码 4 张 `gzca_t gzcal_t gzcb_t gzcbl_t` + 字段规格表 `dzep_t` + 开窗 5 张 `dzca_t dzcal_t dzcb_t dzcbl_t dzcc_t` + 系统消息档 2 张 `gzze_t gzzal_t`）写入本地 SQLite。采用临时库 + 原子替换；原库自动备份为 `<db>.bak`。
+从 ERP 数据库拉取 29 张表（9 张基础字典 + 校验带值 5 张 `dzcd_t dzcdl_t dzce_t dzcel_t dzch_t` + 系统分类码 4 张 `gzca_t gzcal_t gzcb_t gzcbl_t` + 字段规格表 `dzep_t` + 开窗 5 张 `dzca_t dzcal_t dzcb_t dzcbl_t dzcc_t` + 系统消息档 2 张 `gzze_t gzzal_t` + 参数定义档 3 张 `gzsz_t gzszl_t gzsy_t`）写入本地 SQLite。采用临时库 + 原子替换；原库自动备份为 `<db>.bak`。
 
 ```bash
-# 全量同步 26 张表
+# 全量同步 29 张表
 tdict db sync
 
 # 仅同步部分表

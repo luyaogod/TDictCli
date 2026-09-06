@@ -31,6 +31,10 @@ type Source interface {
 	QueryWinCols(id string) ([]WinColRow, error)
 	// msg 系统消息档:gzze_t(azzi920 维护;全语言行)+ gzzal_t 作业名称
 	QueryMsg(code string) ([]MsgRow, error)
+	// param 参数定义档:gzsz_t/gzszl_t(azzi990 系统参数、azzi991 单据别参数
+	// 共用;全语言行)+ gzsy_t 单据性质绑定
+	QueryParam(code string) ([]ParamDefRow, error)
+	QueryDocTypes(code, lang string) ([]DocTypeRow, error)
 	// Close 释放底层连接(SQLite 文件句柄 / 远程连接与隧道)
 	Close()
 }

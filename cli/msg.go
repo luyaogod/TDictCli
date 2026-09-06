@@ -60,23 +60,12 @@ gzzal_t)、程式人员技术细节 (gzze006)、讯息类型 (gzze007: 0警告/1
 				continue
 			}
 			// 语言策略:只取 --lang 行;无该语言行时提示可用语言
-			var match *db.MsgRow
-			for i := range rows {
-				if rows[i].Lang == msgLang {
-					match = &rows[i]
-					break
-				}
-			}
+			match, avail := pickLangRow(rows, msgLang, func(r db.MsgRow) string { return r.Lang })
 			if match == nil {
 				if IsJSON() {
 					continue
 				}
-				var langs []string
-				for i := range rows {
-					langs = append(langs, rows[i].Lang)
-				}
-				fmt.Printf("消息 '%s' 没有 %s 语言行;可用语言: %s(用 --lang 指定)\n",
-					code, msgLang, strings.Join(langs, ", "))
+				fmt.Printf("%s\n", langMissMsg(code, msgLang, avail))
 				continue
 			}
 			picked = append(picked, *match)

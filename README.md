@@ -2,7 +2,7 @@
 
 面向 **T100 / Genero(4GL) ERP** 的本地命令行工具，两条主线：
 
-1. **数据字典查询**（给"读代码、做配置"提供上下文）：基于 T100 数据字典，查询命令（`tdict rt` 表字典 / `rv` 校验带值 / `scc` 系统分类码 / `desc` 字段规格 / `rq` 可复用开窗）统一走同一数据源接口——既可用**本地 SQLite 镜像**（`tdict db sync` 提前拉取 26 张表:24 张字典 + 系统消息档 gzze_t/gzzal_t），也可经 `config.json` 的 `query.source` 或 `--conn` 切换为**远程 ERP 库直查**（金仓/Oracle，同一批表、同一输出）。
+1. **数据字典查询**（给"读代码、做配置"提供上下文）：基于 T100 数据字典，查询命令（`tdict rt` 表字典 / `rv` 校验带值 / `scc` 系统分类码 / `desc` 字段规格 / `rq` 可复用开窗）统一走同一数据源接口——既可用**本地 SQLite 镜像**（`tdict db sync` 提前拉取 29 张表:24 张字典 + 消息档 + 参数档），也可经 `config.json` 的 `query.source` 或 `--conn` 切换为**远程 ERP 库直查**（金仓/Oracle，同一批表、同一输出）。
 2. **AI 人机协同调试 T100 作业**（`tdict debug`）：通过 SSH 在 T100 服务器上驱动 `fglrun -d` 的 (fgldb) 文本调试协议，提供 Web 调试界面与命令行控制端，让 AI/人协同排查作业逻辑错误、跟踪变量、验证接口报文场景。
 
 所有输出默认使用**简体中文 (zh_CN)**。
@@ -292,14 +292,32 @@ tdict msg aoo-00120 --conn 主机正式区
 
 返回字段：文本（`gzze003`）、建议处理方式（`gzze004`）、建议执行作业（`gzze005`，名称取 `gzzal_t`）、程式人员技术细节（`gzze006`）、讯息类型（`gzze007`：0警告/1错误/2资讯）、强制开窗、状态。语言策略与源系统一致（精确匹配、无回退）：默认只显示 `--lang`（zh_CN）行，该编号无此语言时列出可用语言引导重查。数据来源 `gzze_t gzzal_t`，已并入 `tdict db sync` 全量表清单（本地库未同步时可用 `--conn` 远程直查）。
 
+### `tdict sysp <编号>` / `tdict docp <编号>`
+
+查询**参数定义档**（`gzsz_t` + 多语言 `gzszl_t`）——azzi990（参数资料定义作业）与 azzi991（单据别参数维护作业）维护同一张定义表,区别在参数群：
+
+- `tdict sysp` 查 **azzi990 视域**（A 系统级 gzsa_t / E 企业级 ooaa_t / S 据点级 ooab_t,编号形如 `A-SYS-0100`、`E-CIR-0001`、`S-BAS-0028`）；
+- `tdict docp` 查 **azzi991 视域**（单据别参数,群恒 `ooac_t`,编号形如 `D-MFG-0076`）,并附该参数绑定的单据性质清单（`gzsy_t`）。
+
+```bash
+tdict sysp A-SYS-0040              # 系统参数(默认 zh_CN 说明)
+tdict sysp S-FIN-3014 --lang zh_TW
+tdict docp D-MFG-0101              # 单据别参数 + 单据性质绑定
+tdict docp "D-MFG-0076,D-BAS-0058" --json
+tdict docp A-SYS-0040              # 群不对会提示改用 sysp
+```
+
+返回:名称/说明（多语言）、参数群与级别、输入型态（`gzsz003`:1=Y/N 2=整数选项 3=范围设定 4=字符或SCC 5=日期）、领域、预设值（`gzsz008`）、值域（`gzsz009`）、SCC 选项、校核/开窗引用、取参异常处理（`gzsz017`）、修改频度、即时抓取、状态与长文本备注。参数**当前值**在客户化值表（gzsa/ooaa/ooab/ooac_t,单据别值由 aooi200 维护）,不在本命令范围。数据来源 `gzsz_t gzszl_t gzsy_t`,已并入 `tdict db sync` 全量表清单。
+
+### `tdict db sync`
 ### `tdict db sync`
 
-从 ERP 数据库拉取 26 张表（9 张基础字典 `dzea_t dzeal_t dzeb_t dzebl_t dzec_t dzed_t dzee_t dzef_t dzeg_t` + 校验带值 `dzcd_t dzcdl_t dzce_t dzcel_t dzch_t` + 系统分类码 `gzca_t gzcal_t gzcb_t gzcbl_t` + 字段规格 `dzep_t` + 可复用开窗 `dzca_t dzcal_t dzcb_t dzcbl_t dzcc_t` + 系统消息档 `gzze_t gzzal_t`）的最新数据，写入本地 SQLite（默认 `-d/--db` 或 `TDICT_DB` 指向的 `erp_data.db`）。
+从 ERP 数据库拉取 29 张表（9 张基础字典 `dzea_t dzeal_t dzeb_t dzebl_t dzec_t dzed_t dzee_t dzef_t dzeg_t` + 校验带值 `dzcd_t dzcdl_t dzce_t dzcel_t dzch_t` + 系统分类码 `gzca_t gzcal_t gzcb_t gzcbl_t` + 字段规格 `dzep_t` + 可复用开窗 `dzca_t dzcal_t dzcb_t dzcbl_t dzcc_t` + 系统消息档 `gzze_t gzzal_t` + 参数定义档 `gzsz_t gzszl_t gzsy_t`）的最新数据，写入本地 SQLite（默认 `-d/--db` 或 `TDICT_DB` 指向的 `erp_data.db`）。
 
 同步采用**临时库 + 原子替换**：写入临时文件成功后整体替换目标库，中途失败不影响原库；替换前自动备份原库为 `<数据库>.bak`。所有列以 TEXT 存储（与现有 schema 一致），并根据 `dzed_t` 的 PK 定义重建唯一索引。
 
 ```bash
-# 全量同步 26 张表
+# 全量同步 29 张表
 tdict db sync
 
 # 仅同步部分表
