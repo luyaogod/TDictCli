@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 
 	"tdict/host"
+	"tdict/cfgfile"
 
 	"github.com/spf13/cobra"
 )
@@ -87,27 +88,10 @@ func readMirrorDir() (string, bool) {
 
 // writeMirrorDir 写回 config.json 顶层 mirror.dir(原子;其余顶层键原样保留)。
 func writeMirrorDir(dir string) error {
-	raw, err := os.ReadFile(mirrorCfgPath)
-	if err != nil {
-		return fmt.Errorf("读取配置失败: %w", err)
-	}
-	var root map[string]any
-	if err := json.Unmarshal(raw, &root); err != nil || root == nil {
-		root = map[string]any{}
-	}
-	root["mirror"] = map[string]any{"dir": dir}
-	out, err := json.MarshalIndent(root, "", "  ")
-	if err != nil {
-		return err
-	}
-	tmp := mirrorCfgPath + ".tmp"
-	if err := os.WriteFile(tmp, out, 0o644); err != nil {
-		return fmt.Errorf("写入配置失败: %w", err)
-	}
-	if err := os.Rename(tmp, mirrorCfgPath); err != nil {
-		return fmt.Errorf("更新配置失败: %w", err)
-	}
-	return nil
+	return cfgfile.Edit(mirrorCfgPath, nil, func(root map[string]any) error {
+		root["mirror"] = map[string]any{"dir": dir}
+		return nil
+	})
 }
 
 // mirrorEnv 按名(参数 > activeEnv > 首条)解析环境。

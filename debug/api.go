@@ -8,7 +8,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -18,6 +17,7 @@ import (
 	"tdict/dbconfig"
 	"tdict/host"
 	"tdict/erpdb"
+	"tdict/cfgfile"
 )
 
 // Server 本地调试服务:REST + WebSocket + Web 前端
@@ -341,28 +341,14 @@ func (s *Server) setActiveEnv(name string, cfg *Config) error {
 	if s.cfgPath == "" {
 		return fmt.Errorf("服务未挂接 config.json 路径,无法保存")
 	}
-	raw, err := os.ReadFile(s.cfgPath)
-	if err != nil {
-		return fmt.Errorf("读取 config.json 失败: %w", err)
-	}
-	var root map[string]any
-	if err := json.Unmarshal(raw, &root); err != nil || root == nil {
-		root = map[string]any{}
-	}
-	dbg, _ := root["debug"].(map[string]any)
-	if dbg == nil {
-		return fmt.Errorf("config.json 缺少 debug 配置节")
-	}
-	dbg["activeEnv"] = name
-	out, err := json.MarshalIndent(root, "", "  ")
-	if err != nil {
-		return err
-	}
-	tmp := s.cfgPath + ".tmp"
-	if err := os.WriteFile(tmp, out, 0o644); err != nil {
-		return err
-	}
-	if err := os.Rename(tmp, s.cfgPath); err != nil {
+	if err := cfgfile.Edit(s.cfgPath, nil, func(root map[string]any) error {
+		dbg, err := cfgfile.Debug(root)
+		if err != nil {
+			return err
+		}
+		dbg["activeEnv"] = name
+		return nil
+	}); err != nil {
 		return err
 	}
 	if cfg != nil {
@@ -1071,27 +1057,10 @@ func (s *Server) hSettingsPut(w http.ResponseWriter, r *http.Request) {
 	nc.ApplyActiveEnv() // 生效环境的连接/参数合并到运行时字段
 	nc.fillDefaults()
 
-	raw, err := os.ReadFile(s.cfgPath)
-	if err != nil {
-		fail(w, 500, fmt.Errorf("读取 config.json 失败: %w", err))
-		return
-	}
-	var root map[string]any
-	if err := json.Unmarshal(raw, &root); err != nil || root == nil {
-		root = map[string]any{}
-	}
-	root["debug"] = &nc
-	out, err := json.MarshalIndent(root, "", "  ")
-	if err != nil {
-		fail(w, 500, err)
-		return
-	}
-	tmp := s.cfgPath + ".tmp"
-	if err := os.WriteFile(tmp, out, 0o644); err != nil {
-		fail(w, 500, fmt.Errorf("写入 config.json 失败: %w", err))
-		return
-	}
-	if err := os.Rename(tmp, s.cfgPath); err != nil {
+	if err := cfgfile.Edit(s.cfgPath, nil, func(root map[string]any) error {
+		root["debug"] = &nc
+		return nil
+	}); err != nil {
 		fail(w, 500, err)
 		return
 	}
