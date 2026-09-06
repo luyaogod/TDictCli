@@ -374,6 +374,9 @@ tdict debug topent 99                 # 设置会话 TOPENT(企业编号)
 tdict debug quit                      # 结束本轮调试(会话保留可复用)
 ```
 
+- **离线设置默认环境(无需 serve)**:`tdict env` 列出全部环境与当前默认;
+  `tdict env <环境名>` 直接把默认环境写入 config.json(与设置页「设为默认」等效,
+  不影响运行中会话;要连同调试会话一起切换才需要 `tdict debug env`)。
 - 控制端命令默认自动发现后台实例真实地址(端口顺延后仍可达),也可 `--url` 显式指定。
 - 断点支持持久化(下次调试自动恢复);接口日志 `wslogs`/`wsdebug` 支持报文重放调试。
 - 完整用法见内嵌技能 `.claude/skills/tdict-debug.md`(含原生 fgldb 命令参考与人机交接范式)。

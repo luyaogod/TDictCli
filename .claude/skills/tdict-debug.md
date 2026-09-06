@@ -57,6 +57,10 @@ tdict debug env
 # 切换到另一环境:持久化 activeEnv 并把当前会话重连到该环境(空闲 idle)
 tdict debug env 恒烁测试区
 
+# 无需 serve 的离线方式:只改 config.json 的默认环境(列/设)
+tdict env
+tdict env 恒烁测试区
+
 # 查看当前会话的 TOPENT override 与配置级默认
 tdict debug topent
 
