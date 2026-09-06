@@ -408,9 +408,9 @@ ORDER BY CAST(b.dzcb002 AS INTEGER)`
 
 // QueryWinCols 开窗的显现列设置。
 func (l *Live) QueryWinCols(id string) ([]db.WinColRow, error) {
-	sql := `SELECT COALESCE(c.dzcc009, ''), c.dzcc002, COALESCE(c.dzcc003, ''),
-       COALESCE(c.dzcc008, ''), COALESCE(c.dzcc004, ''), COALESCE(c.dzcc005, ''),
-       COALESCE(c.dzcc006, ''), COALESCE(c.dzcc010, ''), COALESCE(c.dzcc007, '')
+	sql := `SELECT c.dzcc009, c.dzcc002, c.dzcc003,
+       c.dzcc008, c.dzcc004, c.dzcc005,
+       c.dzcc006, c.dzcc010, c.dzcc007
 FROM dzcc_t c
 WHERE c.dzcc001 = ` + lit(id) + `
 ORDER BY CAST(c.dzcc002 AS INTEGER)`
@@ -432,9 +432,9 @@ ORDER BY CAST(c.dzcc002 AS INTEGER)`
 // QueryMsg 返回指定消息编号的全部语言行(与本地 SQLite 语义一致)。
 func (l *Live) QueryMsg(code string) ([]db.MsgRow, error) {
 	c := lit(code)
-	sql := `SELECT COALESCE(gzze001, ''), COALESCE(gzze002, ''), COALESCE(gzze003, ''),
-       COALESCE(gzze004, ''), COALESCE(gzze005, ''), COALESCE(gzze006, ''),
-       COALESCE(gzze007, ''), COALESCE(gzze008, ''), COALESCE(gzzestus, '')
+	sql := `SELECT gzze001, gzze002, gzze003,
+       gzze004, gzze005, gzze006,
+       gzze007, gzze008, gzzestus
 FROM gzze_t WHERE gzze001 = ` + c + ` ORDER BY gzze002`
 	rows, err := l.q(sql)
 	if err != nil {
@@ -472,7 +472,7 @@ func (l *Live) msgProgNames(progs map[string]bool) (map[string]string, error) {
 	for p := range progs {
 		ins = append(ins, lit(p))
 	}
-	sql := `SELECT gzzal001, COALESCE(gzzal002, ''), COALESCE(gzzal003, '')
+	sql := `SELECT gzzal001, gzzal002, gzzal003
 FROM gzzal_t WHERE gzzal001 IN (` + strings.Join(ins, ",") + `)`
 	rows, err := l.q(sql)
 	if err != nil {
@@ -481,6 +481,93 @@ FROM gzzal_t WHERE gzzal001 IN (` + strings.Join(ins, ",") + `)`
 	out := map[string]string{}
 	for _, r := range rows {
 		out[get(r, 0)+"\x00"+get(r, 1)] = get(r, 2)
+	}
+	return out, nil
+}
+
+// ---- param:参数定义档 gzsz_t/gzszl_t(azzi990/azzi991)/gzsy_t 单据性质 ----
+
+// QueryParam 返回指定参数编号的全部语言行(与本地 SQLite 语义一致)。
+func (l *Live) QueryParam(code string) ([]db.ParamDefRow, error) {
+	c := lit(code)
+	sql := `SELECT t0.gzsz002, t0.gzsz001, t0.gzszstus, t0.gzsz011,
+       t0.gzsz003, t0.gzsz008, t0.gzsz009,
+       t0.gzsz015, t0.gzsz016, t0.gzsz013,
+       t0.gzsz014, t0.gzsz017, t0.gzsz018,
+       t0.gzsz019, t0.gzsz004, t0.gzsz005,
+       l.gzszl003, l.gzszl004, l.gzszl005,
+       l.gzszl006, l.gzszl007
+FROM gzsz_t t0
+LEFT JOIN gzszl_t l ON l.gzszl001 = t0.gzsz001 AND l.gzszl002 = t0.gzsz002
+WHERE t0.gzsz002 = ` + c + ` ORDER BY t0.gzsz001, l.gzszl003`
+	rows, err := l.q(sql)
+	if err != nil {
+		return nil, fmt.Errorf("查询参数 %s: %w", code, err)
+	}
+	out := make([]db.ParamDefRow, 0, len(rows))
+	groups := map[string]bool{}
+	for _, r := range rows {
+		m := db.ParamDefRow{Code: get(r, 0), Group: get(r, 1), Status: get(r, 2),
+			AreaCode: get(r, 3), TypeCode: get(r, 4), Default: get(r, 5), RangeVal: get(r, 6),
+			DateFmt: get(r, 7), SccCode: get(r, 8), RVCode: get(r, 9), RQCode: get(r, 10),
+			Except: get(r, 11), Freq: get(r, 12), Live: get(r, 13), ValueProg: get(r, 14),
+			Seq: get(r, 15), Lang: get(r, 16), Name: get(r, 17), Desc: get(r, 18),
+			Desc2: get(r, 19), Desc3: get(r, 20)}
+		if m.Group != "" {
+			groups[m.Group] = true
+		}
+		out = append(out, m)
+	}
+	if len(out) == 0 {
+		return out, nil
+	}
+	names, err := l.paramGroupNames(groups)
+	if err != nil {
+		names = map[string]string{}
+	}
+	for i := range out {
+		out[i].GroupName = names[out[i].Group+"\x00"+out[i].Lang]
+	}
+	return out, nil
+}
+
+// paramGroupNames 查参数群名称(表说明 dzeal_t;缺表静默降级)。
+func (l *Live) paramGroupNames(groups map[string]bool) (map[string]string, error) {
+	if len(groups) == 0 {
+		return map[string]string{}, nil
+	}
+	ins := make([]string, 0, len(groups))
+	for g := range groups {
+		ins = append(ins, lit(g))
+	}
+	sql := `SELECT al.dzeal001, al.dzeal002, al.dzeal003
+FROM dzeal_t al WHERE al.dzeal001 IN (` + strings.Join(ins, ",") + `)`
+	rows, err := l.q(sql)
+	if err != nil {
+		return nil, fmt.Errorf("查询参数群名称: %w", err)
+	}
+	out := map[string]string{}
+	for _, r := range rows {
+		out[get(r, 0)+"\x00"+get(r, 1)] = get(r, 2)
+	}
+	return out, nil
+}
+
+// QueryDocTypes 返回单据别参数绑定的单据性质(名称按指定语言)。
+func (l *Live) QueryDocTypes(code, lang string) ([]db.DocTypeRow, error) {
+	sql := `SELECT g.gzsy004, g.gzsy003,
+       g.gzsy005, b.gzcbl004
+FROM gzsy_t g
+LEFT JOIN gzcbl_t b ON b.gzcbl001 = '24' AND b.gzcbl002 = g.gzsy004 AND b.gzcbl003 = ` + lit(lang) + `
+WHERE g.gzsy001 = 'ooac_t' AND g.gzsy002 = ` + lit(code) + ` ORDER BY g.gzsy004`
+	rows, err := l.q(sql)
+	if err != nil {
+		return nil, fmt.Errorf("查询单据性质 %s: %w", code, err)
+	}
+	out := make([]db.DocTypeRow, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, db.DocTypeRow{DocType: get(r, 0), Module: get(r, 1),
+			Generate: get(r, 2), DocName: get(r, 3)})
 	}
 	return out, nil
 }

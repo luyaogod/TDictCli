@@ -22,3 +22,6 @@ config.json
 # 会话数据
 .zcode/
 tdict.exe~
+
+# db sync 备份(每次同步自动生成)
+*.bak

@@ -32,6 +32,8 @@ var dictTables = []string{
 	"dzca_t", "dzcal_t", "dzcb_t", "dzcbl_t", "dzcc_t",
 	// 系统消息档 (azzi920 维护, cl_err/cl_getmsg 取用): 消息文本/建议处理/作业多语言名称
 	"gzze_t", "gzzal_t",
+	// 参数定义档 (azzi990 系统参数 / azzi991 单据别参数): 定义/参数多语言/单据性质绑定
+	"gzsz_t", "gzszl_t", "gzsy_t",
 }
 
 type syncResult struct {
