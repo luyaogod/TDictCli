@@ -1,0 +1,93 @@
+---
+title: "Numeric data types"
+source: "fgl-topics/c_fgl_odiagdmg_025.html"
+breadcrumb: "SQL support > SQL database guides > Dameng® database server > Data dictionary > Numeric data types"
+type: "concept"
+description: "Informix® Informix supports several data types to store numbers: Table 1. Informix numeric data types Informix data type Description SMALLINT 16 bit signed integer INTEGER 32 bit signed integer BIGINT ..."
+---
+
+# Numeric data types
+
+## Informix®
+
+Informix supports several data types to store
+numbers:
+
+| Informix data type | Description |
+| --- | --- |
+| `SMALLINT` | 16 bit signed integer |
+| `INTEGER` | 32 bit signed integer |
+| `BIGINT` | 64 bit signed integer |
+| `INT8` | 64 bit signed integer (replaced by `BIGINT`) |
+| `DECIMAL` | Equivalent to `DECIMAL(16)` |
+| `DECIMAL(p)` | Floating-point decimal number (max precision is 32) |
+| `DECIMAL(p,s)` | Fixed-point decimal number (max precision is 32) |
+| `MONEY` | Equivalent to `DECIMAL(16,2)` |
+| `MONEY(p)` | Equivalent to `DECIMAL(p,2)` (max precision is 32) |
+| `MONEY(p,s)` | Equivalent to `DECIMAL(p,s)` (max precision is 32) |
+| `REAL / SMALLFLOAT` | 32-bit floating point decimal (C float) |
+| `DOUBLE PRECISION / FLOAT[(n)]` | 64-bit floating point decimal (C double) |
+
+## Dameng®
+
+Dameng supports the following numeric data types:
+
+| Dameng data type | Description |
+| --- | --- |
+| `SMALLINT` | 16 bit signed integer |
+| `INTEGER` | 32 bit signed integer |
+| `BIGINT` | 64 bit signed integer |
+| `DECIMAL(p,s)` | Fixed point decimal (max is 38 digits) |
+| `DECIMAL` | Floating point decimal |
+| `REAL` | 32-bit floating point decimal (C float) |
+| `DOUBLE` | 64-bit floating point decimal (C double) |
+
+## Solution
+
+Use the following conversion rules to map Informix numeric types to Dameng numeric types:
+
+| Informix data type | Dameng equivalent |
+| --- | --- |
+| `SMALLINT` | `SMALLINT` |
+| `INTEGER` | `INTEGER` |
+| `INT8 / BIGINT` | `BIGINT` |
+| `DECIMAL(p,s)` | `DECIMAL(p,s)` |
+| `DECIMAL[(p)]` | `DECIMAL` (floating point decimal) |
+| `MONEY` | `DECIMAL(16,2)` |
+| `MONEY(p)` | `DECIMAL(p,2)` |
+| `MONEY(p,s)` | `DECIMAL(p,s)` |
+| `SMALLFLOAT` | `REAL` |
+| `FLOAT[(n)]` | `DOUBLE` |
+
+SQL scripts to create databases must be converted manually. Tables created from BDL programs do
+not have to be converted; the database interface detects the `MONEY` data type and
+uses the `DECIMAL` type for Dameng.
+
+> **Note:**
+>
+> Avoid using `DECIMAL[(p)]` type in FGL or SQL: Due to the implementation
+> differences in Informix SQL / Genero BDL and the native SQL type, such data type is not recommended.
+> Always specify a precision and scale with `DECIMAL(p,s)`.
+
+The numeric types translation can be
+controlled with the following FGLPROFILE
+entries:
+
+```
+dbi.database.dsname.ifxemul.datatype.smallint = { true | false }
+dbi.database.dsname.ifxemul.datatype.integer = { true | false }
+dbi.database.dsname.ifxemul.datatype.bigint = { true | false }
+dbi.database.dsname.ifxemul.datatype.int8 = { true | false }
+dbi.database.dsname.ifxemul.datatype.decimal = { true | false }
+dbi.database.dsname.ifxemul.datatype.money = { true | false }
+dbi.database.dsname.ifxemul.datatype.float = { true | false }
+dbi.database.dsname.ifxemul.datatype.smallfloat = { true | false }
+```
+
+For more details see [IBM Informix emulation parameters in FGLPROFILE](1079-ibm-informix-emulation-parameters-in-fglprofile.md "Emulation of Informix specific SQL features can be controlled with FGLPROFILE entries.").
+
+## Related links
+
+**Related concepts**  
+
+[Using portable data types](1008-using-portable-data-types.md "Only a limited set of data types are really portable across several database engines.")

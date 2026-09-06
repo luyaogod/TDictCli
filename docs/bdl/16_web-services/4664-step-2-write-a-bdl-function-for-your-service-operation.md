@@ -1,0 +1,41 @@
+---
+title: "Step 2: Write a BDL function for your service operation"
+source: "fgl-topics/c_gws_server_tutorial_012.html"
+breadcrumb: "Web services > SOAP Web Services > Writing a Web Services server application > Writing a Web server application > Example 2: Writing a server using third-party WSDL (the fglwsdl tool) > Step 2: Write a BDL function for your service operation"
+type: "concept"
+---
+
+# Step 2: Write a BDL function for your service operation
+
+> Write functions that implement the functions in the stub file. This allows you to create your own version of the function.
+
+Using the information from the files generated in [Get the WSDL description and generate legacy files](4663-get-the-wsdl-description-and-generate-legacy-files.md "Use the fglwsdl tool legacy option to generate legacy code (Genero 3.20 or prior) for the server stub from a WSDL."),
+the **Add** operation from [Example 1: Writing the entire server application](4655-example-1-writing-the-entire-server-application.md "Design a simple Web service.") is rewritten to have different functionality but to still be compatible with the WSDL description
+of the operation.
+
+This step accomplishes the same thing as [Step 2: Write a BDL function for each service operation](4657-step-2-write-a-bdl-function-for-each-service-operation.md "Each function defines an operation of the service.") in Example 1. In this version of
+the add operation, the sum of the two numbers in the input record is increased by 100.
+
+```
+# my_function.4gl                         -- file containing the function
+                                          -- definition
+IMPORT com                                -- import the Web Services library
+IMPORT FGL example1Service                -- import the generated service file
+
+#User Public Functions
+FUNCTION add()                            -- new version of the add function
+                                          -- the public input and output records are used
+  LET example1Service.AddResponse.r = (example1Service.Add.a + example1Service.Add.b)+ 100  
+                                         
+END FUNCTION
+```
+
+## Related links
+
+1. [Write a BDL function for your service operation (legacy)](4665-write-a-bdl-function-for-your-service-operation-legacy.md)
+
+   Write functions that use the generated legacy code (Genero 3.20 or prior) for the server stub of the WSDL. This allows you to create your own version of the function.
+
+**Related concepts**  
+
+[Step 3: Create service, start server and process requests](4666-step-3-create-service-start-server-and-process-requests.md "Code to start the Genero Web Services (GWS) Server.")
