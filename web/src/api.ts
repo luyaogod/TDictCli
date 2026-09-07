@@ -81,6 +81,8 @@ export const api = {
   sources: (id: string) => req<{ sources: string[] }>(`/api/sessions/${id}/sources`),
   functions: (id: string, limit?: number) => req<{ functions: string[]; total: number }>(`/api/sessions/${id}/functions${limit ? `?limit=${limit}` : ''}`),
   autovars: (id: string) => req<{ vars: VarItem[] }>(`/api/sessions/${id}/autovars`),
+  // 自动变量面板开关:停站后是否由服务端自动求值当前源码窗变量(默认关)
+  autovarsAuto: (id: string, auto: boolean) => req<any>(`/api/sessions/${id}/autovars`, { method: 'POST', body: JSON.stringify({ auto }) }),
   frame: (id: string, num: number) => req<{ frame: number }>(`/api/sessions/${id}/frame`, { method: 'POST', body: JSON.stringify({ num }) }),
   bpEnabled: (id: string, num: number, enabled: boolean) =>
     req<any>(`/api/sessions/${id}/breakpoints/${num}/enabled`, { method: 'POST', body: JSON.stringify({ enabled }) }),

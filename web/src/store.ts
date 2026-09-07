@@ -40,6 +40,10 @@ interface Store {
   showRight: boolean
   showBottom: boolean
   rightView: 'debug' | 'outline' | 'session' // 右侧边栏当前 sheet(调试面板/大纲/会话),localStorage tdict.rightView 持久化
+  // 调用栈/自动变量面板「自动」开关(手风琴头部图标,默认关):停站后是否自动抓取该数据
+  // (两者都要经调试会话逐条发命令,自动调度越多步进越卡;关掉后仅手动/开关开启时取)
+  stackAuto: boolean
+  autovarsAuto: boolean
   // 数据
   breakpoints: Breakpoint[]
   adjustedBps: Record<number, number> // 点击行号 → 实际注册断点编号(fgldb 会把非可执行行的断点自动下移)
@@ -87,6 +91,8 @@ interface Store {
   setWsConnected: (b: boolean) => void
   toggleRight: () => void
   toggleBottom: () => void
+  toggleStackAuto: () => void
+  toggleAutovarsAuto: () => void
   setRightView: (v: 'debug' | 'outline' | 'session') => void
   pushRaw: (line: string) => void
   sendRaw: (cmd: string) => Promise<void>
@@ -148,6 +154,9 @@ export const useStore = create<Store>((set, get) => ({
   wsConnected: false,
   sessionId: null, module: '', prog: '', state: '', sessionEnv: '', started: false, stop: null, holdingSeconds: 0,
   launching: false, launchError: '', showRight: true, showBottom: true,
+  // 面板开关默认关(localStorage tdict.stackAuto / tdict.autovarsAuto 持久化)
+  stackAuto: localStorage.getItem('tdict.stackAuto') === '1',
+  autovarsAuto: localStorage.getItem('tdict.autovarsAuto') === '1',
   rightView: (['outline', 'session'].includes(localStorage.getItem('tdict.rightView') || '') ? localStorage.getItem('tdict.rightView') : 'debug') as 'debug' | 'outline' | 'session',
   breakpoints: [], adjustedBps: {}, frames: [], watches: [], autovars: [], selectedFrame: -1, backendDead: '',
   timeline: [], rawLog: [],
@@ -164,6 +173,26 @@ export const useStore = create<Store>((set, get) => ({
   setWsConnected: (b) => set({ wsConnected: b }),
   toggleRight: () => set((st) => ({ showRight: !st.showRight })),
   toggleBottom: () => set((st) => ({ showBottom: !st.showBottom })),
+
+  // 调用栈面板「自动」开关(默认关):开 → 停站后自动抓调用栈,已停站时立即抓一次
+  toggleStackAuto: () => {
+    const st = get()
+    const on = !st.stackAuto
+    localStorage.setItem('tdict.stackAuto', on ? '1' : '0')
+    set({ stackAuto: on })
+    if (on && get().state === 'stopped') void get().refreshFrames()
+  },
+  // 自动变量面板「自动」开关(默认关):服务端停站后自动求值窗口变量才发生(见
+  // 会话 SetAutovarsOn);开 → 下发当前会话(已停站时服务端立即补一次求值并推送)
+  toggleAutovarsAuto: () => {
+    const st = get()
+    const on = !st.autovarsAuto
+    localStorage.setItem('tdict.autovarsAuto', on ? '1' : '0')
+    set({ autovarsAuto: on })
+    const sid = get().sessionId
+    if (!sid) return
+    void api.autovarsAuto(sid, on).catch(() => { /* 会话切换窗口:下次停站前由对齐逻辑重发 */ })
+  },
   setRightView: (v) => {
     localStorage.setItem('tdict.rightView', v)
     set({ rightView: v })
@@ -210,8 +239,8 @@ export const useStore = create<Store>((set, get) => ({
       case 'state':
         set({ state: ev.state || '' })
         if (ev.state === 'stopped') {
-          // 停站后自动刷新栈与监视值(异步,不阻塞)
-          void get().refreshFrames()
+          // 停站后按面板开关自动刷新(异步,不阻塞):调用栈/自动变量默认关,监视保持
+          if (get().stackAuto) void get().refreshFrames()
           void get().refreshWatches()
           startHoldTimer(set, get)
         }
@@ -250,7 +279,7 @@ export const useStore = create<Store>((set, get) => ({
         void (async () => {
           let file = ev.stop?.file
           let frameLine = 0
-          if (!file) {
+          if (!file && get().stackAuto) {
             const frames = await get().refreshFrames()
             file = frames[0]?.file
             frameLine = frames[0]?.line ?? 0
@@ -455,6 +484,7 @@ export const useStore = create<Store>((set, get) => ({
       const rp = r.runProg || prog
       set({ sessionId: r.sessionId, module: mod, prog, runProg: rp, state: 'loading' })
       get().pushTimeline({ origin: 'human', kind: 'command', text: `启动调试会话 ${mod}/${prog}` })
+      alignAutoPrefs(set, get) // 自动变量开关下发到新会话(求值在服务端做)
       // 轮询直到入口停站(源码由会话路径加载并定位 MAIN)
       pollUntilStopped(set, get)
     } catch (e: any) {
@@ -597,9 +627,9 @@ export const useStore = create<Store>((set, get) => ({
         const st = get()
         // 步进可能跨模块:停站文件与当前显示源码不同时,跟随切换(源码到位才落光标)
         if (st.stop?.file && st.stop.file !== st.sourceDVM) void st.refreshSource(st.stop.file, resp?.stop?.line)
-        // 停站后同步调用栈与监视取值
+        // 停站后按面板开关同步调用栈与监视取值
         if (st.state === 'stopped') {
-          void st.refreshFrames()
+          if (get().stackAuto) void st.refreshFrames()
           void st.refreshWatches()
         }
       }
@@ -782,8 +812,9 @@ export const useStore = create<Store>((set, get) => ({
         currentLine: snap.stop?.line ?? 0, holdingSeconds: snap.holdingSeconds || 0,
       })
       if (snap.state === 'stopped') await get().refreshSource(snap.stop?.file)
-      void get().refreshFrames()
+      if (get().stackAuto) void get().refreshFrames()
       void get().refreshWatches()
+      alignAutoPrefs(set, get) // 重连接管:自动变量开关对齐 + 补拉最近一次求值结果
     } catch { /* ignore */ }
   },
 
@@ -831,8 +862,9 @@ export const useStore = create<Store>((set, get) => ({
         const snap = await api.snapshot(s0.id)
         set({ stop: snap.stop, breakpoints: snap.breakpoints || [], started: !!snap.started, holdingSeconds: snap.holdingSeconds || 0 })
         if (snap.stop?.file) void get().refreshSource(snap.stop.file, snap.stop.line)
-        void get().refreshFrames()
+        if (get().stackAuto) void get().refreshFrames()
         void get().refreshWatches()
+        alignAutoPrefs(set, get) // 会话切换/重连后把自动变量开关对齐到新会话
       }
     } catch { /* list/snapshot 失败:保持现状 */ }
   },
@@ -864,7 +896,7 @@ function pollUntilStopped(set: (p: Partial<Store>) => void, get: () => Store) {
         snapTimer = undefined
         set({ activeTab: 'debug' })
         startHoldTimer(set, get)
-        void get().refreshFrames()
+        if (get().stackAuto) void get().refreshFrames()
         void get().refreshWatches()
         void get().refreshSource(snap.stop?.file)
         // 兜底:停站宣告与后端断点恢复收尾之间仍有微小窗口(事件先于快照到达),
@@ -900,6 +932,17 @@ function pollUntilStopped(set: (p: Partial<Store>) => void, get: () => Store) {
       } catch { /* list 也失败:保持轮询,等服务恢复 */ }
     }
   }, 1000)
+}
+
+// 页面「自动变量」开关与服务端会话对齐(求值在服务端做;启动/接管/换会话后重新下发),
+// 已停站且开关开时拉一次最近求值结果,补上重连期间可能错过的 autovars 事件
+function alignAutoPrefs(set: (p: Partial<Store>) => void, get: () => Store) {
+  const sid = get().sessionId
+  if (!sid || !get().autovarsAuto) return
+  void api.autovarsAuto(sid, true).catch(() => { /* 会话瞬态:下次对齐逻辑重发 */ })
+  if (get().state === 'stopped') {
+    void api.autovars(sid).then(({ vars }) => set({ autovars: vars || [] })).catch(() => {})
+  }
 }
 
 function startHoldTimer(set: (p: Partial<Store>) => void, get: () => Store) {

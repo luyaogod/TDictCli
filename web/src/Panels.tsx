@@ -2,7 +2,7 @@
 import * as React from 'react'
 import * as AccordionPrimitive from '@radix-ui/react-accordion'
 import { useEffect, useRef, useState } from 'react'
-import { Play, Ruler } from 'lucide-react'
+import { Eye, EyeOff, Play, Ruler } from 'lucide-react'
 import { useStore } from './store'
 import { Badge, Input } from './ui'
 import { parseFglTree, type TNode } from './fglparse'
@@ -95,34 +95,6 @@ const AccordionItem = React.forwardRef<
 ))
 AccordionItem.displayName = 'AccordionItem'
 
-const AccordionTrigger = React.forwardRef<
-  React.ElementRef<typeof AccordionPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
-  <AccordionPrimitive.Trigger
-    ref={ref}
-    className={`flex h-8 shrink-0 items-center justify-between px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground [&[data-state=open]>svg]:rotate-180 ${className || ''}`}
-    {...props}
-  >
-    {children}
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="shrink-0 text-muted-foreground transition-transform duration-200"
-    >
-      <path d="m6 9 6 6 6-6" />
-    </svg>
-  </AccordionPrimitive.Trigger>
-))
-AccordionTrigger.displayName = 'AccordionTrigger'
-
 const AccordionContent = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Content>
@@ -137,47 +109,115 @@ const AccordionContent = React.forwardRef<
 ))
 AccordionContent.displayName = 'AccordionContent'
 
+// 面板头行:左侧固定位(自动开关或等宽占位),右侧手风琴触发区(整块点击开合)
+function PanelHeader({ leading, children }: { leading?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="flex h-8 shrink-0 items-stretch">
+      {leading}
+      <AccordionPrimitive.Trigger
+        className="flex h-full min-w-0 flex-1 items-center justify-between gap-2 pr-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground [&[data-state=open]>svg]:rotate-180"
+      >
+        <span className="min-w-0 flex-1 truncate pl-1">{children}</span>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="shrink-0 text-muted-foreground transition-transform duration-200"
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </AccordionPrimitive.Trigger>
+    </div>
+  )
+}
+
+// 面板「自动」开关:开(实心眼)= 停站后自动抓取该面板数据(调用栈/自动变量;
+// 都要经调试会话逐条发命令,全开时步进卡)。默认关(空心眼):停站不再自动调度,
+// 需要时点开,立即生效并自动展开面板。
+function AutoSwitch({ on, onToggle, onTip, offTip }: {
+  on: boolean; onToggle: () => void; onTip: string; offTip: string
+}) {
+  const Icon = on ? Eye : EyeOff
+  return (
+    <button
+      title={on ? onTip : offTip}
+      aria-pressed={on}
+      onClick={onToggle}
+      className={`flex w-6 shrink-0 items-center justify-center transition-colors hover:bg-accent/50 ${
+        on ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground hover:text-foreground'
+      }`}
+    >
+      <Icon className="h-3.5 w-3.5" />
+    </button>
+  )
+}
+
 export function RightPanels() {
+  const stackAuto = useStore((s) => s.stackAuto)
+  const autovarsAuto = useStore((s) => s.autovarsAuto)
+  const toggleStackAuto = useStore((s) => s.toggleStackAuto)
+  const toggleAutovarsAuto = useStore((s) => s.toggleAutovarsAuto)
+  // 手风琴开合(受控):默认只展开「变量监视/断点」;调用栈/自动变量随自动开关
+  // 联动——开则展开(数据开始自动刷新),关(默认)则收起,需要时手动点开看存量
+  const [open, setOpen] = useState<string[]>(() => {
+    const v = ['watches', 'bps']
+    if (stackAuto) v.push('stack')
+    if (autovarsAuto) v.push('autovars')
+    return v
+  })
+  useEffect(() => {
+    setOpen((o) => (stackAuto ? (o.includes('stack') ? o : [...o, 'stack']) : o.filter((x) => x !== 'stack')))
+  }, [stackAuto])
+  useEffect(() => {
+    setOpen((o) => (autovarsAuto ? (o.includes('autovars') ? o : [...o, 'autovars']) : o.filter((x) => x !== 'autovars')))
+  }, [autovarsAuto])
+
   return (
     // 一体化侧栏面板(VS Code 经典):与侧栏同底色、无外框无圆角,区块间用分割线区分
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-background">
       <LaunchSection />
-      <Accordion
-        type="multiple"
-        defaultValue={['stack', 'autovars', 'watches', 'bps']}
-        className="flex h-full min-h-0 w-full flex-col"
-      >
+      <Accordion type="multiple" value={open} onValueChange={setOpen} className="flex h-full min-h-0 w-full flex-col">
         <AccordionItem value="stack">
-          <AccordionTrigger>
+          <PanelHeader leading={<AutoSwitch on={stackAuto} onToggle={() => toggleStackAuto()}
+            onTip="自动刷新已开启:每次停站抓取调用栈(点击关闭,减少自动调度卡顿)"
+            offTip="自动刷新已关闭(默认):停站后不再抓调用栈;点击开启" />}>
             <StackTitle />
-          </AccordionTrigger>
+          </PanelHeader>
           <AccordionContent>
             <StackBody />
           </AccordionContent>
         </AccordionItem>
 
         <AccordionItem value="autovars">
-          <AccordionTrigger>
+          <PanelHeader leading={<AutoSwitch on={autovarsAuto} onToggle={() => toggleAutovarsAuto()}
+            onTip="自动求值已开启:每次停站求值源码窗变量并刷新本面板(点击关闭,减少自动调度卡顿)"
+            offTip="自动求值已关闭(默认):停站后不再求值自动变量;点击开启" />}>
             <AutovarsTitle />
-          </AccordionTrigger>
+          </PanelHeader>
           <AccordionContent>
             <AutovarsBody />
           </AccordionContent>
         </AccordionItem>
 
         <AccordionItem value="watches">
-          <AccordionTrigger>
+          <PanelHeader leading={<span className="block w-6 shrink-0" aria-hidden />}>
             <WatchesTitle />
-          </AccordionTrigger>
+          </PanelHeader>
           <AccordionContent>
             <WatchesBody />
           </AccordionContent>
         </AccordionItem>
 
         <AccordionItem value="bps">
-          <AccordionTrigger>
+          <PanelHeader leading={<span className="block w-6 shrink-0" aria-hidden />}>
             <BpsTitle />
-          </AccordionTrigger>
+          </PanelHeader>
           <AccordionContent>
             <BpsBody />
           </AccordionContent>

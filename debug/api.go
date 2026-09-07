@@ -132,6 +132,7 @@ func (s *Server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/sessions/{id}/sources", s.hSources)
 	mux.HandleFunc("GET /api/sessions/{id}/functions", s.hFunctions)
 	mux.HandleFunc("GET /api/sessions/{id}/autovars", s.hAutovars)
+	mux.HandleFunc("POST /api/sessions/{id}/autovars", s.hAutovarsSet)
 	mux.HandleFunc("POST /api/sessions/{id}/frame", s.hFrame)
 	mux.HandleFunc("POST /api/sessions/{id}/locate", s.hLocate)
 	mux.HandleFunc("POST /api/sessions/{id}/calibrate", s.hCalibrate)
@@ -753,6 +754,23 @@ func (s *Server) hAutovars(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, 200, map[string]any{"ok": true, "vars": sess.Autovars()})
+}
+
+// hAutovarsSet POST /api/sessions/{id}/autovars {auto}:开关停站后自动求值自动变量
+// (默认关;开启且已停站时立即补一次求值,结果照常以 autovars 事件推送)
+func (s *Server) hAutovarsSet(w http.ResponseWriter, r *http.Request) {
+	sess := s.sessOf(w, r)
+	if sess == nil {
+		return
+	}
+	var req struct {
+		Auto *bool `json:"auto"`
+	}
+	if !readBody(w, r, &req) || req.Auto == nil {
+		return
+	}
+	sess.SetAutovarsOn(*req.Auto)
+	writeJSON(w, 200, map[string]any{"ok": true, "auto": *req.Auto})
 }
 
 func (s *Server) hFrame(w http.ResponseWriter, r *http.Request) {
