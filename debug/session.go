@@ -198,6 +198,7 @@ type Session struct {
 	quitting bool
 
 	lastAutovars []VarItem // 最近一次停站的自动变量求值结果
+	autovarsOn   bool      // 停站后自动求值自动变量(前端面板开关,默认关:减少自动调度拖慢命令队列)
 
 	emit  func(Event)
 	lines chan string // 全量行广播(启动序列等待用)
@@ -1476,7 +1477,7 @@ func (s *Session) Step(cmd string) (*StopInfo, error) {
 	}
 	if stop != nil {
 		s.setStop(stop)
-		go s.evaluateAutovars(stop) // 步进同步完成路径不走 onStop,这里补触发自动变量
+		s.autovarsSettle(stop) // 步进同步完成路径不走 onStop,这里补处理自动变量
 		return stop, nil
 	}
 	return nil, nil
@@ -1804,7 +1805,7 @@ func (s *Session) onStop(stop *StopInfo, pending *pendingCmd, quitReq bool) {
 		})
 		s.startWatchdog()
 		if !quitReq {
-			go s.evaluateAutovars(stop)
+			s.autovarsSettle(stop)
 		}
 		return
 	}
@@ -1815,7 +1816,7 @@ func (s *Session) onStop(stop *StopInfo, pending *pendingCmd, quitReq bool) {
 	s.setState(StateStopped)
 	s.emitEvent(Event{Type: "stopped", Stop: stop})
 	s.startWatchdog()
-	go s.evaluateAutovars(stop)
+	s.autovarsSettle(stop)
 }
 
 // ---------- 状态与看门狗 ----------
@@ -2233,6 +2234,45 @@ func init() {
 	}
 	for _, w := range kws {
 		glKeywords[w] = true
+	}
+}
+
+// AutovarsOn 停站后自动求值自动变量的开关状态(默认关,由前端面板开关打开)
+func (s *Session) AutovarsOn() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.autovarsOn
+}
+
+// SetAutovarsOn 开关停站后自动求值自动变量。默认关:每次停站自动调度对窗口变量
+// 逐个 print 求值会占住命令队列、拖慢步进(见 autovarsSettle)。
+// 开启且当前已停站时立即补一次求值,结果照常以 autovars 事件推送。
+func (s *Session) SetAutovarsOn(on bool) {
+	s.mu.Lock()
+	s.autovarsOn = on
+	cur := s.cur
+	st := s.state
+	s.mu.Unlock()
+	if on && st == StateStopped && cur.Line > 0 {
+		go s.evaluateAutovars(&cur)
+	}
+}
+
+// autovarsSettle 停站收口处理自动变量:开关开 → 后台求值;关 → 清掉旧值并广播空,
+// 避免面板残留上一停站的结果误导(默认关时每次停站不产生求值命令)。
+func (s *Session) autovarsSettle(stop *StopInfo) {
+	if s.AutovarsOn() {
+		if stop != nil {
+			go s.evaluateAutovars(stop)
+		}
+		return
+	}
+	s.mu.Lock()
+	had := len(s.lastAutovars) > 0
+	s.lastAutovars = nil
+	s.mu.Unlock()
+	if had {
+		s.emitEvent(Event{Type: "autovars", Vars: nil})
 	}
 }
 
