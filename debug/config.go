@@ -181,7 +181,8 @@ func (c *Config) TopDirActual() string {
 // 未获取时返回 nil——调用方须先确保动态环境已获取,不得回退静态路径。
 func (c *Config) ModuleRootsActual() []string {
 	if c.Runtime != nil && c.Runtime.ERP != "" {
-		// com/wss 是 WebService 程序(wssp* / awsp*)的专用模块目录
+		// WebService 程序(wssp* / awsp*)挂 com/wss(标准)与 com/cwss(客制),
+		// com 根的通配已覆盖两者;再显式列 com/wss 兼容直挂布局
 		return []string{c.Runtime.ERP, c.Runtime.COM, c.Runtime.COM + "/wss"}
 	}
 	return nil
@@ -201,11 +202,13 @@ func (c *Config) CloneWithZone(zone string) *Config {
 	return &c2
 }
 
-// ModuleDir 返回模块主目录,如 /u1/t35prd/erp/asf;wss 模块挂载在 com 下
+// ModuleDir 返回模块主目录:业务模块在 erp 下(客制目录即其模块本身,如 erp/csf);
+// 接口(WebService)模块挂载在 com 下——标准 wss 与客制 cwss 同根(与登录环境
+// $WSS/$CWSS、awsq990 的 cd $WSS/4gl 语义一致)。top 须登录后动态获取。
 func (c *Config) ModuleDir(module string) string {
 	top := c.TopDirActual()
-	if module == "wss" {
-		return top + "/com/wss"
+	if module == "wss" || module == "cwss" {
+		return top + "/com/" + module
 	}
 	return top + "/erp/" + module
 }
@@ -214,8 +217,8 @@ func (c *Config) ModuleDir(module string) string {
 func (c *Config) FGLSOURCEPath(module string) string {
 	top := c.TopDirActual()
 	base := top + "/erp/" + module
-	if module == "wss" {
-		base = top + "/com/wss"
+	if module == "wss" || module == "cwss" {
+		base = top + "/com/" + module
 	}
 	dirs := []string{
 		base + "/4gl",
