@@ -256,6 +256,9 @@ export const useStore = create<Store>((set, get) => ({
         if (ev.state === 'exit') {
           st.pushTimeline({ origin: 'system', kind: 'warn', text: '会话已断开(结束会话/切换环境或连接中断)' })
           set({ loadingSource: false, currentLine: 0, started: false, stop: null })
+          // 后端已移除该会话:按服务端现状对齐绑定(有常驻/新会话则重绑,没了即清),
+          // 避免 sessionId 残留导致界面一直停在"会话进行中"(如 wslogs 重放被锁)
+          void get().syncFromSessions()
         }
         return
       case 'dead':
@@ -969,7 +972,12 @@ export function connectWS() {
   function connect() {
     const proto = location.protocol === 'https:' ? 'wss' : 'ws'
     ws = new WebSocket(`${proto}://${location.host}/api/ws`)
-    ws.onopen = () => setWs(true)
+    ws.onopen = () => {
+      setWs(true)
+      // 连接/重连后按服务端实况对齐会话绑定:后端重启、会话被移走或页面长时间
+      // 挂着时清掉残留引用,避免界面停在"会话进行中"锁死 wslogs 重放等操作
+      void useStore.getState().syncFromSessions()
+    }
     ws.onclose = () => {
       setWs(false)
       if (!closed) setTimeout(connect, 2000)
