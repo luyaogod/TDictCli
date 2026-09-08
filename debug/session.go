@@ -2081,6 +2081,13 @@ func (s *Session) Breakpoints() []Breakpoint {
 	for _, b := range s.bps {
 		out = append(out, *b)
 	}
+	// map 遍历顺序随机:按 文件+行号 稳定排序,保证快照/列表刷新(如步进后)顺序不变
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].File != out[j].File {
+			return out[i].File < out[j].File
+		}
+		return out[i].Line < out[j].Line
+	})
 	return out
 }
 
