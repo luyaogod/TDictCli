@@ -20,6 +20,10 @@ export function WsLogView() {
   const setWsLogTab = useStore((s) => s.setWsLogTab)
   const replayDebug = useStore((s) => s.replayDebug)
   const sessionId = useStore((s) => s.sessionId)
+  const state = useStore((s) => s.state)
+  // 宿主会话常驻:结束调试后会话仍空闲保留,不算"进行中";只有真在跑/停着/启动
+  // 才算忙碌。重放按钮不设禁用——后端重放会先自动收口现有会话(见 wslog 重放接口)
+  const sessionBusy = !!sessionId && state !== 'idle' && state !== 'exit' && state !== ''
   const [service, setService] = useState('')
   const [onlyFail, setOnlyFail] = useState(false)
   // 默认过滤条件:当天(awsq990 查当天日志是最常用场景)
@@ -102,7 +106,7 @@ export function WsLogView() {
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
-        {sessionId && <span className="text-xs text-amber-600/80 dark:text-amber-500/80">调试会话进行中(重放前需先结束)</span>}
+        {sessionBusy && <span className="text-xs text-amber-600/80 dark:text-amber-500/80">调试会话忙碌中:重放将自动结束当前调试</span>}
       </div>
 
       {err && (
@@ -160,9 +164,8 @@ export function WsLogView() {
                 ))}
                 <button
                   onClick={() => void replayDebug(sel)}
-                  disabled={!!sessionId}
-                  title="用该日志的报文重放此接口调用并进入调试(T100 r.dg 同款)"
-                  className="ml-auto inline-flex items-center gap-1 border border-emerald-500/20 px-2 py-0.5 text-xs text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-40"
+                  title="用该日志的报文重放此接口调用并进入调试(T100 r.dg 同款;现有会话会自动收口)"
+                  className="ml-auto inline-flex items-center gap-1 border border-emerald-500/20 px-2 py-0.5 text-xs text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"
                 >
                   <Bug className="h-3.5 w-3.5" />
                   调试此调用
