@@ -340,4 +340,20 @@ export function attachHover(editor: monaco.editor.IStandaloneCodeEditor) {
       }
     },
   })
+
+  // 「运行到光标处」:停站时从当前停站位置继续执行到光标所在行(fgldb until,同 VS Code)
+  editor.addAction({
+    id: 'fgl.runToCursor',
+    label: '运行到光标处',
+    contextMenuGroupId: 'fgl',
+    contextMenuOrder: 3,
+    run: async (ed) => {
+      const pos = ed.getPosition()
+      if (!pos) return
+      const s = st()
+      if (!s.sessionId) { timeline('运行到光标处:无调试会话', 'warn'); return }
+      if (s.state !== 'stopped') { timeline('运行到光标处:仅停站时可用', 'warn'); return }
+      await s.runToCursor(pos.lineNumber)
+    },
+  })
 }

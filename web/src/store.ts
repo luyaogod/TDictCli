@@ -44,6 +44,9 @@ interface Store {
   // (两者都要经调试会话逐条发命令,自动调度越多步进越卡;关掉后仅手动/开关开启时取)
   stackAuto: boolean
   autovarsAuto: boolean
+  // 最近一次接口日志重放(wslogs「调试此调用」)的日志 rowid:重放会话点「重新开始」
+  // 时按同一日志重放(报文参数在后端),而不是普通启动丢参数;null = 普通作业调试
+  lastReplayRowid: string | null
   // 数据
   breakpoints: Breakpoint[]
   adjustedBps: Record<number, number> // 点击行号 → 实际注册断点编号(fgldb 会把非可执行行的断点自动下移)
@@ -93,6 +96,8 @@ interface Store {
   toggleBottom: () => void
   toggleStackAuto: () => void
   toggleAutovarsAuto: () => void
+  // 接口日志重放启动(wslogs「调试此调用」与重放会话「重新开始」共用同一上下文)
+  replayStart: (rowid: string) => Promise<void>
   setRightView: (v: 'debug' | 'outline' | 'session') => void
   pushRaw: (line: string) => void
   sendRaw: (cmd: string) => Promise<void>
@@ -157,6 +162,7 @@ export const useStore = create<Store>((set, get) => ({
   // 面板开关默认关(localStorage tdict.stackAuto / tdict.autovarsAuto 持久化)
   stackAuto: localStorage.getItem('tdict.stackAuto') === '1',
   autovarsAuto: localStorage.getItem('tdict.autovarsAuto') === '1',
+  lastReplayRowid: null,
   rightView: (['outline', 'session'].includes(localStorage.getItem('tdict.rightView') || '') ? localStorage.getItem('tdict.rightView') : 'debug') as 'debug' | 'outline' | 'session',
   breakpoints: [], adjustedBps: {}, frames: [], watches: [], autovars: [], selectedFrame: -1, backendDead: '',
   timeline: [], rawLog: [],
@@ -448,21 +454,27 @@ export const useStore = create<Store>((set, get) => ({
   setWsLogTab: (t) => set({ wsLogTab: t }),
 
   replayDebug: async (item) => {
-    // 立即切到 debug 页并进入 loading 态,再发启动请求(用户点了就看到页面在动)
+    await get().replayStart(item.rowid)
+  },
+
+  // 接口日志重放启动:立即切到 debug 页进 loading,再请求后端重放该日志
+  // (后端按 rowid 重读报文并落临时文件,报文参数在 ArgsOverride 里,随会话保留)
+  replayStart: async (rowid) => {
     set({ view: 'debug', wsLogErr: '', launching: true, launchError: '', state: 'loading' })
     try {
-      // 已有会话在跑:先结束它(一次只能调一个作业)
+      // 已有会话在跑:先结束它(一次只能调一个作业;后端重放也会收口,双保险)
       const old = get().sessionId
       if (old) {
         set({ sessionId: null })
         void api.quit(old).catch(() => {})
       }
-      const r = await api.wsLogDebug(item.rowid)
+      const r = await api.wsLogDebug(rowid)
       const mod = r.module || ''
-      const rp = r.runProg || r.prog || item.job
+      const rp = r.runProg || r.prog || ''
       set({
-        sessionId: r.sessionId, module: mod, prog: r.prog || item.job,
-        runProg: rp, state: 'loading', timeline: [], rawLog: [], watches: [], autovars: [],
+        sessionId: r.sessionId, module: mod, prog: r.prog || rp,
+        runProg: rp, state: 'loading', lastReplayRowid: rowid,
+        timeline: [], rawLog: [], watches: [], autovars: [],
         backendDead: '', selectedFrame: -1, stop: null, breakpoints: [], frames: [],
         sourceContent: '', sourcePath: '', sourceDVM: '', currentLine: 0, loadingSource: true,
       })
@@ -476,7 +488,7 @@ export const useStore = create<Store>((set, get) => ({
   },
 
   launch: async (module, prog) => {
-    set({ launching: true, launchError: '', timeline: [], rawLog: [], watches: [], autovars: [], backendDead: '', selectedFrame: -1 })
+    set({ launching: true, launchError: '', timeline: [], rawLog: [], watches: [], autovars: [], backendDead: '', selectedFrame: -1, lastReplayRowid: null })
     // 启动调试:编辑器进入加载态(转圈),入口停站定位 MAIN 后一次性显示源码,
     // 避免启动过程中内容跳来跳去
     set({ sourceContent: '', sourcePath: '', sourceDVM: '', currentLine: 0, loadingSource: true })
@@ -774,14 +786,16 @@ export const useStore = create<Store>((set, get) => ({
   restart: async () => {
     const st = get()
     if (!st.sessionId) return
-    const { module, prog } = st
-    st.pushTimeline({ origin: 'human', kind: 'command', text: `重新开始 ${module}/${prog}` })
+    const { module, prog, lastReplayRowid } = st
+    st.pushTimeline({ origin: 'human', kind: 'command', text: `重新开始 ${module}/${prog}${lastReplayRowid ? '(按原接口日志重放)' : ''}` })
     try { await api.quit(st.sessionId) } catch { /* 忽略,直接重启 */ }
     if (snapTimer) { clearInterval(snapTimer); snapTimer = undefined }
     stopHoldTimer()
-    // 结束本轮(会话保留 idle),再启动新的一轮——宿主复用,免重新登录
+    // 结束本轮(会话保留 idle),再启动新的一轮——宿主复用,免重新登录。
+    // 重放会话必须按原日志重放(报文参数在服务端 ArgsOverride 里,普通启动会丢参数)
     set({ state: 'idle', started: false, stop: null, breakpoints: [], frames: [], adjustedBps: {}, autovars: [], selectedFrame: -1, currentLine: 0 })
-    await get().launch(module, prog)
+    if (lastReplayRowid) await get().replayStart(lastReplayRowid)
+    else await get().launch(module, prog)
   },
 
   doPrint: async (expr) => {
