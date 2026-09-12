@@ -15,11 +15,11 @@ package host
 import (
 	"archive/tar"
 	"compress/gzip"
+	"crypto/sha1"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 )
@@ -35,11 +35,24 @@ type MirrorStats struct {
 	Note    string // 附加说明(如 "无变更")
 }
 
-var mirrorTagRe = regexp.MustCompile(`[^A-Za-z0-9]`)
+// localMarkName 本地镜像目录内的"完整基线"标记文件:存在表示该目录曾成功
+// 建立/更新过完整镜像,增量更新以此为前提;缺失时强制全量(见 MirrorPull)。
+const localMarkName = ".tdict-mirror.ok"
+
+// mirrorTag 环境名 → 服务器 marker 文件名 ASCII 尾缀。
+// 环境名可能是中文/含特殊字符(不能直接作文件名),且同一服务器可挂多个环境,
+// 统一取 sha1 前 10 位十六进制:唯一、安全、与语言无关。
+func mirrorTag(name string) string {
+	sum := sha1.Sum([]byte(name))
+	return fmt.Sprintf("%x", sum)[:10]
+}
 
 // MirrorPull 拉取/更新指定环境(NamedSsh)的 4gl+4fd 源码镜像到 mirrorDir/<环境名>/。
-// full=true 全量重建;否则增量(服务器 marker 记录基线)。镜像目录本身(mirrorDir)
-// 由调用方保证已配置;本函数只负责连服务器与落盘。
+// full=true 全量重建;否则增量(服务器 marker 记录基线)。
+// 增量只在本地已有完整基线(envDir 内存在 .tdict-mirror.ok 标记)时允许;
+// 本地首次/目录被清/旧版无标记 → 自动转全量,防止"服务器 marker 存在而本地
+// 无镜像"时只拉到变更文件造成镜像永久残缺。成功结束后写入/刷新本地基线标记。
+// 镜像目录本身(mirrorDir)由调用方保证已配置;本函数只负责连服务器与落盘。
 func MirrorPull(e *NamedSsh, mirrorDir string, full bool) (*MirrorStats, error) {
 	start := time.Now()
 	st := &MirrorStats{Env: e.Name, Full: full}
@@ -59,23 +72,36 @@ func MirrorPull(e *NamedSsh, mirrorDir string, full bool) (*MirrorStats, error) 
 	}
 	st.TopDir = top
 
-	tag := mirrorTagRe.ReplaceAllString(e.Name, "")
-	if tag == "" {
-		tag = "env"
-	}
-	if len(tag) > 24 {
-		tag = tag[:24]
-	}
+	tag := mirrorTag(e.Name)
 	base := top + "/.tdict-mirror-" + tag
 
+	// 本地无完整基线(首次拉取/目录被清/旧版本遗留)时,增量没有可叠加的对象,
+	// 自动按全量拉取,避免只拿到服务器 marker 之后的变更文件导致镜像残缺
+	envDir := filepath.Join(mirrorDir, e.Name)
+	needFull := full
+	if !needFull {
+		if _, err := os.Stat(filepath.Join(envDir, localMarkName)); err != nil {
+			needFull = true
+			logfMirror("本地镜像缺少完整基线标记(%s),本次自动按全量拉取以保证完整", filepath.Join(envDir, localMarkName))
+		}
+	}
+	st.Full = needFull
+
 	// 服务器打包(输出 TDICT_MIRROR_OK <文件数> <字节> / TDICT_MIRROR_NONE)
-	n, size, err := mirrorPack(conn, base, top, full)
+	n, size, err := mirrorPack(conn, base, top, needFull)
 	if err != nil {
 		return nil, fmt.Errorf("服务器打包失败: %w", err)
 	}
 	if n == 0 {
 		st.Elapsed = time.Since(start).Round(100 * time.Millisecond).String()
 		st.Note = "无变更(服务器 4gl/4fd 自上次 pull 后未修改;--full 可强制全量重建)"
+		// 服务器无变更但本地基线标记缺失时,依然补一个基线标记,
+		// 否则下次 pull 仍会误判"无基线"而反复尝试全量
+		if !needFull {
+			if err := writeLocalMark(envDir); err != nil {
+				logfMirror("写入本地基线标记失败(忽略): %v", err)
+			}
+		}
 		return st, nil
 	}
 	st.Bytes = size
@@ -95,9 +121,8 @@ func MirrorPull(e *NamedSsh, mirrorDir string, full bool) (*MirrorStats, error) 
 	}
 	defer rf.Close()
 
-	envDir := filepath.Join(mirrorDir, e.Name)
 	var files int
-	if full {
+	if needFull {
 		files, err = extractFull(rf, envDir)
 	} else {
 		files, err = extractIncremental(rf, envDir)
@@ -106,6 +131,9 @@ func MirrorPull(e *NamedSsh, mirrorDir string, full bool) (*MirrorStats, error) 
 		return nil, fmt.Errorf("本地解压失败: %w", err)
 	}
 	st.Files = files
+	if err := writeLocalMark(envDir); err != nil {
+		return nil, fmt.Errorf("写入本地基线标记失败: %w", err)
+	}
 
 	// 清理服务器归档(marker 保留,供下次增量)
 	if out, err := conn.Output(`rm -f "`+base+`.tar.gz"`, time.Minute); err != nil && !strings.Contains(out, "No such file") {
@@ -114,6 +142,15 @@ func MirrorPull(e *NamedSsh, mirrorDir string, full bool) (*MirrorStats, error) 
 	}
 	st.Elapsed = time.Since(start).Round(100 * time.Millisecond).String()
 	return st, nil
+}
+
+// writeLocalMark 在镜像环境目录写入完整基线标记(带时间)。
+func writeLocalMark(envDir string) error {
+	if err := os.MkdirAll(envDir, 0o755); err != nil {
+		return err
+	}
+	return os.WriteFile(filepath.Join(envDir, localMarkName),
+		[]byte(time.Now().UTC().Format(time.RFC3339)+"\n"), 0o644)
 }
 
 func logfMirror(format string, args ...any) {
