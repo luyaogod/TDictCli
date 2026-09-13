@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
@@ -20,6 +21,10 @@ var (
 	// skillFS holds the embedded Claude Code skill files (.claude/skills),
 	// provided by main via Execute. Used by `tdict install`.
 	skillFS fs.FS
+	// webFS holds the embedded frontend build output (web/dist), provided by
+	// main via Execute. Reserved for the future frontend serve command; the
+	// current placeholder web page is not served by any command yet.
+	webFS fs.FS
 )
 
 // rootCmd is the base command.
@@ -159,7 +164,7 @@ func resolveConfigPath(flagPath string) (string, error) {
 
 // Execute runs the root command. skills carries the embedded Claude Code
 // skill files (used by `tdict install`); it may be nil when unavailable.
-// web carries the embedded debug web frontend (web/dist); may be nil/empty.
+// web carries the embedded frontend build output (web/dist); may be nil/empty.
 func Execute(skills fs.FS, web fs.FS) {
 	skillFS = skills
 	webFS = web
@@ -167,6 +172,13 @@ func Execute(skills fs.FS, web fs.FS) {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
+}
+
+// printJSON 以 JSON 输出结果(缩进两格)。
+func printJSON(v any) error {
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	return enc.Encode(v)
 }
 
 // GetDB returns the current query data source (local SQLite or remote ERP DB).

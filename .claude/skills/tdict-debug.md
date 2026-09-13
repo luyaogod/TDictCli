@@ -87,7 +87,7 @@ tdict debug stop
 
 # 读服务器源码(白名单只读登录区源码目录,不经会话;支持行段,省上下文)
 tdict debug source bsft001_wf.4gl -m asf          # 按模块解析候选路径读取
-tdict debug source --path /u1/topprd/erp/asf/4gl/asf_bsft001_wf.4gl
+tdict debug source --path /u1/<TOP>/erp/asf/4gl/asf_bsft001_wf.4gl
 tdict debug source bsft001_wf.4gl -m asf --from 4400 --to 4600
 
 # 会话最近事件(谁停在哪/日志/断开),回答"刚才 continue 之后发生了什么"

@@ -1,6 +1,6 @@
 // 包 cfgfile:config.json 的统一读写入口(读取/校验/修改/原子更新)。
 //
-// config.json 是 tdict 唯一配置文件(顶层 debug/mirror/query 等节),serve 与
+// config.json 是 tdict 唯一配置文件(顶层 hosts/mirror/query 等节),
 // 各 CLI 命令都会修改它。本包集中 读取→校验→修改→原子写回 全流程:
 // 调用方只声明"改哪些键"与"改前校验",不重复样板,错误语义全工具一致。
 package cfgfile
@@ -11,13 +11,19 @@ import (
 	"os"
 )
 
-// Debug 返回 root 的 "debug" 对象节;缺失或非对象返回统一错误。
-func Debug(root map[string]any) (map[string]any, error) {
-	dbg, _ := root["debug"].(map[string]any)
-	if dbg == nil {
-		return nil, fmt.Errorf("config.json 缺少 \"debug\" 配置节")
+// Hosts 返回 root 的顶层 "hosts" 配置节(SSH 环境 + 数据库连接)。
+// 兼容旧键 "debug":仅存在旧键时,原样提升为 "hosts" 并删除 "debug"
+// (调用方随后 Save 即完成迁移);两键皆无返回统一错误。
+func Hosts(root map[string]any) (map[string]any, error) {
+	if h, _ := root["hosts"].(map[string]any); h != nil {
+		return h, nil
 	}
-	return dbg, nil
+	if legacy, _ := root["debug"].(map[string]any); legacy != nil {
+		root["hosts"] = legacy
+		delete(root, "debug")
+		return legacy, nil
+	}
+	return nil, fmt.Errorf("config.json 缺少 \"hosts\" 配置节")
 }
 
 // Open 读取并解析 config.json;空文件视为空配置,文件缺失/非法 JSON 报错。

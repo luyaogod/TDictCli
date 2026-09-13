@@ -3,7 +3,7 @@ package cli
 // db 连接管理:tdict db list / ping / discover。
 // list    :列出 connections(含 source/viaSsh 标记与默认项)
 // ping    :验证给定连接可达(含 viaSsh 隧道;只读 SELECT version)
-// discover:SSH 自动发现某 debug 环境(env)的数据库连接要素 → 预览/--save 写入 connections
+// discover:SSH 自动发现某环境(env)的数据库连接要素 → 预览/--save 写入 connections
 //          (oracle:chenv zone+ORACLE_HOME+TNS/tnsnames;kingbase:实例发现)
 
 import (
@@ -105,7 +105,7 @@ var dbPingCmd = &cobra.Command{
 var dbDiscoverCmd = &cobra.Command{
 	Use:   "discover",
 	Short: "SSH 自动发现数据库连接要素并保存为连接(--env <环境名>)",
-	Long: `登录 debug 环境(env)的 SSH,按区域探测数据库连接要素:
+	Long: `登录 hosts 环境(env)的 SSH,按区域探测数据库连接要素:
   oracle  → chenv zone + ORACLE_HOME/sqlplus + TNS 别名 + tnsnames 解析 host/port/service
   kingbase→ 实例发现(ps 找 kingbase + ksql + kingbase.conf 端口 + 库名)
 输出候选连接(不落盘);--save 写入 config.json connections(source=ssh:<env>)。
@@ -147,7 +147,7 @@ var dbDiscoverCmd = &cobra.Command{
 		}
 		fmt.Println("  说明: host 为服务器视角候选地址,客户端不可达时请改 host 或补 viaSsh")
 		if !discoverSave {
-			fmt.Println("  保存: 加 --save 写入该环境的 db(config.json debug.sshs[].db)")
+			fmt.Println("  保存: 加 --save 写入该环境的 db(config.json hosts.sshs[].db)")
 			return nil
 		}
 		if err := saveDiscoveredConn(cand, envName); err != nil {
@@ -167,7 +167,7 @@ func firstLine(s string) string {
 	return s
 }
 
-// discoverSSHFromEnv 从 debug.sshs 找到匹配环境并返回 SSH+zone。
+// discoverSSHFromEnv 从 hosts.sshs 找到匹配环境并返回 SSH+zone。
 func discoverSSHFromEnv(name string) (host.SSHConfig, string, string, error) {
 	cfgPath, err := resolveConfigPath(configPath)
 	if err != nil {
@@ -195,7 +195,7 @@ func discoverSSHFromEnv(name string) (host.SSHConfig, string, string, error) {
 		}
 		return host.SSHConfig{}, "", "", fmt.Errorf("未找到环境 %q(可 tdict env 查看)", name)
 	}
-	return host.SSHConfig{}, "", "", fmt.Errorf("debug.sshs 未配置服务器环境")
+	return host.SSHConfig{}, "", "", fmt.Errorf("尚未配置 SSH 环境(运行 tdict serve 添加,或编辑 config.json hosts.sshs)")
 }
 
 // candidateConn 由探测结果构造连接要素(type/host/port/service|库名);
@@ -223,14 +223,14 @@ func candidateConn(out *host.DBProbeOut) *dbconfig.Connection {
 	return c
 }
 
-// saveDiscoveredConn 把连接要素写入 config.json debug.sshs[envName].db(保留账号列表)。
+// saveDiscoveredConn 把连接要素写入 config.json hosts.sshs[envName].db(保留账号列表)。
 func saveDiscoveredConn(c *dbconfig.Connection, envName string) error {
 	cfgPath, err := resolveConfigPath(configPath)
 	if err != nil {
 		return err
 	}
 	return cfgfile.Edit(cfgPath, nil, func(root map[string]any) error {
-		dbg, err := cfgfile.Debug(root)
+		dbg, err := cfgfile.Hosts(root)
 		if err != nil {
 			return err
 		}
@@ -260,9 +260,9 @@ func saveDiscoveredConn(c *dbconfig.Connection, envName string) error {
 
 func init() {
 	dbPingCmd.Flags().StringVarP(&dbSyncConn, "conn", "c", "", "SSH 环境名(默认活跃环境的库)")
-	dbDiscoverCmd.Flags().StringVar(&discoverEnv, "env", "", "debug 环境名(空=活跃环境)")
+	dbDiscoverCmd.Flags().StringVar(&discoverEnv, "env", "", "环境名(空=活跃环境)")
 	dbDiscoverCmd.Flags().StringVar(&discoverType, "type", "", "数据库类型(oracle/kingbase;默认 oracle)")
 	dbDiscoverCmd.Flags().StringVar(&discoverHost, "host", "", "客户端可达 DB 地址覆盖(默认取探测/ssh host)")
-	dbDiscoverCmd.Flags().BoolVar(&discoverSave, "save", false, "写入该环境的 db(config.json debug.sshs[].db)")
+	dbDiscoverCmd.Flags().BoolVar(&discoverSave, "save", false, "写入该环境的 db(config.json hosts.sshs[].db)")
 	dbCmd.AddCommand(dbListCmd, dbPingCmd, dbDiscoverCmd)
 }

@@ -1,4 +1,4 @@
-// Package dbconfig 定义统一的数据库连接类型(config.json debug.sshs[].db)。
+// Package dbconfig 定义统一的数据库连接类型(config.json hosts.sshs[].db)。
 // 每个 SSH 环境一对一挂一个库:显式 类型/主机/端口/服务名(oracle)|库名(kingbase),
 // 账号全部在 Accounts 列表 —— 运行时用哪个账号由 TOPENT 决定(服务器侧经 gzou_t
 // 解析账号名后在列表查密码,未收录回退 账号=密码);客户端直连(ping/在线查询/sync)
@@ -33,20 +33,20 @@ func (v *ViaSSH) EffectiveRemote(fallbackHost string, fallbackPort int) (string,
 	return h, p
 }
 
-// DBAcct 数据库账号凭据(账号即 schema 名,如 ds/your_schema/your_schema)。
+// DBAcct 数据库账号凭据(账号即 schema 名,如 your_schema)。
 type DBAcct struct {
 	Account  string `json:"account"`  // 账号/schema 名
 	Password string `json:"password"` // 登录密码
 }
 
-// Connection 数据库连接(内嵌于 debug.sshs[].db,与 SSH 环境一对一)。
+// Connection 数据库连接(内嵌于 hosts.sshs[].db,与 SSH 环境一对一)。
 // oracle 用 Service(SERVICE_NAME),kingbase 用 Database(库名)。
 type Connection struct {
 	Type     string `json:"type"`               // "kingbase" | "oracle"
 	Host     string `json:"host,omitempty"`     // 主机地址(客户端与服务器侧均可达)
 	Port     int    `json:"port,omitempty"`     // 端口(0=默认 1521/54321)
-	Service  string `json:"service,omitempty"`  // oracle: SERVICE_NAME(如 t35prd)
-	Database string `json:"database,omitempty"` // kingbase: 库名(如 topprd)
+	Service  string `json:"service,omitempty"`  // oracle: SERVICE_NAME(如 YOUR_SERVICE)
+	Database string `json:"database,omitempty"` // kingbase: 库名(如 your_database)
 	// Accounts 账号列表(全部账号,无主账号标记)。服务器侧按 TOPENT→gzou_t 解析出的
 	// 账号名在列表中查密码;客户端直连取列表首项(DialCred)。
 	Accounts []DBAcct `json:"accounts,omitempty"`

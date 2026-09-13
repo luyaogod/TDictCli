@@ -38,7 +38,7 @@ var mirrorCmd = &cobra.Command{
   pull [<环境名>]  下载/更新该环境镜像(默认增量;--full 全量重建)
   path [<环境名>]  打印该环境镜像目录的绝对路径(AI 直接前往)
 
-环境名缺省取 debug.activeEnv,未设置取 sshs 首条。镜像根未设置时 pull/path 会提示先 dir。`,
+环境名缺省取 hosts.activeEnv,未设置取 sshs 首条。镜像根未设置时 pull/path 会提示先 dir。`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		// 与 dbCmd 相同:覆盖 root 的 SQLite 钩子,镜像命令不依赖本地字典库
 		path, err := resolveConfigPath(configPath)
@@ -109,7 +109,7 @@ var mirrorDirCmd = &cobra.Command{
 	Use:   "dir [<目录>]",
 	Short: "查看或设置本地镜像根目录(config.json 顶层 mirror.dir)",
 	Long: `不带参数显示当前镜像根目录;带参数把新的镜像根目录写入 config.json
-(顶层 "mirror" 键,与 debug/query 平级)。镜像根必须显式设置:
+(顶层 "mirror" 键,与 hosts/query 平级)。镜像根必须显式设置:
 未设置时 mirror pull/path 会提示先执行本命令。目录可为相对路径,保存时转为绝对路径。`,
 	Example: `  tdict mirror dir                      # 显示当前镜像根
   tdict mirror dir D:\dev\erp-src       # 设置镜像根(写入 config.json)`,

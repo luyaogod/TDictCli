@@ -6,10 +6,10 @@ package cli
 //
 // 选择优先级:
 //  1. --conn <环境名|local>(覆盖本次调用);
-//  2. config.json 顶层 query.source(与 debug 键平级,serve 保存设置不动它);
+//  2. config.json 顶层 query.source(与 hosts 键平级);
 //  3. 默认 "local"(纯本地用法与旧版一致,无需任何配置)。
 //
-// "local" = 现有 erp_data.db(--db / TDICT_DB);环境名 = debug.sshs 中该环境的
+// "local" = 现有 erp_data.db(--db / TDICT_DB);环境名 = hosts.sshs 中该环境的
 // db(客户端直连,凭据取账号列表首项)。
 
 import (
@@ -116,7 +116,7 @@ func openRemoteSource(target string) error {
 	return nil
 }
 
-// envDBByName 在 debug.sshs 中按环境名取该环境 db 的深拷贝。
+// envDBByName 在 hosts.sshs 中按环境名取该环境 db 的深拷贝。
 func envDBByName(cfg *host.Hosts, name string) (*dbconfig.Connection, error) {
 	for i := range cfg.SSHs {
 		e := &cfg.SSHs[i]
@@ -124,13 +124,13 @@ func envDBByName(cfg *host.Hosts, name string) (*dbconfig.Connection, error) {
 			continue
 		}
 		if e.DB == nil {
-			return nil, fmt.Errorf("环境 %q 未配置数据库(设置-环境-数据库页添加后可用 --conn 直查)", name)
+			return nil, fmt.Errorf("环境 %q 未配置数据库(可在 config.json hosts.sshs[].db 添加后可用 --conn 直查)", name)
 		}
 		cc := *e.DB
 		cc.Accounts = append([]dbconfig.DBAcct(nil), e.DB.Accounts...)
 		return &cc, nil
 	}
-	return nil, fmt.Errorf("未找到环境 %q(可用: tdict debug env 查看环境名)", name)
+	return nil, fmt.Errorf("未找到环境 %q(可用: tdict env 查看环境名)", name)
 }
 
 // missingHint 主字典表缺失(IsMissingTable)时的提示:本地源建议先 db sync;

@@ -23,7 +23,7 @@ var dbCmd = &cobra.Command{
 	Use:   "db",
 	Short: "管理 ERP 数据库连接与数据同步",
 	Long: `从 config.json 读取配置 (--config / TDICT_CONFIG)。数据库连接按环境一对一挂载:
-debug.sshs[].db 即该环境的库(显式 host/port/service|库名 + 账号列表)。
+hosts.sshs[].db 即该环境的库(显式 host/port/service|库名 + 账号列表)。
 子命令: sync (从 ERP 拉取字典数据写入 SQLite) / list (列各环境的库) /
 ping (验证连接可达) / discover (SSH 自动发现连接要素并写入环境 db)。
 支持连接类型: kingbase (金仓, PostgreSQL 协议)、oracle (go-ora)。`,
@@ -62,7 +62,7 @@ func resolveDbConn(name string) (*dbconfig.Connection, string, error) {
 		target = dbCfg.SSHs[0].Name
 	}
 	if target == "" {
-		return nil, "", fmt.Errorf("debug.sshs 未配置服务器环境")
+		return nil, "", fmt.Errorf("尚未配置 SSH 环境(运行 tdict serve 添加,或编辑 config.json hosts.sshs)")
 	}
 	for i := range dbCfg.SSHs {
 		e := &dbCfg.SSHs[i]
@@ -76,5 +76,5 @@ func resolveDbConn(name string) (*dbconfig.Connection, string, error) {
 		cc.Accounts = append([]dbconfig.DBAcct(nil), e.DB.Accounts...)
 		return &cc, target, nil
 	}
-	return nil, name, fmt.Errorf("未找到环境 %q(可用: tdict debug env 查看)", name)
+	return nil, name, fmt.Errorf("未找到环境 %q(可用: tdict env 查看)", name)
 }

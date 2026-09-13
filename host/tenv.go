@@ -191,7 +191,7 @@ echo TDICT_FGLRESOURCEPATH=$FGLRESOURCEPATH
 }
 
 // probeTEnvScript 旧版 exec 通道探针(选项号直接当 ZONE 变量用,仅适用于菜单码与
-// ZONE 值重合的站点,如 109 的 35/36;站点类站点菜单码≠ZONE 字符串,此路径会失败)。
+// ZONE 值重合的站点,如 109 的 35/36;非编号类站点菜单码≠ZONE 字符串,此路径会失败)。
 // 保留作登录式探针失败时的兜底。
 func probeTEnvScript(conn *SSHConn, zone string) (*RuntimeEnv, error) {
 	script := tenvProbeScript(zone)

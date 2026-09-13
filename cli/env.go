@@ -1,10 +1,8 @@
 package cli
 
-// tdict env:离线查看/设置默认环境(直接读写 config.json 的 debug.activeEnv,
-// 不需要 debug serve 运行)——与前端设置页「设为默认」等效。
-// 与 tdict debug env(需 serve 运行,且会把正在进行的调试会话一并切换过去)
-// 互补:本命令只动配置文件,不影响运行中的服务/会话内存态
-// (serve 下次保存设置时以其内存态为准)。
+// tdict env:离线查看/设置默认环境(直接读写 config.json 的 hosts.activeEnv,
+// 不需要任何后台服务运行)。
+// 只动配置文件,不影响其它命令的本地状态。
 
 import (
 	"fmt"
@@ -26,8 +24,7 @@ var envCmd = &cobra.Command{
 	Short: "查看/设置默认环境",
 	Long: `列出 config.json 中全部 SSH 环境与当前默认(activeEnv),或直接把默认环境写入配置。
 无参数 = 列出全部环境(带 * 为当前默认);带环境名 = 设为默认并持久化(校验名称存在)。
-本命令离线执行(同 mirror/db 组,只读改 config.json),不依赖 debug serve;
-要连同正在运行的调试会话一起切换,请用 tdict debug env <环境名>(需 serve)。`,
+本命令离线执行(同 mirror/db 组,只读改 config.json),不依赖任何后台服务。`,
 	Example: `  tdict env                     # 列出全部环境与当前默认
   tdict env 正式区            # 把默认环境设为正式区(写入 config.json)
   tdict env --json`,
@@ -132,7 +129,7 @@ func envSetDefault(name string) error {
 	}
 
 	if err := cfgfile.Edit(envCfgPath, nil, func(root map[string]any) error {
-		dbg, err := cfgfile.Debug(root)
+		dbg, err := cfgfile.Hosts(root)
 		if err != nil {
 			return err
 		}
@@ -142,8 +139,16 @@ func envSetDefault(name string) error {
 		return err
 	}
 	fmt.Printf("默认环境已切换为: %s(已写入 %s)\n", name, envCfgPath)
-	fmt.Printf("提示: 运行中的 debug serve 不受影响;新调试会话/缺省 db sync、mirror 将使用该环境。\n")
+	fmt.Printf("提示: 新命令(缺省 db sync、mirror、--conn 直查)将使用该环境。\n")
 	return nil
+}
+
+// orDefault 返回 v,空串时返回默认值 d。
+func orDefault(v, d string) string {
+	if v == "" {
+		return d
+	}
+	return v
 }
 
 

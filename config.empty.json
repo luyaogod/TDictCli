@@ -1,0 +1,9 @@
+{
+  "hosts": {
+    "sshs": [],
+    "activeEnv": ""
+  },
+  "query": {
+    "source": "local"
+  }
+}

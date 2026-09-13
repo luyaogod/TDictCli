@@ -1,9 +1,12 @@
-# TDict — ERP 数据字典 CLI / T100 作业调试工具
+# TDict — ERP 数据字典 CLI
 
-面向 **T100 / Genero(4GL) ERP** 的本地命令行工具，两条主线：
+面向 **T100 / Genero(4GL) ERP** 的本地命令行工具：
 
-1. **ERP 数据字典查询**（给"读代码、做配置"提供上下文）：查 ERP 数据字典与业务元数据——数据表结构与字段中文含义（`tdict rt`）、字段校验规则（`rv`）、下拉选项/系统分类码（`scc`）、字段画面规格（`desc`）、可复用开窗（`rq`）、报错消息文本（`msg`）、系统与单据参数说明（`sysp`/`docp`）。数据随工具本地保存（`tdict db sync` 从 ERP 刷新），也可 `--conn` 直查远程库。
-2. **AI 人机协同调试 T100 作业**（`tdict debug`）：通过 SSH 在 T100 服务器上驱动 `fglrun -d` 的 (fgldb) 文本调试协议，提供 Web 调试界面与命令行控制端，让 AI/人协同排查作业逻辑错误、跟踪变量、验证接口报文场景。
+**ERP 数据字典查询**（给"读代码、做配置"提供上下文）：查 ERP 数据字典与业务元数据——数据表结构与字段中文含义（`tdict rt`）、字段校验规则（`rv`）、下拉选项/系统分类码（`scc`）、字段画面规格（`desc`）、可复用开窗（`rq`）、报错消息文本（`msg`）、系统与单据参数说明（`sysp`/`docp`）。数据随工具本地保存（`tdict db sync` 从 ERP 刷新），也可 `--conn` 直查远程库。
+
+此外保留 SSH 环境与数据库连接管理（`tdict serve` 可视化配置页 / `tdict env` / `tdict db`）与服务器源码镜像（`tdict mirror`）。
+
+T100 作业调试（原 `tdict debug`）已拆分到独立项目，本仓库不再包含调试代码。
 
 所有输出默认使用**简体中文 (zh_CN)**。
 
@@ -378,45 +381,42 @@ tdict install
 tdict install D:/path/to/project
 ```
 
-### T100 作业调试（`tdict debug`）
+### `tdict env [<环境名>]`
 
-通过 SSH 在 T100 服务器上驱动 `fglrun -d` 的 (fgldb) 文本调试协议，实现"人操作 GDC 界面 + AI 借助命令行检查分析"的人机协同调试。依赖 `config.json` 的 `debug` 节（SSH/区域/多环境）。
+查看/设置默认 SSH 环境（写入 `config.json` 顶层 `hosts.activeEnv`）：
 
 ```bash
-# 1. 启动调试服务(默认后台常驻、单实例;打印地址后返回,会话不被占用)
-tdict debug serve                 # 前端+API: http://127.0.0.1:28670(端口占用自动顺延)
-tdict debug serve --stop          # 停止后台实例
-tdict debug serve --foreground    # 前台运行(日志直出)
-
-# 2. 连接并启动作业调试(等入口停站,返回 JSON 快照)
-tdict debug start bsft001_wf -m asf
-
-# 3. 透传任意 fgldb 标准命令,原样返回输出(原生文本)
-tdict debug exec "break 4450"        # 下断点
-tdict debug exec "info breakpoints"
-tdict debug exec "print ls_sql"      # 求值变量
-tdict debug exec "continue"          # 继续(阻塞到下次停站;--timeout 300 调大)
-tdict debug exec "where"             # 调用栈
-
-# 4. AI 信息通道(原生命令行给不了的"看"):
-tdict debug stop                      # 可复取的停站现场快照
-tdict debug source bsft001_wf.4gl -m asf --from 4400 --to 4600  # 读服务器源码(白名单只读)
-tdict debug logs --tail 50            # 会话事件日志
-tdict debug locate b_fill             # 函数定义定位
-tdict debug resolve bsft001_wf -m asf # 作业→实体程序/模块(gzzz_t)
-
-# 5. 环境/会话管理
-tdict debug env                       # 查看/切换当前生效环境(SSH 配置)
-tdict debug topent 99                 # 设置会话 TOPENT(企业编号)
-tdict debug quit                      # 结束本轮调试(会话保留可复用)
+tdict env                     # 列出全部环境与当前默认
+tdict env 正式区           # 把默认环境写入 config.json
+tdict env --json
 ```
 
-- **离线设置默认环境(无需 serve)**:`tdict env` 列出全部环境与当前默认;
-  `tdict env <环境名>` 直接把默认环境写入 config.json(与设置页「设为默认」等效,
-  不影响运行中会话;要连同调试会话一起切换才需要 `tdict debug env`)。
-- 控制端命令默认自动发现后台实例真实地址(端口顺延后仍可达),也可 `--url` 显式指定。
-- 断点支持持久化(下次调试自动恢复);接口日志 `wslogs`/`wsdebug` 支持报文重放调试。
-- 完整用法见内嵌技能 `.claude/skills/tdict-debug.md`(含原生 fgldb 命令参考与人机交接范式)。
+缺省数据源（`db sync`、`mirror`、`--conn` 直查）都取该默认环境；`--conn <环境名>` 可对单次调用覆盖。
+
+## 可视化配置页（`tdict serve`）
+
+在浏览器里维护 `config.json` 的 SSH 环境与数据库连接，无需手改 JSON：
+
+```bash
+tdict serve                              # 默认 127.0.0.1:28670(占用自动顺延),Ctrl+C 停止
+tdict serve --listen 127.0.0.1:9123
+```
+
+页面（左侧环境列表 + 右侧「SSH 服务器 / 数据库」Tab 编辑同一环境）：
+
+| 操作 | 说明 |
+|---|---|
+| SSH 服务器 | 环境名、主机、端口、账号、密码、登录区域(zone)、TOPENT；可增删环境、设为默认环境 |
+| 数据库 | 每个环境一对一挂载：类型(oracle/kingbase)、主机、端口、服务名(service)/库名(database)、账号列表 |
+| 从服务器获取数据库配置 | 用该环境 SSH 登录服务器**只读探测**并回填连接要素：oracle 按区域加载环境后读 `ORACLE_HOME`/`sqlplus`/`TWO_TASK` 并解析 `tnsnames.ora` 得到 host/port/service；kingbase 发现运行中实例的数据目录、端口与库名。解析出内部主机名(客户端不可达)时回填 SSH 主机 |
+| 账号行 ⚡ 验证 | 服务器侧以该「账号/密码」连显式目标库执行 `select 1`(只读) |
+| 数据库「测试连接」 | 客户端直连测试（与 `tdict db ping` 同链路：账号取列表首项） |
+| 保存 | 整块写回顶层 `hosts` 键（`query`/`mirror`/`bdldoc` 原样保留），并兼容迁移旧键 `debug` |
+
+- 配置文件取 `--config` / `TDICT_CONFIG`（缺省 `config.json`）；文件不存在时首次保存自动创建。
+- **便携版发布为空配置、且不含业务数据**：打包脚本用 `config.empty.json` 生成空的 `config.json`（`hosts.sshs` 为空），首次运行用本页添加自己的环境；同时也**不打包 `erp_data.db`**（含客户表字典/schema/企业码等数据），配好环境后自行 `tdict db sync` 拉取。仓库中不提交 `config.json` 与 `erp_data.db`（见 `.gitignore`）。
+- 服务器执行工具（sqlplus/ksql）路径自动探测，无需配置；SSH/DB 探测逻辑与 `tdict db discover` 同源（`host` 包）。
+- 该服务只做配置读写与只读探测，不启动任何调试会话。
 
 ## 本地源码镜像（tdict mirror）
 
@@ -425,7 +425,8 @@ tdict debug quit                      # 结束本轮调试(会话保留可复用
 镜像根目录配置在 config.json 顶层 `mirror` 键(**必须显式设置**,不设默认避免隐式落盘):
 
 ```json
-{ "debug": { ... }, "query": { "source": "local" }, "mirror": { "dir": "D:\\dev\\erp-src" },
+{ "hosts": { "sshs": [ ... ], "activeEnv": "正式区" },
+  "query": { "source": "local" }, "mirror": { "dir": "D:\\dev\\erp-src" },
   "bdldoc": { "dir": "D:\\path\\to\\docs\\bdl" } }
 ```
 
@@ -441,7 +442,7 @@ tdict mirror path 正式区
 
 - **增量机制**:服务器 TOP 下保留 `.tdict-mirror-<环境>.mark` 基线,默认只打包 `find -newer` 的变更文件(秒级);首次拉取与 `--full` 走全量(数百 MB~数 GB,视站点规模,服务器 gzip 打包 + SFTP 流式下载,完成后清理归档、保留 marker)。
 - **打包根(TOP)解析**:T100 路径**不允许静态配置**——打包根按登录区域在服务器上动态探测获取(登录 zone → 环境脚本回读 TOP/ERP/COM),探测失败即报错(检查该环境 SSH 登录与 zone 设置)。
-- AI 工作流:`tdict mirror path` 拿目录 → 本地工具读码;未镜像的文件(如 per)仍走 `tdict debug source` 白名单通道;调试停站行号来自服务器编译表,与镜像不同代时以服务器文件为准(先 pull)。
+- AI 工作流:`tdict mirror path` 拿目录 → 本地工具读码。
 
 ## BDL 语言参考文档(tdict bdldoc)
 
@@ -459,21 +460,21 @@ tdict bdldoc dir D:\path\to\docs    # 设置目录(写入 config.json;相对路�
 
 ## 数据库连接与查询数据源（config.json）
 
-连接配置存于项目根目录 `config.json`（JSON，开发阶段明文，勿用于生产）。数据库连接按 SSH 环境**一对一挂载**：每个环境在 `debug.sshs[]` 内嵌一个 `db`（显式 host/port + `service`(oracle) 或 `database`(kingbase) + 账号列表）；服务器侧 sqlplus/ksql 工具路径自动探测，无需配置。顶层 `query` 键记录查询命令的默认数据源（与 debug 平级，设置页保存环境不会覆盖它）：
+连接配置存于项目根目录 `config.json`（JSON，开发阶段明文，勿用于生产）。数据库连接按 SSH 环境**一对一挂载**：每个环境在 `hosts.sshs[]` 内嵌一个 `db`（显式 host/port + `service`(oracle) 或 `database`(kingbase) + 账号列表）；服务器侧 sqlplus/ksql 工具路径自动探测，无需配置。顶层 `query` 键记录查询命令的默认数据源（与 hosts 平级）：
 
 ```json
 {
-  "debug": {
+  "hosts": {
     "sshs": [
       { "name": "正式区", "host": "10.0.0.1", "port": 22, "user": "youruser",
-        "password": "youruser", "zone": "36", "topent": "99",
+        "password": "yourpassword", "zone": "36", "topent": "99",
         "db": {
           "type": "oracle",
           "host": "10.0.0.1", "port": 1521,
-          "service": "t35prd",
+          "service": "YOUR_SERVICE",
           "accounts": [
-            { "account": "your_schema", "password": "your_schema" },
-            { "account": "ds", "password": "ds" }
+            { "account": "your_schema", "password": "your_password" },
+            { "account": "your_schema2", "password": "your_password2" }
           ]
         } }
     ],
@@ -484,7 +485,7 @@ tdict bdldoc dir D:\path\to\docs    # 设置目录(写入 config.json;相对路�
 ```
 
 - **T100 路径不静态配置**:没有 `topDir`/`moduleRoots` 配置项——源码查找根/打包根等路径一律登录该环境后按其 zone 动态探测获取(登录 zone → 环境脚本回读 TOP/ERP/COM),探测失败即报错,请检查 SSH 登录与 zone 设置。
-- **账号规则**：无"主账号"，所有账号都在 `accounts` 列表，不区分默认。客户端直连（查询数据源 / `db ping` / `db sync` / 连接测试）取列表**首项**；服务器侧调试连库由会话 TOPENT 经服务器 `gzou_t` 解析出账号名后回本表查密码（未收录时按"账号=密码"惯例）。
+- **账号规则**：无"主账号"，所有账号都在 `accounts` 列表，不区分默认。客户端直连（查询数据源 / `db ping` / `db sync` / 连接测试）取列表**首项**；未收录的账号按"账号=密码"惯例兜底。
 - `viaSsh`（可选）：客户端不可达 DB、但 DB 对 SSH 服务器可达时，经 SSH 端口转发再直连（本地起转发端口 → 驱动连 `127.0.0.1:本地端口`）；缺省远端取连接自身 host/port。
 - 支持类型：`kingbase`（人大金仓，PostgreSQL 协议，pgx）、`oracle`（go-ora 纯 Go 驱动）。
 - 配置文件查找优先级：`$TDICT_CONFIG` > `--config` 参数 > 可执行文件同目录 > 当前工作目录。
@@ -499,8 +500,8 @@ tdict bdldoc dir D:\path\to\docs    # 设置目录(写入 config.json;相对路�
 
 ```bash
 tdict rt dzea_t                                # 默认本地 SQLite
-tdict rt dzea_t --conn 正式区               # 远程直查正式区(金仓 your_schema)
-tdict desc oobd_t oobd002 --conn 正式区     # 远程直查正式区(oracle your_schema)
+tdict rt dzea_t --conn 正式区                   # 远程直查正式区(金仓 your_schema)
+tdict desc oobd_t oobd002 --conn 正式区         # 远程直查正式区(oracle your_schema)
 tdict rv v_ooba002_07 --conn local             # 显式切回本地
 ```
 
@@ -557,7 +558,7 @@ tdict db discover --env 正式区 --type oracle [--save]   # SSH 自动发现连
 TDictCli/
 ├── main.go              # 入口(内嵌 web/dist 与 .claude/skills)
 ├── go.mod / go.sum      # Go module
-├── config.json          # debug(环境/调试) + query(数据源) + mirror(镜像根) + bdldoc(BDL 文档目录)(明文,勿提交真实凭据)
+├── config.json          # hosts(SSH 环境 + 数据库连接) + query(数据源) + mirror(镜像根) + bdldoc(BDL 文档目录)(明文,勿提交真实凭据)
 ├── cfgfile/             # config.json 统一读写入口(读取/校验/原子更新)
 ├── cli/
 │   ├── root.go          # 根命令 + 全局 --json/--csv/-d/--config/--conn
@@ -570,9 +571,9 @@ TDictCli/
 │   ├── bdldoc.go        # tdict bdldoc(BDL 语言文档目录 dir)
 │   ├── install.go       # tdict install(安装内嵌 Claude Code 技能)
 │   ├── db.go / db_sync.go / dbops.go   # tdict db(sync/list/ping/discover)
-│   ├── debug*.go        # tdict debug 命令族(serve/start/exec/...)
-│   └── servebg*.go      # debug serve 后台常驻(单实例/端口顺延/stop)
-├── host/                # 远程能力共享层(debug 会话与 CLI 命令共用的"服务器问路"层)
+│   ├── serve.go         # tdict serve(可视化配置页:SSH 环境 + 数据库)
+├── server/              # 配置服务实现(静态前端 + /api/config、/api/dbprobe、/api/conntest)
+├── host/                # 远程能力共享层(CLI 命令共用的"服务器问路"层)
 │   ├── env.go           # 环境模型 NamedSsh + LoadHosts(读 config 环境清单)
 │   ├── ssh.go           # SSH 连接(Dial/PTY/SFTP/exec)
 │   ├── term.go          # 终端行解析/提示符判定
@@ -582,21 +583,15 @@ TDictCli/
 ├── dbconfig/            # db 连接配置模型(每环境挂一个,host/port/service|库名+账号列表)
 ├── erpdb/               # ERP 连接器(只读 Query;kingbase 经 pgx / oracle 经 go-ora)
 ├── db/                  # SQLite 查询实现 + db.Source 统一查询接口
-├── debug/               # 调试服务(会话调度 + fgldb 协议 + REST/WS;依赖 host)
-│   ├── api.go           # 调试服务 REST + WS + 静态前端
-│   ├── session.go       # fgldb 会话/PTY 协议驱动
-│   ├── manager.go       # 会话管理器 + 事件流/源码读取/作业解析
-│   ├── config.go        # debug 配置(sshs 环境/运行时合并;路径动态获取)
-│   ├── db.go            # 服务器侧 SQL 执行(作业解析 gzzz_t/账号探查 gzou_t)
-│   └── parser.go / wslog.go / bpsstore.go / wstest.go
 ├── live/                # 远程数据源(live.Open;viaSsh 隧道支持)
 ├── sshtun/              # SSH 端口转发隧道组件
 ├── output/              # 表格/JSON/CSV 输出格式化
-├── web/                 # 调试 Web 前端(React/Vite;产物嵌入)
+├── server/              # 本地配置服务(tdict serve):静态前端 + 配置读写/连接探测 REST
+├── web/                 # 前端(React/Vite/Tailwind;SSH 与数据库配置页,产物嵌入)
 ├── .claude/
 │   └── skills/          # 内嵌 AI 技能(安装的就是当前版本)
 │       ├── tdict.md              # 数据字典查询 Skill
-│       ├── tdict-debug.md        # T100 作业调试 Skill
+│       ├── tdict-debug.md        # T100 作业调试 Skill(调试功能已迁出,供独立调试项目使用)
 │       ├── erp-read.md           # 阅读/分析 ERP 4GL 源码 Skill
 │       └── erp-modify.md         # 修改框架生成 4GL 源码(add-point)Skill
 ├── docs/
@@ -615,7 +610,7 @@ TDictCli/
 | Kingbase 驱动 | [jackc/pgx](https://github.com/jackc/pgx)（纯 Go，PostgreSQL 协议） |
 | Oracle 驱动 | [sijms/go-ora/v2](https://github.com/sijms/go-ora)（纯 Go） |
 | SSH/SFTP | [golang.org/x/crypto/ssh](https://pkg.go.dev/golang.org/x/crypto/ssh) + [pkg/sftp](https://github.com/pkg/sftp) |
-| WebSocket | [coder/websocket](https://github.com/coder/websocket) |
+| WebSocket | 已移除（随调试功能迁出） |
 | CLI 框架 | [cobra](https://github.com/spf13/cobra) |
-| Web 前端 | React + Vite + Monaco（调试界面） |
+| Web 前端 | React + Vite + Tailwind（SSH/数据库配置页，产物 `go:embed` 嵌入） |
 | 输出 | `text/tabwriter` + `encoding/json` |

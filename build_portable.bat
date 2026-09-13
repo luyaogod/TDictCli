@@ -1,6 +1,10 @@
 @echo off
 chcp 65001 >nul
-rem Build the TDict Windows portable package: exe + config + db + readme, zipped.
+rem Build the TDict Windows portable package: exe + EMPTY config + example + readme, zipped.
+rem NOTE: 绝不打包本机 config.json(含真实 SSH/数据库凭据);便携版落地的是 config.empty.json,
+rem       用户首次用 `tdict serve` 或手改自行配置。
+rem NOTE: 也不打包 erp_data.db(含客户表字典/schema/企业码等数据);用户配好环境后自行
+rem       `tdict db sync` 拉取本地字典库。
 setlocal
 cd /d "%~dp0"
 
@@ -17,9 +21,10 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo [2/4] Copying config.json / erp_data.db ...
-copy /y config.json "%STAGE%\" >nul || (echo COPY config.json FAILED & exit /b 1)
-copy /y erp_data.db "%STAGE%\" >nul || (echo COPY erp_data.db FAILED & exit /b 1)
+echo [2/4] Staging EMPTY config.json / config.example.json / README.md ...
+copy /y config.empty.json "%STAGE%\config.json" >nul || (echo COPY empty config FAILED & exit /b 1)
+copy /y config.example.json "%STAGE%\" >nul || (echo COPY config.example.json FAILED & exit /b 1)
+copy /y README.md "%STAGE%\" >nul || (echo COPY README.md FAILED & exit /b 1)
 if exist "%STAGE%\tdict.exe" del /q "%STAGE%\tdict.exe"
 copy /y tdict.exe "%STAGE%\" >nul || (echo COPY tdict.exe FAILED & exit /b 1)
 

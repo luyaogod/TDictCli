@@ -1,27 +1,23 @@
 {
-  "debug": {
+  "hosts": {
     "sshs": [
       {
         "name": "正式区",
         "host": "10.0.0.1",
         "port": 22,
         "user": "youruser",
-        "password": "youruser",
+        "password": "yourpassword",
         "zone": "36",
         "topent": "99",
         "db": {
           "type": "oracle",
           "host": "10.0.0.1",
           "port": 1521,
-          "service": "t35prd",
+          "service": "YOUR_SERVICE",
           "accounts": [
             {
               "account": "your_schema",
-              "password": "your_schema"
-            },
-            {
-              "account": "ds",
-              "password": "ds"
+              "password": "your_password"
             }
           ]
         }
@@ -31,36 +27,24 @@
         "host": "10.0.0.2",
         "port": 22,
         "user": "youruser",
-        "password": "youruser",
+        "password": "yourpassword",
         "zone": "35",
         "topent": "99",
         "db": {
           "type": "kingbase",
           "host": "10.0.0.2",
           "port": 54321,
-          "database": "topprd",
+          "database": "your_database",
           "accounts": [
             {
               "account": "your_schema",
-              "password": "your_schema"
-            },
-            {
-              "account": "ds",
-              "password": "ds"
+              "password": "your_password"
             }
           ]
         }
       }
     ],
-    "activeEnv": "正式区",
-    "listen": "127.0.0.1:28670",
-    "launchArgs": "BBDL512840855a 2 12345 'N' {prog}",
-    "watchdogSeconds": 1800,
-    "fglserver": "",
-    "termWidth": 200,
-    "termHeight": 50,
-    "printElements": 1000,
-    "persistBreakpoints": null
+    "activeEnv": "正式区"
   },
   "query": {
     "source": "local"
