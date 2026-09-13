@@ -32,7 +32,7 @@ var rootCmd = &cobra.Command{
 	Use:   "tdict",
 	Short: "TDict - ERP data dictionary query tool",
 	Long: `TDict 是一个查询 ERP 数据字典的 CLI 工具。
-查询数据源(rt/rv/desc/scc/rq)默认是本地 SQLite 镜像 (erp_data.db,由 tdict db sync 同步);
+查询数据源(r.t/r.v/desc/scc/r.q)默认是本地 SQLite 镜像 (erp_data.db,由 tdict db sync 同步);
 可用 config.json 顶层 query.source 或 --conn <环境名> 切换为某环境的远程库直查(金仓/Oracle)。
 所有输出使用简体中文 (zh_CN)。`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {

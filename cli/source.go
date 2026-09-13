@@ -1,6 +1,6 @@
 package cli
 
-// 查询数据源(rt/rv/desc/scc/rq 共用):本地 SQLite 镜像(*db.DB)与远程 ERP 库
+// 查询数据源(r.t/r.v/desc/scc/r.q 共用):本地 SQLite 镜像(*db.DB)与远程 ERP 库
 // (*live.Live,金仓/Oracle)实现同一 db.Source 接口,数据源由配置/CLI 决定,
 // 命令层不感知差异 —— 不再有 --online 开关。
 //

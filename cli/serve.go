@@ -46,12 +46,16 @@ var serveCmd = &cobra.Command{
 			cfgPath = abs
 		}
 		srv := server.New(cfgPath, serveListen, webFS)
+		// 数据同步目标库:与查询命令同一解析规则(优先已存在的库;否则 TDICT_DB/exe 同目录/当前目录)
+		dbTarget := resolveSyncTarget()
+		srv.SetDBTarget(dbTarget)
 		ln, addr, err := srv.Listen()
 		if err != nil {
 			return err
 		}
 		fmt.Printf("[tdict] 配置服务已启动: http://%s\n", addr)
 		fmt.Printf("  配置文件: %s\n", cfgPath)
+		fmt.Printf("  数据同步目标: %s\n", dbTarget)
 		fmt.Println("  按 Ctrl+C 停止")
 		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 		defer stop()

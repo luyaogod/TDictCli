@@ -67,18 +67,18 @@ type winDetail struct {
 }
 
 var winCmd = &cobra.Command{
-	Use:     "rq [开窗码]",
-	Aliases: []string{"win"},
-	Short:   "查询可复用开窗",
+	Use:     "r.q [开窗码]",
+	Aliases: []string{"rq", "win"},
+	Short:   "查询可复用开窗 (r.q)",
 	Long: `查询可复用开窗 (r.q):代码里 CALL q_xxx() 弹出的查寻选单定义——带占位符的
 选取 SQL(<field>/<table>/<wc> 标记)、外部参数(arg1~9)与显现/回传列。
 无参数时列出全部开窗(--kw 按说明过滤);指定开窗码显示完整详情:
 SQL 指令(附标签图例)、参数、显现设定。
-开窗码形如 q_apca001。`,
-	Example: `  tdict rq
-  tdict rq --kw 料号
-  tdict rq q_apca001
-  tdict rq q_apca001 --json`,
+开窗码形如 q_apca001。命令名对齐 T100 原生工具 r.q(旧名 rq/win 仍可用)。`,
+	Example: `  tdict r.q
+  tdict r.q --kw 料号
+  tdict r.q q_apca001
+  tdict r.q q_apca001 --json`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 1 {
@@ -158,7 +158,7 @@ func runWinDetail(id string) error {
 		return err
 	}
 	if len(headers) == 0 {
-		fmt.Printf("未找到开窗定义 '%s'。可执行 tdict rq 查看全部开窗。\n", id)
+		fmt.Printf("未找到开窗定义 '%s'。可执行 tdict r.q 查看全部开窗。\n", id)
 		return nil
 	}
 

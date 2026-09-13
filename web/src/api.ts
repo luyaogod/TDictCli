@@ -38,6 +38,78 @@ export interface DBProbeOut {
   note?: string
 }
 
+// 源码镜像(host.MirrorPullProgress 的进度经 /api/mirror 轮询返回)
+export interface MirrorEnv {
+  name: string
+  zone: string
+  path: string
+  ready: boolean // 本地已有完整基线(增量前提)
+}
+export interface MirrorJob {
+  running: boolean
+  env: string
+  full: boolean
+  phase: string // connect|probe|pack|download|done|error
+  message: string
+  bytes: number
+  total: number // 下载阶段为归档总字节;0=未知(pack 阶段)
+  files: number
+  elapsed: string
+  error?: string
+  note?: string
+  done: boolean
+  startedAt?: string
+}
+export interface MirrorResp {
+  mirrorDir: string
+  activeEnv: string
+  envs: MirrorEnv[]
+  job: MirrorJob
+}
+
+// 数据库同步(dbsync.Run 的进度经 /api/dbsync 轮询返回)
+export interface DBSyncEnv {
+  name: string
+  type: string
+  address: string
+}
+export interface DBSyncJob {
+  running: boolean
+  env: string
+  phase: string // open|table|index|replace|done|error
+  message: string
+  table: string
+  tableIndex: number
+  tableTotal: number
+  tableRows: number
+  totalRows: number
+  tables: number
+  elapsed: string
+  target: string
+  backup?: string
+  warning?: string
+  error?: string
+  done: boolean
+  startedAt?: string
+}
+export interface DBSyncResp {
+  target: string
+  activeEnv: string
+  envs: DBSyncEnv[]
+  job: DBSyncJob
+}
+
+// 命令行安装:把 tdict 所在目录加入用户 PATH
+export interface InstallStatus {
+  supported: boolean // 本平台是否支持自动写入
+  exePath: string
+  exeDir: string
+  inUserPath: boolean
+  userPath?: string
+  manual?: string
+  note?: string
+}
+
 async function req<T>(url: string, opts?: RequestInit): Promise<T> {
   const r = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...opts })
   const data = await r.json().catch(() => ({}))
@@ -60,4 +132,19 @@ export const api = {
     host: string; port: number; user: string; password: string; zone: string; type: string
     account: string; acctPassword: string; dbHost?: string; dbPort?: number; dbSvc?: string; dbDatabase?: string
   }) => req<{ ok: boolean; error?: string }>('/api/dbaccverify', { method: 'POST', body: JSON.stringify(body) }),
+  // 源码镜像:根目录读写 + 拉取任务(单实例)
+  mirror: () => req<MirrorResp>('/api/mirror'),
+  saveMirrorDir: (dir: string) =>
+    req<{ ok: boolean; mirrorDir?: string }>('/api/mirror', { method: 'PUT', body: JSON.stringify({ dir }) }),
+  mirrorPull: (env: string, full: boolean) =>
+    req<{ ok: boolean }>('/api/mirror/pull', { method: 'POST', body: JSON.stringify({ env, full }) }),
+  // 数据库同步:远程库字典 → 本地 SQLite(单实例任务)
+  dbsync: () => req<DBSyncResp>('/api/dbsync'),
+  dbsyncRun: (env: string) =>
+    req<{ ok: boolean }>('/api/dbsync', { method: 'POST', body: JSON.stringify({ env }) }),
+  status: () => req<{ ok: boolean; server: string; listen: string }>('/api/status'),
+  // 命令行安装:查看/加入/移出用户 PATH(用户级,无需管理员)
+  installStatus: () => req<InstallStatus>('/api/install'),
+  installAdd: () => req<InstallStatus>('/api/install', { method: 'POST' }),
+  installRemove: () => req<InstallStatus>('/api/install', { method: 'DELETE' }),
 }

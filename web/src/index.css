@@ -9,3 +9,12 @@ body,
 body {
   margin: 0;
 }
+
+/* 进度条:总量未知(服务器打包阶段)时的循环动画条 */
+@keyframes tdict-indeterminate {
+  0% { transform: translateX(-110%); }
+  100% { transform: translateX(310%); }
+}
+.bar-indeterminate {
+  animation: tdict-indeterminate 1.2s linear infinite;
+}

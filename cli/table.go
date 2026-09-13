@@ -11,17 +11,18 @@ import (
 )
 
 var tableCmd = &cobra.Command{
-	Use:     "rt <table_name>",
-	Aliases: []string{"table"},
-	Short:   "查询数据表字典",
+	Use:     "r.t <table_name>",
+	Aliases: []string{"rt", "table"},
+	Short:   "查询数据表字典 (r.t)",
 	Long: `查询一张或多张数据表的字典:这张表在系统里做什么(表说明/所属模块/表类型),
 以及字段(中文含义/数据类型/长度/主键/必填)、键值与索引。
 读代码、看 SQL、查界面字段含义时用它。
-支持逗号分隔多个表名;输出简体中文。`,
-	Example: `  tdict rt dzea_t
-  tdict rt "dzea_t,dzeb_t,dzed_t"
-  tdict rt dzea_t --json
-  tdict rt dzea_t --conn 正式区   # 切到某环境的远程库直查(--conn local 回本地)`,
+支持逗号分隔多个表名;输出简体中文。
+命令名对齐 T100 原生工具 r.t(旧名 rt/table 仍可用)。`,
+	Example: `  tdict r.t dzea_t
+  tdict r.t "dzea_t,dzeb_t,dzed_t"
+  tdict r.t dzea_t --json
+  tdict r.t dzea_t --conn 正式区   # 切到某环境的远程库直查(--conn local 回本地)`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		tables := splitNames(args[0])

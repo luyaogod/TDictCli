@@ -60,19 +60,19 @@ type checkDetail struct {
 }
 
 var checkCmd = &cobra.Command{
-	Use:     "rv [识别码]",
-	Aliases: []string{"check"},
-	Short:   "查询校验带值定义",
+	Use:     "r.v [识别码]",
+	Aliases: []string{"rv", "check"},
+	Short:   "查询校验带值定义 (r.v)",
 	Long: `查询字段校验规则 (r.v):系统保存数据前的检查是可复用的校验模板,每条校验一个
 识别码,含要执行的校验 SQL(SQL 内用 <field>、arg1~9、:TODAY 等占位符,运行时代入)、
 外部参数与判断条件。
 无参数时列出全部校验定义(--kw 按识别码/说明过滤);指定识别码显示完整详情:
 校验 SQL 原文(附标签图例)、参数、判断条件与错误讯息。
-识别码形如 v_ooba002_07。`,
-	Example: `  tdict rv
-  tdict rv --kw 料号
-  tdict rv v_ooba002_07
-  tdict rv v_ooba002_07 --json`,
+识别码形如 v_ooba002_07。命令名对齐 T100 原生工具 r.v(旧名 rv/check 仍可用)。`,
+	Example: `  tdict r.v
+  tdict r.v --kw 料号
+  tdict r.v v_ooba002_07
+  tdict r.v v_ooba002_07 --json`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 1 {
@@ -153,7 +153,7 @@ func runCheckDetail(id string) error {
 		return err
 	}
 	if len(headers) == 0 {
-		fmt.Printf("未找到校验定义 '%s'。可执行 tdict rv 查看全部校验定义。\n", id)
+		fmt.Printf("未找到校验定义 '%s'。可执行 tdict r.v 查看全部校验定义。\n", id)
 		return nil
 	}
 

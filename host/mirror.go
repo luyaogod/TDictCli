@@ -21,6 +21,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"time"
 )
 
@@ -47,6 +48,18 @@ func mirrorTag(name string) string {
 	return fmt.Sprintf("%x", sum)[:10]
 }
 
+// MirrorProgress 拉取过程的进度(Web 进度条用;CLI 传 nil 回调即无进度)。
+type MirrorProgress struct {
+	Phase   string // connect|probe|pack|download|done
+	Message string // 人类可读说明
+	Bytes   int64  // 已处理字节:pack=服务器归档当前大小,download=已读压缩字节
+	Total   int64  // 总字节(仅 download 阶段已知;0=未知)
+	Files   int    // 文件数(已知时)
+}
+
+// ProgressFunc 进度回调(可能被多次调用,实现需自行加锁)。
+type ProgressFunc func(MirrorProgress)
+
 // MirrorPull 拉取/更新指定环境(NamedSsh)的 4gl+4fd 源码镜像到 mirrorDir/<环境名>/。
 // full=true 全量重建;否则增量(服务器 marker 记录基线)。
 // 增量只在本地已有完整基线(envDir 内存在 .tdict-mirror.ok 标记)时允许;
@@ -54,18 +67,30 @@ func mirrorTag(name string) string {
 // 无镜像"时只拉到变更文件造成镜像永久残缺。成功结束后写入/刷新本地基线标记。
 // 镜像目录本身(mirrorDir)由调用方保证已配置;本函数只负责连服务器与落盘。
 func MirrorPull(e *NamedSsh, mirrorDir string, full bool) (*MirrorStats, error) {
+	return MirrorPullProgress(e, mirrorDir, full, nil)
+}
+
+// MirrorPullProgress 同 MirrorPull,并在各阶段回调 onProgress(供 Web 显示拉取进度)。
+func MirrorPullProgress(e *NamedSsh, mirrorDir string, full bool, onProgress ProgressFunc) (*MirrorStats, error) {
+	report := func(p MirrorProgress) {
+		if onProgress != nil {
+			onProgress(p)
+		}
+	}
 	start := time.Now()
 	st := &MirrorStats{Env: e.Name, Full: full}
 	if e.Name == "" {
 		return nil, fmt.Errorf("环境名为空")
 	}
 
+	report(MirrorProgress{Phase: "connect", Message: "连接 SSH " + e.SSHConfig.Addr()})
 	conn, err := Dial(e.SSHConfig)
 	if err != nil {
 		return nil, fmt.Errorf("连接 %s 失败: %w", e.SSHConfig.Addr(), err)
 	}
 	defer conn.Close()
 
+	report(MirrorProgress{Phase: "probe", Message: "探测 T100 目录(zone " + e.Zone + ")"})
 	top, err := mirrorTopDir(conn, e)
 	if err != nil {
 		return nil, err
@@ -88,7 +113,8 @@ func MirrorPull(e *NamedSsh, mirrorDir string, full bool) (*MirrorStats, error) 
 	st.Full = needFull
 
 	// 服务器打包(输出 TDICT_MIRROR_OK <文件数> <字节> / TDICT_MIRROR_NONE)
-	n, size, err := mirrorPack(conn, base, top, needFull)
+	report(MirrorProgress{Phase: "pack", Message: "服务器打包中…"})
+	n, size, err := mirrorPackProgress(conn, base, top, needFull, report)
 	if err != nil {
 		return nil, fmt.Errorf("服务器打包失败: %w", err)
 	}
@@ -102,11 +128,12 @@ func MirrorPull(e *NamedSsh, mirrorDir string, full bool) (*MirrorStats, error) 
 				logfMirror("写入本地基线标记失败(忽略): %v", err)
 			}
 		}
+		report(MirrorProgress{Phase: "done", Message: st.Note})
 		return st, nil
 	}
 	st.Bytes = size
 
-	// 下载并解压(流式)
+	// 下载并解压(流式):countingReader 按压缩字节回报进度
 	if err := os.MkdirAll(mirrorDir, 0o755); err != nil {
 		return nil, fmt.Errorf("创建镜像根目录失败: %w", err)
 	}
@@ -121,11 +148,13 @@ func MirrorPull(e *NamedSsh, mirrorDir string, full bool) (*MirrorStats, error) 
 	}
 	defer rf.Close()
 
+	report(MirrorProgress{Phase: "download", Message: "下载并解压…", Total: size})
+	cr := &countingReader{r: rf, total: size, report: report}
 	var files int
 	if needFull {
-		files, err = extractFull(rf, envDir)
+		files, err = extractFull(cr, envDir)
 	} else {
-		files, err = extractIncremental(rf, envDir)
+		files, err = extractIncremental(cr, envDir)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("本地解压失败: %w", err)
@@ -141,7 +170,62 @@ func MirrorPull(e *NamedSsh, mirrorDir string, full bool) (*MirrorStats, error) 
 		logfMirror("清理服务器归档失败(忽略): %v", err)
 	}
 	st.Elapsed = time.Since(start).Round(100 * time.Millisecond).String()
+	report(MirrorProgress{Phase: "done", Message: fmt.Sprintf("完成:%d 个文件", files), Bytes: size, Total: size, Files: files})
 	return st, nil
+}
+
+// countingReader 统计已读字节并节流回调进度(下载/解压阶段共用;压缩字节即下载量)。
+type countingReader struct {
+	r      io.Reader
+	n      int64
+	total  int64
+	last   time.Time
+	report ProgressFunc
+}
+
+func (c *countingReader) Read(p []byte) (int, error) {
+	n, err := c.r.Read(p)
+	if n > 0 {
+		c.n += int64(n)
+	}
+	now := time.Now()
+	// 节流:每 200ms 一次;流结束时(EOF)必报一次最终字节数
+	if (n > 0 && now.Sub(c.last) >= 200*time.Millisecond) || err == io.EOF {
+		c.last = now
+		c.report(MirrorProgress{Phase: "download", Message: "下载并解压…", Bytes: c.n, Total: c.total})
+	}
+	return n, err
+}
+
+// mirrorPackProgress 在服务器打包期间轮询归档大小回报进度(pack 阶段无法预知总量)。
+func mirrorPackProgress(conn *SSHConn, base, top string, full bool, report ProgressFunc) (int, int64, error) {
+	var stopped atomic.Bool
+	done := make(chan struct{})
+	defer func() {
+		stopped.Store(true)
+		close(done)
+	}()
+	go func() {
+		t := time.NewTicker(2 * time.Second)
+		defer t.Stop()
+		cmd := `stat -c %s ` + shdq(base+".tar.gz") + ` 2>/dev/null || echo 0`
+		for {
+			select {
+			case <-done:
+				return
+			case <-t.C:
+				out, err := conn.Output(cmd, 8*time.Second)
+				if err != nil {
+					continue
+				}
+				var sz int64
+				if _, err := fmt.Sscanf(strings.TrimSpace(out), "%d", &sz); err == nil && sz > 0 && !stopped.Load() {
+					report(MirrorProgress{Phase: "pack", Message: "服务器打包中…", Bytes: sz})
+				}
+			}
+		}
+	}()
+	return mirrorPack(conn, base, top, full)
 }
 
 // writeLocalMark 在镜像环境目录写入完整基线标记(带时间)。
@@ -151,6 +235,25 @@ func writeLocalMark(envDir string) error {
 	}
 	return os.WriteFile(filepath.Join(envDir, localMarkName),
 		[]byte(time.Now().UTC().Format(time.RFC3339)+"\n"), 0o644)
+}
+
+// MirrorEnvDir 返回某环境的本地镜像目录(mirrorDir/<环境名>)。
+func MirrorEnvDir(mirrorDir, envName string) string {
+	if mirrorDir == "" || envName == "" {
+		return ""
+	}
+	return filepath.Join(mirrorDir, envName)
+}
+
+// MirrorReady 本地是否已有完整镜像基线(.tdict-mirror.ok 标记;增量更新的前提)。
+// 无基线时 MirrorPull 会自动转全量。
+func MirrorReady(mirrorDir, envName string) bool {
+	dir := MirrorEnvDir(mirrorDir, envName)
+	if dir == "" {
+		return false
+	}
+	_, err := os.Stat(filepath.Join(dir, localMarkName))
+	return err == nil
 }
 
 func logfMirror(format string, args ...any) {

@@ -16,8 +16,10 @@ import (
 	"io/fs"
 	"net"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -33,6 +35,32 @@ type Server struct {
 	listen  string // 配置的监听地址
 	webSub  fs.FS  // web/dist 子文件系统(未构建前端时为 nil)
 	addr    string // 实际监听地址(端口顺延时与 listen 不同;不写回配置)
+	dbPath  string // 数据同步目标 SQLite(serve 启动时由 CLI 注入;空=erp_data.db)
+
+	// 源码镜像拉取任务(单实例:同一时间只允许一个)
+	mirrorMu    sync.Mutex
+	mirror      mirrorJob
+	mirrorStart time.Time
+
+	// 数据库同步任务(单实例:同一时间只允许一个)
+	syncMu    sync.Mutex
+	sync      dbSyncJob
+	syncStart time.Time
+}
+
+// SetDBTarget 注入数据同步的目标 SQLite 路径(cli/serve 按 -d/TDICT_DB 解析后传入)。
+func (s *Server) SetDBTarget(p string) { s.dbPath = p }
+
+// syncTarget 返回数据同步的目标 SQLite 路径(未注入时用当前目录下 erp_data.db)。
+func (s *Server) syncTarget() string {
+	if s.dbPath != "" {
+		return s.dbPath
+	}
+	abs, err := filepath.Abs("erp_data.db")
+	if err != nil {
+		return "erp_data.db"
+	}
+	return abs
 }
 
 // New 创建服务实例;web 由 main 经 //go:embed 注入,可为 nil(此时返回引导页)。
@@ -121,6 +149,14 @@ func (s *Server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/dbprobe", s.hDBProbe)
 	mux.HandleFunc("POST /api/dbaccverify", s.hDbAccVerify)
 	mux.HandleFunc("POST /api/conntest", s.hConnTest)
+	mux.HandleFunc("GET /api/mirror", s.hMirrorGet)
+	mux.HandleFunc("PUT /api/mirror", s.hMirrorPut)
+	mux.HandleFunc("POST /api/mirror/pull", s.hMirrorPull)
+	mux.HandleFunc("GET /api/dbsync", s.hDBSyncGet)
+	mux.HandleFunc("POST /api/dbsync", s.hDBSyncPost)
+	mux.HandleFunc("GET /api/install", s.hInstallGet)
+	mux.HandleFunc("POST /api/install", s.hInstallAdd)
+	mux.HandleFunc("DELETE /api/install", s.hInstallRemove)
 	mux.HandleFunc("/", s.hStatic)
 }
 
