@@ -110,6 +110,14 @@ export interface InstallStatus {
   note?: string
 }
 
+// BDL(4GL)语言文档目录(等价 tdict bdldoc dir)
+export interface BdldocStatus {
+  ok: boolean
+  dir: string
+  exists: boolean
+  configPath: string
+}
+
 async function req<T>(url: string, opts?: RequestInit): Promise<T> {
   const r = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...opts })
   const data = await r.json().catch(() => ({}))
@@ -147,4 +155,8 @@ export const api = {
   installStatus: () => req<InstallStatus>('/api/install'),
   installAdd: () => req<InstallStatus>('/api/install', { method: 'POST' }),
   installRemove: () => req<InstallStatus>('/api/install', { method: 'DELETE' }),
+  // BDL 语言文档目录(config.json 顶层 bdldoc.dir)
+  bdldoc: () => req<BdldocStatus>('/api/bdldoc'),
+  saveBdldocDir: (dir: string) =>
+    req<BdldocStatus>('/api/bdldoc', { method: 'PUT', body: JSON.stringify({ dir }) }),
 }

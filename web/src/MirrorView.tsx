@@ -99,7 +99,7 @@ export function MirrorView() {
       <header className="flex shrink-0 items-center gap-3 border-b border-zinc-200 bg-white px-4 py-2 dark:border-zinc-800 dark:bg-zinc-900">
         <h1 className="shrink-0 text-sm font-semibold">源码镜像</h1>
         <span className="min-w-0 flex-1 truncate text-[11px] text-zinc-500 dark:text-zinc-400">
-          把某环境 T100 服务器的 4gl/4fd 源码与 42s(zh_CN)字符串镜像到本地,供 AI 用本地文件工具读码
+          把某环境 T100 服务器的 4gl/4fd 源码、42s(zh_CN)字符串与 *.inc 包含文件镜像到本地,供 AI 用本地文件工具读码
         </span>
         {err && <span className="flex shrink-0 items-center gap-1 text-[11px] text-red-600 dark:text-red-400"><AlertCircle className="h-3.5 w-3.5" />{err}</span>}
       </header>

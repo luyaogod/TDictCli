@@ -18,12 +18,7 @@ var (
 	useJSON    bool
 	useCSV     bool
 	verbose    bool
-	// skillFS holds the embedded Claude Code skill files (.claude/skills),
-	// provided by main via Execute. Used by `tdict install`.
-	skillFS fs.FS
-	// webFS holds the embedded frontend build output (web/dist), provided by
-	// main via Execute. Reserved for the future frontend serve command; the
-	// current placeholder web page is not served by any command yet.
+	// webFS holds the embedded frontend build output (web/dist), provided by main via Execute.
 	webFS fs.FS
 )
 
@@ -162,11 +157,10 @@ func resolveConfigPath(flagPath string) (string, error) {
 	)
 }
 
-// Execute runs the root command. skills carries the embedded Claude Code
-// skill files (used by `tdict install`); it may be nil when unavailable.
-// web carries the embedded frontend build output (web/dist); may be nil/empty.
-func Execute(skills fs.FS, web fs.FS) {
-	skillFS = skills
+// Execute runs the root command. web carries the embedded frontend build output
+// (web/dist); may be nil/empty. AI 技能文件不再内嵌:以 skills/ 目录随发行包分发,
+// 由 `tdict install skills` 复制到当前目录。
+func Execute(web fs.FS) {
 	webFS = web
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)

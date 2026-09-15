@@ -2,19 +2,20 @@ package host
 
 // 本地源码镜像引擎:把某环境(T100 服务器)的源码拉到本地镜像目录。
 //
-// 白名单原则(与调试读码一致):只收各模块三类目录树
+// 白名单原则(与调试读码一致):只收
 //   find erp com -type f \( -path '*/4gl/*' -o -path '*/4fd/*' \
-//        -o -path '*/42s/zh_CN/*' -o -path '*/42s/*/zh_CN/*' \)
+//        -o -path '*/42s/zh_CN/*' -o -path '*/42s/*/zh_CN/*' -o -iname '*.inc' \)
 //   - 4gl(源码)、4fd(前端字段描述)、42s(编译字符串;只取简体中文目录 zh_CN,
-//     即文件所在目录的最后一个目录必须是 zh_CN)。
+//     即文件所在目录的最后一个目录必须是 zh_CN)、*.inc(4GL include,任意位置)。
 // per(界面源)/42m/42r/42f/其它语言/设计器辅助等一概不拉 —— AI 只读源代码、
-// 前端字段描述与中文字符串,本地目录与服务器同构(erp/、com/)。
+// 前端字段描述、包含文件与中文字符串,本地目录与服务器同构(erp/、com/)。
 // 备份/临时文件(x.4fd.bak、x.bck、x.bck1、*~ 等)不拉,并会清理本地残留。
 //
 // 传输:服务器侧 tar 打包(绝对路径,exec 通道不经登录 profile) → SFTP 流式
 // 下载 → 本地标准库解压(gzip+tar),全程不进内存。
 // 增量:服务器保留 marker 文件(.tdict-mirror-<env>.mark),pull 默认只打包
 // find -newer 的变更文件;--full 全量打包并在本地整目录替换(含删除残留)。
+// 白名单升级(新增文件类型)时,本地基线标记版本不一致 → 自动转全量补齐。
 
 import (
 	"archive/tar"
@@ -25,6 +26,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -66,7 +68,7 @@ type MirrorProgress struct {
 // ProgressFunc 进度回调(可能被多次调用,实现需自行加锁)。
 type ProgressFunc func(MirrorProgress)
 
-// MirrorPull 拉取/更新指定环境(NamedSsh)的源码镜像(4gl/4fd/42s-zh_CN)到 mirrorDir/<环境名>/。
+// MirrorPull 拉取/更新指定环境(NamedSsh)的源码镜像(4gl/4fd/42s-zh_CN/*.inc)到 mirrorDir/<环境名>/。
 // full=true 全量重建;否则增量(服务器 marker 记录基线)。
 // 增量只在本地已有完整基线(envDir 内存在 .tdict-mirror.ok 标记)时允许;
 // 本地首次/目录被清/旧版无标记 → 自动转全量,防止"服务器 marker 存在而本地
@@ -106,14 +108,17 @@ func MirrorPullProgress(e *NamedSsh, mirrorDir string, full bool, onProgress Pro
 	tag := mirrorTag(e.Name)
 	base := top + "/.tdict-mirror-" + tag
 
-	// 本地无完整基线(首次拉取/目录被清/旧版本遗留)时,增量没有可叠加的对象,
-	// 自动按全量拉取,避免只拿到服务器 marker 之后的变更文件导致镜像残缺
+	// 本地无完整基线(首次拉取/目录被清/旧版本遗留),或白名单升级过(增量补不齐
+	// 新增类型的历史文件)时,自动按全量拉取,避免镜像残缺
 	envDir := filepath.Join(mirrorDir, e.Name)
 	needFull := full
 	if !needFull {
-		if _, err := os.Stat(filepath.Join(envDir, localMarkName)); err != nil {
+		if lv := localMarkVersion(envDir); !MirrorReady(mirrorDir, e.Name) {
 			needFull = true
 			logfMirror("本地镜像缺少完整基线标记(%s),本次自动按全量拉取以保证完整", filepath.Join(envDir, localMarkName))
+		} else if lv != mirrorWhitelistVersion {
+			needFull = true
+			logfMirror("镜像白名单已升级(v%d -> v%d,新增文件类型),本次自动按全量拉取以补齐", lv, mirrorWhitelistVersion)
 		}
 	}
 	st.Full = needFull
@@ -126,7 +131,7 @@ func MirrorPullProgress(e *NamedSsh, mirrorDir string, full bool, onProgress Pro
 	}
 	if n == 0 {
 		st.Elapsed = time.Since(start).Round(100 * time.Millisecond).String()
-		st.Note = "无变更(服务器 4gl/4fd/42s 自上次 pull 后未修改;--full 可强制全量重建)"
+		st.Note = "无变更(服务器 4gl/4fd/42s/.inc 自上次 pull 后未修改;--full 可强制全量重建)"
 		// 服务器无变更但本地基线标记缺失时,依然补一个基线标记,
 		// 否则下次 pull 仍会误判"无基线"而反复尝试全量
 		if !needFull {
@@ -245,13 +250,30 @@ func mirrorPackProgress(conn *SSHConn, base, top string, full bool, report Progr
 	return mirrorPack(conn, base, top, full)
 }
 
-// writeLocalMark 在镜像环境目录写入完整基线标记(带时间)。
+// writeLocalMark 在镜像环境目录写入完整基线标记(白名单版本 + 时间)。
 func writeLocalMark(envDir string) error {
 	if err := os.MkdirAll(envDir, 0o755); err != nil {
 		return err
 	}
 	return os.WriteFile(filepath.Join(envDir, localMarkName),
-		[]byte(time.Now().UTC().Format(time.RFC3339)+"\n"), 0o644)
+		[]byte(fmt.Sprintf("v%d %s\n", mirrorWhitelistVersion, time.Now().UTC().Format(time.RFC3339))), 0o644)
+}
+
+// localMarkVersion 读本地基线标记里的白名单版本;无标记或旧格式(纯时间戳)返回 0。
+func localMarkVersion(envDir string) int {
+	b, err := os.ReadFile(filepath.Join(envDir, localMarkName))
+	if err != nil {
+		return 0
+	}
+	fields := strings.Fields(strings.TrimSpace(string(b)))
+	if len(fields) == 0 || !strings.HasPrefix(fields[0], "v") {
+		return 0
+	}
+	n, err := strconv.Atoi(strings.TrimPrefix(fields[0], "v"))
+	if err != nil {
+		return 0
+	}
+	return n
 }
 
 // MirrorEnvDir 返回某环境的本地镜像目录(mirrorDir/<环境名>)。
@@ -280,11 +302,20 @@ func logfMirror(format string, args ...any) {
 
 // mirrorWhitelistFindExpr 服务器侧 find 的白名单:各模块 4gl(源码)、4fd(前端字段描述)、
 // 42s 编译字符串(只取 zh_CN 语言目录 —— 文件所在目录的最后一个目录必须是 zh_CN;
-// 浅层 <模块>/42s/zh_CN/* 与更深层 <模块>/42s/<...>/zh_CN/* 都覆盖)。
+// 浅层 <模块>/42s/zh_CN/* 与更深层 <模块>/42s/<...>/zh_CN/* 都覆盖)、
+// 以及 *.inc 包含文件(4GL include,不限定目录,erp/com 下任意位置都收)。
 func mirrorWhitelistFindExpr() string {
 	return `\( -path '*/4gl/*' -o -path '*/4fd/*' ` +
-		`-o -path '*/42s/zh_CN/*' -o -path '*/42s/*/zh_CN/*' \)`
+		`-o -path '*/42s/zh_CN/*' -o -path '*/42s/*/zh_CN/*' ` +
+		`-o -iname '*.inc' \)`
 }
+
+// mirrorWhitelistVersion 白名单版本:新增文件类型时 +1。
+// 本地基线标记(.tdict-mirror.ok)里记录该版本;版本不一致说明白名单升级过,
+// 增量无法补齐新增类型的历史文件,于是下次拉取自动转全量(见 MirrorPullProgress)。
+//   v1: 4gl/4fd
+//   v2: +42s/zh_CN、*.inc
+const mirrorWhitelistVersion = 2
 
 // mirrorBackupSuffixes 备份/临时文件名特征(不含点全名包含即算备份)。
 // 服务器侧打包排除与本地残留清理共用同一份列表,避免两边规则漂移:
@@ -359,7 +390,7 @@ func shdq(s string) string {
 	return `"` + s + `"`
 }
 
-// mirrorPack 在服务器 TOP 下打包白名单文件(4gl/4fd/42s-zh_CN)。返回 (文件数, 归档字节);
+// mirrorPack 在服务器 TOP 下打包白名单文件(4gl/4fd/42s-zh_CN/*.inc)。返回 (文件数, 归档字节);
 // 无变更时返回 (0, 0) 且不产生归档。marker 保留在 TOP 下供下次增量。
 func mirrorPack(conn *SSHConn, base, top string, full bool) (int, int64, error) {
 	m := shdq(base + ".mark")
@@ -367,7 +398,7 @@ func mirrorPack(conn *SSHConn, base, top string, full bool) (int, int64, error) 
 	l := shdq(base + ".list")
 	t := shdq(top)
 	// 注意:exec 通道不经过登录 profile,但这里只依赖绝对路径与标准工具
-	// 白名单树(4gl/4fd/42s-zh_CN)+ 排除备份/临时文件(如 x.4gl.bak、x.bck、x.bck1)
+	// 白名单树(4gl/4fd/42s-zh_CN/*.inc)+ 排除备份/临时文件(如 x.4gl.bak、x.bck、x.bck1)
 	findExpr := mirrorWhitelistFindExpr() + " " + mirrorBackupFindExpr()
 	fullFlag := "0"
 	if full {
@@ -513,7 +544,7 @@ func extractTarGz(r io.Reader, dest string) (int, error) {
 			_ = os.Chtimes(target, hdr.ModTime, hdr.ModTime)
 			files++
 		default:
-			// 符号链接/设备等不落盘(4gl/4fd/42s 白名单内不会出现)
+			// 符号链接/设备等不落盘(4gl/4fd/42s/.inc 白名单内不会出现)
 		}
 	}
 	return files, nil

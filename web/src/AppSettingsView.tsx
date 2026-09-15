@@ -1,24 +1,28 @@
-// 设置页:把 tdict 可执行文件所在目录加入「用户 PATH」,之后任意位置都能直接运行 tdict。
-// 用户级修改(注册表 HKCU\Environment\Path),无需管理员;可一键移除。另附运行信息。
-import { useCallback, useEffect, useState } from 'react'
-import { Terminal, CheckCircle2, AlertCircle, Plus, Trash2 } from 'lucide-react'
-import { api, type InstallStatus } from './api'
-import { Button, cn, SectionTitle } from './ui'
+// 设置页:命令行安装(把 tdict 加入用户 PATH)、BDL 语言文档目录,以及运行信息。
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Terminal, CheckCircle2, AlertCircle, Plus, Trash2, BookOpen, Save } from 'lucide-react'
+import { api, type BdldocStatus, type InstallStatus } from './api'
+import { Button, cn, Field, Input, SectionTitle } from './ui'
 
 export function AppSettingsView() {
   const [st, setSt] = useState<InstallStatus | null>(null)
   const [configPath, setConfigPath] = useState('')
   const [listen, setListen] = useState('')
+  const [bd, setBd] = useState<BdldocStatus | null>(null)
+  const [bdInput, setBdInput] = useState('')
+  const bdInit = useRef(false)
   const [err, setErr] = useState('')
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState('')
 
   const refresh = useCallback(async () => {
     try {
-      const [s, cfg, status] = await Promise.all([api.installStatus(), api.config(), api.status()])
+      const [s, cfg, status, b] = await Promise.all([api.installStatus(), api.config(), api.status(), api.bdldoc()])
       setSt(s)
       setConfigPath(cfg.configPath)
       setListen(status.listen)
+      setBd(b)
+      if (!bdInit.current) { setBdInput(b.dir); bdInit.current = true }
       setErr('')
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e))
@@ -51,12 +55,25 @@ export function AppSettingsView() {
   const supported = !!st?.supported
   const inPath = !!st?.inUserPath
 
+  const saveBdldoc = async () => {
+    if (!bdInput.trim()) { setErr('请填写 BDL 文档目录'); return }
+    setBusy('bdldoc'); setErr(''); setNotice('')
+    try {
+      const r = await api.saveBdldocDir(bdInput.trim())
+      setBd(r)
+      setBdInput(r.dir)
+      setNotice('BDL 文档目录已保存到 config.json(等价 tdict bdldoc dir)。')
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e))
+    } finally { setBusy('') }
+  }
+
   return (
     <div className="flex h-full min-h-0 flex-col bg-zinc-50 text-zinc-800 dark:bg-zinc-950 dark:text-zinc-100">
       <header className="flex shrink-0 items-center gap-3 border-b border-zinc-200 bg-white px-4 py-2 dark:border-zinc-800 dark:bg-zinc-900">
         <h1 className="shrink-0 text-sm font-semibold">设置</h1>
         <span className="min-w-0 flex-1 truncate text-[11px] text-zinc-500 dark:text-zinc-400">
-          命令行安装与运行信息
+          命令行安装、BDL 语言文档目录与运行信息
         </span>
         {err && <span className="flex shrink-0 items-center gap-1 text-[11px] text-red-600 dark:text-red-400"><AlertCircle className="h-3.5 w-3.5" />{err}</span>}
       </header>
@@ -101,6 +118,45 @@ export function AppSettingsView() {
                     <summary className="cursor-pointer text-[11px] text-zinc-500 dark:text-zinc-400">查看当前用户 PATH</summary>
                     <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap break-all bg-zinc-100 px-3 py-2 text-[11px] text-zinc-700 dark:bg-zinc-900 dark:text-zinc-200">{st?.userPath || '(空)'}</pre>
                   </details>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* BDL 语言文档目录 */}
+          <section>
+            <SectionTitle>BDL 语言文档目录</SectionTitle>
+            <div className="mt-2 border border-zinc-200 p-3 dark:border-zinc-800">
+              <div className="flex items-start gap-2">
+                <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-zinc-500" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-zinc-600 dark:text-zinc-300">
+                    Genero BDL(4GL)语言参考文档(markdown)的存放目录,写入 <code>config.json</code> 顶层 <code>bdldoc.dir</code>,
+                    供 AI/工具查语法与内置函数时定位(等价 <code>tdict bdldoc dir &lt;目录&gt;</code>)。
+                  </p>
+                  <div className="mt-2 flex items-end gap-2">
+                    <Field label="文档目录(绝对路径)" className="min-w-0 flex-1">
+                      <Input value={bdInput} placeholder="如 D:\T100\4gl文档\BDL-Markdown"
+                        onChange={(e) => setBdInput(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void saveBdldoc() } }} />
+                    </Field>
+                    <Button variant="primary" disabled={busy === 'bdldoc'} onClick={() => void saveBdldoc()}>
+                      <Save className="h-3.5 w-3.5" />{busy === 'bdldoc' ? '保存中…' : '保存'}
+                    </Button>
+                  </div>
+                  <div className="mt-2 flex items-center gap-2 text-[11px]">
+                    {bd?.dir
+                      ? <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400"><CheckCircle2 className="h-3.5 w-3.5" />已设置</span>
+                      : <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400"><AlertCircle className="h-3.5 w-3.5" />未设置</span>}
+                    {bd?.dir && (
+                      <span className={cn(bd.exists ? 'text-zinc-500 dark:text-zinc-400' : 'text-red-600 dark:text-red-400')}>
+                        {bd.exists ? '目录存在' : '目录不存在(仍可保存,请确认路径)'}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-[11px] text-zinc-500 dark:text-zinc-400">
+                    仅改设置,不移动文档文件;仓库自带文档在仓库的 <code>docs/bdl</code> 下。
+                  </p>
                 </div>
               </div>
             </div>

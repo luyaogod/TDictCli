@@ -157,6 +157,8 @@ func (s *Server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/install", s.hInstallGet)
 	mux.HandleFunc("POST /api/install", s.hInstallAdd)
 	mux.HandleFunc("DELETE /api/install", s.hInstallRemove)
+	mux.HandleFunc("GET /api/bdldoc", s.hBdldocGet)
+	mux.HandleFunc("PUT /api/bdldoc", s.hBdldocPut)
 	mux.HandleFunc("/", s.hStatic)
 }
 

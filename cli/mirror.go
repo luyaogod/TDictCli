@@ -1,12 +1,12 @@
 package cli
 
-// tdict mirror:管理 T100 本地源码镜像(服务器 4gl/4fd/42s-zh_CN → 本地目录,供 AI 读码)。
+// tdict mirror:管理 T100 本地源码镜像(服务器 4gl/4fd/42s-zh_CN/*.inc → 本地目录,供 AI 读码)。
 //   mirror dir [<目录>]   查看/设置镜像根目录(config.json 顶层 "mirror": {"dir": ...});
 //   mirror pull [<环境名>] [--full]   下载/更新该环境镜像(默认增量);
 //   mirror path [<环境名>]  打印该环境镜像目录的绝对路径(AI 直接前往)。
 //
 // 镜像根目录必须显式设置(不设默认),避免隐式落盘位置。镜像目录结构:
-// <根>/<环境名>/erp/... com/...(与服务器同构;只含各模块 4gl/4fd 与 42s/zh_CN)。
+// <根>/<环境名>/erp/... com/...(与服务器同构;只含各模块 4gl/4fd、42s/zh_CN 与 *.inc)。
 
 import (
 	"encoding/json"
@@ -28,10 +28,11 @@ var (
 
 var mirrorCmd = &cobra.Command{
 	Use:   "mirror",
-	Short: "管理 T100 本地源码镜像(服务器 4gl/4fd/42s → 本地目录)",
+	Short: "管理 T100 本地源码镜像(服务器 4gl/4fd/42s/*.inc → 本地目录)",
 	Long: `把某环境(T100 服务器)的源代码镜像到本地目录,供 AI 用本地文件工具读码:
-只镜像各模块 4gl(源码)、4fd(前端字段描述)、42s(编译字符串,仅 zh_CN 语言目录)
-三类目录树,per/编译产物/其它语言等一律不拉;备份文件(*.bak/*.bck/*~)也排除。
+只镜像各模块 4gl(源码)、4fd(前端字段描述)、42s(编译字符串,仅 zh_CN 语言目录),
+以及 *.inc(4GL include,任意位置);
+per/编译产物/其它语言等一律不拉;备份文件(*.bak/*.bck/*~)也排除。
 目录结构与服务器同构:<镜像根>/<环境名>/erp/... com/...。
 
 子命令:
@@ -141,10 +142,11 @@ var mirrorDirCmd = &cobra.Command{
 
 var mirrorPullCmd = &cobra.Command{
 	Use:   "pull [<环境名>]",
-	Short: "下载/更新该环境源码镜像(4gl/4fd/42s-zh_CN;默认增量;--full 全量重建)",
-	Long: `SSH 登录环境,按白名单(各模块 4gl/4fd,以及 42s 下 zh_CN 语言目录)打包源码
+	Short: "下载/更新该环境源码镜像(4gl/4fd/42s-zh_CN/*.inc;默认增量;--full 全量重建)",
+	Long: `SSH 登录环境,按白名单(各模块 4gl/4fd、42s 下 zh_CN 语言目录、*.inc)打包源码
 下载到本地镜像目录 <镜像根>/<环境名>/。默认增量:服务器 marker 记录上次基线,
 只拉变更文件;--full 全量重建:本地整目录替换(删除服务器已不存在的残留文件)。
+白名单升级(新增文件类型)后,下次拉取会自动转全量以补齐新增类型的历史文件。
 
 打包根(TOP)按登录区域动态探测获取(T100 路径不允许静态配置);
 探测失败的环境会直接报错(请检查该环境 SSH 登录与 zone 设置)。`,
@@ -179,8 +181,11 @@ var mirrorPullCmd = &cobra.Command{
 		} else {
 			fmt.Printf("镜像完成: %d 个文件, %s, 用时 %s\n", st.Files, fmtBytes(st.Bytes), st.Elapsed)
 			if st.Pruned > 0 {
-				fmt.Printf("已清理本地残留备份文件: %d 个(如 *.bak/*.bck;镜像只保留 4gl/4fd 与 42s-zh_CN)\n", st.Pruned)
+				fmt.Printf("已清理本地残留备份文件: %d 个(如 *.bak/*.bck;镜像只保留 4gl/4fd、42s-zh_CN 与 *.inc)\n", st.Pruned)
 			}
+		}
+		if st.Full && !mirrorFull {
+			fmt.Println("(本地无完整基线或镜像白名单已升级,本次自动按全量拉取)")
 		}
 		fmt.Printf("镜像目录: %s\n", filepath.Join(dir, e.Name))
 		if st.TopDir != "" {

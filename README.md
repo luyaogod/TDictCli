@@ -66,14 +66,14 @@ GOPROXY=https://goproxy.cn,direct go build -o tdict.exe .
 
 ### 安装 Skill（推荐）
 
-安装 Claude Code Skill 后，AI Agent 可自动理解并使用本工具。技能内容内嵌在 `tdict.exe` 中，安装的就是当前版本：
+AI 技能文件（`tdict`、`tdict-debug`、`erp-read`）以普通目录 **`skills/`** 与 `tdict.exe` 放在一起（便携版/仓库里都是），**不内嵌进二进制**，可直接编辑：
 
 ```bash
-# 安装到当前项目
-tdict install
+# 把 exe 同目录的 skills/ 复制到当前目录(生成 ./skills/)
+tdict install skills
 
-# 安装到指定项目
-tdict install /path/to/project
+# 之后按所用 AI 工具自己摆放,例如给 Claude Code 用:
+#   mv skills .claude/skills
 ```
 
 ## 快速上手
@@ -371,16 +371,16 @@ tdict db sync --conn 正式区 -d D:/path/to/erp_data.db
 - 缺省数据源 = 默认环境（activeEnv，`tdict env` 查看/切换）的库；环境与库配置见「数据库连接与查询数据源」。
 - 不想维护本地数据时，查询命令加 `--conn <环境名>` 直接查远程（与本地同一批数据、同一输出）。
 
-### `tdict install [目录]`
+### `tdict install skills`
 
-将 TDict 的 Claude Code 技能文件（`tdict`、`tdict-debug`、`erp-read`、`erp-modify`）安装到目标项目的 `.claude/skills/` 目录，使 Claude Code Agent 能够自动理解和使用本工具，并能安全修改框架生成的 ERP 4GL 源码。技能内容由二进制内嵌（`go:embed`），安装的就是当前版本。
+把**与 `tdict.exe` 同目录的 `skills/`** 复制到**当前工作目录**（命令在哪运行就装到哪）。`skills/` 是普通的 markdown 文件、可直接编辑（不再内嵌二进制）；装完由你按所用 AI 工具改名/移动，如 Claude Code 的 `.claude/skills/`。
 
 ```bash
-# 安装到当前工作目录
-tdict install
+# 把 exe 同目录的 skills/ 复制到当前目录(生成 ./skills/)
+tdict install skills
 
-# 安装到指定项目
-tdict install D:/path/to/project
+# 之后自己摆放,例如:
+#   mv skills .claude/skills
 ```
 
 ### `tdict env [<环境名>]`
@@ -435,17 +435,18 @@ tdict serve --listen 127.0.0.1:9123
 | 开始同步 | 后台执行 `dbsync.Run`：远程逐表拉取 → 写临时库 → 建主键索引 → 原子替换本地库。需二次确认；同一时间只允许一个同步任务 |
 | 同步进度 | 数据表 `第 x/y 张`、当前表与行数、累计行数、阶段（连接 → 拉取 → 建索引 → 替换 → 完成）、用时、原库备份路径与索引警告 |
 
-- **设置**（命令行安装 / 运行信息）：
+- **设置**（命令行安装 / BDL 文档目录 / 运行信息）：
 
 | 操作 | 说明 |
 |---|---|
 | 命令行安装 | 显示当前 `tdict` 可执行文件与所在目录，一键**加入用户 PATH**（Windows 写注册表 `HKCU\Environment\Path`，用户级、无需管理员），之后任意位置可直接运行 `tdict`；也可一键移除。已加入/未加入有明确状态 |
 | 生效时机 | 新开的终端立即可用；**已打开的终端需重开**（写入后广播 `WM_SETTINGCHANGE`） |
 | 非 Windows | 不自动改 PATH，页面给出等价的 `export PATH="$PATH:<目录>"` 手动命令 |
+| BDL 语言文档目录 | 查看/设置 `config.json` 顶层 `bdldoc.dir`（等价 `tdict bdldoc dir <目录>`），并提示该目录在本机是否存在；接口 `GET/PUT /api/bdldoc` |
 | 运行信息 | 配置文件路径、当前服务地址 |
 
 - 配置文件取 `--config` / `TDICT_CONFIG`（缺省 `config.json`）；文件不存在时首次保存自动创建。
-- **便携版发布为空配置、且不含业务数据**：打包脚本用 `config.empty.json` 生成空的 `config.json`（`hosts.sshs` 为空），首次运行用本页添加自己的环境；同时也**不打包 `erp_data.db`**（含客户表字典/schema/企业码等数据），配好环境后自行用「数据同步」或 `tdict db sync` 拉取。仓库中不提交 `config.json` 与 `erp_data.db`（见 `.gitignore`）。
+- **便携版发布为空配置、且不含业务数据**：打包脚本用 `config.empty.json` 生成空的 `config.json`（`hosts.sshs` 为空），首次运行用本页添加自己的环境；同时也**不打包 `erp_data.db`**（含客户表字典/schema/企业码等数据），配好环境后自行用「数据同步」或 `tdict db sync` 拉取。技能以普通目录 `skills/` 随包提供（**不内嵌二进制**，可直接编辑）。仓库中不提交 `config.json` 与 `erp_data.db`（见 `.gitignore`）。
 - 服务器执行工具（sqlplus/ksql）路径自动探测，无需配置；SSH/DB 探测逻辑与 `tdict db discover` 同源（`host` 包）；镜像逻辑与 `tdict mirror pull` 同源，同步逻辑与 `tdict db sync` 同源（`dbsync` 包）。
 - 该服务只做配置读写、只读探测与同步拉取，不启动任何调试会话。
 
@@ -453,7 +454,9 @@ tdict serve --listen 127.0.0.1:9123
 
 > 通常不必用 CLI：`tdict serve` 的「源码镜像」视图可直接设置镜像根、执行增量/全量拉取并显示实时进度（见「可视化配置页」）。下列命令等价，便于脚本/自动化。
 
-把某环境(T100 服务器)的源代码镜像到本地目录,供 **AI 用本地文件工具读码**(ls/rg/带行号读),避免每次读取都经服务器往返、也避免给 AI 服务器端查询权限。**只镜像各模块三类目录树**:`4gl`(源码)、`4fd`(前端字段描述)、`42s`(编译字符串,**只取 `zh_CN` 语言目录**——文件所在目录的最后一个目录必须是 `zh_CN`)。per(界面源)、编译产物(42m/42r/42f)、其它语言、设计器辅助目录一律不拉;目录与服务器同构(`<镜像根>/<环境名>/erp/<模块>/{4gl,4fd,42s/zh_CN}/...`、`com/{lib,sub,qry,wss}/...`),客制模块 `c<mod>` 与标准模块并列,同路径下客制优先。
+把某环境(T100 服务器)的源代码镜像到本地目录,供 **AI 用本地文件工具读码**(ls/rg/带行号读),避免每次读取都经服务器往返、也避免给 AI 服务器端查询权限。**只镜像**:各模块 `4gl`(源码)、`4fd`(前端字段描述)、`42s`(编译字符串,**只取 `zh_CN` 语言目录**——文件所在目录的最后一个目录必须是 `zh_CN`),以及 **`*.inc`(4GL include,erp/com 下任意位置)**。per(界面源)、编译产物(42m/42r/42f)、其它语言、设计器辅助目录一律不拉;目录与服务器同构(`<镜像根>/<环境名>/erp/<模块>/{4gl,4fd,42s/zh_CN,inc}/...`、`com/{lib,sub,qry,wss}/...`),客制模块 `c<mod>` 与标准模块并列,同路径下客制优先。
+
+> **新增文件类型会自动补齐**:白名单带版本号(记录在本地基线标记 `.tdict-mirror.ok` 里)。白名单升级后,下次「增量更新」检测到版本不一致会**自动转全量**一次,把新增类型的历史文件补齐(不必手动 `--full`);进度/日志会提示本次实际为全量。
 
 > **备份/临时文件也排除**:`*.bak`、`*.bck`、`*.bck1`、`*.old`、`*.orig`、`*.tmp`、`*.swp`、`*~` 等(服务器侧 `find` 与本地清理共用同一份后缀列表)。历史上已拉取到本地的备份文件会在下次拉取时自动清理(无需 `--full`)。
 
@@ -591,7 +594,7 @@ tdict db discover --env 正式区 --type oracle [--save]   # SSH 自动发现连
 
 ```
 TDictCli/
-├── main.go              # 入口(内嵌 web/dist 与 .claude/skills)
+├── main.go              # 入口(内嵌 web/dist)
 ├── go.mod / go.sum      # Go module
 ├── config.json          # hosts(SSH 环境 + 数据库连接) + query(数据源) + mirror(镜像根) + bdldoc(BDL 文档目录)(明文,勿提交真实凭据)
 ├── cfgfile/             # config.json 统一读写入口(读取/校验/原子更新)
@@ -604,7 +607,7 @@ TDictCli/
 │   ├── env.go           # tdict env(离线查看/设置默认环境)
 │   ├── mirror.go        # tdict mirror(镜像根 dir / pull / path)
 │   ├── bdldoc.go        # tdict bdldoc(BDL 语言文档目录 dir)
-│   ├── install.go       # tdict install(安装内嵌 Claude Code 技能)
+│   ├── install.go       # tdict install skills(把 exe 同目录的 skills/ 复制到当前目录)
 │   ├── db.go / db_sync.go / dbops.go   # tdict db(sync/list/ping/discover)
 │   ├── serve.go         # tdict serve(可视化配置页:SSH 环境 + 数据库)
 ├── server/              # 配置服务实现(静态前端 + /api/config、/api/dbprobe、/api/conntest)
@@ -613,7 +616,7 @@ TDictCli/
 │   ├── ssh.go           # SSH 连接(Dial/PTY/SFTP/exec)
 │   ├── term.go          # 终端行解析/提示符判定
 │   ├── tenv.go          # 登录动态路径探测(登录 zone → TOP/ERP/COM)
-│   ├── mirror.go        # 源码镜像引擎(服务器 4gl/4fd/42s-zh_CN 打包 → SFTP → 解压)
+│   ├── mirror.go        # 源码镜像引擎(服务器 4gl/4fd/42s-zh_CN/*.inc 打包 → SFTP → 解压)
 │   └── dbprobe.go       # 服务器侧 DB 探测/账号验证
 ├── dbconfig/            # db 连接配置模型(每环境挂一个,host/port/service|库名+账号列表)
 ├── erpdb/               # ERP 连接器(只读 Query;kingbase 经 pgx / oracle 经 go-ora)
@@ -623,12 +626,10 @@ TDictCli/
 ├── output/              # 表格/JSON/CSV 输出格式化
 ├── server/              # 本地配置服务(tdict serve):静态前端 + 配置读写/连接探测 REST
 ├── web/                 # 前端(React/Vite/Tailwind;SSH 与数据库配置页,产物嵌入)
-├── .claude/
-│   └── skills/          # 内嵌 AI 技能(安装的就是当前版本)
-│       ├── tdict.md              # 数据字典查询 Skill
-│       ├── tdict-debug.md        # T100 作业调试 Skill(调试功能已迁出,供独立调试项目使用)
-│       ├── erp-read.md           # 阅读/分析 ERP 4GL 源码 Skill
-│       └── erp-modify.md         # 修改框架生成 4GL 源码(add-point)Skill
+├── skills/              # AI 技能文件(普通 markdown,不内嵌;tdict install skills 复制到当前目录)
+│   ├── tdict.md              # 数据字典查询 Skill
+│   ├── tdict-debug.md        # T100 作业调试 Skill(调试功能已迁出,供独立调试项目使用)
+│   └── erp-read.md           # 阅读/分析 ERP 4GL 源码 Skill
 ├── docs/
 │   └── bdl/             # BDL(4GL)语言参考文档(markdown,无图片;路径记于 bdldoc.dir)
 ├── erp_data.db          # SQLite 数据库(tdict db sync 刷新)

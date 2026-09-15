@@ -209,6 +209,7 @@ func (s *Server) runMirror(e *host.NamedSsh, dir string, full bool) {
 		return
 	}
 	s.mirror.Phase = "done"
+	s.mirror.Full = st.Full // 可能因缺基线或白名单升级而自动转全量,以实际为准
 	s.mirror.Bytes = st.Bytes
 	s.mirror.Total = st.Bytes
 	s.mirror.Files = st.Files
