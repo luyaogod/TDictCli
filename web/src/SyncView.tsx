@@ -2,10 +2,10 @@
 //
 // 后端 POST /api/dbsync 在服务端后台执行(dbsync.Run),前端轮询 /api/dbsync 画进度:
 // 逐表拉取(第 x/y 张表 + 当前表行数/累计行数)→ 建索引 → 原子替换本地库(原库备份 .bak)。
-import { useCallback, useEffect, useState } from 'react'
-import { RefreshCw, AlertCircle, CheckCircle2, Database } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { RefreshCw, AlertCircle, CheckCircle2, Save } from 'lucide-react'
 import { api, type DBSyncResp } from './api'
-import { Button, cn, SectionTitle } from './ui'
+import { Button, cn, Field, Input, SectionTitle } from './ui'
 
 const PHASE_LABEL: Record<string, string> = {
   open: '连接远程数据库…',
@@ -19,14 +19,20 @@ const PHASE_LABEL: Record<string, string> = {
 export function SyncView() {
   const [data, setData] = useState<DBSyncResp | null>(null)
   const [env, setEnv] = useState('')
+  const [targetInput, setTargetInput] = useState('')
+  const targetInit = useRef(false)
   const [err, setErr] = useState('')
-  const [busy, setBusy] = useState(false)
+  const [busy, setBusy] = useState('')
 
   const refresh = useCallback(async () => {
     try {
       const d = await api.dbsync()
       setData(d)
       setErr('')
+      if (!targetInit.current) {
+        setTargetInput(d.target)
+        targetInit.current = true
+      }
       setEnv((prev) => {
         if (prev && d.envs.some((e) => e.name === prev)) return prev
         if (d.activeEnv && d.envs.some((e) => e.name === d.activeEnv)) return d.activeEnv
@@ -50,13 +56,25 @@ export function SyncView() {
   const run = async () => {
     if (!env) { setErr('请先选择环境'); return }
     if (!window.confirm(`从环境「${env}」拉取字典数据到:\n${data?.target || ''}\n\n将覆盖本地 SQLite(原库自动备份为 .bak),约 85 万行,需数分钟。继续?`)) return
-    setBusy(true); setErr('')
+    setBusy('run'); setErr('')
     try {
       await api.dbsyncRun(env)
       await refresh()
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e))
-    } finally { setBusy(false) }
+    } finally { setBusy('') }
+  }
+
+  // 保存自定义目标(空串 = 清除,回到默认 exe 同目录)
+  const saveTarget = async (value: string) => {
+    setBusy('target'); setErr('')
+    try {
+      const d = await api.saveDBSyncTarget(value)
+      setData(d)
+      setTargetInput(d.target)
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e))
+    } finally { setBusy('') }
   }
 
   const job = data?.job
@@ -80,12 +98,30 @@ export function SyncView() {
           {/* 目标库 */}
           <section>
             <SectionTitle>目标数据库</SectionTitle>
-            <div className="mt-2 flex items-center gap-2">
-              <Database className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
-              <span className="min-w-0 truncate text-xs text-zinc-600 dark:text-zinc-300" title={data?.target}>{data?.target || '(解析中…)'}</span>
+            <div className="mt-2 flex items-end gap-2">
+              <Field label="同步写入的本地 SQLite(默认 exe 同目录;文件/目录不存在时同步会自动创建)" className="min-w-0 flex-1">
+                <Input value={targetInput} placeholder={data?.defaultTarget || 'erp_data.db'}
+                  onChange={(e) => setTargetInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void saveTarget(targetInput.trim()) } }} />
+              </Field>
+              <Button variant="primary" disabled={busy === 'target'} onClick={() => void saveTarget(targetInput.trim())}>
+                <Save className="h-3.5 w-3.5" />{busy === 'target' ? '保存中…' : '保存'}
+              </Button>
+              <Button variant="outline" disabled={busy === 'target' || !data?.configured} onClick={() => void saveTarget('')}>
+                恢复默认
+              </Button>
+            </div>
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px]">
+              <span className={cn('flex items-center gap-1', data?.exists ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400')}>
+                {data?.exists ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
+                {data?.exists ? '目标文件已存在' : '目标文件尚未创建(同步时自动创建)'}
+              </span>
+              <span className="min-w-0 truncate text-zinc-500 dark:text-zinc-400" title={data?.target}>
+                生效:{data?.target || '—'}{data?.configured ? '(自定义)' : '(默认 exe 同目录)'}
+              </span>
             </div>
             <p className="mt-1 text-[11px] text-zinc-500 dark:text-zinc-400">
-              同步写入该文件(查询命令读的就是它);原库自动备份为 <code>.bak</code>,失败不影响原库。
+              查询命令读的也是它;原库自动备份为 <code>.bak</code>,失败不影响原库。清空后保存或用「恢复默认」即回到 exe 同目录。
             </p>
           </section>
 
@@ -117,7 +153,7 @@ export function SyncView() {
               </>
             )}
             <div className="mt-2">
-              <Button variant="primary" disabled={running || busy || !env || !data?.envs.length} onClick={() => void run()}>
+              <Button variant="primary" disabled={running || busy !== '' || !env || !data?.envs.length} onClick={() => void run()}>
                 <RefreshCw className={cn('h-3.5 w-3.5', running && 'animate-spin')} />{running ? '同步中…' : '开始同步'}
               </Button>
             </div>

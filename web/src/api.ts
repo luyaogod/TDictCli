@@ -94,6 +94,9 @@ export interface DBSyncJob {
 }
 export interface DBSyncResp {
   target: string
+  configured: string
+  defaultTarget: string
+  exists: boolean
   activeEnv: string
   envs: DBSyncEnv[]
   job: DBSyncJob
@@ -150,6 +153,9 @@ export const api = {
   dbsync: () => req<DBSyncResp>('/api/dbsync'),
   dbsyncRun: (env: string) =>
     req<{ ok: boolean }>('/api/dbsync', { method: 'POST', body: JSON.stringify({ env }) }),
+  // 设置同步目标(config.json 顶层 sync.target;空串=清除,回到默认 exe 同目录)
+  saveDBSyncTarget: (target: string) =>
+    req<DBSyncResp>('/api/dbsync', { method: 'PUT', body: JSON.stringify({ target }) }),
   status: () => req<{ ok: boolean; server: string; listen: string }>('/api/status'),
   // 命令行安装:查看/加入/移出用户 PATH(用户级,无需管理员)
   installStatus: () => req<InstallStatus>('/api/install'),

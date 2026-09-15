@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -85,6 +86,12 @@ func Run(ctx context.Context, conn dbconfig.Connection, target string, tables []
 	defer ext.Close()
 
 	// 写入临时库,全部成功后原子替换目标文件,避免中途失败留下半成品
+	// 目标目录不存在就创建(便携版/自定义路径首跑)
+	if dir := filepath.Dir(target); dir != "" && dir != "." {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return nil, fmt.Errorf("创建目标目录失败 (%s): %w", dir, err)
+		}
+	}
 	tmpPath := target + ".sync.tmp"
 	os.Remove(tmpPath)
 	sq, err := db.Open(tmpPath)

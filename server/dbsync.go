@@ -4,9 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
+	"tdict/cfgfile"
 	"tdict/dbsync"
 	"tdict/host"
 )
@@ -40,15 +43,25 @@ type dbSyncEnv struct {
 }
 
 type dbSyncResp struct {
-	Target    string      `json:"target"`
-	ActiveEnv string      `json:"activeEnv"`
-	Envs      []dbSyncEnv `json:"envs"`
-	Job       dbSyncJob   `json:"job"`
+	Target        string      `json:"target"`        // 当前生效目标(写入位置)
+	Configured    string      `json:"configured"`    // config.json 顶层 sync.target(空=用默认)
+	DefaultTarget string      `json:"defaultTarget"` // 默认目标(exe 同目录;便携版自带)
+	Exists        bool        `json:"exists"`        // 目标文件当前是否已存在
+	ActiveEnv     string      `json:"activeEnv"`
+	Envs          []dbSyncEnv `json:"envs"`
+	Job           dbSyncJob   `json:"job"`
 }
 
-// hDBSyncGet 返回同步目标、可用环境与当前/最近一次任务(前端轮询用)。
-func (s *Server) hDBSyncGet(w http.ResponseWriter, r *http.Request) {
-	resp := dbSyncResp{Target: s.syncTarget(), Envs: []dbSyncEnv{}}
+// dbSyncView 汇总同步页面需要的状态(目标/环境/任务)。
+func (s *Server) dbSyncView() dbSyncResp {
+	target := s.syncTarget()
+	resp := dbSyncResp{Target: target, DefaultTarget: s.defaultDBTarget(), Envs: []dbSyncEnv{}}
+	if root, err := s.readRoot(); err == nil {
+		resp.Configured = syncTargetFromRoot(root)
+	}
+	if _, err := os.Stat(target); err == nil {
+		resp.Exists = true
+	}
 	if hosts, err := host.LoadHosts(s.cfgPath); err == nil {
 		resp.ActiveEnv = hosts.ActiveEnv
 		for i := range hosts.SSHs {
@@ -60,7 +73,43 @@ func (s *Server) hDBSyncGet(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	resp.Job = s.syncSnapshot()
-	writeJSON(w, 200, resp)
+	return resp
+}
+
+// hDBSyncGet 返回同步目标、可用环境与当前/最近一次任务(前端轮询用)。
+func (s *Server) hDBSyncGet(w http.ResponseWriter, r *http.Request) {
+	writeJSON(w, 200, s.dbSyncView())
+}
+
+// hDBSyncPut 设置同步目标(config.json 顶层 sync.target);target 为空 = 清除,回到默认(exe 同目录)。
+func (s *Server) hDBSyncPut(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Target string `json:"target"`
+	}
+	if !readBody(w, r, &req) {
+		return
+	}
+	root, err := s.readRoot()
+	if err != nil {
+		fail(w, 500, err)
+		return
+	}
+	t := strings.TrimSpace(req.Target)
+	if t == "" {
+		delete(root, "sync")
+	} else {
+		abs, err := filepath.Abs(t)
+		if err != nil {
+			fail(w, 400, fmt.Errorf("解析路径失败: %w", err))
+			return
+		}
+		root["sync"] = map[string]any{"target": abs}
+	}
+	if err := cfgfile.Save(s.cfgPath, root); err != nil {
+		fail(w, 500, err)
+		return
+	}
+	writeJSON(w, 200, s.dbSyncView())
 }
 
 // hDBSyncPost 启动一次同步(单实例:已有任务在跑返回 409);返回后前端轮询 /api/dbsync。

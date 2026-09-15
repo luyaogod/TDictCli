@@ -48,11 +48,11 @@ type Server struct {
 	syncStart time.Time
 }
 
-// SetDBTarget 注入数据同步的目标 SQLite 路径(cli/serve 按 -d/TDICT_DB 解析后传入)。
+// SetDBTarget 注入数据同步的默认目标(便携版:exe 同目录的 erp_data.db,由 cli/serve 传入)。
 func (s *Server) SetDBTarget(p string) { s.dbPath = p }
 
-// syncTarget 返回数据同步的目标 SQLite 路径(未注入时用当前目录下 erp_data.db)。
-func (s *Server) syncTarget() string {
+// defaultDBTarget 返回默认同步目标(未注入时用当前目录下 erp_data.db)。
+func (s *Server) defaultDBTarget() string {
 	if s.dbPath != "" {
 		return s.dbPath
 	}
@@ -61,6 +61,34 @@ func (s *Server) syncTarget() string {
 		return "erp_data.db"
 	}
 	return abs
+}
+
+// syncTarget 返回当前同步目标:优先 config.json 顶层 sync.target(页面可改),
+// 否则用默认目标(exe 同目录)。文件不存在时由同步过程创建(含父目录)。
+func (s *Server) syncTarget() string {
+	if root, err := s.readRoot(); err == nil {
+		if d := syncTargetFromRoot(root); d != "" {
+			return d
+		}
+	}
+	return s.defaultDBTarget()
+}
+
+// syncTargetFromRoot 读 config.json 顶层 sync.target(相对路径转绝对)。
+func syncTargetFromRoot(root map[string]any) string {
+	sec, _ := root["sync"].(map[string]any)
+	if sec == nil {
+		return ""
+	}
+	d, _ := sec["target"].(string)
+	d = strings.TrimSpace(d)
+	if d == "" {
+		return ""
+	}
+	if abs, err := filepath.Abs(d); err == nil {
+		return abs
+	}
+	return d
 }
 
 // New 创建服务实例;web 由 main 经 //go:embed 注入,可为 nil(此时返回引导页)。
@@ -154,6 +182,7 @@ func (s *Server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/mirror/pull", s.hMirrorPull)
 	mux.HandleFunc("GET /api/dbsync", s.hDBSyncGet)
 	mux.HandleFunc("POST /api/dbsync", s.hDBSyncPost)
+	mux.HandleFunc("PUT /api/dbsync", s.hDBSyncPut)
 	mux.HandleFunc("GET /api/install", s.hInstallGet)
 	mux.HandleFunc("POST /api/install", s.hInstallAdd)
 	mux.HandleFunc("DELETE /api/install", s.hInstallRemove)

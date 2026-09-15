@@ -68,18 +68,20 @@ var dbSyncCmd = &cobra.Command{
 	},
 }
 
-// resolveSyncTarget 解析数据同步(写库)的目标路径,与查询命令的查找规则保持一致:
-// 优先返回已存在的库(TDICT_DB > -d 绝对 > exe 同目录 > 当前目录),使写入的正是查询要读的那个;
-// 都不存在时按 TDICT_DB > exe 同目录 > 当前目录 决定新建位置(便携版首跑:exe 同目录)。
+// resolveSyncTarget 解析数据同步(写库)的目标路径。便携优先:
+//  1. 已存在的库(TDICT_DB > -d 绝对 > exe 同目录 > 当前目录 中先找到的那个)——与查询命令读同一个;
+//  2. -d 绝对路径(显式指定);
+//  3. 都不存在时用 exe 同目录(便携版自带位置,分发到任何机器都成立);
+//  4. 再退当前目录。
+//
+// 注意:不再无条件采用 TDICT_DB —— 否则宿主机上遗留的旧环境变量会把便携版的写入目标带偏。
+// 需要固定/共享位置时,用 config.json 顶层 sync.target(设置页可改)或 -d 绝对路径。
 func resolveSyncTarget() string {
 	if p, err := resolveDBPath(dbPath); err == nil {
 		return p
 	}
-	if env := os.Getenv("TDICT_DB"); env != "" {
-		if abs, err := filepath.Abs(env); err == nil {
-			return abs
-		}
-		return env
+	if filepath.IsAbs(dbPath) {
+		return dbPath
 	}
 	if exe, err := os.Executable(); err == nil {
 		return filepath.Join(filepath.Dir(exe), dbPath)
