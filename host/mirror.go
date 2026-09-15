@@ -1,11 +1,15 @@
 package host
 
-// 本地源码镜像引擎:把某环境(T100 服务器)的 4gl/4fd 源码拉到本地镜像目录。
+// 本地源码镜像引擎:把某环境(T100 服务器)的源码拉到本地镜像目录。
 //
-// 白名单原则(与调试读码一致):只收各模块 4gl/4fd 两个目录树
-//   find erp com -type f \( -path '*/4gl/*' -o -path '*/4fd/*' \)
-// per(界面源)/42m/42r/42f/多语言/设计器辅助等一概不拉 —— AI 只读源代码与
-// 前端字段描述,本地目录与服务器同构(erp/、com/),AI 用本地文件工具直接读。
+// 白名单原则(与调试读码一致):只收各模块三类目录树
+//   find erp com -type f \( -path '*/4gl/*' -o -path '*/4fd/*' \
+//        -o -path '*/42s/zh_CN/*' -o -path '*/42s/*/zh_CN/*' \)
+//   - 4gl(源码)、4fd(前端字段描述)、42s(编译字符串;只取简体中文目录 zh_CN,
+//     即文件所在目录的最后一个目录必须是 zh_CN)。
+// per(界面源)/42m/42r/42f/其它语言/设计器辅助等一概不拉 —— AI 只读源代码、
+// 前端字段描述与中文字符串,本地目录与服务器同构(erp/、com/)。
+// 备份/临时文件(x.4fd.bak、x.bck、x.bck1、*~ 等)不拉,并会清理本地残留。
 //
 // 传输:服务器侧 tar 打包(绝对路径,exec 通道不经登录 profile) → SFTP 流式
 // 下载 → 本地标准库解压(gzip+tar),全程不进内存。
@@ -18,6 +22,7 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -32,6 +37,7 @@ type MirrorStats struct {
 	Full    bool   // 是否全量
 	Files   int    // 归档内文件数(无变更时为 0)
 	Bytes   int64  // 下载字节数(压缩后)
+	Pruned  int    // 本地清理掉的残留备份文件数(历史拉取留下)
 	Elapsed string // 耗时
 	Note    string // 附加说明(如 "无变更")
 }
@@ -60,7 +66,7 @@ type MirrorProgress struct {
 // ProgressFunc 进度回调(可能被多次调用,实现需自行加锁)。
 type ProgressFunc func(MirrorProgress)
 
-// MirrorPull 拉取/更新指定环境(NamedSsh)的 4gl+4fd 源码镜像到 mirrorDir/<环境名>/。
+// MirrorPull 拉取/更新指定环境(NamedSsh)的源码镜像(4gl/4fd/42s-zh_CN)到 mirrorDir/<环境名>/。
 // full=true 全量重建;否则增量(服务器 marker 记录基线)。
 // 增量只在本地已有完整基线(envDir 内存在 .tdict-mirror.ok 标记)时允许;
 // 本地首次/目录被清/旧版无标记 → 自动转全量,防止"服务器 marker 存在而本地
@@ -120,13 +126,18 @@ func MirrorPullProgress(e *NamedSsh, mirrorDir string, full bool, onProgress Pro
 	}
 	if n == 0 {
 		st.Elapsed = time.Since(start).Round(100 * time.Millisecond).String()
-		st.Note = "无变更(服务器 4gl/4fd 自上次 pull 后未修改;--full 可强制全量重建)"
+		st.Note = "无变更(服务器 4gl/4fd/42s 自上次 pull 后未修改;--full 可强制全量重建)"
 		// 服务器无变更但本地基线标记缺失时,依然补一个基线标记,
 		// 否则下次 pull 仍会误判"无基线"而反复尝试全量
 		if !needFull {
 			if err := writeLocalMark(envDir); err != nil {
 				logfMirror("写入本地基线标记失败(忽略): %v", err)
 			}
+		}
+		// 服务器虽无变更,本地仍可能残留旧版本拉下来的备份文件
+		st.Pruned = pruneBackupFiles(envDir)
+		if st.Pruned > 0 {
+			st.Note += fmt.Sprintf(";已清理本地备份 %d 个", st.Pruned)
 		}
 		report(MirrorProgress{Phase: "done", Message: st.Note})
 		return st, nil
@@ -163,6 +174,8 @@ func MirrorPullProgress(e *NamedSsh, mirrorDir string, full bool, onProgress Pro
 	if err := writeLocalMark(envDir); err != nil {
 		return nil, fmt.Errorf("写入本地基线标记失败: %w", err)
 	}
+	// 增量拉取不会删旧文件:清掉历史版本留在本地的备份文件(全量重建时本就没有)
+	st.Pruned = pruneBackupFiles(envDir)
 
 	// 清理服务器归档(marker 保留,供下次增量)
 	if out, err := conn.Output(`rm -f "`+base+`.tar.gz"`, time.Minute); err != nil && !strings.Contains(out, "No such file") {
@@ -170,7 +183,11 @@ func MirrorPullProgress(e *NamedSsh, mirrorDir string, full bool, onProgress Pro
 		logfMirror("清理服务器归档失败(忽略): %v", err)
 	}
 	st.Elapsed = time.Since(start).Round(100 * time.Millisecond).String()
-	report(MirrorProgress{Phase: "done", Message: fmt.Sprintf("完成:%d 个文件", files), Bytes: size, Total: size, Files: files})
+	msg := fmt.Sprintf("完成:%d 个文件", files)
+	if st.Pruned > 0 {
+		msg += fmt.Sprintf(",清理本地备份 %d 个", st.Pruned)
+	}
+	report(MirrorProgress{Phase: "done", Message: msg, Bytes: size, Total: size, Files: files})
 	return st, nil
 }
 
@@ -261,6 +278,65 @@ func logfMirror(format string, args ...any) {
 	fmt.Fprintf(os.Stderr, "[mirror] "+format+"\n", args...)
 }
 
+// mirrorWhitelistFindExpr 服务器侧 find 的白名单:各模块 4gl(源码)、4fd(前端字段描述)、
+// 42s 编译字符串(只取 zh_CN 语言目录 —— 文件所在目录的最后一个目录必须是 zh_CN;
+// 浅层 <模块>/42s/zh_CN/* 与更深层 <模块>/42s/<...>/zh_CN/* 都覆盖)。
+func mirrorWhitelistFindExpr() string {
+	return `\( -path '*/4gl/*' -o -path '*/4fd/*' ` +
+		`-o -path '*/42s/zh_CN/*' -o -path '*/42s/*/zh_CN/*' \)`
+}
+
+// mirrorBackupSuffixes 备份/临时文件名特征(不含点全名包含即算备份)。
+// 服务器侧打包排除与本地残留清理共用同一份列表,避免两边规则漂移:
+//   - 框架/人工备份:x.4gl.bak、x.4fd.bak、x.bck、x.bck1、x.bck2 …
+//   - 编辑器临时文件:x.4gl~、x.swp、x.tmp 等
+var mirrorBackupSuffixes = []string{".bak", ".bck", ".old", ".orig", ".tmp", ".swp", ".swo"}
+
+// isBackupFile 判断文件名是否备份/临时文件(与服务器侧 find 排除规则一致)。
+func isBackupFile(name string) bool {
+	n := strings.ToLower(strings.TrimSpace(name))
+	if n == "" {
+		return false
+	}
+	if strings.HasSuffix(n, "~") {
+		return true
+	}
+	for _, suf := range mirrorBackupSuffixes {
+		if strings.Contains(n, suf) {
+			return true
+		}
+	}
+	return false
+}
+
+// mirrorBackupFindExpr 生成服务器侧 find 的备份排除条件(与 isBackupFile 同语义)。
+func mirrorBackupFindExpr() string {
+	parts := make([]string, 0, len(mirrorBackupSuffixes)+1)
+	for _, suf := range mirrorBackupSuffixes {
+		parts = append(parts, `-not -iname '*`+suf+`*'`)
+	}
+	parts = append(parts, `-not -iname '*~'`)
+	return strings.Join(parts, " ")
+}
+
+// pruneBackupFiles 删除本地镜像目录内残留的备份文件(旧版本拉取过),返回删除数。
+// 只删除文件,不动目录;root 不存在时静默返回 0。
+func pruneBackupFiles(root string) int {
+	removed := 0
+	_ = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d == nil || d.IsDir() {
+			return nil
+		}
+		if isBackupFile(d.Name()) {
+			if os.Remove(path) == nil {
+				removed++
+			}
+		}
+		return nil
+	})
+	return removed
+}
+
 // mirrorTopDir 确定打包根:仅 SSH 登录探测(Runtime.TOP)——T100 路径无静态配置,
 // 一律按登录区域动态获取;探测失败即报错。
 func mirrorTopDir(conn *SSHConn, e *NamedSsh) (string, error) {
@@ -283,7 +359,7 @@ func shdq(s string) string {
 	return `"` + s + `"`
 }
 
-// mirrorPack 在服务器 TOP 下打包 4gl/4fd 白名单文件。返回 (文件数, 归档字节);
+// mirrorPack 在服务器 TOP 下打包白名单文件(4gl/4fd/42s-zh_CN)。返回 (文件数, 归档字节);
 // 无变更时返回 (0, 0) 且不产生归档。marker 保留在 TOP 下供下次增量。
 func mirrorPack(conn *SSHConn, base, top string, full bool) (int, int64, error) {
 	m := shdq(base + ".mark")
@@ -291,7 +367,8 @@ func mirrorPack(conn *SSHConn, base, top string, full bool) (int, int64, error) 
 	l := shdq(base + ".list")
 	t := shdq(top)
 	// 注意:exec 通道不经过登录 profile,但这里只依赖绝对路径与标准工具
-	findExpr := `\( -path '*/4gl/*' -o -path '*/4fd/*' \)`
+	// 白名单树(4gl/4fd/42s-zh_CN)+ 排除备份/临时文件(如 x.4gl.bak、x.bck、x.bck1)
+	findExpr := mirrorWhitelistFindExpr() + " " + mirrorBackupFindExpr()
 	fullFlag := "0"
 	if full {
 		fullFlag = "1"
@@ -436,7 +513,7 @@ func extractTarGz(r io.Reader, dest string) (int, error) {
 			_ = os.Chtimes(target, hdr.ModTime, hdr.ModTime)
 			files++
 		default:
-			// 符号链接/设备等不落盘(4gl/4fd 白名单内不会出现)
+			// 符号链接/设备等不落盘(4gl/4fd/42s 白名单内不会出现)
 		}
 	}
 	return files, nil

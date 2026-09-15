@@ -21,6 +21,7 @@ type mirrorJob struct {
 	Bytes     int64  `json:"bytes"`
 	Total     int64  `json:"total"` // 下载阶段=归档总字节;0=未知(pack 阶段)
 	Files     int    `json:"files"`
+	Pruned    int    `json:"pruned"` // 本地清理掉的残留备份文件数
 	Elapsed   string `json:"elapsed"`
 	Error     string `json:"error,omitempty"`
 	Note      string `json:"note,omitempty"`
@@ -211,11 +212,15 @@ func (s *Server) runMirror(e *host.NamedSsh, dir string, full bool) {
 	s.mirror.Bytes = st.Bytes
 	s.mirror.Total = st.Bytes
 	s.mirror.Files = st.Files
+	s.mirror.Pruned = st.Pruned
 	if st.Note != "" {
 		s.mirror.Note = st.Note
 		s.mirror.Message = st.Note
 	} else {
 		s.mirror.Message = fmt.Sprintf("完成:%d 个文件,共 %s", st.Files, humanBytes(st.Bytes))
+		if st.Pruned > 0 {
+			s.mirror.Message += fmt.Sprintf(";清理本地备份 %d 个", st.Pruned)
+		}
 	}
 }
 
