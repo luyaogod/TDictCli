@@ -411,7 +411,7 @@ tdict serve --listen 127.0.0.1:9123
 | 操作 | 说明 |
 |---|---|
 | SSH 服务器 | 环境名、主机、端口、账号、密码、登录区域(zone)、TOPENT；可增删环境、设为默认环境 |
-| 数据库 | 每个环境一对一挂载：类型(oracle/kingbase)、主机、端口、服务名(service)/库名(database)、账号列表 |
+| 数据库 | 每个环境一对一挂载：类型(oracle/kingbase)、主机、端口、服务名(service)/库名(database)、账号列表；**新增环境时账号列表默认预置 `ds` / `dsdata` / `dsdemo` 三个账号(密码=账号)**，可自行增删改。账号列表是可编辑表格（对齐 TDebug/TbmLite 的 Excel 风格：网格线由单元格承担、控件嵌在格内、聚焦时整格描边），行内 👁 切换该行密码明文 |
 | 从服务器获取数据库配置 | 用该环境 SSH 登录服务器**只读探测**并回填连接要素：oracle 按区域加载环境后读 `ORACLE_HOME`/`sqlplus`/`TWO_TASK` 并解析 `tnsnames.ora` 得到 host/port/service；kingbase 发现运行中实例的数据目录、端口与库名。解析出内部主机名(客户端不可达)时回填 SSH 主机 |
 | 账号行 ⚡ 验证 | 服务器侧以该「账号/密码」连显式目标库执行 `select 1`(只读) |
 | 数据库「测试连接」 | 客户端直连测试（与 `tdict db ping` 同链路：账号取列表首项） |

@@ -8,12 +8,35 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   Plus, Trash2, Server, Database, Eye, EyeOff, RefreshCw, Zap, Save, Star, AlertCircle, CheckCircle2,
 } from 'lucide-react'
-import { api, type DBConnection, type SshEnv } from './api'
-import { Button, cn, Field, Input, SectionTitle } from './ui'
+import { api, type DBAcct, type DBConnection, type SshEnv } from './api'
+import { Button, cn, Field, Input, SectionTitle, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui'
 
 type EnvTab = 'ssh' | 'db'
 
-const blankDb = (): DBConnection => ({ type: 'oracle', host: '', port: 1521, service: '', database: '', accounts: [] })
+// 可编辑表格的单元格:聚焦时给整格一圈内描边,提示「正在编辑这一格」
+const CELL_EDITING = 'focus-within:ring-1 focus-within:ring-inset focus-within:ring-sky-500/60'
+
+// 格内密码可见性切换(浮在 TableCell 右上,故父格需 relative)
+function PwdEye({ shown, onClick }: { shown: boolean; onClick: () => void }) {
+  return (
+    <button type="button" title={shown ? '隐藏密码' : '显示密码'} onClick={onClick}
+      className="absolute right-0.5 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100">
+      {shown ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+    </button>
+  )
+}
+
+// T100 标准 schema 账号(密码=账号):新增环境时预置,可自由增删改
+const DEFAULT_ACCOUNTS: DBAcct[] = [
+  { account: 'ds', password: 'ds' },
+  { account: 'dsdata', password: 'dsdata' },
+  { account: 'dsdemo', password: 'dsdemo' },
+]
+
+const blankDb = (): DBConnection => ({
+  type: 'oracle', host: '', port: 1521, service: '', database: '',
+  accounts: DEFAULT_ACCOUNTS.map((a) => ({ ...a })), // 复制,避免各环境共享同一数组
+})
 const blankSsh = (): SshEnv => ({
   name: '', host: '', port: 22, user: '', password: '', zone: '36', topent: '',
   db: { ...blankDb() },
@@ -375,57 +398,78 @@ export function SettingsView() {
                       {/* 账号列表(无主账号;客户端直连取首项,服务器侧按 TOPENT 解析) */}
                       <div className="col-span-2 mt-2">
                         <SectionTitle>账号列表(账号=schema)</SectionTitle>
-                        <div className="mt-1.5 space-y-1">
-                          <div className="grid grid-cols-[1.2fr_1.5fr_auto] gap-1 border-b border-zinc-200 pb-1 text-[11px] text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
-                            <span>账号(schema)</span><span>密码(缺省=账号)</span><span className="w-16 text-center">操作</span>
+                        {/* 账号表:可编辑表格(每格直接是输入框,网格线由 TableCell 承担) */}
+                        <Table className="mt-1.5">
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead className="w-40">账号(schema)</TableHead>
+                              <TableHead>密码(缺省=账号)</TableHead>
+                              <TableHead className="w-20 text-center">操作</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {/* 新增行放第一行:Enter 或「添加」落到下方列表末尾 */}
+                            <TableRow>
+                              <TableCell className={CELL_EDITING}>
+                                <input className="cell-input font-mono" placeholder="如 ds" value={addAcct.account}
+                                  onChange={(e) => setAddAcct({ ...addAcct, account: e.target.value })}
+                                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); pushAcct() } }} />
+                              </TableCell>
+                              <TableCell className={cn('relative', CELL_EDITING)}>
+                                <input className="cell-input pr-7 font-mono" type={showPwd ? 'text' : 'password'} placeholder="密码(缺省=账号)" value={addAcct.password}
+                                  onChange={(e) => setAddAcct({ ...addAcct, password: e.target.value })}
+                                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); pushAcct() } }} />
+                                <PwdEye shown={showPwd} onClick={() => setShowPwd((v) => !v)} />
+                              </TableCell>
+                              <TableCell className="text-center">
+                                <Button variant="outline" size="xs" disabled={!addAcct.account.trim()} onClick={pushAcct}>
+                                  <Plus className="h-3 w-3" />添加
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                            {acctList.map((a, j) => (
+                              <TableRow key={j}>
+                                <TableCell className={CELL_EDITING}>
+                                  <input className="cell-input font-mono" placeholder="如 ds" value={a.account}
+                                    onChange={(e) => patchAcct(sel, j, { account: e.target.value })} />
+                                </TableCell>
+                                <TableCell className={cn('relative', CELL_EDITING)}>
+                                  <input className="cell-input pr-7 font-mono" type={showPwd ? 'text' : 'password'} placeholder="密码(缺省=账号)" value={a.password}
+                                    onChange={(e) => patchAcct(sel, j, { password: e.target.value })} />
+                                  <PwdEye shown={showPwd} onClick={() => setShowPwd((v) => !v)} />
+                                </TableCell>
+                                <TableCell className="text-center">
+                                  <div className="flex items-center justify-center gap-1">
+                                    <button type="button" title="服务器上以该账号+密码连目标库验证(只读)"
+                                      className={cn('flex h-6 w-6 items-center justify-center',
+                                        accProbe?.i === j && accProbe.state === 'testing' ? 'animate-pulse text-sky-500' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100')}
+                                      onClick={() => void verifyAcct(j)}>
+                                      <Zap className="h-3.5 w-3.5" />
+                                    </button>
+                                    <button type="button" title="删除该账号"
+                                      className="flex h-6 w-6 items-center justify-center text-zinc-500 hover:text-red-600 dark:hover:text-red-400"
+                                      onClick={() => delAcct(sel, j)}>
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                        {accProbe && acctList[accProbe.i] && (
+                          <div className={cn('mt-1 flex items-center gap-1 text-[11px]',
+                            accProbe.state === 'ok' ? 'text-emerald-600 dark:text-emerald-400'
+                              : accProbe.state === 'err' ? 'text-red-600 dark:text-red-400' : 'text-sky-600 dark:text-sky-400')}>
+                            {accProbe.state === 'ok' ? <CheckCircle2 className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+                            账号 {acctList[accProbe.i].account}: {accProbe.msg || '验证中…'}
                           </div>
-                          {/* 新增行:Enter 或「添加」落到列表末尾 */}
-                          <div className="grid grid-cols-[1.2fr_1.5fr_auto] items-center gap-1">
-                            <Input className="font-mono" placeholder="如 ds" value={addAcct.account}
-                              onChange={(e) => setAddAcct({ ...addAcct, account: e.target.value })}
-                              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); pushAcct() } }} />
-                            <Input className="font-mono" type={showPwd ? 'text' : 'password'} placeholder="密码(缺省=账号)" value={addAcct.password}
-                              onChange={(e) => setAddAcct({ ...addAcct, password: e.target.value })}
-                              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); pushAcct() } }} />
-                            <div className="w-16 text-center">
-                              <Button variant="outline" size="xs" disabled={!addAcct.account.trim()} onClick={pushAcct}>
-                                <Plus className="h-3 w-3" />添加
-                              </Button>
-                            </div>
+                        )}
+                        {!acctList.length && (
+                          <div className="mt-1 text-[11px] text-zinc-500 dark:text-zinc-400">
+                            客户端直连(远程直查 / db ping / db sync)取列表首项;未收录账号按「账号=密码」兜底。
                           </div>
-                          {acctList.map((a, j) => (
-                            <div key={j} className="grid grid-cols-[1.2fr_1.5fr_auto] items-center gap-1">
-                              <Input className="font-mono" value={a.account} placeholder="如 ds" onChange={(e) => patchAcct(sel, j, { account: e.target.value })} />
-                              <Input className="font-mono" type={showPwd ? 'text' : 'password'} value={a.password} placeholder="密码(缺省=账号)" onChange={(e) => patchAcct(sel, j, { password: e.target.value })} />
-                              <div className="flex w-16 items-center justify-center gap-1">
-                                <button type="button" title="服务器上以该账号+密码连目标库验证(只读)"
-                                  className={cn('flex h-6 w-6 items-center justify-center',
-                                    accProbe?.i === j && accProbe.state === 'testing' ? 'animate-pulse text-sky-500' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100')}
-                                  onClick={() => void verifyAcct(j)}>
-                                  <Zap className="h-3.5 w-3.5" />
-                                </button>
-                                <button type="button" title="删除该账号"
-                                  className="flex h-6 w-6 items-center justify-center text-zinc-500 hover:text-red-600 dark:hover:text-red-400"
-                                  onClick={() => delAcct(sel, j)}>
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                          {accProbe && acctList[accProbe.i] && (
-                            <div className={cn('flex items-center gap-1 text-[11px]',
-                              accProbe.state === 'ok' ? 'text-emerald-600 dark:text-emerald-400'
-                                : accProbe.state === 'err' ? 'text-red-600 dark:text-red-400' : 'text-sky-600 dark:text-sky-400')}>
-                              {accProbe.state === 'ok' ? <CheckCircle2 className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
-                              账号 {acctList[accProbe.i].account}: {accProbe.msg || '验证中…'}
-                            </div>
-                          )}
-                          {!acctList.length && (
-                            <div className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                              客户端直连(远程直查 / db ping / db sync)取列表首项;未收录账号按「账号=密码」兜底。
-                            </div>
-                          )}
-                        </div>
+                        )}
                       </div>
 
                       {note && (
