@@ -28,7 +28,20 @@ T100 作业调试（原 `tdict debug`）已拆分到独立项目，本仓库不�
 
 ## 安装
 
-### 方式一：全局安装（推荐）
+### 方式一：下载便携版（Windows，免编译）
+
+不想装 Go 的话，直接下载打包好的便携版：
+
+**<https://github.com/luyaogod/TDictCli/releases/latest>** → `tdict-portable-vX.Y.Z.zip`，解压即用。包含 `tdict.exe`（内嵌配置页前端）、空的 `config.json`、`config.example.json`、`README.md`、`skills/`；**不含任何真实凭据与业务数据**，也**不含 `erp_data.db`**——首次解压后：
+
+```bash
+tdict.exe serve            # 浏览器里「环境配置」填 SSH 环境与数据库
+# 再到「数据同步」拉字典数据(默认写到 exe 同目录的 erp_data.db)
+```
+
+每个版本同时提供 `.sha256` 校验文件。可执行文件**未做代码签名**，首次运行可能被 SmartScreen 拦截，选「更多信息 → 仍要运行」即可。
+
+### 方式二：全局安装（推荐）
 
 安装到系统 PATH 后，可在任意目录直接调用 `tdict`：
 
@@ -49,14 +62,14 @@ export TDICT_DB="D:\我的项目\TDictCli\erp_data.db"
 
 数据库查找优先级：`$TDICT_DB` > `-d` 参数 > 可执行文件同目录 > 当前工作目录。
 
-### 方式二：手动指定数据库路径
+### 方式三：手动指定数据库路径
 
 将 `tdict.exe` 和 `erp_data.db` 放到同一目录：
 ```bash
 ./tdict r.t dzea_t -d ./erp_data.db
 ```
 
-### 方式三：从源码编译
+### 方式四：从源码编译
 
 ```bash
 # 要求 Go 1.21+
