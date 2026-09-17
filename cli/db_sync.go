@@ -20,11 +20,12 @@ var (
 var dbSyncCmd = &cobra.Command{
 	Use:   "sync",
 	Short: "从 ERP 刷新本地查询数据",
-	Long: `从 ERP 刷新本地查询数据(表字典、校验、分类码、画面规格、开窗、消息、参数等
-全部内容,约 85 万行),查询命令读的就是它。
+	Long: `从 ERP 刷新本地查询数据(表字典、校验、分类码、画面规格、开窗、消息、参数、
+程序与作业等全部内容,约 86 万行),查询命令读的就是它。
 写入 -d/--db 或 TDICT_DB 指向的数据库(默认 ./erp_data.db);原库自动备份为 .bak。
 --table 可只刷部分;缺省数据源 = 默认环境(activeEnv,tdict env 查看/切换)的库,
 可用 --conn <环境名> 指定。
+各数据族与本地覆盖情况见 tdict db status。
 也可在 tdict serve 的「数据同步」页面里选环境执行(带进度)。`,
 	Example: `  tdict db sync
   tdict db sync --table dzea_t,dzeal_t

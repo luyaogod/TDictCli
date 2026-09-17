@@ -18,21 +18,65 @@ import (
 	"tdict/erpdb"
 )
 
-// DictTables 同步的 T100 数据字典表(表字典/校验带值/分类码/画面规格/开窗/消息/参数)。
-var DictTables = []string{
-	"dzea_t", "dzeal_t", "dzeb_t", "dzebl_t", "dzec_t", "dzed_t", "dzee_t", "dzef_t", "dzeg_t",
-	// 校验带值 (r.v) 体系: 校验定义/多语言/外部参数/参数多语言/判断条件
-	"dzcd_t", "dzcdl_t", "dzce_t", "dzcel_t", "dzch_t",
-	// 系统分类码 (SCC): 分类码头档/多语言/分类值/值多语言
-	"gzca_t", "gzcal_t", "gzcb_t", "gzcbl_t",
-	// 字段规格 (画面设计器参考配置): 控件/SCC码/格式/必填等
-	"dzep_t",
-	// 可复用开窗 (r.q): 开窗主档/多语言/设计参数/参数多语言/显现设定
-	"dzca_t", "dzcal_t", "dzcb_t", "dzcbl_t", "dzcc_t",
-	// 系统消息档 (azzi920 维护, cl_err/cl_getmsg 取用): 消息文本/建议处理/作业多语言名称
-	"gzze_t", "gzzal_t",
-	// 参数定义档 (azzi990 系统参数 / azzi991 单据别参数): 定义/参数多语言/单据性质绑定
-	"gzsz_t", "gzszl_t", "gzsy_t",
+// Family 一个数据族:一族 = 一个查询命令所需的一组字典表。
+// Families 是同步清单、`tdict db status` 与各命令 --help 里「本地数据齐不齐」
+// 提示的唯一事实来源(改同步范围请改这里)。
+type Family struct {
+	Key      string   `json:"键"`     // 稳定标识(表族键,如 table/check/scc/prog)
+	Name     string   `json:"数据族"`   // 中文名
+	Commands []string `json:"依赖命令"`  // 依赖该族的命令
+	Tables   []string `json:"字典表"`   // 该族的字典表
+}
+
+// Families 全部数据族,顺序即同步顺序(表字典一族放在最前,先有表才有别的)。
+var Families = []Family{
+	{Key: "table", Name: "表字典", Commands: []string{"r.t"},
+		Tables: []string{"dzea_t", "dzeal_t", "dzeb_t", "dzebl_t", "dzec_t", "dzed_t", "dzee_t", "dzef_t", "dzeg_t"}},
+	{Key: "check", Name: "校验带值", Commands: []string{"r.v"},
+		Tables: []string{"dzcd_t", "dzcdl_t", "dzce_t", "dzcel_t", "dzch_t"}},
+	{Key: "scc", Name: "系统分类码", Commands: []string{"scc"},
+		Tables: []string{"gzca_t", "gzcal_t", "gzcb_t", "gzcbl_t"}},
+	{Key: "spec", Name: "字段画面规格", Commands: []string{"desc"},
+		Tables: []string{"dzep_t"}},
+	{Key: "win", Name: "可复用开窗", Commands: []string{"r.q"},
+		Tables: []string{"dzca_t", "dzcal_t", "dzcb_t", "dzcbl_t", "dzcc_t"}},
+	{Key: "msg", Name: "系统消息", Commands: []string{"msg"},
+		Tables: []string{"gzze_t", "gzzal_t"}},
+	{Key: "param", Name: "参数定义", Commands: []string{"sysp", "docp"},
+		Tables: []string{"gzsz_t", "gzszl_t", "gzsy_t"}},
+	// 程序与作业 (azzi900 程式基本資料 / azzi910 作業基本資料):
+	// 程序档 + 程序名称多语言 + 作业编号设置表(作业用 gzzz002 挂程序,一个程序可被多个作业使用)
+	// + 程序应用参数组设置表。gzzal_t 同时服务 msg 族,展平时去重。
+	{Key: "prog", Name: "程序与作业", Commands: []string{"prog"},
+		Tables: []string{"gzza_t", "gzzz_t", "gzzk_t", "gzzal_t"}},
+}
+
+// DictTables 同步的 T100 数据字典表 —— 由 Families 展平并按首次出现去重。
+var DictTables = flattenFamilies()
+
+func flattenFamilies() []string {
+	seen := make(map[string]bool)
+	var out []string
+	for _, f := range Families {
+		for _, t := range f.Tables {
+			if seen[t] {
+				continue
+			}
+			seen[t] = true
+			out = append(out, t)
+		}
+	}
+	return out
+}
+
+// FamilyByKey 按 key 取数据族;不存在返回 nil。
+func FamilyByKey(key string) *Family {
+	for i := range Families {
+		if Families[i].Key == key {
+			return &Families[i]
+		}
+	}
+	return nil
 }
 
 // Progress 同步过程回调(CLI 打印/Web 进度条用)。

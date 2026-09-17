@@ -571,3 +571,113 @@ WHERE g.gzsy001 = 'ooac_t' AND g.gzsy002 = ` + lit(code) + ` ORDER BY g.gzsy004`
 	}
 	return out, nil
 }
+
+// ---- rt 列表:表字典全表列表/搜索(--kw) ----
+
+// QueryTableList 表档 dzea_t 列表,可按表名/表说明(指定语言)过滤。
+func (l *Live) QueryTableList(lang, keyword string) ([]db.TableListItem, error) {
+	where := ""
+	if keyword != "" {
+		k := lit("%" + keyword + "%")
+		where = fmt.Sprintf(` WHERE (UPPER(a.dzea001) LIKE UPPER(%[1]s)
+       OR UPPER(COALESCE(al.dzeal003, '')) LIKE UPPER(%[1]s)
+       OR UPPER(COALESCE(a.dzea002, '')) LIKE UPPER(%[1]s))`, k)
+	}
+	sql := `SELECT a.dzea001, COALESCE(al.dzeal003, a.dzea002, ''), a.dzea003, a.dzea004,
+       (SELECT COUNT(*) FROM dzeb_t b WHERE b.dzeb001 = a.dzea001)
+FROM dzea_t a
+LEFT JOIN dzeal_t al ON al.dzeal001 = a.dzea001 AND al.dzeal002 = ` + lit(lang) + where +
+		` ORDER BY a.dzea001`
+	rows, err := l.q(sql)
+	if err != nil {
+		return nil, fmt.Errorf("查询表列表: %w", err)
+	}
+	out := make([]db.TableListItem, 0, len(rows))
+	for _, r := range rows {
+		var n int
+		fmt.Sscanf(get(r, 4), "%d", &n)
+		out = append(out, db.TableListItem{TableName: get(r, 0), TableDesc: get(r, 1),
+			Module: get(r, 2), TableType: get(r, 3), FieldCnt: n})
+	}
+	return out, nil
+}
+
+// ---- prog:程序与作业字典(azzi900 程式基本資料 / azzi910 作業基本資料) ----
+
+// QueryProgInfo 按编号查程序登记信息;该编号同时是作业时一并给出它挂的程序。
+func (l *Live) QueryProgInfo(code, lang string) (*db.ProgInfo, error) {
+	info := &db.ProgInfo{Code: code}
+	sql := `SELECT COALESCE(a.gzza002, ''), COALESCE(a.gzza003, ''), COALESCE(a.gzza004, ''),
+       COALESCE(a.gzza008, ''), COALESCE(a.gzza011, ''), COALESCE(a.gzzastus, ''),
+       COALESCE(l.gzzal003, ''), COALESCE(l.gzzal005, '')
+FROM gzza_t a
+LEFT JOIN gzzal_t l ON l.gzzal001 = a.gzza001 AND l.gzzal002 = ` + lit(lang) + `
+WHERE a.gzza001 = ` + lit(code)
+	rows, err := l.q(sql)
+	if err != nil {
+		return nil, fmt.Errorf("查询程序 %s: %w", code, err)
+	}
+	if len(rows) > 0 {
+		r := rows[0]
+		info.IsProg = true
+		info.Category, info.Module, info.RunCmd = get(r, 0), get(r, 1), get(r, 2)
+		info.RefMain, info.Cust, info.Status = get(r, 3), get(r, 4), get(r, 5)
+		info.Name, info.ShortName = get(r, 6), get(r, 7)
+	}
+	jobRows, err := l.q(`SELECT COALESCE(gzzz002, '') FROM gzzz_t WHERE gzzz001 = ` + lit(code))
+	if err != nil {
+		return nil, fmt.Errorf("查询作业 %s: %w", code, err)
+	}
+	if len(jobRows) > 0 {
+		info.IsJob, info.JobProg = true, get(jobRows[0], 0)
+	}
+	if !info.IsProg && !info.IsJob {
+		return nil, nil
+	}
+	return info, nil
+}
+
+// QueryProgJobs 查"哪些作业用了这个程序"(作业名称取所挂程序的名称,与 azzi910 取法一致)。
+func (l *Live) QueryProgJobs(code, lang string) ([]db.ProgJob, error) {
+	sql := `SELECT z.gzzz001, COALESCE(l.gzzal003, ''), COALESCE(z.gzzz005, ''),
+       COALESCE(z.gzzz003, ''), COALESCE(k.gzzk003, ''), COALESCE(z.gzzz006, ''),
+       COALESCE(z.gzzzstus, '')
+FROM gzzz_t z
+LEFT JOIN gzzal_t l ON l.gzzal001 = z.gzzz002 AND l.gzzal002 = ` + lit(lang) + `
+LEFT JOIN gzzk_t k ON k.gzzk001 = z.gzzz002 AND k.gzzk002 = z.gzzz003
+WHERE z.gzzz002 = ` + lit(code) + `
+ORDER BY z.gzzz001`
+	rows, err := l.q(sql)
+	if err != nil {
+		return nil, fmt.Errorf("查询程序 %s 的作业: %w", code, err)
+	}
+	out := make([]db.ProgJob, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, db.ProgJob{JobCode: get(r, 0), JobName: get(r, 1), Module: get(r, 2),
+			ParamGrp: get(r, 3), ParamDesc: get(r, 4), DocType: get(r, 5), Status: get(r, 6)})
+	}
+	return out, nil
+}
+
+// QueryProgList 程序列表/搜索(--kw 按程序编号或程序名称),附各自作业数。
+func (l *Live) QueryProgList(lang, keyword string) ([]db.ProgListItem, error) {
+	sql := `SELECT a.gzza001, COALESCE(l.gzzal003, ''), COALESCE(a.gzza002, ''),
+       COALESCE(a.gzza003, ''), COALESCE(a.gzza011, ''),
+       (SELECT COUNT(*) FROM gzzz_t z WHERE z.gzzz002 = a.gzza001)
+FROM gzza_t a
+LEFT JOIN gzzal_t l ON l.gzzal001 = a.gzza001 AND l.gzzal002 = ` + lit(lang) +
+		kwWhere("a.gzza001", "l.gzzal003", keyword) +
+		` ORDER BY a.gzza001`
+	rows, err := l.q(sql)
+	if err != nil {
+		return nil, fmt.Errorf("查询程序列表: %w", err)
+	}
+	out := make([]db.ProgListItem, 0, len(rows))
+	for _, r := range rows {
+		var n int
+		fmt.Sscanf(get(r, 5), "%d", &n)
+		out = append(out, db.ProgListItem{Code: get(r, 0), Name: get(r, 1), Category: get(r, 2),
+			Module: get(r, 3), Cust: get(r, 4), JobCount: n})
+	}
+	return out, nil
+}

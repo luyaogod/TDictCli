@@ -45,6 +45,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&useCSV, "csv", false, "Output in CSV format")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Verbose output (show resolved db path)")
 	rootCmd.PersistentFlags().StringVar(&configPath, "config", "", "ERP 数据库连接配置文件路径 (JSON;缺省取统一用户目录 "+defaultConfigPathHint()+")")
+	attachDataHint() // --help 末尾附一行本地数据覆盖状态(见 helpdata.go)
 }
 
 // resolveDBPath resolves the database file path with the following priority:

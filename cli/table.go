@@ -10,21 +10,32 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	tableKW   string
+	tableLang string
+)
+
 var tableCmd = &cobra.Command{
-	Use:     "r.t <table_name>",
+	Use:     "r.t [table_name]",
 	Aliases: []string{"rt", "table"},
 	Short:   "查询数据表字典 (r.t)",
 	Long: `查询一张或多张数据表的字典:这张表在系统里做什么(表说明/所属模块/表类型),
 以及字段(中文含义/数据类型/长度/主键/必填)、键值与索引。
 读代码、看 SQL、查界面字段含义时用它。
 支持逗号分隔多个表名;输出简体中文。
+无参数时列出全部表(--kw 按表名/中文表说明搜索,从业务词找表);
+指定表名显示该表完整字典。
 命令名对齐 T100 原生工具 r.t(旧名 rt/table 仍可用)。`,
 	Example: `  tdict r.t dzea_t
   tdict r.t "dzea_t,dzeb_t,dzed_t"
+  tdict r.t --kw 应收        # 按中文说明找表(列表模式)
   tdict r.t dzea_t --json
   tdict r.t dzea_t --conn 正式区   # 切到某环境的远程库直查(--conn local 回本地)`,
-	Args: cobra.ExactArgs(1),
+	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if len(args) == 0 {
+			return runTableList()
+		}
 		tables := splitNames(args[0])
 		if len(tables) == 0 {
 			return fmt.Errorf("未指定有效的表名")
@@ -52,6 +63,45 @@ var tableCmd = &cobra.Command{
 		}
 		return nil
 	},
+}
+
+// runTableList 列表模式:列出/搜索表(3,882 张),按中文表说明找表时用它。
+func runTableList() error {
+	list, err := GetDB().QueryTableList(tableLang, tableKW)
+	if err != nil {
+		if db.IsMissingTable(err) {
+			fmt.Println(missingHint("表字典 (dzea_t/dzeb_t 等表)"))
+			return nil
+		}
+		return err
+	}
+	if len(list) == 0 {
+		if tableKW != "" {
+			fmt.Printf("没有匹配 '%s' 的表。\n提示: 表说明有简繁两种写法(zh_CN 与原始繁体档),用字可能是异体(如 对账/对帐/對帳);换个写法或更短的词再试。\n", tableKW)
+		} else {
+			fmt.Println(emptyHint("表字典"))
+		}
+		return nil
+	}
+
+	headers := []string{"表名", "表说明", "模块", "类型", "字段数"}
+	var rows [][]string
+	for _, t := range list {
+		rows = append(rows, []string{t.TableName, t.TableDesc, t.Module, t.TableType, fmt.Sprintf("%d", t.FieldCnt)})
+	}
+	if IsJSON() {
+		return output.PrintJSON(list)
+	}
+	if IsCSV() {
+		return output.PrintCSVFromMaps(headers, rows)
+	}
+	output.PrintTable(headers, rows)
+	fmt.Printf("\n共 %d 张表", len(list))
+	if tableKW == "" {
+		fmt.Print(";用 --kw <业务词> 按表名/中文说明过滤,如 tdict r.t --kw 应收")
+	}
+	fmt.Println()
+	return nil
 }
 
 // queryTableDict assembles a table's complete dictionary (meta + fields + keys + indexes).
@@ -187,6 +237,8 @@ func keyTypeLabel(code string) string {
 }
 
 func init() {
+	tableCmd.Flags().StringVar(&tableKW, "kw", "", "按表名/中文表说明搜索 (无表名时的列表模式)")
+	tableCmd.Flags().StringVar(&tableLang, "lang", "zh_CN", "表说明语言别 (dzeal002, 默认 zh_CN)")
 	rootCmd.AddCommand(tableCmd)
 }
 

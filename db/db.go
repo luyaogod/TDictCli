@@ -130,8 +130,9 @@ type TableListItem struct {
 	FieldCnt  int    `json:"字段数"`
 }
 
-// QueryTableList returns all tables, optionally filtered by keyword.
-func (d *DB) QueryTableList(keyword string) ([]TableListItem, error) {
+// QueryTableList returns all tables, optionally filtered by keyword
+// (matched against table name and zh_CN/指定语言 table description).
+func (d *DB) QueryTableList(lang, keyword string) ([]TableListItem, error) {
 	like := "%" + keyword + "%"
 	query := `
 		SELECT a.dzea001,
@@ -140,11 +141,11 @@ func (d *DB) QueryTableList(keyword string) ([]TableListItem, error) {
 		       COALESCE(a.dzea004, ''),
 		       (SELECT COUNT(*) FROM dzeb_t WHERE dzeb001 = a.dzea001)
 		FROM dzea_t a
-		LEFT JOIN dzeal_t al ON al.dzeal001 = a.dzea001 AND al.dzeal002 = 'zh_CN'
+		LEFT JOIN dzeal_t al ON al.dzeal001 = a.dzea001 AND al.dzeal002 = ?
 		WHERE (? = '' OR a.dzea001 LIKE ? OR al.dzeal003 LIKE ? OR a.dzea002 LIKE ?)
 		ORDER BY a.dzea001
 	`
-	rows, err := d.conn.Query(query, keyword, like, like, like)
+	rows, err := d.conn.Query(query, lang, keyword, like, like, like)
 	if err != nil {
 		return nil, fmt.Errorf("query table list: %w", err)
 	}
@@ -159,6 +160,23 @@ func (d *DB) QueryTableList(keyword string) ([]TableListItem, error) {
 		result = append(result, t)
 	}
 	return result, rows.Err()
+}
+
+// TableRowCounts 返回给定表中"本地库里存在"那些的行数(不存在的表不出现在结果里,
+// 也不会报错)。用于 `tdict db status` 检查本地库对各数据族的覆盖情况。
+func (d *DB) TableRowCounts(names []string) (map[string]int64, error) {
+	out := make(map[string]int64, len(names))
+	for _, n := range names {
+		if !validIdent(n) {
+			continue
+		}
+		var c int64
+		if err := d.conn.QueryRow(`SELECT COUNT(*) FROM ` + quoteIdent(n)).Scan(&c); err != nil {
+			continue // 表不存在:跳过(缺表由调用方按数据族汇总)
+		}
+		out[n] = c
+	}
+	return out, nil
 }
 
 // QueryRaw executes a raw SQL query and returns rows as maps.

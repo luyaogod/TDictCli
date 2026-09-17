@@ -13,6 +13,12 @@ type Source interface {
 	QueryTable(tableName string) ([]TableInfo, error)
 	QueryKeys(tableName string) ([]KeyInfo, error)
 	QueryIndexes(tableName string) ([]IndexInfo, error)
+	QueryTableList(lang, keyword string) ([]TableListItem, error) // 列表/搜索(--kw)
+	// prog 程序与作业字典:程序档 gzza_t / 程序名称 gzzal_t / 作业 zzz_t(作业挂程序)
+	// / 应用参数组 gzzk_t。见 db/prog.go 注释里的表结构说明。
+	QueryProgInfo(code, lang string) (*ProgInfo, error) // 未收录返回 (nil, nil)
+	QueryProgJobs(code, lang string) ([]ProgJob, error)
+	QueryProgList(lang, keyword string) ([]ProgListItem, error)
 	// rv 校验带值:dzcd_t/dzce_t/dzch_t
 	QueryCheckList(lang, keyword string) ([]CheckListRow, error)
 	QueryCheckHeaders(id, lang string) ([]CheckHeaderRow, error)
