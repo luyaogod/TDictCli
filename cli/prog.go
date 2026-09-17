@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strings"
 
 	"tdict/db"
 	"tdict/output"
@@ -55,7 +56,18 @@ func runProgDetail(code string) error {
 	}
 	if info == nil {
 		fmt.Printf("未找到程序/作业 '%s'。\n", code)
-		fmt.Println("提示: 用业务词搜索试试 —— tdict prog --kw <关键字>")
+		if base := progBaseCode(code); base != "" {
+			// 子程序/子元件形态:工具只登记主程序。跟到主程序,但要说清二者不是一回事
+			// (如 aapq110_01「报表列印」 vs 主程序 aapq110「明细查询」)。
+			if bi, err := GetDB().QueryProgInfo(base, progLang); err == nil && bi != nil && bi.IsProg {
+				fmt.Printf("提示: '%s' 是子程序/子元件形态,主程序为 '%s'(%s)。\n", code, base, bi.Name)
+			} else {
+				fmt.Printf("提示: '%s' 是子程序/子元件形态,主程序代码应是 '%s'(工具里没登记它)。\n", code, base)
+			}
+			fmt.Println("      子程序自己做什么,看它文件头的 `#+ Description:`;别把主程序的用途当成它的。")
+		} else {
+			fmt.Println("提示: 用业务词搜索试试 —— tdict prog --kw <关键字>")
+		}
 		return nil
 	}
 
@@ -213,6 +225,55 @@ func orDash(s string) string {
 		return "-"
 	}
 	return s
+}
+
+// progBaseCode 把子程序/子元件编号还原成主程序编号:aapq110_01 → aapq110、
+// axmi125_wf → axmi125、aapt110_01_rep → aapt110。不是这些形态时返回空串
+// (普通程序编号如 aapi011、开窗码如 q_adzi052 都不动)。
+func progBaseCode(code string) string {
+	base := code
+	for {
+		i := strings.LastIndex(base, "_")
+		if i <= 0 || !isSubSuffix(base[i+1:]) {
+			break
+		}
+		base = base[:i]
+	}
+	if base == code {
+		return ""
+	}
+	return base
+}
+
+// isSubSuffix 判断是否为子程序/子元件后缀:_01/_02…、_x01、_g01、_k01、_s01、_wf、_rep。
+func isSubSuffix(s string) bool {
+	switch s {
+	case "wf", "rep":
+		return true
+	}
+	if s == "" {
+		return false
+	}
+	if isDigits(s) {
+		return true
+	}
+	switch s[0] {
+	case 'x', 'g', 'k', 's':
+		return len(s) > 1 && isDigits(s[1:])
+	}
+	return false
+}
+
+func isDigits(s string) bool {
+	if s == "" {
+		return false
+	}
+	for i := 0; i < len(s); i++ {
+		if s[i] < '0' || s[i] > '9' {
+			return false
+		}
+	}
+	return true
 }
 
 func init() {
