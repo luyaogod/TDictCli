@@ -640,7 +640,7 @@ WHERE a.gzza001 = ` + lit(code)
 // QueryProgJobs 查"哪些作业用了这个程序"(作业名称取所挂程序的名称,与 azzi910 取法一致)。
 func (l *Live) QueryProgJobs(code, lang string) ([]db.ProgJob, error) {
 	sql := `SELECT z.gzzz001, COALESCE(l.gzzal003, ''), COALESCE(z.gzzz005, ''),
-       COALESCE(z.gzzz003, ''), COALESCE(k.gzzk003, ''), COALESCE(z.gzzz006, ''),
+       COALESCE(TO_CHAR(z.gzzz003), ''), COALESCE(k.gzzk003, ''), COALESCE(z.gzzz006, ''),
        COALESCE(z.gzzzstus, '')
 FROM gzzz_t z
 LEFT JOIN gzzal_t l ON l.gzzal001 = z.gzzz002 AND l.gzzal002 = ` + lit(lang) + `
