@@ -2,7 +2,7 @@
 
 面向 **T100 / Genero(4GL) ERP** 的本地命令行工具：
 
-**ERP 数据字典查询**（给"读代码、做配置"提供上下文）：查 ERP 数据字典与业务元数据——数据表结构与字段中文含义（`tdict r.t`）、字段校验规则（`tdict r.v`）、下拉选项/系统分类码（`scc`）、字段画面规格（`desc`）、可复用开窗（`tdict r.q`）、报错消息文本（`msg`）、系统与单据参数说明（`sysp`/`docp`）。数据随工具本地保存（`tdict db sync` 从 ERP 刷新），也可 `--conn` 直查远程库。
+**ERP 数据字典查询**（给"读代码、做配置"提供上下文）：查 ERP 数据字典与业务元数据——数据表结构与字段中文含义（`tdict r.t`）、字段校验规则（`tdict r.v`）、下拉选项/系统分类码（`scc`）、字段画面规格（`desc`）、可复用开窗（`tdict r.q`）、报错消息文本（`msg`）、系统与单据参数说明（`sysp`/`docp`）。查询**缺省直连 ERP 在线库**（数据最新最全，不用先同步），也可切到本地 SQLite 副本（`tdict db sync` 刷新，离线可用）——见「查询数据源切换」。
 
 此外保留 SSH 环境与数据库连接管理（`tdict serve` 可视化配置页 / `tdict env` / `tdict db`）与服务器源码镜像（`tdict mirror`）。
 
@@ -622,6 +622,7 @@ tdict serve --listen 127.0.0.1:9123
 
 | 操作 | 说明 |
 |---|---|
+| 查询数据源 | 下拉切换查询命令读哪里：**在线**（默认环境或指定环境的 ERP 库直查，数据最新），或**本地 SQLite**（`erp_data.db` 副本，快、可离线）。写入 `config.json` 顶层 `query.source`；两者不自动切换 |
 | 命令行安装 | 显示当前 `tdict` 可执行文件与所在目录，一键**加入用户 PATH**（Windows 写注册表 `HKCU\Environment\Path`，用户级、无需管理员），之后任意位置可直接运行 `tdict`；也可一键移除。已加入/未加入有明确状态 |
 | 生效时机 | 新开的终端立即可用；**已打开的终端需重开**（写入后广播 `WM_SETTINGCHANGE`） |
 | 非 Windows | 不自动改 PATH，页面给出等价的 `export PATH="$PATH:<目录>"` 手动命令 |
@@ -712,22 +713,28 @@ tdict bdldoc dir D:\path\to\docs    # 设置目录(写入 config.json;相对路�
 - 支持类型：`kingbase`（人大金仓，PostgreSQL 协议，pgx）、`oracle`（go-ora 纯 Go 驱动）。
 - 配置文件查找优先级：`$TDICT_CONFIG` > `--config` 参数 > 便携包内（exe 同目录有 `.portable` 标记时）> **统一用户目录** `%APPDATA%\T100\tdict\config.json` > 旧位置（exe 同目录、当前工作目录）。首次运行会把旧位置的配置**复制**到统一用户目录（只复制、不删除，确认无误后自行清理原文件）。
 
-### 查询数据源切换（本地 SQLite ⇄ 远程库）
+### 查询数据源切换（在线 ⇄ 本地库）
 
-`r.t/r.v/desc/scc/r.q` 五个查询命令统一走同一查询接口（`db.Source`）：本地 SQLite 镜像与远程 ERP 库查的是**同一批表(24 张字典 + 消息档)**，输出完全一致；命令层不感知数据源。解析优先级：
+`r.t/r.v/desc/scc/r.q/prog` 这些查询命令统一走同一查询接口（`db.Source`）：本地 SQLite 镜像与远程 ERP 库查的是**同一批表**，输出完全一致；命令层不感知数据源。解析优先级：
 
-1. `--conn <环境名>`：本次调用远程直查该环境的库（`--conn local` 回本地）；
-2. `config.json` 顶层 `query.source`：设为环境名（如 `"正式区"`）即默认远程直查该环境；
-3. 缺省 `local`：本地 SQLite（`-d`/`TDICT_DB` 定位的 `erp_data.db`），与旧版行为一致。
+1. `--conn <环境名>` / `--conn local`：本次调用**强制**走该数据源；
+2. `config.json` 顶层 `query.source`：**环境名** → 在线直查该环境；**`"local"`** → 本地 SQLite（`-d`/`TDICT_DB` 定位的 `erp_data.db`）；
+3. **缺省 = 在线**：用默认环境（`hosts.activeEnv`）直查；一个环境都没配（新装/便携包首次）时才用本地库。
+
+**两者不自动切换**：在线就是在线、本地就是本地——选在线时连不上就**直接报错**（不会偷偷改查本地），报错里会提示怎么切。
+
+三种切换方式（等效）：
 
 ```bash
-tdict r.t dzea_t                                # 默认本地 SQLite
-tdict r.t dzea_t --conn 正式区                   # 远程直查正式区(金仓 your_schema)
-tdict desc oobd_t oobd002 --conn 正式区         # 远程直查正式区(oracle your_schema)
-tdict r.v v_ooba002_07 --conn local             # 显式切回本地
+tdict r.t dzea_t --conn local              # ① 单次覆盖(命令行)
+tdict serve                                # ② 前端:「设置 → 查询数据源」下拉切换
+# ③ 直接改 config.json 顶层(与 hosts 平级)
+{"query": {"source": "local"}}             # 或 {"source": "正式区"} 指定在线环境
 ```
 
-远程直查使用客户端驱动直连 `db.host:port`（账号取列表首项，`--conn`/`query.source` 与此无关），不要求本地已 sync；金仓与 Oracle 均为完整支持（列表 `--kw` 过滤大小写不敏感，与本地一致）。查询是只读单条 SELECT，值经白名单/转义内联。
+为什么缺省在线：**远程是最新且完整的数据**，本地副本要靠 `db sync` 更新（新机器/便携包上甚至还没有）。离线作业就在设置页切成「本地 SQLite」，或长期固定本地。
+
+远程直查使用客户端驱动直连 `db.host:port`（账号取列表首项，与 `query.source` 的取值无关），不要求本地已 sync；金仓与 Oracle 均为完整支持（列表 `--kw` 过滤大小写不敏感，与本地一致）。查询是只读单条 SELECT，值经白名单/转义内联。
 
 `db` 子命令（连接管理，与查询数据源独立；`--conn` 语义同为环境名）：
 
