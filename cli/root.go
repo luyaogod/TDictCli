@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 
 	"tdict/db"
 
@@ -20,7 +21,62 @@ var (
 	verbose    bool
 	// webFS holds the embedded frontend build output (web/dist), provided by main via Execute.
 	webFS fs.FS
+	// version 由打包脚本注入:build_portable.bat 传 -ldflags "-X tdict/cli.version=0.1.1"。
+	// 本地 go build 时为空,此时用 Go 构建信息里的 VCS 修订回答"这份二进制对应哪次提交"。
+	version string
 )
+
+// versionString 组装版本描述:优先注入的版本号,再附 commit / 提交日期 / 是否带未提交改动。
+// 本地 go build 也会带上这些 VCS 信息(见 runtime/debug.ReadBuildInfo),所以总能回答
+// "手上这份二进制对应哪次提交、工作区干不干净"——这正是排查"文档与二进制是否同版"要的。
+func versionString() string {
+	rev, when, dirty := vcsInfo()
+	tag := shortRev(rev)
+	if tag != "" && dirty {
+		tag += "+未提交改动"
+	}
+	switch {
+	case version != "" && tag != "":
+		return fmt.Sprintf("%s (commit %s, %s)", version, tag, when)
+	case version != "":
+		return version
+	case tag != "":
+		return fmt.Sprintf("devel (commit %s, %s)", tag, when)
+	default:
+		return "devel (无版本信息;用 build_portable.bat 打包会注入版本号)"
+	}
+}
+
+// vcsInfo 从构建信息里取 VCS 修订号 / 提交日期 / 是否有未提交改动。
+func vcsInfo() (rev, when string, dirty bool) {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return "", "", false
+	}
+	for _, s := range info.Settings {
+		switch s.Key {
+		case "vcs.revision":
+			rev = s.Value
+		case "vcs.time":
+			if len(s.Value) >= 10 {
+				when = s.Value[:10]
+			} else {
+				when = s.Value
+			}
+		case "vcs.modified":
+			dirty = s.Value == "true"
+		}
+	}
+	return rev, when, dirty
+}
+
+// shortRev 取修订号前 7 位(与 git 的短 hash 一致)。
+func shortRev(rev string) string {
+	if len(rev) > 7 {
+		return rev[:7]
+	}
+	return rev
+}
 
 // rootCmd is the base command.
 var rootCmd = &cobra.Command{
@@ -40,12 +96,15 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
+	rootCmd.Version = versionString() // 装出 --version(短名 -v 已被 verbose 占用,故无短名)
+	// 注:不要用 SetVersionTemplate 自定义模板——那会让 cobra 链进整棵 text/template
+	// 反射执行器,二进制实测 +5MB。默认模板已够用:tdict version <版本>
 	rootCmd.PersistentFlags().StringVarP(&dbPath, "db", "d", "erp_data.db", "Path to SQLite database file")
 	rootCmd.PersistentFlags().BoolVar(&useJSON, "json", false, "Output in JSON format")
 	rootCmd.PersistentFlags().BoolVar(&useCSV, "csv", false, "Output in CSV format")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Verbose output (show resolved db path)")
 	rootCmd.PersistentFlags().StringVar(&configPath, "config", "", "ERP 数据库连接配置文件路径 (JSON;缺省取统一用户目录 "+defaultConfigPathHint()+")")
-	attachDataHint() // --help 末尾附一行本地数据覆盖状态(见 helpdata.go)
+	attachDataHint() // --help 末尾附一行版本 + 本地数据覆盖状态(见 helpdata.go)
 }
 
 // resolveDBPath resolves the database file path with the following priority:

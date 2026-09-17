@@ -89,7 +89,8 @@ func runParamQuery(arg string, docOnly bool) error {
 		rows, err := GetDB().QueryParam(code)
 		if err != nil {
 			if db.IsMissingTable(err) {
-				return fmt.Errorf("本地库尚未包含参数档 (gzsz_t/gzszl_t)。请先执行 tdict db sync,或用 --conn <环境名> 远程直查")
+				fmt.Println(missingHint("参数档 (gzsz_t/gzszl_t)"))
+				return nil
 			}
 			return err
 		}

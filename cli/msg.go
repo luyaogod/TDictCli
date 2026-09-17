@@ -48,7 +48,8 @@ SQLCODE(如 -263,查询时需用 -- 分隔:tdict msg -- -263)。
 			rows, err := GetDB().QueryMsg(code)
 			if err != nil {
 				if db.IsMissingTable(err) {
-					return fmt.Errorf("本地库尚未包含消息档 (gzze_t/gzzal_t)。请先执行 tdict db sync,或用 --conn <环境名> 远程直查")
+					fmt.Println(missingHint("消息档 (gzze_t/gzzal_t)"))
+					return nil
 				}
 				return err
 			}
@@ -134,5 +135,13 @@ func statusLabel(code string) string {
 
 func init() {
 	msgCmd.Flags().StringVar(&msgLang, "lang", "zh_CN", "显示语言别 (gzze002;缺省 zh_CN)")
+	// 负整数编号(SQLCODE,如 -263)会被 flag 解析吃掉,报 "unknown shorthand flag: '2' in -263",
+	// 看不出该怎么办。这里翻成可操作的提示(唯一需要 -- 分隔的参数位置)。
+	msgCmd.SetFlagErrorFunc(func(c *cobra.Command, err error) error {
+		if strings.Contains(err.Error(), "unknown shorthand flag") {
+			return fmt.Errorf("%w\n提示: 负整数编号(SQLCODE)要写成 `tdict msg -- -263`(`--` 之后才当参数解析)", err)
+		}
+		return err
+	})
 	rootCmd.AddCommand(msgCmd)
 }

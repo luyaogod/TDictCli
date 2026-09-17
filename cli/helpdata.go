@@ -37,17 +37,18 @@ func localDataHint(keys ...string) string {
 }
 
 // attachDataHint 在根命令上装 help 钩子。子命令继承根命令的 help 函数,
-// 所以这一处就能让所有数据命令的 --help 末尾都带上本地数据状态。
+// 所以这一处就能让所有命令的 --help 末尾都带上版本与本地数据状态。
 func attachDataHint() {
 	rootCmd.SetHelpFunc(func(c *cobra.Command, args []string) {
 		baseHelpFunc(c, args)
 		out := c.OutOrStdout()
+		fmt.Fprintln(out, "\n版本: tdict "+versionString())
 		if c == rootCmd {
-			fmt.Fprintln(out, "\n"+localDataHint())
+			fmt.Fprintln(out, localDataHint())
 			return
 		}
 		if keys, ok := helpCmdFamilies[c.Name()]; ok {
-			fmt.Fprintln(out, "\n"+localDataHint(keys...))
+			fmt.Fprintln(out, localDataHint(keys...))
 		}
 	})
 }

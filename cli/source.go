@@ -133,11 +133,35 @@ func envDBByName(cfg *host.Hosts, name string) (*dbconfig.Connection, error) {
 	return nil, fmt.Errorf("未找到环境 %q(可用: tdict env 查看环境名)", name)
 }
 
-// missingHint 主字典表缺失(IsMissingTable)时的提示:本地源建议先 db sync;
+// defaultEnvName 尽力取默认环境名(读配置失败或未配置时返回空串)。只用于错误提示,不报错。
+func defaultEnvName() string {
+	path, err := resolveConfigPath(configPath)
+	if err != nil {
+		return ""
+	}
+	cfg, err := host.LoadHosts(path)
+	if err != nil {
+		return ""
+	}
+	if cfg.ActiveEnv != "" {
+		return cfg.ActiveEnv
+	}
+	if len(cfg.SSHs) > 0 {
+		return cfg.SSHs[0].Name
+	}
+	return ""
+}
+
+// missingHint 主字典表缺失(IsMissingTable)时的提示。本地源给**两条路**:全量同步,
+// 以及"免写盘"的远程直查(有些环境不允许/不方便写本地库,只报 db sync 会把人引到死路);
 // 远程源说明库的问题与回退方式。subject 如 "校验定义 (dzcd_t 等表)"。
 func missingHint(subject string) string {
 	if srcLocal {
-		return fmt.Sprintf("本地库尚未包含%s数据。请先在有数据库的环境执行: tdict db sync", subject)
+		remote := "  tdict <命令> --conn <环境名>       # 免写盘,直接查远程"
+		if env := defaultEnvName(); env != "" {
+			remote = fmt.Sprintf("  tdict <命令> --conn %-11s # 免写盘,直接查远程(当前默认环境)", env)
+		}
+		return fmt.Sprintf("本地库尚未包含%s数据。二选一:\n  tdict db sync                     # 从 ERP 全量刷新(原库自动备份为 .bak)\n%s\n看各数据族缺什么: tdict db status", subject, remote)
 	}
 	return fmt.Sprintf("远程库缺少%s相关字典表(该环境数据库未同步或账号权限不足);可用 --conn local 切回本地库", subject)
 }

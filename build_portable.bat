@@ -12,12 +12,14 @@ cd /d "%~dp0"
 
 set STAGE=dist\tdict-portable
 set GOPROXY=https://goproxy.cn,direct
+rem 发布版本号:由 -ldflags 注入二进制(`tdict --version` 显示);发新版改这一行
+set VERSION=0.1.1
 
 if exist dist rmdir /s /q dist
 mkdir "%STAGE%"
 
-echo [1/4] Building tdict.exe ...
-call go build -trimpath -o tdict.exe .
+echo [1/4] Building tdict.exe (v%VERSION%) ...
+call go build -trimpath -ldflags "-X tdict/cli.version=%VERSION%" -o tdict.exe .
 if errorlevel 1 (
     echo BUILD FAILED
     exit /b 1

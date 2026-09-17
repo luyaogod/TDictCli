@@ -50,16 +50,24 @@ func printLocalStatus(st *dbsync.LocalStatus) {
 	rows := make([][]string, 0, len(st.Families))
 	missingAny := false
 	for _, f := range st.Families {
-		mark, missing := "✓", "-"
+		mark, missing, cnt := "✓", "-", fmt.Sprintf("%d", f.Rows)
 		if !f.Complete {
-			mark, missing, missingAny = "✗", strings.Join(f.Missing, ","), true
+			missingAny = true
+			missing = strings.Join(f.Missing, ",")
+			// 表不全时行数没有可解释的语义(命令会整体不可用),显示 — 而不是一个会误导人的数字
+			cnt = "—"
+			mark = "✗"
+			if f.Present > 0 {
+				mark = "✗ 部分"
+			}
 		}
-		rows = append(rows, []string{mark, f.Name, fmt.Sprintf("%d", f.Rows), missing, strings.Join(f.Commands, ",")})
+		rows = append(rows, []string{mark, f.Name, cnt, missing, strings.Join(f.Commands, ",")})
 	}
 	output.PrintTable(headers, rows)
 
 	if missingAny {
-		fmt.Println("\n未同步的数据族用 `tdict db sync` 补齐(需能连 ERP);临时也可 `tdict <命令> --conn <环境名>` 远程直查。")
+		fmt.Println("\n✗ = 该族的字典表不全,依赖它的命令会**整体**报错(不是部分可用);行数显示 — 表示该族不全、行数无意义。")
+		fmt.Println("补齐: tdict db sync(从 ERP 全量刷新,需能连 ERP);临时也可 `tdict <命令> --conn <环境名>` 远程直查。")
 	}
 }
 
