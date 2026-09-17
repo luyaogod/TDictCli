@@ -199,8 +199,9 @@ func runProgList() error {
 }
 
 // categoryLabel 程序类别码的中文补充(取 T100 程序编号第 4 码的类别约定)。
+// 注意 ERP 里存的是大写(gzza002='I'),这里统一转小写再比——否则注解永远不出现。
 func categoryLabel(code string) string {
-	switch code {
+	switch strings.ToLower(code) {
 	case "i":
 		return "(基本资料维护)"
 	case "m":

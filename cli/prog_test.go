@@ -43,3 +43,18 @@ func TestIsSubSuffix(t *testing.T) {
 		}
 	}
 }
+
+// TestCategoryLabel 程序类别码的中文注解:ERP 里存的是大写(gzza002='I'),
+// 大小写都要能注解出来(曾经只认小写,导致 prog 输出里注解永远不出现)。
+func TestCategoryLabel(t *testing.T) {
+	cases := map[string]string{
+		"I": "(基本资料维护)", "i": "(基本资料维护)",
+		"M": "(主档维护)", "Q": "(查询)", "R": "(报表)", "P": "(批次处理)",
+		"": "", "Z": "",
+	}
+	for in, want := range cases {
+		if got := categoryLabel(in); got != want {
+			t.Errorf("categoryLabel(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
