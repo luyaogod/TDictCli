@@ -584,10 +584,12 @@ func (l *Live) QueryTableList(lang, keyword string) ([]db.TableListItem, error) 
        OR UPPER(COALESCE(a.dzea002, '')) LIKE UPPER(%[1]s))`, k)
 	}
 	sql := `SELECT a.dzea001, COALESCE(al.dzeal003, a.dzea002, ''), a.dzea003, a.dzea004,
-       (SELECT COUNT(*) FROM dzeb_t b WHERE b.dzeb001 = a.dzea001)
+       COUNT(b.dzeb001)
 FROM dzea_t a
-LEFT JOIN dzeal_t al ON al.dzeal001 = a.dzea001 AND al.dzeal002 = ` + lit(lang) + where +
-		` ORDER BY a.dzea001`
+LEFT JOIN dzeal_t al ON al.dzeal001 = a.dzea001 AND al.dzeal002 = ` + lit(lang) + `
+LEFT JOIN dzeb_t b ON b.dzeb001 = a.dzea001` + where + `
+GROUP BY a.dzea001, al.dzeal003, a.dzea002, a.dzea003, a.dzea004
+ORDER BY a.dzea001`
 	rows, err := l.q(sql)
 	if err != nil {
 		return nil, fmt.Errorf("查询表列表: %w", err)

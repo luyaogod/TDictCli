@@ -11,8 +11,9 @@ import (
 )
 
 var (
-	tableKW   string
-	tableLang string
+	tableKW    string
+	tableLang  string
+	tableBrief bool
 )
 
 var tableCmd = &cobra.Command{
@@ -24,11 +25,13 @@ var tableCmd = &cobra.Command{
 读代码、看 SQL、查界面字段含义时用它。
 支持逗号分隔多个表名;输出简体中文。
 无参数时列出全部表(--kw 按表名/中文表说明搜索,从业务词找表);
-指定表名显示该表完整字典。
+指定表名显示该表完整字典,--brief 则只给表级信息(表名/说明/模块/类型/字段数),
+多表同查时用它避免打出上千行字段明细。
 命令名对齐 T100 原生工具 r.t(旧名 rt/table 仍可用)。`,
 	Example: `  tdict r.t dzea_t
   tdict r.t "dzea_t,dzeb_t,dzed_t"
   tdict r.t --kw 应收        # 按中文说明找表(列表模式)
+  tdict r.t --brief "apca_t,apcb_t,glab_t"   # 多表只解语义,不打字段明细
   tdict r.t dzea_t --json
   tdict r.t dzea_t --conn 正式区   # 切到某环境的远程库直查(--conn local 回本地)`,
 	Args: cobra.MaximumNArgs(1),
@@ -56,6 +59,19 @@ var tableCmd = &cobra.Command{
 
 		if IsCSV() {
 			return printTableCSV(dicts)
+		}
+
+		// --brief:只要表级信息。多表同查时默认会打每张表的全部字段(7 张表 ≈ 700 行),
+		// 只想确认"这几张表分别是什么"时用 --brief,和列表模式同样的表。
+		if tableBrief {
+			headers := []string{"表名", "表说明", "模块", "类型", "字段数"}
+			var rows [][]string
+			for _, d := range dicts {
+				rows = append(rows, []string{d.TableName, d.TableDesc, d.Module, d.TableType,
+					fmt.Sprintf("%d", len(d.Fields))})
+			}
+			output.PrintTable(headers, rows)
+			return nil
 		}
 
 		for _, d := range dicts {
@@ -239,6 +255,7 @@ func keyTypeLabel(code string) string {
 func init() {
 	tableCmd.Flags().StringVar(&tableKW, "kw", "", "按表名/中文表说明搜索 (无表名时的列表模式)")
 	tableCmd.Flags().StringVar(&tableLang, "lang", "zh_CN", "表说明语言别 (dzeal002, 默认 zh_CN)")
+	tableCmd.Flags().BoolVar(&tableBrief, "brief", false, "只给表级信息(表名/说明/模块/类型/字段数),不打字段明细")
 	rootCmd.AddCommand(tableCmd)
 }
 

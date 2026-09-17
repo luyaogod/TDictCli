@@ -132,6 +132,9 @@ type TableListItem struct {
 
 // QueryTableList returns all tables, optionally filtered by keyword
 // (matched against table name and zh_CN/指定语言 table description).
+//
+// 字段数用 LEFT JOIN + COUNT 一次算出,而不是逐行相关子查询:
+// 3,882 张表 × 15 万行字段表,相关子查询实测 81 秒,改 JOIN 后 0.25 秒(本地无索引的库也如此)。
 func (d *DB) QueryTableList(lang, keyword string) ([]TableListItem, error) {
 	like := "%" + keyword + "%"
 	query := `
@@ -139,10 +142,12 @@ func (d *DB) QueryTableList(lang, keyword string) ([]TableListItem, error) {
 		       COALESCE(al.dzeal003, a.dzea002, ''),
 		       COALESCE(a.dzea003, ''),
 		       COALESCE(a.dzea004, ''),
-		       (SELECT COUNT(*) FROM dzeb_t WHERE dzeb001 = a.dzea001)
+		       COUNT(b.dzeb001)
 		FROM dzea_t a
 		LEFT JOIN dzeal_t al ON al.dzeal001 = a.dzea001 AND al.dzeal002 = ?
+		LEFT JOIN dzeb_t b ON b.dzeb001 = a.dzea001
 		WHERE (? = '' OR a.dzea001 LIKE ? OR al.dzeal003 LIKE ? OR a.dzea002 LIKE ?)
+		GROUP BY a.dzea001, al.dzeal003, a.dzea002, a.dzea003, a.dzea004
 		ORDER BY a.dzea001
 	`
 	rows, err := d.conn.Query(query, lang, keyword, like, like, like)
