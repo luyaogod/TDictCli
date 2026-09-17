@@ -6,8 +6,6 @@
 
 此外保留 SSH 环境与数据库连接管理（`tdict serve` 可视化配置页 / `tdict env` / `tdict db`）与服务器源码镜像（`tdict mirror`）。
 
-T100 作业调试（原 `tdict debug`）已拆分到独立项目，本仓库不再包含调试代码。
-
 所有输出默认使用**简体中文 (zh_CN)**。
 
 ## 能查到的数据（规模）
@@ -480,7 +478,7 @@ tdict serve --listen 127.0.0.1:9123
 - 配置文件取 `--config` / `TDICT_CONFIG`；缺省位置是**统一用户目录** `%APPDATA%\T100\tdict\config.json`（可用 `T100_HOME` 整体改写）。文件不存在时首次保存自动创建，目录也一并建好。与 TDebug 的 `%APPDATA%\T100\tdebug\config.json` 同处一个父目录。
 - **便携版发布为空配置、且不含业务数据**：打包脚本用 `config.empty.json` 生成空的 `config.json`（`hosts.sshs` 为空），首次运行用本页添加自己的环境；同时也**不打包 `erp_data.db`**（含客户表字典/schema/企业码等数据），配好环境后自行用「数据同步」或 `tdict db sync` 拉取。技能以普通目录 `skills/` 随包提供（**不内嵌二进制**，可直接编辑）。仓库中不提交 `config.json` 与 `erp_data.db`（见 `.gitignore`）。
 - 服务器执行工具（sqlplus/ksql）路径自动探测，无需配置；SSH/DB 探测逻辑与 `tdict db discover` 同源（`host` 包）；镜像逻辑与 `tdict mirror pull` 同源，同步逻辑与 `tdict db sync` 同源（`dbsync` 包）。
-- 该服务只做配置读写、只读探测与同步拉取，不启动任何调试会话。
+- 该服务只做配置读写、只读探测与同步拉取。
 
 ## 本地源码镜像（tdict mirror）
 
@@ -659,9 +657,8 @@ TDictCli/
 ├── server/              # 本地配置服务(tdict serve):静态前端 + 配置读写/连接探测 REST
 ├── web/                 # 前端(React/Vite/Tailwind;SSH 与数据库配置页,产物嵌入)
 ├── skills/              # AI 技能文件(每技能一个目录 + SKILL.md,不内嵌;tdict install skills 复制到目标目录)
-│   ├── tdict.md              # 数据字典查询 Skill
-│   ├── tdict-debug.md        # T100 作业调试 Skill(调试功能已迁出,供独立调试项目使用)
-│   └── erp-read.md           # 阅读/分析 ERP 4GL 源码 Skill
+│   ├── tdict/SKILL.md           # 数据字典查询 Skill
+│   └── erp-code-reader/SKILL.md # 阅读/分析 ERP 4GL 源码 Skill
 ├── docs/
 │   └── bdl/             # BDL(4GL)语言参考文档(markdown,无图片;路径记于 bdldoc.dir)
 ├── erp_data.db          # SQLite 数据库(tdict db sync 刷新)
@@ -678,7 +675,6 @@ TDictCli/
 | Kingbase 驱动 | [jackc/pgx](https://github.com/jackc/pgx)（纯 Go，PostgreSQL 协议） |
 | Oracle 驱动 | [sijms/go-ora/v2](https://github.com/sijms/go-ora)（纯 Go） |
 | SSH/SFTP | [golang.org/x/crypto/ssh](https://pkg.go.dev/golang.org/x/crypto/ssh) + [pkg/sftp](https://github.com/pkg/sftp) |
-| WebSocket | 已移除（随调试功能迁出） |
 | CLI 框架 | [cobra](https://github.com/spf13/cobra) |
 | Web 前端 | React + Vite + Tailwind（SSH/数据库配置页，产物 `go:embed` 嵌入） |
 | 输出 | `text/tabwriter` + `encoding/json` |
