@@ -14,6 +14,7 @@ var (
 	progKW    string
 	progLang  string
 	progLimit int
+	progSub   bool
 )
 
 var progCmd = &cobra.Command{
@@ -26,17 +27,25 @@ var progCmd = &cobra.Command{
 一个程序可以被多个作业使用(作业名称取它所挂程序的名称,与 azzi910 一致)。
 
 读代码时的第一个问题"这个程序做什么"就用它;也可以拿作业编号去查它挂的是哪个程序。
+主程序查不到时会继续查**子程序/元件登记**(gzde_t,参考作业 azzi901):子程序(aapq110_01)、
+应用元件/库(cl_abi、s_xxx)都能给出它自己的说明与规格类别——两类登记互不重叠。
+子程序/元件的列表与搜索用 --sub。
 无参数时列出全部程序(--kw 按程序编号/中文名称搜索,从业务词找程序)。
 程序名称有简体(--lang zh_CN,默认)与繁体(--lang zh_TW)两份,搜索用字要对应;
 一个程序被很多作业使用时(如共用维护程序可达数百个),作业表默认只列前 --limit 行。
-数据族为"程序与作业"(--help 末尾会显示本地是否已同步;缺就 tdict db sync)。`,
-	Example: `  tdict prog aapi011          # 程序做什么 + 被哪些作业使用
+数据族为"程序与作业/程序与表格/子程序与元件"(--help 末尾会显示本地是否已同步)。`,
+	Example: `  tdict prog aapi011          # 程序做什么 + 被哪些作业使用 + 用了哪些表
+  tdict prog aapq110_01       # 子程序:自己的说明 + 它的主程序
+  tdict prog cl_abi           # 库/元件:说明 + 用表清单
   tdict prog --kw 对帐        # 按中文作业名找程序
-  tdict prog aapit100 --json
-  tdict prog aapi011 --conn 正式区`,
+  tdict prog --sub --kw ABI   # 在子程序/元件里按业务词搜
+  tdict prog aapi011 --json`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
+			if progSub {
+				return runSubProgList()
+			}
 			return runProgList()
 		}
 		return runProgDetail(args[0])
@@ -55,10 +64,24 @@ func runProgDetail(code string) error {
 		return err
 	}
 	if info == nil {
-		fmt.Printf("未找到程序/作业 '%s' 的登记。\n", code)
+		// 主程序登记(gzza_t)里没有 → 查子程序/元件/库登记(gzde_t,参考作业 azzi901)。
+		// 两张表互不重叠:实测 gzde_t 4,036 个 / gzza_t 4,147 个、交集 0。
+		sub, serr := GetDB().QuerySubProgInfo(code, progLang)
+		if serr != nil && !db.IsMissingTable(serr) {
+			return serr
+		}
+		if sub != nil {
+			printSubProgInfo(sub)
+			if base := progBaseCode(code); base != "" {
+				if bi, err := GetDB().QueryProgInfo(base, progLang); err == nil && bi != nil && bi.IsProg {
+					fmt.Printf("它的主程序: %s(%s);子程序自己做的事以文件头 `#+ Description:` 为准。\n", base, bi.Name)
+				}
+			}
+			return printProgTables(code, true)
+		}
+		fmt.Printf("未找到程序/作业/元件 '%s' 的登记。\n", code)
 		if base := progBaseCode(code); base != "" {
-			// 子程序/子元件形态:工具只登记主程序。跟到主程序,但要说清二者不是一回事
-			// (如 aapq110_01「报表列印」 vs 主程序 aapq110「明细查询」)。
+			// 子程序/子元件形态,但两张登记表都没有:只提示主程序
 			if bi, err := GetDB().QueryProgInfo(base, progLang); err == nil && bi != nil && bi.IsProg {
 				fmt.Printf("提示: '%s' 是子程序/子元件形态,主程序为 '%s'(%s)。\n", code, base, bi.Name)
 			} else {
@@ -131,6 +154,75 @@ func runProgDetail(code string) error {
 			len(jobs)-len(shown), len(jobs))
 	}
 	return printProgTables(code, false)
+}
+
+// printSubProgInfo 打印子程序/元件/库的登记(gzde_t + gzdel_t,参考作业 azzi901)。
+func printSubProgInfo(p *db.SubProgInfo) {
+	fmt.Printf("=== %s ===\n", p.Code)
+	if p.Name != "" {
+		fmt.Printf("说明: %s\n", p.Name)
+	}
+	var parts []string
+	if p.Category != "" {
+		parts = append(parts, "规格类别: "+p.Category+db.SubProgCategoryLabel(p.Category))
+	}
+	if p.Module != "" {
+		parts = append(parts, "归属模块: "+p.Module)
+	}
+	if p.ProgCat != "" {
+		parts = append(parts, "程序类别: "+p.ProgCat+categoryLabel(p.ProgCat))
+	}
+	if p.Cust != "" {
+		parts = append(parts, "客制: "+p.Cust)
+	}
+	if p.Status != "" {
+		parts = append(parts, "状态码: "+p.Status)
+	}
+	for _, x := range parts {
+		fmt.Println(x)
+	}
+	if p.Industry != "" {
+		fmt.Printf("归属行业别: %s\n", p.Industry)
+	}
+	fmt.Println("(登记在「子程序及应用元件基本数据表」gzde_t,不在程序/作业登记里)")
+}
+
+// runSubProgList 列出/搜索子程序与元件(--sub,--kw 按编号或说明过滤)。
+func runSubProgList() error {
+	list, err := GetDB().QuerySubProgList(progLang, progKW)
+	if err != nil {
+		if db.IsMissingTable(err) {
+			fmt.Println(missingHint("子程序与元件 (gzde_t/gzdel_t)"))
+			return nil
+		}
+		return err
+	}
+	if len(list) == 0 {
+		if progKW != "" {
+			fmt.Printf("没有匹配 '%s' 的子程序/元件。\n提示: 说明可能只有繁体或其它语言,换 --lang 或更短的词再试。\n", progKW)
+		} else {
+			fmt.Println(emptyHint("子程序与元件"))
+		}
+		return nil
+	}
+	headers := []string{"规格编号", "说明", "规格类别", "归属模块", "客制"}
+	var rows [][]string
+	for _, p := range list {
+		rows = append(rows, []string{p.Code, p.Name, p.Category, p.Module, p.Cust})
+	}
+	if IsJSON() {
+		return output.PrintJSON(list)
+	}
+	if IsCSV() {
+		return output.PrintCSVFromMaps(headers, rows)
+	}
+	output.PrintTable(headers, rows)
+	fmt.Printf("\n共 %d 个", len(list))
+	if progKW == "" {
+		fmt.Print(";用 --kw <业务词> 过滤")
+	}
+	fmt.Println()
+	return nil
 }
 
 // printProgTables 打印"这个编号用了哪些表"(gzdg_t,由 T100 自己维护;参考作业 azzq902)。
@@ -326,5 +418,6 @@ func init() {
 	progCmd.Flags().StringVar(&progKW, "kw", "", "按程序编号/中文名称搜索 (无编号时的列表模式)")
 	progCmd.Flags().StringVar(&progLang, "lang", "zh_CN", "程序名称语言别 (gzzal002, 默认 zh_CN)")
 	progCmd.Flags().IntVar(&progLimit, "limit", 20, "作业最多显示几行 (0 = 全部;大程序可被数百个作业使用)")
+	progCmd.Flags().BoolVar(&progSub, "sub", false, "无编号时:列出/搜索子程序与元件(gzde_t)而不是主程序")
 	rootCmd.AddCommand(progCmd)
 }

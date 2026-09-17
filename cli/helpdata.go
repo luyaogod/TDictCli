@@ -19,7 +19,7 @@ var helpCmdFamilies = map[string][]string{
 	"msg":  {"msg"},
 	"sysp": {"param"},
 	"docp": {"param"},
-	"prog": {"prog", "progtable"},
+	"prog": {"prog", "progtable", "subprog"},
 }
 
 // baseHelpFunc 是 cobra 的默认 help 实现。用一个无父命令的临时命令取出来,

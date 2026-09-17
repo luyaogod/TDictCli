@@ -54,6 +54,11 @@ var Families = []Family{
 	// 表名与程序名分别 join dzeal_t(表字典族)与 gzzal_t(程序族),两者已在库中。
 	{Key: "progtable", Name: "程序与表格", Commands: []string{"prog", "r.t"},
 		Tables: []string{"gzdg_t"}},
+	// 子程序与元件(gzde_t 子程序及应用元件基本数据表 + gzdel_t 说明,参考作业 azzi901
+	// 子程式及元件基本資料設定作業):与 gzza_t(主程序)互不重叠——实测正式区
+	// gzde_t 4,036 个 / gzza_t 4,147 个、交集 0。规格类别见 SCC 91。
+	{Key: "subprog", Name: "子程序与元件", Commands: []string{"prog"},
+		Tables: []string{"gzde_t", "gzdel_t"}},
 }
 
 // DictTables 同步的 T100 数据字典表 —— 由 Families 展平并按首次出现去重。

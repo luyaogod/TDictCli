@@ -23,6 +23,14 @@ func buildProgDB(t *testing.T) *DB {
 		`CREATE TABLE gzzk_t (gzzk001 TEXT, gzzk002 TEXT, gzzk003 TEXT)`,
 		// 程序↔表格(参考作业 azzq902):主键 程序编号+表格编号+操作类别
 		`CREATE TABLE gzdg_t (gzdg001 TEXT, gzdg002 TEXT, gzdg003 TEXT)`,
+		// 子程序/元件登记(参考作业 azzi901):与 gzza_t(主程序)互不重叠
+		`CREATE TABLE gzde_t (gzde001 TEXT, gzde002 TEXT, gzde003 TEXT, gzde005 TEXT,
+		   gzde006 TEXT, gzde008 TEXT, gzde009 TEXT, gzdestus TEXT)`,
+		`CREATE TABLE gzdel_t (gzdel001 TEXT, gzdel002 TEXT, gzdel003 TEXT)`,
+		`INSERT INTO gzde_t VALUES ('aapq110_01','AAP','S','Q','','s','sd','Y')`,
+		`INSERT INTO gzde_t VALUES ('cl_abi','LIB','B','X','','s','sd','Y')`,
+		`INSERT INTO gzdel_t VALUES ('aapq110_01','zh_CN','供应商对账单明细查询报表打印')`,
+		`INSERT INTO gzdel_t VALUES ('cl_abi','zh_CN','ABI Library')`,
 		`CREATE TABLE dzeal_t (dzeal001 TEXT, dzeal002 TEXT, dzeal003 TEXT)`,
 		`INSERT INTO dzeal_t VALUES ('glab_t','zh_CN','账套应用会计科目设置档')`,
 		`INSERT INTO dzeal_t VALUES ('ooag_t','zh_CN','员工数据档')`,
@@ -138,6 +146,67 @@ func TestQueryProgJobs(t *testing.T) {
 	}
 	if len(only) != 1 || only[0].JobCode != "aapi011" {
 		t.Errorf("aapi011 应只有 1 个作业: %+v", only)
+	}
+}
+
+// TestQuerySubProgInfo 子程序/元件登记:能答"这个编号是什么",且主程序不在其中
+// (与 gzza_t 互不重叠——实测正式区两表交集 0)。
+func TestQuerySubProgInfo(t *testing.T) {
+	d := buildProgDB(t)
+
+	sub, err := d.QuerySubProgInfo("aapq110_01", "zh_CN")
+	if err != nil {
+		t.Fatalf("QuerySubProgInfo: %v", err)
+	}
+	if sub == nil {
+		t.Fatal("aapq110_01 应登记在 gzde_t")
+	}
+	if sub.Name != "供应商对账单明细查询报表打印" || sub.Category != "S" || sub.Module != "AAP" {
+		t.Errorf("字段不符: %+v", sub)
+	}
+	if sub.ProgCat != "Q" || sub.Status != "Y" || sub.Cust != "s" {
+		t.Errorf("字段不符: %+v", sub)
+	}
+
+	// 主程序(aapi011)不在 gzde_t —— 两个登记表互补
+	if p, err := d.QuerySubProgInfo("aapi011", "zh_CN"); err != nil || p != nil {
+		t.Errorf("主程序不该出现在 gzde_t: %+v, %v", p, err)
+	}
+	// 未收录
+	if p, err := d.QuerySubProgInfo("nosuch", "zh_CN"); err != nil || p != nil {
+		t.Errorf("未收录应返回 (nil,nil): %+v, %v", p, err)
+	}
+}
+
+// TestQuerySubProgList 子程序/元件列表与搜索,--kw 按编号或说明。
+func TestQuerySubProgList(t *testing.T) {
+	d := buildProgDB(t)
+
+	all, err := d.QuerySubProgList("zh_CN", "")
+	if err != nil {
+		t.Fatalf("QuerySubProgList: %v", err)
+	}
+	if len(all) != 2 {
+		t.Fatalf("应有 2 个, got %d", len(all))
+	}
+	byName, err := d.QuerySubProgList("zh_CN", "ABI")
+	if err != nil {
+		t.Fatalf("QuerySubProgList(ABI): %v", err)
+	}
+	if len(byName) != 1 || byName[0].Code != "cl_abi" || byName[0].Category != "B" {
+		t.Errorf("按说明搜索应命中 cl_abi: %+v", byName)
+	}
+}
+
+// TestSubProgCategoryLabel 规格类别(SCC 91)注解。
+func TestSubProgCategoryLabel(t *testing.T) {
+	cases := map[string]string{"B": "(应用元件)", "S": "(子程序)", "M": "(主程序)",
+		"G": "(报表元件-GR类)", "X": "(报表元件-XG/FR类)", "K": "(报表组件-XR类)",
+		"W": "(WebService元件)", "": "", "z": ""}
+	for in, want := range cases {
+		if got := SubProgCategoryLabel(in); got != want {
+			t.Errorf("SubProgCategoryLabel(%q) = %q, want %q", in, got, want)
+		}
 	}
 }
 

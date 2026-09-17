@@ -29,7 +29,7 @@ func (l *Live) q(sql string) ([][]string, error) {
 	return rows, nil
 }
 
-// get 取行内第 i 列,越界/为空返回空串(与本地全 TEXT 镜像的 NULL→'' 一致)。
+// get 取行内第 i 列,越界/为空返回空串(与本地全 TEXT 镜像的 NULL→” 一致)。
 func get(row []string, i int) string {
 	if i < len(row) {
 		return row[i]
@@ -40,7 +40,7 @@ func get(row []string, i int) string {
 // lit 把用户值转 SQL 字面量(单引号翻倍);表名等标识符先过 ValidIdent 防注入。
 func lit(s string) string { return erpdb.QuoteLit(s) }
 
-// tableLit 表名(标识符形态,如 dzea_t)校验后转字面量;非法返回 "''"(查不到,不报错)。
+// tableLit 表名(标识符形态,如 dzea_t)校验后转字面量;非法返回 "”"(查不到,不报错)。
 func tableLit(t string) string {
 	if !erpdb.ValidIdent(t) {
 		return "''"
@@ -49,7 +49,7 @@ func tableLit(t string) string {
 }
 
 // kwWhere 生成大小写不敏感的关键字过滤(本地 LIKE 不区分大小写;远程统一 UPPER)。
-// 返回空串表示不加过滤。kw 为空与本地 `?='' OR ... LIKE '%%'` 语义等价。
+// 返回空串表示不加过滤。kw 为空与本地 `?=” OR ... LIKE '%%'` 语义等价。
 func kwWhere(idExpr, descExpr, kw string) string {
 	if kw == "" {
 		return ""
@@ -698,6 +698,49 @@ ORDER BY t.gzdg002, t.gzdg003`
 		return nil, fmt.Errorf("查询程序 %s 使用的表格: %w", code, err)
 	}
 	return db.GroupProgTables(rows, get), nil
+}
+
+// ---- 子程序与元件:gzde_t(参考作业 azzi901 子程式及元件基本資料設定作業) ----
+
+// QuerySubProgInfo 按编号查子程序/元件/库的登记;未收录返回 (nil, nil)。
+func (l *Live) QuerySubProgInfo(code, lang string) (*db.SubProgInfo, error) {
+	sql := `SELECT g.gzde001, COALESCE(l.gzdel003, ''), COALESCE(g.gzde003, ''),
+       COALESCE(g.gzde002, ''), COALESCE(g.gzde008, ''), COALESCE(g.gzde009, ''),
+       COALESCE(g.gzde005, ''), COALESCE(g.gzde006, ''), COALESCE(g.gzdestus, '')
+FROM gzde_t g
+LEFT JOIN gzdel_t l ON l.gzdel001 = g.gzde001 AND l.gzdel002 = ` + lit(lang) + `
+WHERE g.gzde001 = ` + lit(code)
+	rows, err := l.q(sql)
+	if err != nil {
+		return nil, fmt.Errorf("查询子程序/元件 %s: %w", code, err)
+	}
+	if len(rows) == 0 {
+		return nil, nil
+	}
+	r := rows[0]
+	return &db.SubProgInfo{Code: get(r, 0), Name: get(r, 1), Category: get(r, 2),
+		Module: get(r, 3), Cust: get(r, 4), Industry: get(r, 5),
+		ProgCat: get(r, 6), GenType: get(r, 7), Status: get(r, 8)}, nil
+}
+
+// QuerySubProgList 列出/搜索子程序与元件(--kw 按编号或说明过滤)。
+func (l *Live) QuerySubProgList(lang, keyword string) ([]db.SubProgListItem, error) {
+	sql := `SELECT g.gzde001, COALESCE(l.gzdel003, ''), COALESCE(g.gzde003, ''),
+       COALESCE(g.gzde002, ''), COALESCE(g.gzde008, '')
+FROM gzde_t g
+LEFT JOIN gzdel_t l ON l.gzdel001 = g.gzde001 AND l.gzdel002 = ` + lit(lang) +
+		kwWhere("g.gzde001", "l.gzdel003", keyword) +
+		` ORDER BY g.gzde001`
+	rows, err := l.q(sql)
+	if err != nil {
+		return nil, fmt.Errorf("查询子程序/元件列表: %w", err)
+	}
+	out := make([]db.SubProgListItem, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, db.SubProgListItem{Code: get(r, 0), Name: get(r, 1),
+			Category: get(r, 2), Module: get(r, 3), Cust: get(r, 4)})
+	}
+	return out, nil
 }
 
 // QueryTablePrograms 反查"哪些程序在用这张表"(gzdg002 = table)。

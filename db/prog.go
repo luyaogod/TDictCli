@@ -98,6 +98,109 @@ func mergeOps(ops []string) string {
 	return strings.Join(append(out, rest...), "/")
 }
 
+// ---- 子程序与元件(gzde_t 子程序及应用元件基本数据表,参考作业 azzi901) ----
+//
+//	gzde001 规格编号(PK)、gzde002 归属模块(LIB/SUB 等 $COM 子目录)、
+//	gzde003 规格类别(SCC 91:B=应用元件 M=主程序 S=子程序 G=报表元件-GR类
+//	X=报表元件-XG/FR类 K=报表组件-XR类 W=WebService元件)、gzde005 程序类别、
+//	gzde008 客制、gzde009 归属行业别;说明在 gzdel_t(多语言)。
+//
+// 与 gzza_t(主程序)的关系:**互不重叠**——实测正式区 gzde_t 4,036 个、
+// gzza_t 4,147 个,交集 0(本站 gzde_t 无 M 主程序行)。两者合起来才是完整的
+// "这个编号是什么":主程序查 gzza_t,子程序/元件/库查 gzde_t。
+
+// SubProgInfo 一个编号在"子程序/元件/库"登记里的信息。
+type SubProgInfo struct {
+	Code     string `json:"规格编号"`   // gzde001
+	Name     string `json:"说明"`     // gzdel003(指定语言)
+	Category string `json:"规格类别"`   // gzde003(SCC 91)
+	Module   string `json:"归属模块"`   // gzde002
+	Cust     string `json:"客制"`     // gzde008
+	Industry string `json:"归属行业别"`  // gzde009
+	ProgCat  string `json:"程序类别"`   // gzde005
+	GenType  string `json:"程序生成类型"` // gzde006
+	Status   string `json:"状态码"`    // gzdestus
+}
+
+// SubProgListItem 子程序/元件列表的一行。
+type SubProgListItem struct {
+	Code     string `json:"规格编号"`
+	Name     string `json:"说明"`
+	Category string `json:"规格类别"`
+	Module   string `json:"归属模块"`
+	Cust     string `json:"客制"`
+}
+
+// QuerySubProgInfo 按编号查子程序/元件/库的登记;未收录返回 (nil, nil)。
+func (d *DB) QuerySubProgInfo(code, lang string) (*SubProgInfo, error) {
+	var p SubProgInfo
+	err := d.conn.QueryRow(`
+		SELECT g.gzde001, COALESCE(l.gzdel003, ''), COALESCE(g.gzde003, ''),
+		       COALESCE(g.gzde002, ''), COALESCE(g.gzde008, ''), COALESCE(g.gzde009, ''),
+		       COALESCE(g.gzde005, ''), COALESCE(g.gzde006, ''), COALESCE(g.gzdestus, '')
+		FROM gzde_t g
+		LEFT JOIN gzdel_t l ON l.gzdel001 = g.gzde001 AND l.gzdel002 = ?
+		WHERE g.gzde001 = ?`, lang, code).
+		Scan(&p.Code, &p.Name, &p.Category, &p.Module, &p.Cust, &p.Industry,
+			&p.ProgCat, &p.GenType, &p.Status)
+	switch err {
+	case nil:
+		return &p, nil
+	case sql.ErrNoRows:
+		return nil, nil
+	default:
+		return nil, fmt.Errorf("query subprog info %s: %w", code, err)
+	}
+}
+
+// QuerySubProgList 列出/搜索子程序与元件(--kw 按编号或说明过滤)。
+func (d *DB) QuerySubProgList(lang, keyword string) ([]SubProgListItem, error) {
+	like := "%" + keyword + "%"
+	rows, err := d.conn.Query(`
+		SELECT g.gzde001, COALESCE(l.gzdel003, ''), COALESCE(g.gzde003, ''),
+		       COALESCE(g.gzde002, ''), COALESCE(g.gzde008, '')
+		FROM gzde_t g
+		LEFT JOIN gzdel_t l ON l.gzdel001 = g.gzde001 AND l.gzdel002 = ?
+		WHERE (? = '' OR g.gzde001 LIKE ? OR COALESCE(l.gzdel003, '') LIKE ?)
+		ORDER BY g.gzde001`, lang, keyword, like, like)
+	if err != nil {
+		return nil, fmt.Errorf("query subprog list: %w", err)
+	}
+	defer rows.Close()
+
+	var result []SubProgListItem
+	for rows.Next() {
+		var p SubProgListItem
+		if err := rows.Scan(&p.Code, &p.Name, &p.Category, &p.Module, &p.Cust); err != nil {
+			return nil, fmt.Errorf("scan subprog row: %w", err)
+		}
+		result = append(result, p)
+	}
+	return result, rows.Err()
+}
+
+// SubProgCategoryLabel 规格类别(SCC 91)的中文注解。
+func SubProgCategoryLabel(code string) string {
+	switch strings.ToUpper(code) {
+	case "B":
+		return "(应用元件)"
+	case "M":
+		return "(主程序)"
+	case "S":
+		return "(子程序)"
+	case "G":
+		return "(报表元件-GR类)"
+	case "X":
+		return "(报表元件-XG/FR类)"
+	case "K":
+		return "(报表组件-XR类)"
+	case "W":
+		return "(WebService元件)"
+	default:
+		return ""
+	}
+}
+
 // GetCol 取行内第 i 列(越界返回空串)。语义与 live 包的 get 一致,供共用的合并函数使用。
 func GetCol(row []string, i int) string {
 	if i < len(row) {

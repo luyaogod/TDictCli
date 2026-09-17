@@ -22,6 +22,9 @@ type Source interface {
 	// 程序 ↔ 表格:gzdg_t(程序与应用表格功能分析表,参考作业 azzq902),两侧都按操作类别合并
 	QueryProgTables(code, lang string) ([]ProgTableRow, error)
 	QueryTablePrograms(table, lang string) ([]TableProgRow, error)
+	// 子程序与元件:gzde_t(子程序及应用元件基本数据表,参考作业 azzi901)+ gzdel_t(说明)
+	QuerySubProgInfo(code, lang string) (*SubProgInfo, error) // 未收录返回 (nil, nil)
+	QuerySubProgList(lang, keyword string) ([]SubProgListItem, error)
 	// rv 校验带值:dzcd_t/dzce_t/dzch_t
 	QueryCheckList(lang, keyword string) ([]CheckListRow, error)
 	QueryCheckHeaders(id, lang string) ([]CheckHeaderRow, error)
