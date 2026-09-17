@@ -31,7 +31,7 @@
 
 不想装 Go 的话，直接下载打包好的便携版：
 
-**<https://github.com/luyaogod/TDictCli/releases/latest>** → `tdict-portable-vX.Y.Z.zip`，解压即用。包含 `tdict.exe`（内嵌配置页前端）、空的 `config.json`、`config.example.json`、`README.md`、`skills/`；**不含任何真实凭据与业务数据**，也**不含 `erp_data.db`**——首次解压后：
+**<https://github.com/luyaogod/TDictCli/releases/latest>** → `tdict-portable-vX.Y.Z.zip`，解压即用。包含 `tdict.exe`（内嵌配置页前端）、空的 `config.json`、`config.example.json`、`README.md`、`skills/`；**发布包里不含任何真实凭据与业务数据**，也**不含 `erp_data.db`**（首次解压后：
 
 ```bash
 tdict.exe serve            # 浏览器里「环境配置」填 SSH 环境与数据库
@@ -94,11 +94,19 @@ tdict install skills
 ## 快速上手
 
 ```bash
+# 查版本与本地数据覆盖情况（先看这两个，再决定要不要同步）
+tdict --version
+tdict db status
+
 # 查询单张表的完整字典（表名、字段、键值、索引）
 tdict r.t dzea_t
 
-# 查询多个表（逗号分隔）
+# 查询多个表（逗号分隔）；只要表级信息时加 --brief，避免打出上千行字段明细
 tdict r.t "dzea_t,dzeb_t,dzed_t"
+tdict r.t --brief "apca_t,apcb_t,glab_t"
+
+# 按中文业务词找表（读代码时最常用）
+tdict r.t --kw 应收
 
 # 输出 JSON / CSV
 tdict r.t dzea_t --json
@@ -188,6 +196,12 @@ nmcn_t  应收票据主档     ANM  M   89
 ```
 
 > 表说明有简繁两种写法（`zh_CN` 列与原始繁体档），同一词也可能有异体（如 `对账`/`对帐`/`對帳`）：搜不到时换个写法、更短的词，或加 `--lang` 切换语言别。
+
+**只要表级信息时加 `--brief`**：指定多张表时默认会打印每张表的**全部字段**（7 张表 ≈ 700 行），`--brief` 只给「表名/表说明/模块/类型/字段数」，与列表模式同样的表——读代码时"这几张表分别是什么"就用它，要看字段再单表查：
+
+```bash
+tdict r.t --brief "glab_t,glaa_t,glad_t,apca_t,apcb_t,oocq_t,ooag_t"
+```
 
 ### `tdict r.v [dzcd001]`
 
@@ -434,6 +448,19 @@ $ tdict db status
 
 只读、不改任何文件，也不需要 `config.json`。各数据命令的 `--help` 末尾也会带一行本命令数据族的状态（`tdict --help` 给全部数据族的概览）。
 
+**读法**：`✓`=该族已完整同步；`✗`/`✗ 部分`=该族字典表不全，**依赖它的命令会整体报错**（不是部分可用——所以行数列显示 `—`，因为那个行数没有意义）。补齐两条路：`tdict db sync`，或临时用 `tdict <命令> --conn <环境名>` 免写盘直查。
+
+### `tdict --version`
+
+打印版本与构建来源：打包脚本用 `-ldflags` 注入版本号（如 `0.1.1`），并附上 commit 短号、提交日期、是否有未提交改动；本地 `go build` 出来的则显示 `devel (commit <短号>+未提交改动, <日期>)`。
+
+```bash
+$ tdict --version
+tdict version 0.1.1 (commit 8c57e1d, 2026-09-17)
+```
+
+用来判断「手上的二进制与文档是不是同一版」；每个命令的 `--help` 末尾也会带一行（`版本: tdict …`）。
+
 ### `tdict db sync` — 数据维护（刷新本地查询数据）
 
 > 通常不必用 CLI：`tdict serve` 的「数据同步」视图可选环境并显示逐表进度（见「可视化配置页」）。下列命令等价，便于脚本/自动化。
@@ -547,6 +574,7 @@ tdict serve --listen 127.0.0.1:9123
 
 - 配置文件取 `--config` / `TDICT_CONFIG`；缺省位置是**统一用户目录** `%APPDATA%\T100\tdict\config.json`（可用 `T100_HOME` 整体改写）。文件不存在时首次保存自动创建，目录也一并建好。与 TDebug 的 `%APPDATA%\T100\tdebug\config.json` 同处一个父目录。
 - **便携版发布为空配置、且不含业务数据**：打包脚本用 `config.empty.json` 生成空的 `config.json`（`hosts.sshs` 为空），首次运行用本页添加自己的环境；同时也**不打包 `erp_data.db`**（含客户表字典/schema/企业码等数据），配好环境后自行用「数据同步」或 `tdict db sync` 拉取。技能以普通目录 `skills/` 随包提供（**不内嵌二进制**，可直接编辑）。仓库中不提交 `config.json` 与 `erp_data.db`（见 `.gitignore`）。
+  > 注意区分**发布包**与**你自己那份安装副本**：发布包里是空配置；而你把工具解压/安装到某个目录、配置过环境并同步过数据之后，**那个目录里当然会有你的真实凭据与 `erp_data.db`**——那是你的工作副本，不是发布物，别拿它跟上面这句话对照。
 - 服务器执行工具（sqlplus/ksql）路径自动探测，无需配置；SSH/DB 探测逻辑与 `tdict db discover` 同源（`host` 包）；镜像逻辑与 `tdict mirror pull` 同源，同步逻辑与 `tdict db sync` 同源（`dbsync` 包）。
 - 该服务只做配置读写、只读探测与同步拉取。
 
