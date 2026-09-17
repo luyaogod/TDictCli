@@ -22,6 +22,7 @@
 | 系统消息 | 所有提示/报错编号的文本、建议处理、技术细节（多语言） | 约 6 万条 | `tdict msg <编号>` |
 | 参数定义 | 系统/企业/据点/单据参数的用途说明、型态、值域、预设值 | 1,034 个参数（含 2,578 条单据性质绑定） | `tdict sysp <编号>` / `tdict docp <编号>` |
 | 程序与作业 | 程序登记（中文作业名、程序类别、归属模块、客制、引用主程序）与作业挂程序的关联（**一个程序可被多个作业使用**） | 4,147 个程序、5,416 个作业、1.1 万条名称 | `tdict prog [程序编号]` |
+| 程序与表格 | **程序用哪些表、每张表做了什么操作**（T100 自己维护的代码分析索引，参考作业 azzq902） | 18.2 万条（14,448 个程序 × 3,825 张表） | `tdict prog [编号]` / `tdict r.t <表名> --who` |
 
 查询读的是本地数据；`tdict db sync` 从 ERP 刷新后即包含以上全部内容（详见各命令节与「数据维护」）。
 
@@ -31,7 +32,7 @@
 
 不想装 Go 的话，直接下载打包好的便携版：
 
-**<https://github.com/luyaogod/TDictCli/releases/latest>** → `tdict-portable-vX.Y.Z.zip`，解压即用。包含 `tdict.exe`（内嵌配置页前端）、空的 `config.json`、`config.example.json`、`README.md`、`skills/`；**发布包里不含任何真实凭据与业务数据**，也**不含 `erp_data.db`**（首次解压后：
+**<https://github.com/luyaogod/TDictCli/releases/latest>** → `tdict-portable-vX.Y.Z.zip`，解压即用。包含 `tdict.exe`（内嵌配置页前端）、空的 `config.json`、`config.example.json`、`README.md`、`skills/`；**发布包里不含任何真实凭据与业务数据**，也**不含 `erp_data.db`**——首次解压后：
 
 ```bash
 tdict.exe serve            # 浏览器里「环境配置」填 SSH 环境与数据库
@@ -111,6 +112,10 @@ tdict r.t --kw 应收
 # 输出 JSON / CSV
 tdict r.t dzea_t --json
 tdict r.t dzea_t --csv
+
+# 程序用了哪些表 / 这张表被哪些程序用（改表前的影响分析）
+tdict prog aapi011
+tdict r.t glab_t --who
 
 # 从 ERP 实时刷新数据
 tdict db sync
@@ -425,6 +430,34 @@ $ tdict prog aooi701          # 作业编号 → 它挂的程序
 ```
 
 - `tdict prog --kw 对账` —— 按程序编号或中文名称搜索（从业务词找程序/作业）
+
+**「程序**↔**表格」两个方向都能查**（数据来自 `gzdg_t` 程序与应用表格功能分析表，由 T100 自己维护，参考作业 azzq902「程式編號對應表格查詢」）：
+
+```
+$ tdict prog aapi011
+…（程序信息、作业清单）…
+使用的表格 (11):
+表格编号     表说明            操作
+-------  -------------  -------
+glab_t   账套应用会计科目设置档    S/I/U/D
+glaa_t   账别数据档          S
+aapi011  应付账款类别依账套设置科目作业  S/I/U/D
+操作: S=SELECT 查询 / I=INSERT 新增 / U=UPDATE 修改 / D=DELETE 删除
+
+$ tdict r.t glab_t --who          # 反查:改这张表会影响谁
+=== glab_t (账套应用会计科目设置档) ===
+使用它的程序 (376):
+程序编号        程序名称             操作
+aapi011     应付账款类别依账套设置科目作业  S/I/U/D
+aapi201     结算费用依账套设置科目作业    S/I/U/D
+…（--limit 默认 20，0 = 全部）
+```
+
+- **比 grep 准**：`grep` 会把被注释掉的 SQL、字符串里的表名、`LIKE 表名.字段` 的变量声明都算进来，还混进 `type_t`；这个索引只登记**真实 SQL 访问**，并带操作类别（S/I/U/D）。
+- **覆盖库与元件**：不只作业主程序——实测 `cl_abi`（库）22 条、`s_apcp300`（元件）8 条、`q_adzi052`（开窗）9 条。所以 `tdict prog <库名/元件名/开窗码>` 也能用它。
+- **边界**：**子程序**（`aapq110_01` 这类，实测 0 条）与**动态 SQL**（`CURSOR FROM 变量`）不入索引，这些仍需 `grep` 兜底。
+
+
 - 程序名称有简体（`--lang zh_CN`，默认）与繁体（`--lang zh_TW`）两份，搜索用字要对应
 - 一个程序被很多作业使用时默认只列前 20 个作业（`--limit 0` 显示全部，`--json` 导出）
 
