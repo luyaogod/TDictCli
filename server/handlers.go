@@ -15,10 +15,13 @@ import (
 	"tdict/host"
 )
 
-// settingsPayload 前端保存的配置(仅 hosts 节的 SSH 环境与数据库连接)。
+// settingsPayload 前端保存的配置。
+// SSHs 为 nil 表示"本次不动 hosts 节"(设置页只改查询数据源时用),
+// 非 nil 时按原逻辑整块替换 hosts;QuerySource 为 nil 表示不动 query.source。
 type settingsPayload struct {
-	ActiveEnv string          `json:"activeEnv"`
-	SSHs      []host.NamedSsh `json:"sshs"`
+	ActiveEnv   string           `json:"activeEnv"`
+	SSHs        *[]host.NamedSsh `json:"sshs"`
+	QuerySource *string          `json:"querySource,omitempty"`
 }
 
 // configResp GET /api/config 的应答:配置来源 + 当前环境清单。
@@ -27,6 +30,8 @@ type configResp struct {
 	Exists     bool            `json:"exists"`
 	ActiveEnv  string          `json:"activeEnv,omitempty"`
 	SSHs       []host.NamedSsh `json:"sshs"`
+	// query.source:空=在线(缺省)/"local"=本地库/环境名=该环境远程(见「设置」页)
+	QuerySource string `json:"querySource,omitempty"`
 }
 
 // readRoot 读取 config.json 为可变 map;文件不存在时返回空配置(首次保存创建)。
@@ -58,6 +63,11 @@ func (s *Server) hConfigGet(w http.ResponseWriter, r *http.Request) {
 	if resp.SSHs == nil {
 		resp.SSHs = []host.NamedSsh{}
 	}
+	if q, ok := root["query"].(map[string]any); ok {
+		if src, ok := q["source"].(string); ok {
+			resp.QuerySource = src
+		}
+	}
 	writeJSON(w, 200, resp)
 }
 
@@ -68,33 +78,9 @@ func (s *Server) hConfigPut(w http.ResponseWriter, r *http.Request) {
 	if !readBody(w, r, &p) {
 		return
 	}
-	if len(p.SSHs) == 0 {
-		writeJSON(w, 200, map[string]any{"ok": false, "error": "至少保留一个 SSH 环境"})
+	if p.SSHs == nil && p.QuerySource == nil {
+		writeJSON(w, 200, map[string]any{"ok": false, "error": "没有要保存的内容"})
 		return
-	}
-	for i := range p.SSHs {
-		e := &p.SSHs[i]
-		e.Name = strings.TrimSpace(e.Name)
-		e.Host = strings.TrimSpace(e.Host)
-		e.User = strings.TrimSpace(e.User)
-		e.Zone = strings.TrimSpace(e.Zone)
-		if e.Port == 0 {
-			e.Port = 22
-		}
-		if e.Host == "" {
-			writeJSON(w, 200, map[string]any{"ok": false, "error": fmt.Sprintf("第 %d 个环境缺少主机地址", i+1)})
-			return
-		}
-		if e.Name == "" {
-			e.Name = e.Host
-			if e.Zone != "" {
-				e.Name = e.Host + "-" + e.Zone
-			}
-		}
-	}
-	// 默认环境必须指向列表中存在的环境,否则回退首条(与 host.LoadHosts 语义一致)
-	if !hasEnv(p.SSHs, p.ActiveEnv) {
-		p.ActiveEnv = p.SSHs[0].Name
 	}
 
 	root, err := s.readRoot()
@@ -102,18 +88,72 @@ func (s *Server) hConfigPut(w http.ResponseWriter, r *http.Request) {
 		fail(w, 500, err)
 		return
 	}
-	b, err := json.Marshal(p)
-	if err != nil {
-		fail(w, 500, err)
-		return
+
+	// ① hosts 节:环境配置页保存时整块替换;设置页只改查询数据源时不带 sshs,这里就不动它
+	// (避免设置页用陈旧快照覆盖刚在环境配置页改好的环境)
+	if p.SSHs != nil {
+		list := *p.SSHs
+		if len(list) == 0 {
+			writeJSON(w, 200, map[string]any{"ok": false, "error": "至少保留一个 SSH 环境"})
+			return
+		}
+		for i := range list {
+			e := &list[i]
+			e.Name = strings.TrimSpace(e.Name)
+			e.Host = strings.TrimSpace(e.Host)
+			e.User = strings.TrimSpace(e.User)
+			e.Zone = strings.TrimSpace(e.Zone)
+			if e.Port == 0 {
+				e.Port = 22
+			}
+			if e.Host == "" {
+				writeJSON(w, 200, map[string]any{"ok": false, "error": fmt.Sprintf("第 %d 个环境缺少主机地址", i+1)})
+				return
+			}
+			if e.Name == "" {
+				e.Name = e.Host
+				if e.Zone != "" {
+					e.Name = e.Host + "-" + e.Zone
+				}
+			}
+		}
+		// 默认环境必须指向列表中存在的环境,否则回退首条(与 host.LoadHosts 语义一致)
+		if !hasEnv(list, p.ActiveEnv) {
+			p.ActiveEnv = list[0].Name
+		}
+		b, err := json.Marshal(list)
+		if err != nil {
+			fail(w, 500, err)
+			return
+		}
+		var arr []any
+		if err := json.Unmarshal(b, &arr); err != nil {
+			fail(w, 500, err)
+			return
+		}
+		root["hosts"] = map[string]any{"activeEnv": p.ActiveEnv, "sshs": arr}
+		delete(root, "debug") // 旧键迁移:写路径统一落到 hosts
 	}
-	var section map[string]any
-	if err := json.Unmarshal(b, &section); err != nil {
-		fail(w, 500, err)
-		return
+
+	// ② 查询数据源:顶层 query.source("local"/环境名;空串=清除,回到缺省的"在线")
+	if p.QuerySource != nil {
+		src := strings.TrimSpace(*p.QuerySource)
+		q, _ := root["query"].(map[string]any)
+		if q == nil {
+			q = map[string]any{}
+		}
+		if src == "" {
+			delete(q, "source")
+		} else {
+			q["source"] = src
+		}
+		if len(q) == 0 {
+			delete(root, "query")
+		} else {
+			root["query"] = q
+		}
 	}
-	root["hosts"] = section
-	delete(root, "debug") // 旧键迁移:写路径统一落到 hosts
+
 	if err := cfgfile.Save(s.cfgPath, root); err != nil {
 		fail(w, 500, err)
 		return

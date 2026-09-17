@@ -23,6 +23,8 @@ export interface ConfigView {
   exists: boolean
   activeEnv?: string
   sshs: SshEnv[]
+  // query.source:空/缺省=在线(默认环境直查);"local"=本地 SQLite;环境名=该环境远程
+  querySource?: string
 }
 // 服务器侧探测结果(host.ProbeDBConfig)
 export interface DBProbeOut {
@@ -130,7 +132,9 @@ async function req<T>(url: string, opts?: RequestInit): Promise<T> {
 
 export const api = {
   config: () => req<ConfigView>('/api/config'),
-  saveConfig: (cfg: { activeEnv: string; sshs: SshEnv[] }) =>
+  // 保存 hosts 节(环境配置页:activeEnv+sshs);设置页只改查询数据源时只传 querySource,
+  // 此时后端不动 hosts 节(避免用陈旧快照覆盖刚改好的环境)
+  saveConfig: (cfg: { activeEnv?: string; sshs?: SshEnv[]; querySource?: string }) =>
     req<{ ok: boolean }>('/api/config', { method: 'PUT', body: JSON.stringify(cfg) }),
   // 服务器侧探测连接要素(登录该环境 SSH 只读执行;note 说明未获取到的原因)
   probeDB: (body: { host: string; port: number; user: string; password: string; zone: string; type: string }) =>

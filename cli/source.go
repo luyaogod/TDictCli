@@ -5,9 +5,12 @@ package cli
 // 命令层不感知差异 —— 不再有 --online 开关。
 //
 // 选择优先级:
-//  1. --conn <环境名|local>(覆盖本次调用);
-//  2. config.json 顶层 query.source(与 hosts 键平级);
-//  3. 默认 "local"(纯本地用法与旧版一致,无需任何配置)。
+//  1. --conn <环境名|local>(覆盖本次调用;**显式指定即强制**);
+//  2. config.json 顶层 query.source(环境名 或 "local";可在 tdict serve 的「设置」页切换);
+//  3. 缺省 = **在线**:用默认环境(hosts.activeEnv)直查;一个环境都没配才用本地库。
+//
+// **明确不做自动降级**:在线就是在线、本地就是本地,连不上直接报错并提示怎么切
+// (--conn local,或前端「设置」页把「查询数据源」切成本地)。
 //
 // "local" = 现有 erp_data.db(--db / TDICT_DB);环境名 = hosts.sshs 中该环境的
 // db(客户端直连,凭据取账号列表首项)。
@@ -30,16 +33,28 @@ var (
 	srcLocal bool // 当前源为本地 SQLite(错误提示文案分流)
 )
 
-// openQuerySource 在 root PersistentPreRunE 打开数据源(本地库或远程连接)。
+// openQuerySource 在 root PersistentPreRunE 打开数据源。
 func openQuerySource() error {
-	target := srcConn
-	if target == "" {
-		target = queryCfgSource()
+	if srcConn != "" { // ① 命令行指定:强制
+		if srcConn == "local" {
+			return openLocalSource()
+		}
+		return openRemoteSource(srcConn)
 	}
-	if target == "" || target == "local" {
+	switch cfg := queryCfgSource(); cfg {
+	case "local": // ② 配置指定本地
 		return openLocalSource()
+	case "", "auto": // ③ 未配置:在线(没配环境才本地)
+		if env := defaultEnvName(); env != "" {
+			if err := openRemoteSource(env); err != nil {
+				return fmt.Errorf("%w\n提示: 想查本地库就加 `--conn local`,或在 tdict serve 的「设置 → 查询数据源」里切成「本地 SQLite」", err)
+			}
+			return nil
+		}
+		return openLocalSource()
+	default: // ② 配置指定了环境名:强制
+		return openRemoteSource(cfg)
 	}
-	return openRemoteSource(target)
 }
 
 // closeQuerySource 在 root PersistentPostRun 关闭数据源。
@@ -50,8 +65,8 @@ func closeQuerySource() {
 	}
 }
 
-// queryCfgSource 读 config.json 顶层 query.source("local" 或环境名);
-// 配置文件缺失/未配置返回 ""(即默认本地)。
+// queryCfgSource 读 config.json 顶层 query.source("local" / 环境名 / "auto");
+// 缺失、"auto" 或读不到配置时返回空串/auto(即走缺省策略:在线优先)。
 func queryCfgSource() string {
 	path, err := resolveConfigPath(configPath)
 	if err != nil {
@@ -177,5 +192,5 @@ func emptyHint(subject string) string {
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&srcConn, "conn", "",
-		"查询数据源: local(本地 SQLite)或 SSH 环境名(远程直查该环境数据库);默认取 config.json query.source,缺省 local")
+		"查询数据源: local(本地 SQLite)或 SSH 环境名(远程直查该环境数据库);不给则按 config.json query.source,都没配置时**在线优先**(连不上自动降级本地并提示)")
 }

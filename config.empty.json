@@ -4,6 +4,6 @@
     "activeEnv": ""
   },
   "query": {
-    "source": "local"
+    "source": "auto"
   }
 }

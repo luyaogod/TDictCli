@@ -47,7 +47,7 @@
     "activeEnv": "正式区"
   },
   "query": {
-    "source": "local"
+    "source": "auto"
   },
   "bdldoc": {
     "dir": ""

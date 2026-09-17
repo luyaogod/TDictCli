@@ -1,7 +1,7 @@
 // 设置页:命令行安装(把 tdict 加入用户 PATH)、BDL 语言文档目录,以及运行信息。
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Terminal, CheckCircle2, AlertCircle, Plus, Trash2, BookOpen, Save } from 'lucide-react'
-import { api, type BdldocStatus, type InstallStatus } from './api'
+import { Terminal, CheckCircle2, AlertCircle, Plus, Trash2, BookOpen, Save, Database } from 'lucide-react'
+import { api, type BdldocStatus, type ConfigView, type InstallStatus } from './api'
 import { Button, cn, Field, Input, SectionTitle } from './ui'
 
 export function AppSettingsView() {
@@ -9,6 +9,9 @@ export function AppSettingsView() {
   const [configPath, setConfigPath] = useState('')
   const [listen, setListen] = useState('')
   const [bd, setBd] = useState<BdldocStatus | null>(null)
+  const [cfg, setCfg] = useState<ConfigView | null>(null)
+  const [srcSel, setSrcSel] = useState('')
+  const srcInit = useRef(false)
   const [bdInput, setBdInput] = useState('')
   const bdInit = useRef(false)
   const [err, setErr] = useState('')
@@ -19,7 +22,9 @@ export function AppSettingsView() {
     try {
       const [s, cfg, status, b] = await Promise.all([api.installStatus(), api.config(), api.status(), api.bdldoc()])
       setSt(s)
+      setCfg(cfg)
       setConfigPath(cfg.configPath)
+      if (!srcInit.current) { setSrcSel(cfg.querySource || ''); srcInit.current = true }
       setListen(status.listen)
       setBd(b)
       if (!bdInit.current) { setBdInput(b.dir); bdInit.current = true }
@@ -68,18 +73,67 @@ export function AppSettingsView() {
     } finally { setBusy('') }
   }
 
+  const saveSrc = async () => {
+    setBusy('src'); setErr(''); setNotice('')
+    try {
+      // 只传 querySource:后端不动 hosts 节,避免用陈旧快照覆盖环境配置页刚改好的环境
+      await api.saveConfig({ querySource: srcSel })
+      setNotice(srcSel === '' ? '查询数据源已设为「在线(默认环境)」。' : srcSel === 'local'
+        ? '查询数据源已设为「本地 SQLite」。' : `查询数据源已设为「在线(${srcSel})」。`)
+      await refresh()
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e))
+    } finally { setBusy('') }
+  }
+
+  const envNames = (cfg?.sshs || []).map((e) => e.name || e.host)
+
   return (
     <div className="flex h-full min-h-0 flex-col bg-zinc-50 text-zinc-800 dark:bg-zinc-950 dark:text-zinc-100">
       <header className="flex shrink-0 items-center gap-3 border-b border-zinc-200 bg-white px-4 py-2 dark:border-zinc-800 dark:bg-zinc-900">
         <h1 className="shrink-0 text-sm font-semibold">设置</h1>
         <span className="min-w-0 flex-1 truncate text-[11px] text-zinc-500 dark:text-zinc-400">
-          命令行安装、BDL 语言文档目录与运行信息
+          查询数据源、命令行安装、BDL 语言文档目录与运行信息
         </span>
         {err && <span className="flex shrink-0 items-center gap-1 text-[11px] text-red-600 dark:text-red-400"><AlertCircle className="h-3.5 w-3.5" />{err}</span>}
       </header>
 
       <main className="min-h-0 flex-1 overflow-auto p-4">
         <div className="mx-auto max-w-3xl space-y-5">
+          {/* 查询数据源 */}
+          <section>
+            <SectionTitle>查询数据源</SectionTitle>
+            <div className="mt-2 border border-zinc-200 p-3 dark:border-zinc-800">
+              <div className="flex items-start gap-2">
+                <Database className="mt-0.5 h-4 w-4 shrink-0 text-zinc-500" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-zinc-600 dark:text-zinc-300">
+                    查询命令(r.t / r.v / desc / scc / r.q / prog)读哪里,写入 <code>config.json</code> 顶层 <code>query.source</code>:
+                    <strong>在线</strong>=每次直连该环境的 ERP 库(数据最新,需要网络);<strong>本地</strong>=查 <code>erp_data.db</code> 副本(快,靠「数据同步」更新)。
+                    两者**不自动切换**——选在线时连不上就直接报错,不会偷偷改查本地。
+                  </p>
+                  <div className="mt-2 flex items-end gap-2">
+                    <Field label="查询数据源" className="min-w-0 flex-1">
+                      <select value={srcSel} onChange={(e) => setSrcSel(e.target.value)}
+                        className="h-7 w-full min-w-0 border border-zinc-300 bg-white px-2 text-xs text-zinc-800 outline-none focus:border-sky-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100">
+                        <option value="">在线（默认环境{cfg?.activeEnv ? `:${cfg.activeEnv}` : ''}）</option>
+                        <option value="local">本地 SQLite（erp_data.db）</option>
+                        {envNames.map((n) => <option key={n} value={n}>在线（{n}）</option>)}
+                      </select>
+                    </Field>
+                    <Button variant="primary" disabled={busy === 'src'} onClick={() => void saveSrc()}>
+                      <Save className="h-3.5 w-3.5" />{busy === 'src' ? '保存中…' : '保存'}
+                    </Button>
+                  </div>
+                  <p className="mt-2 text-[11px] text-zinc-500 dark:text-zinc-400">
+                    当前:<code>{cfg?.querySource || '(在线 · 默认环境)'}</code> · 命令行可单次覆盖:
+                    <code> --conn local</code> 或 <code>--conn &lt;环境名&gt;</code>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* 命令行安装 */}
           <section>
             <SectionTitle>命令行安装</SectionTitle>
