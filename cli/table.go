@@ -14,6 +14,8 @@ var (
 	tableKW    string
 	tableLang  string
 	tableBrief bool
+	tableWho   bool
+	tableLimit int
 )
 
 var tableCmd = &cobra.Command{
@@ -27,11 +29,15 @@ var tableCmd = &cobra.Command{
 无参数时列出全部表(--kw 按表名/中文表说明搜索,从业务词找表);
 指定表名显示该表完整字典,--brief 则只给表级信息(表名/说明/模块/类型/字段数),
 多表同查时用它避免打出上千行字段明细。
+--who 反查"哪些程序在用这张表"(数据来自 gzdg_t 程序与应用表格功能分析表,由 T100
+自己维护;参考作业 azzq902「程式編號對應表格查詢」),并给出各程序对它的操作类别
+(S=查询/I=新增/U=修改/D=删除)——改表前的影响分析用它。
 命令名对齐 T100 原生工具 r.t(旧名 rt/table 仍可用)。`,
 	Example: `  tdict r.t dzea_t
   tdict r.t "dzea_t,dzeb_t,dzed_t"
   tdict r.t --kw 应收        # 按中文说明找表(列表模式)
   tdict r.t --brief "apca_t,apcb_t,glab_t"   # 多表只解语义,不打字段明细
+  tdict r.t glab_t --who                     # 反查:哪些程序在用 glab_t(含操作类别)
   tdict r.t dzea_t --json
   tdict r.t dzea_t --conn 正式区   # 切到某环境的远程库直查(--conn local 回本地)`,
 	Args: cobra.MaximumNArgs(1),
@@ -42,6 +48,11 @@ var tableCmd = &cobra.Command{
 		tables := splitNames(args[0])
 		if len(tables) == 0 {
 			return fmt.Errorf("未指定有效的表名")
+		}
+
+		// --who:反查"哪些程序在用这些表"(gzdg_t,参考作业 azzq902),与看字典是两回事
+		if tableWho {
+			return runTableWho(tables)
 		}
 
 		var dicts []*db.TableDict
@@ -238,6 +249,67 @@ func printTableCSV(dicts []*db.TableDict) error {
 	return output.PrintCSVFromMaps(headers, rows)
 }
 
+// runTableWho 反查"哪些程序在用这些表"(gzdg_t 程序与应用表格功能分析表,由 T100 自己维护;
+// 参考作业 azzq902 程式編號對應表格查詢)。改表前的影响分析用它。
+func runTableWho(tables []string) error {
+	var jsonOut []map[string]any
+	for _, t := range tables {
+		meta, err := GetDB().QueryTableMeta(t)
+		if err != nil && !db.IsMissingTable(err) {
+			return err
+		}
+		desc := ""
+		if meta != nil {
+			desc = meta.TableDesc
+		}
+
+		progs, err := GetDB().QueryTablePrograms(t, tableLang)
+		if err != nil {
+			if db.IsMissingTable(err) {
+				fmt.Println(missingHint("程序与表格 (gzdg_t)"))
+				return nil
+			}
+			return err
+		}
+		if IsJSON() {
+			// 机器可读:不打标题行,只收集
+			jsonOut = append(jsonOut, map[string]any{"表格编号": t, "表说明": desc, "使用程序": progs})
+			continue
+		}
+
+		title := t
+		if desc != "" {
+			title = fmt.Sprintf("%s (%s)", t, desc)
+		}
+		fmt.Printf("=== %s ===\n", title)
+		if len(progs) == 0 {
+			fmt.Println("没有程序登记使用这张表(或该表只被动态 SQL 访问)。")
+			fmt.Println()
+			continue
+		}
+		fmt.Printf("使用它的程序 (%d):\n", len(progs))
+		shown := progs
+		if tableLimit > 0 && len(progs) > tableLimit {
+			shown = progs[:tableLimit]
+		}
+		var rows [][]string
+		for _, p := range shown {
+			rows = append(rows, []string{p.Prog, p.ProgName, p.Ops})
+		}
+		output.PrintTable([]string{"程序编号", "程序名称", "操作"}, rows)
+		if len(shown) < len(progs) {
+			fmt.Printf("\n… 还有 %d 个未显示(共 %d 个);--limit 0 显示全部,或 --json 导出\n",
+				len(progs)-len(shown), len(progs))
+		}
+		fmt.Println("操作: S=SELECT 查询 / I=INSERT 新增 / U=UPDATE 修改 / D=DELETE 删除")
+		fmt.Println()
+	}
+	if IsJSON() {
+		return output.PrintJSON(jsonOut)
+	}
+	return nil
+}
+
 // keyTypeLabel maps dzed_t key type codes to Chinese labels.
 func keyTypeLabel(code string) string {
 	switch code {
@@ -256,6 +328,8 @@ func init() {
 	tableCmd.Flags().StringVar(&tableKW, "kw", "", "按表名/中文表说明搜索 (无表名时的列表模式)")
 	tableCmd.Flags().StringVar(&tableLang, "lang", "zh_CN", "表说明语言别 (dzeal002, 默认 zh_CN)")
 	tableCmd.Flags().BoolVar(&tableBrief, "brief", false, "只给表级信息(表名/说明/模块/类型/字段数),不打字段明细")
+	tableCmd.Flags().BoolVar(&tableWho, "who", false, "反查哪些程序在用这些表(含操作类别 S/I/U/D)")
+	tableCmd.Flags().IntVar(&tableLimit, "limit", 20, "--who 最多显示几个程序 (0 = 全部)")
 	rootCmd.AddCommand(tableCmd)
 }
 

@@ -683,3 +683,33 @@ LEFT JOIN gzzal_t l ON l.gzzal001 = a.gzza001 AND l.gzzal002 = ` + lit(lang) +
 	}
 	return out, nil
 }
+
+// ---- 程序 ↔ 表格:gzdg_t(参考作业 azzq902 程式編號對應表格查詢) ----
+
+// QueryProgTables 查"这个程序用了哪些表"(gzdg001 = code),同一张表的多个操作合并成一行。
+func (l *Live) QueryProgTables(code, lang string) ([]db.ProgTableRow, error) {
+	sql := `SELECT t.gzdg002, COALESCE(al.dzeal003, ''), COALESCE(t.gzdg003, '')
+FROM gzdg_t t
+LEFT JOIN dzeal_t al ON al.dzeal001 = t.gzdg002 AND al.dzeal002 = ` + lit(lang) + `
+WHERE t.gzdg001 = ` + lit(code) + `
+ORDER BY t.gzdg002, t.gzdg003`
+	rows, err := l.q(sql)
+	if err != nil {
+		return nil, fmt.Errorf("查询程序 %s 使用的表格: %w", code, err)
+	}
+	return db.GroupProgTables(rows, get), nil
+}
+
+// QueryTablePrograms 反查"哪些程序在用这张表"(gzdg002 = table)。
+func (l *Live) QueryTablePrograms(table, lang string) ([]db.TableProgRow, error) {
+	sql := `SELECT t.gzdg001, COALESCE(pl.gzzal003, ''), COALESCE(t.gzdg003, '')
+FROM gzdg_t t
+LEFT JOIN gzzal_t pl ON pl.gzzal001 = t.gzdg001 AND pl.gzzal002 = ` + lit(lang) + `
+WHERE t.gzdg002 = ` + lit(table) + `
+ORDER BY t.gzdg001, t.gzdg003`
+	rows, err := l.q(sql)
+	if err != nil {
+		return nil, fmt.Errorf("查询使用表格 %s 的程序: %w", table, err)
+	}
+	return db.GroupTablePrograms(rows, get), nil
+}

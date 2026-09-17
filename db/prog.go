@@ -3,6 +3,8 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"sort"
+	"strings"
 )
 
 // 程序与作业字典(azzi900 程式基本資料設定作業 / azzi910 作業基本資料維護):
@@ -35,13 +37,13 @@ type ProgInfo struct {
 
 // ProgJob 一个使用某程序的作业(gzzz_t 按 gzzz002 关联到程序)。
 type ProgJob struct {
-	JobCode   string `json:"作业编号"`    // gzzz001
-	JobName   string `json:"作业名称"`    // gzzal003(经 gzzz002 关联的程序名称)
-	Module    string `json:"归属模块"`    // gzzz005
-	ParamGrp  string `json:"应用参数组"`   // gzzz003
-	ParamDesc string `json:"参数组说明"`   // gzzk003(经 gzzk001/gzzk002)
-	DocType   string `json:"默认单据性质"`  // gzzz006
-	Status    string `json:"状态码"`     // gzzzstus
+	JobCode   string `json:"作业编号"`   // gzzz001
+	JobName   string `json:"作业名称"`   // gzzal003(经 gzzz002 关联的程序名称)
+	Module    string `json:"归属模块"`   // gzzz005
+	ParamGrp  string `json:"应用参数组"`  // gzzz003
+	ParamDesc string `json:"参数组说明"`  // gzzk003(经 gzzk001/gzzk002)
+	DocType   string `json:"默认单据性质"` // gzzz006
+	Status    string `json:"状态码"`    // gzzzstus
 }
 
 // ProgListItem 程序列表/搜索(prog --kw)的一行。
@@ -52,6 +54,153 @@ type ProgListItem struct {
 	Module   string `json:"归属模块"`
 	Cust     string `json:"客制"`
 	JobCount int    `json:"作业数"`
+}
+
+// ---- 程序 ↔ 表格(gzdg_t 程序与应用表格功能分析表,由 T100 自己维护) ----
+//
+//	gzdg001 程序编号 + gzdg002 表格编号 + gzdg003 功能类别(SCC 212:
+//	I=INSERT 新增 / S=SELECT 查询 / U=UPDATE 修改 / D=DELETE 删除)构成主键。
+//	参考作业 azzq902「程式編號對應表格查詢」:它 join gzzal_t(程序名称)与
+//	dzeal_t(表名称)展示两侧。实测正式区 18.2 万行 / 14,448 个程序 / 3,825 张表。
+
+// ProgTableRow 一个程序用到的一张表(同一张表的多个操作合并为一行,如 "S/I/U/D")。
+type ProgTableRow struct {
+	Table     string `json:"表格编号"`
+	TableDesc string `json:"表说明"`
+	Ops       string `json:"操作"`
+}
+
+// TableProgRow 一个使用某表的程序。
+type TableProgRow struct {
+	Prog     string `json:"程序编号"`
+	ProgName string `json:"程序名称"`
+	Ops      string `json:"操作"`
+}
+
+// mergeOps 把同一目标的多个操作类别合并成固定顺序的字符串(S/I/U/D,再按字母补未知码)。
+func mergeOps(ops []string) string {
+	seen := make(map[string]bool, len(ops))
+	for _, o := range ops {
+		seen[o] = true
+	}
+	var out []string
+	for _, code := range []string{"S", "I", "U", "D"} {
+		if seen[code] {
+			out = append(out, code)
+			delete(seen, code)
+		}
+	}
+	var rest []string
+	for code := range seen {
+		rest = append(rest, code)
+	}
+	sort.Strings(rest)
+	return strings.Join(append(out, rest...), "/")
+}
+
+// GetCol 取行内第 i 列(越界返回空串)。语义与 live 包的 get 一致,供共用的合并函数使用。
+func GetCol(row []string, i int) string {
+	if i < len(row) {
+		return row[i]
+	}
+	return ""
+}
+
+// GroupProgTables 把 (表格编号, 表说明, 操作) 行按表格合并操作类别。
+// 本地与远程共用同一份合并逻辑(远程查询返回 [][]string,用 get 取列)。
+func GroupProgTables(rows [][]string, get func([]string, int) string) []ProgTableRow {
+	var result []ProgTableRow
+	idx := make(map[string]int)
+	var ops [][]string
+	for _, r := range rows {
+		table := get(r, 0)
+		if i, ok := idx[table]; ok {
+			ops[i] = append(ops[i], get(r, 2))
+			continue
+		}
+		idx[table] = len(result)
+		result = append(result, ProgTableRow{Table: table, TableDesc: get(r, 1)})
+		ops = append(ops, []string{get(r, 2)})
+	}
+	for i := range result {
+		result[i].Ops = mergeOps(ops[i])
+	}
+	return result
+}
+
+// GroupTablePrograms 把 (程序编号, 程序名称, 操作) 行按程序合并操作类别。
+func GroupTablePrograms(rows [][]string, get func([]string, int) string) []TableProgRow {
+	var result []TableProgRow
+	idx := make(map[string]int)
+	var ops [][]string
+	for _, r := range rows {
+		prog := get(r, 0)
+		if i, ok := idx[prog]; ok {
+			ops[i] = append(ops[i], get(r, 2))
+			continue
+		}
+		idx[prog] = len(result)
+		result = append(result, TableProgRow{Prog: prog, ProgName: get(r, 1)})
+		ops = append(ops, []string{get(r, 2)})
+	}
+	for i := range result {
+		result[i].Ops = mergeOps(ops[i])
+	}
+	return result
+}
+
+// QueryProgTables 查"这个程序用了哪些表"(gzdg_t 按 gzdg001)。表名取 dzeal_t(指定语言)。
+func (d *DB) QueryProgTables(code, lang string) ([]ProgTableRow, error) {
+	rows, err := d.conn.Query(`
+		SELECT t.gzdg002, COALESCE(al.dzeal003, ''), COALESCE(t.gzdg003, '')
+		FROM gzdg_t t
+		LEFT JOIN dzeal_t al ON al.dzeal001 = t.gzdg002 AND al.dzeal002 = ?
+		WHERE t.gzdg001 = ?
+		ORDER BY t.gzdg002, t.gzdg003`, lang, code)
+	if err != nil {
+		return nil, fmt.Errorf("query prog tables %s: %w", code, err)
+	}
+	defer rows.Close()
+
+	var raw [][]string
+	for rows.Next() {
+		var table, desc, op string
+		if err := rows.Scan(&table, &desc, &op); err != nil {
+			return nil, fmt.Errorf("scan prog table: %w", err)
+		}
+		raw = append(raw, []string{table, desc, op})
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return GroupProgTables(raw, GetCol), nil
+}
+
+// QueryTablePrograms 反查"哪些程序在用这张表"(gzdg_t 按 gzdg002)。程序名取 gzzal_t(指定语言)。
+func (d *DB) QueryTablePrograms(table, lang string) ([]TableProgRow, error) {
+	rows, err := d.conn.Query(`
+		SELECT t.gzdg001, COALESCE(pl.gzzal003, ''), COALESCE(t.gzdg003, '')
+		FROM gzdg_t t
+		LEFT JOIN gzzal_t pl ON pl.gzzal001 = t.gzdg001 AND pl.gzzal002 = ?
+		WHERE t.gzdg002 = ?
+		ORDER BY t.gzdg001, t.gzdg003`, lang, table)
+	if err != nil {
+		return nil, fmt.Errorf("query table programs %s: %w", table, err)
+	}
+	defer rows.Close()
+
+	var raw [][]string
+	for rows.Next() {
+		var prog, name, op string
+		if err := rows.Scan(&prog, &name, &op); err != nil {
+			return nil, fmt.Errorf("scan table program: %w", err)
+		}
+		raw = append(raw, []string{prog, name, op})
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return GroupTablePrograms(raw, GetCol), nil
 }
 
 // QueryProgInfo 按编号查程序登记信息(附"该编号是否也是作业、挂的哪个程序")。

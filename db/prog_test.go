@@ -21,6 +21,19 @@ func buildProgDB(t *testing.T) *DB {
 		`CREATE TABLE gzzz_t (gzzz001 TEXT, gzzz002 TEXT, gzzz003 TEXT, gzzz005 TEXT,
 		   gzzz006 TEXT, gzzzstus TEXT)`,
 		`CREATE TABLE gzzk_t (gzzk001 TEXT, gzzk002 TEXT, gzzk003 TEXT)`,
+		// 程序↔表格(参考作业 azzq902):主键 程序编号+表格编号+操作类别
+		`CREATE TABLE gzdg_t (gzdg001 TEXT, gzdg002 TEXT, gzdg003 TEXT)`,
+		`CREATE TABLE dzeal_t (dzeal001 TEXT, dzeal002 TEXT, dzeal003 TEXT)`,
+		`INSERT INTO dzeal_t VALUES ('glab_t','zh_CN','账套应用会计科目设置档')`,
+		`INSERT INTO dzeal_t VALUES ('ooag_t','zh_CN','员工数据档')`,
+		// aapi011 对 glab_t 是完整读写,对 ooag_t 只读;aapi201 也读写 glab_t
+		`INSERT INTO gzdg_t VALUES ('aapi011','glab_t','S')`,
+		`INSERT INTO gzdg_t VALUES ('aapi011','glab_t','U')`,
+		`INSERT INTO gzdg_t VALUES ('aapi011','glab_t','I')`,
+		`INSERT INTO gzdg_t VALUES ('aapi011','glab_t','D')`,
+		`INSERT INTO gzdg_t VALUES ('aapi011','ooag_t','S')`,
+		`INSERT INTO gzdg_t VALUES ('aapi201','glab_t','S')`,
+		`INSERT INTO gzdg_t VALUES ('aapi201','glab_t','U')`,
 		// aooi301:被两个作业使用的共用维护程序;aapi011:作业编号=程序编号
 		`INSERT INTO gzza_t VALUES ('aooi301','i','AOO','$FGLRUN $AOOi/aooi301','','s','Y')`,
 		`INSERT INTO gzza_t VALUES ('aapi011','i','AAP','$FGLRUN $AAPi/aapi011','','s','Y')`,
@@ -125,6 +138,85 @@ func TestQueryProgJobs(t *testing.T) {
 	}
 	if len(only) != 1 || only[0].JobCode != "aapi011" {
 		t.Errorf("aapi011 应只有 1 个作业: %+v", only)
+	}
+}
+
+// TestQueryProgTables 程序 → 表格:同一张表的多个操作合并成一行(固定顺序 S/I/U/D),
+// 表名走 dzeal_t(指定语言),按表名升序。
+func TestQueryProgTables(t *testing.T) {
+	d := buildProgDB(t)
+
+	rows, err := d.QueryProgTables("aapi011", "zh_CN")
+	if err != nil {
+		t.Fatalf("QueryProgTables: %v", err)
+	}
+	if len(rows) != 2 {
+		t.Fatalf("aapi011 应命中 2 张表, got %d: %+v", len(rows), rows)
+	}
+	if rows[0].Table != "glab_t" || rows[0].Ops != "S/I/U/D" {
+		t.Errorf("glab_t 操作应为 S/I/U/D: %+v", rows[0])
+	}
+	if rows[0].TableDesc != "账套应用会计科目设置档" {
+		t.Errorf("表说明应取 dzeal_t: %+v", rows[0])
+	}
+	if rows[1].Table != "ooag_t" || rows[1].Ops != "S" {
+		t.Errorf("ooag_t 应只有 S: %+v", rows[1])
+	}
+
+	// 另一程序对同一张表只读写
+	rows2, err := d.QueryProgTables("aapi201", "zh_CN")
+	if err != nil {
+		t.Fatalf("QueryProgTables(aapi201): %v", err)
+	}
+	if len(rows2) != 1 || rows2[0].Ops != "S/U" {
+		t.Errorf("aapi201 对 glab_t 应为 S/U: %+v", rows2)
+	}
+
+	// 未登记用表的程序:空结果,不报错
+	if none, err := d.QueryProgTables("nosuch", "zh_CN"); err != nil || len(none) != 0 {
+		t.Errorf("未登记者应返回空: %+v, %v", none, err)
+	}
+}
+
+// TestQueryTablePrograms 表 → 程序:反查哪些程序在用这张表(含操作类别)。
+func TestQueryTablePrograms(t *testing.T) {
+	d := buildProgDB(t)
+
+	rows, err := d.QueryTablePrograms("glab_t", "zh_CN")
+	if err != nil {
+		t.Fatalf("QueryTablePrograms: %v", err)
+	}
+	if len(rows) != 2 {
+		t.Fatalf("glab_t 应被 2 个程序使用, got %d: %+v", len(rows), rows)
+	}
+	if rows[0].Prog != "aapi011" || rows[0].Ops != "S/I/U/D" {
+		t.Errorf("aapi011 行不符: %+v", rows[0])
+	}
+	if rows[1].Prog != "aapi201" || rows[1].Ops != "S/U" {
+		t.Errorf("aapi201 行不符: %+v", rows[1])
+	}
+	// 程序名取 gzzal_t(该编号在 gzzal_t 里没有名称时为空的用例见下)
+	if none, err := d.QueryTablePrograms("nosuch_t", "zh_CN"); err != nil || len(none) != 0 {
+		t.Errorf("没人用的表应返回空: %+v, %v", none, err)
+	}
+}
+
+// TestMergeOps 操作类别合并:固定顺序 S/I/U/D,未知码按字母序追加。
+func TestMergeOps(t *testing.T) {
+	cases := []struct {
+		in   []string
+		want string
+	}{
+		{[]string{"D", "I", "U", "S"}, "S/I/U/D"},
+		{[]string{"U", "S"}, "S/U"},
+		{[]string{"S", "S"}, "S"},
+		{[]string{"Z", "S"}, "S/Z"},
+		{nil, ""},
+	}
+	for _, c := range cases {
+		if got := mergeOps(c.in); got != c.want {
+			t.Errorf("mergeOps(%v) = %q, want %q", c.in, got, c.want)
+		}
 	}
 }
 

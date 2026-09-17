@@ -50,12 +50,12 @@ func runProgDetail(code string) error {
 	if err != nil {
 		if db.IsMissingTable(err) {
 			fmt.Println(missingHint("程序与作业 (gzza_t/gzzz_t 等表)"))
-			return nil
+			return printProgTables(code, true) // 用表索引是另一族,可能已同步
 		}
 		return err
 	}
 	if info == nil {
-		fmt.Printf("未找到程序/作业 '%s'。\n", code)
+		fmt.Printf("未找到程序/作业 '%s' 的登记。\n", code)
 		if base := progBaseCode(code); base != "" {
 			// 子程序/子元件形态:工具只登记主程序。跟到主程序,但要说清二者不是一回事
 			// (如 aapq110_01「报表列印」 vs 主程序 aapq110「明细查询」)。
@@ -67,16 +67,22 @@ func runProgDetail(code string) error {
 			fmt.Println("      子程序自己做什么,看它文件头的 `#+ Description:`;别把主程序的用途当成它的。")
 		} else {
 			fmt.Println("提示: 用业务词搜索试试 —— tdict prog --kw <关键字>")
+			fmt.Println("      库/元件/开窗(cl_abi、s_xxx、q_xxx)不登记为程序与作业,但下面的用表索引里可能有它。")
 		}
-		return nil
+		// 没登记为程序≠查不到:gzdg_t(用表索引)覆盖库/元件/开窗等(实测 cl_abi 22 条、s_apcp300 8 条)
+		return printProgTables(code, true)
 	}
 
 	if IsJSON() {
-		jobs, err := GetDB().QueryProgJobs(code, progLang)
-		if err != nil && !db.IsMissingTable(err) {
-			return err
+		jobs, jerr := GetDB().QueryProgJobs(code, progLang)
+		if jerr != nil && !db.IsMissingTable(jerr) {
+			return jerr
 		}
-		return output.PrintJSON(map[string]any{"程序": info, "作业": jobs})
+		tables, terr := GetDB().QueryProgTables(code, progLang)
+		if terr != nil && !db.IsMissingTable(terr) {
+			return terr
+		}
+		return output.PrintJSON(map[string]any{"程序": info, "作业": jobs, "表格": tables})
 	}
 
 	if info.IsProg {
@@ -101,14 +107,14 @@ func runProgDetail(code string) error {
 	if err != nil {
 		if db.IsMissingTable(err) {
 			fmt.Println(missingHint("程序与作业 (gzzz_t 等表)"))
-			return nil
+			return printProgTables(code, false) // 程序与表格可能是另一族,继续试
 		}
 		return err
 	}
 	fmt.Printf("\n使用它的作业 (%d):\n", len(jobs))
 	if len(jobs) == 0 {
 		fmt.Println("  (无;该程序未被作业登记,或是被作其他用途引用)")
-		return nil
+		return printProgTables(code, false)
 	}
 	headers := []string{"作业编号", "作业名称", "归属模块", "应用参数组", "参数组说明", "默认单据性质"}
 	shown := jobs
@@ -124,6 +130,44 @@ func runProgDetail(code string) error {
 		fmt.Printf("\n… 还有 %d 个未显示(共 %d 个);--limit 0 显示全部,或 --json 导出\n",
 			len(jobs)-len(shown), len(jobs))
 	}
+	return printProgTables(code, false)
+}
+
+// printProgTables 打印"这个编号用了哪些表"(gzdg_t,由 T100 自己维护;参考作业 azzq902)。
+// 该数据族缺失时只提示、不影响上面的程序与作业信息。
+// fromNotFound=true 表示调用方刚说过"未登记为程序/作业":索引里没记录就静默,
+// 有记录则说明它是库/元件/开窗之类——照样给出来(实测 cl_abi 22 条、s_apcp300 8 条)。
+func printProgTables(code string, fromNotFound bool) error {
+	tables, err := GetDB().QueryProgTables(code, progLang)
+	if err != nil {
+		if db.IsMissingTable(err) {
+			fmt.Println()
+			fmt.Println(missingHint("程序与表格 (gzdg_t)"))
+			return nil
+		}
+		return err
+	}
+	if len(tables) == 0 {
+		if fromNotFound {
+			return nil
+		}
+		fmt.Println("\n使用的表格 (0):\n  (无登记;该程序未在 gzdg_t 登记用表,或只用了动态 SQL)")
+		return nil
+	}
+	fmt.Printf("\n使用的表格 (%d):\n", len(tables))
+	shown := tables
+	if progLimit > 0 && len(tables) > progLimit {
+		shown = tables[:progLimit]
+	}
+	var rows [][]string
+	for _, t := range shown {
+		rows = append(rows, []string{t.Table, t.TableDesc, t.Ops})
+	}
+	output.PrintTable([]string{"表格编号", "表说明", "操作"}, rows)
+	if len(shown) < len(tables) {
+		fmt.Printf("\n… 还有 %d 张未显示(共 %d 张);--limit 0 显示全部\n", len(tables)-len(shown), len(tables))
+	}
+	fmt.Println("操作: S=SELECT 查询 / I=INSERT 新增 / U=UPDATE 修改 / D=DELETE 删除")
 	return nil
 }
 
@@ -152,7 +196,8 @@ func printProgInfo(p *db.ProgInfo) {
 	for _, s := range parts {
 		fmt.Println(s)
 	}
-	if p.RefMain != "" {		fmt.Printf("引用主程序: %s\n", p.RefMain)
+	if p.RefMain != "" {
+		fmt.Printf("引用主程序: %s\n", p.RefMain)
 	}
 	if p.RunCmd != "" {
 		fmt.Printf("系统运行指令: %s\n", p.RunCmd)

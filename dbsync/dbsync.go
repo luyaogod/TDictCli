@@ -22,10 +22,10 @@ import (
 // Families 是同步清单、`tdict db status` 与各命令 --help 里「本地数据齐不齐」
 // 提示的唯一事实来源(改同步范围请改这里)。
 type Family struct {
-	Key      string   `json:"键"`     // 稳定标识(表族键,如 table/check/scc/prog)
-	Name     string   `json:"数据族"`   // 中文名
-	Commands []string `json:"依赖命令"`  // 依赖该族的命令
-	Tables   []string `json:"字典表"`   // 该族的字典表
+	Key      string   `json:"键"`    // 稳定标识(表族键,如 table/check/scc/prog)
+	Name     string   `json:"数据族"`  // 中文名
+	Commands []string `json:"依赖命令"` // 依赖该族的命令
+	Tables   []string `json:"字典表"`  // 该族的字典表
 }
 
 // Families 全部数据族,顺序即同步顺序(表字典一族放在最前,先有表才有别的)。
@@ -49,6 +49,11 @@ var Families = []Family{
 	// + 程序应用参数组设置表。gzzal_t 同时服务 msg 族,展平时去重。
 	{Key: "prog", Name: "程序与作业", Commands: []string{"prog"},
 		Tables: []string{"gzza_t", "gzzz_t", "gzzk_t", "gzzal_t"}},
+	// 程序 ↔ 表格(gzdg_t 程序与应用表格功能分析表,由 T100 自己维护;参考作业 azzq902
+	// 程式編號對應表格查詢):主键 = 程序编号 + 表格编号 + 功能类别(SCC 212: I/S/U/D)。
+	// 表名与程序名分别 join dzeal_t(表字典族)与 gzzal_t(程序族),两者已在库中。
+	{Key: "progtable", Name: "程序与表格", Commands: []string{"prog", "r.t"},
+		Tables: []string{"gzdg_t"}},
 }
 
 // DictTables 同步的 T100 数据字典表 —— 由 Families 展平并按首次出现去重。
