@@ -1,6 +1,6 @@
 //go:build windows
 
-package server
+package pathinstall
 
 import (
 	"testing"
@@ -23,11 +23,11 @@ func TestUserPathInstallWindows(t *testing.T) {
 	userEnvKeyPath = keyPath
 	defer func() { userEnvKeyPath = old }()
 
-	if st := getInstallStatus(); !st.Supported || st.InUserPath {
+	if st := Get(); !st.Supported || st.InUserPath {
 		t.Fatalf("初始状态不符: %+v", st)
 	}
 
-	st, err := addExeDirToUserPath()
+	st, err := Add()
 	if err != nil {
 		t.Fatalf("add: %v", err)
 	}
@@ -36,14 +36,14 @@ func TestUserPathInstallWindows(t *testing.T) {
 	}
 
 	// 幂等:重复添加只保留一项
-	if _, err := addExeDirToUserPath(); err != nil {
+	if _, err := Add(); err != nil {
 		t.Fatalf("add2: %v", err)
 	}
-	if st = getInstallStatus(); len(splitPathList(st.UserPath, ";")) != 1 {
+	if st = Get(); len(splitPathList(st.UserPath, ";")) != 1 {
 		t.Fatalf("重复添加应幂等, 现有: %q", st.UserPath)
 	}
 
-	st, err = removeExeDirFromUserPath()
+	st, err = Remove()
 	if err != nil {
 		t.Fatalf("remove: %v", err)
 	}

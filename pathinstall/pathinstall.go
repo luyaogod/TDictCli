@@ -1,12 +1,16 @@
-package server
+// 包 pathinstall:把可执行文件所在目录加入/移出**用户** PATH。
+//
+// 只动 HKCU\Environment,绝不碰 HKLM/系统 PATH,也不需要管理员。
+// Web 设置页(/api/install)与 CLI(`tdict install path`)共用这一份实现。
+package pathinstall
 
 import (
 	"os"
 	"path/filepath"
 )
 
-// pathInstallStatus 命令行安装状态(GET /api/install 返回)。
-type pathInstallStatus struct {
+// Status 安装状态(Web 的 GET /api/install 与 CLI 的 `tdict install path` 共用)。
+type Status struct {
 	Supported  bool   `json:"supported"`  // 本平台是否支持自动写入 PATH
 	ExePath    string `json:"exePath"`    // 当前可执行文件
 	ExeDir     string `json:"exeDir"`     // 将被加入 PATH 的目录

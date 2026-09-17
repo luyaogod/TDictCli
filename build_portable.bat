@@ -30,6 +30,8 @@ copy /y README.md "%STAGE%\" >nul || (echo COPY README.md FAILED & exit /b 1)
 xcopy /e /i /y /q skills "%STAGE%\skills" >nul || (echo COPY skills FAILED & exit /b 1)
 if exist "%STAGE%\tdict.exe" del /q "%STAGE%\tdict.exe"
 copy /y tdict.exe "%STAGE%\" >nul || (echo COPY tdict.exe FAILED & exit /b 1)
+rem 便携标记:CLI 据此把配置留在包内而不是写用户目录(见 cli/root.go 的 isPortable)
+type nul > "%STAGE%\.portable"
 
 echo [3/4] Packing zip ...
 rem 递归打包(含 skills/ 子目录);shutil.make_archive 会保留 tdict-portable/ 顶层目录

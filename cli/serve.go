@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"path/filepath"
 
 	"tdict/server"
 
@@ -39,11 +38,7 @@ var serveCmd = &cobra.Command{
 		// 配置文件不存在也允许启动(首次在页面里创建)
 		cfgPath, err := resolveConfigPath(configPath)
 		if err != nil {
-			abs, aerr := filepath.Abs(configPath)
-			if aerr != nil {
-				return err
-			}
-			cfgPath = abs
+			cfgPath = defaultConfigPath()
 		}
 		srv := server.New(cfgPath, serveListen, webFS)
 		// 数据同步目标库:与查询命令同一解析规则(优先已存在的库;否则 TDICT_DB/exe 同目录/当前目录)

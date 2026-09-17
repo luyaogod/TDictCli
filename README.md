@@ -43,15 +43,18 @@ tdict.exe serve            # 浏览器里「环境配置」填 SSH 环境与数�
 
 ### 方式二：全局安装（推荐）
 
-安装到系统 PATH 后，可在任意目录直接调用 `tdict`：
+安装到用户 PATH 后，可在任意目录直接调用 `tdict`：
 
 ```bash
 # 1. 编译
 cd TDictCli
 GOPROXY=https://goproxy.cn,direct go build -o tdict.exe .
 
-# 2. 复制到 GOPATH/bin（已在 PATH 中）
-cp tdict.exe $GOPATH/bin/
+# 2. 把 exe 所在目录加入用户 PATH（HKCU，不需要管理员；先 --dry-run 可预览）
+tdict install path
+
+#    或手动复制到 GOPATH/bin（要求它已在 PATH 中）
+#    cp tdict.exe $GOPATH/bin/
 
 # 3. 设置数据库路径环境变量（永久生效，需重启终端）
 setx TDICT_DB "D:\我的项目\TDictCli\erp_data.db"
@@ -79,14 +82,14 @@ GOPROXY=https://goproxy.cn,direct go build -o tdict.exe .
 
 ### 安装 Skill（推荐）
 
-AI 技能文件（`tdict`、`tdict-debug`、`erp-read`）以普通目录 **`skills/`** 与 `tdict.exe` 放在一起（便携版/仓库里都是），**不内嵌进二进制**，可直接编辑：
+AI 技能文件（`tdict`、`erp-code-reader`）以普通目录 **`skills/`** 与 `tdict.exe` 放在一起（便携版/仓库里都是），**不内嵌进二进制**，可直接编辑。每个技能是一个带 `SKILL.md` 的目录：
 
 ```bash
-# 把 exe 同目录的 skills/ 复制到当前目录(生成 ./skills/)
-tdict install skills
+# 装到 Claude Code 直接读取的位置
+tdict install skills --to .claude/skills
 
-# 之后按所用 AI 工具自己摆放,例如给 Claude Code 用:
-#   mv skills .claude/skills
+# 或先装到当前目录(生成 ./skills/<技能名>/SKILL.md),之后自己摆放
+tdict install skills
 ```
 
 ## 快速上手
@@ -384,16 +387,32 @@ tdict db sync --conn 正式区 -d D:/path/to/erp_data.db
 - 缺省数据源 = 默认环境（activeEnv，`tdict env` 查看/切换）的库；环境与库配置见「数据库连接与查询数据源」。
 - 不想维护本地数据时，查询命令加 `--conn <环境名>` 直接查远程（与本地同一批数据、同一输出）。
 
-### `tdict install skills`
+### `tdict install skills` / `tdict install path`
 
-把**与 `tdict.exe` 同目录的 `skills/`** 复制到**当前工作目录**（命令在哪运行就装到哪）。`skills/` 是普通的 markdown 文件、可直接编辑（不再内嵌二进制）；装完由你按所用 AI 工具改名/移动，如 Claude Code 的 `.claude/skills/`。
+把 tdict 装进使用者的环境。命令形态与 TDebug、TDev 一致。
+
+**`install skills`** —— 把**与 `tdict.exe` 同目录的 `skills/`** 复制到**当前工作目录**（命令在哪运行就装到哪）。
+每个技能是一个带 `SKILL.md` 的目录（Claude 技能规范：目录名必须等于 frontmatter 里的 `name`）；
+`skills/` 是普通 markdown、可直接编辑，不内嵌二进制。
 
 ```bash
-# 把 exe 同目录的 skills/ 复制到当前目录(生成 ./skills/)
+# 装到当前目录(生成 ./skills/<技能名>/SKILL.md)
 tdict install skills
 
-# 之后自己摆放,例如:
-#   mv skills .claude/skills
+# 装到 Claude Code 直接读取的位置
+tdict install skills --to .claude/skills
+
+# 已存在同名技能目录时默认拒绝(列出冲突);确认要刷新再加 --force
+tdict install skills --force
+```
+
+**`install path`** —— 把 `tdict.exe` 所在目录追加到**用户** PATH（`HKCU\Environment\Path`，不需要管理员，
+绝不碰系统 PATH）。已存在时幂等，原有的 `%USERPROFILE%` 之类可展开变量原样保留、不重排顺序。
+与设置页「加入 PATH」是同一份实现（`pathinstall` 包）。
+
+```bash
+tdict install path --dry-run   # 只预览将要写入的内容,不碰注册表
+tdict install path             # 实际写入(新开的终端生效)
 ```
 
 ### `tdict env [<环境名>]`
@@ -458,7 +477,7 @@ tdict serve --listen 127.0.0.1:9123
 | BDL 语言文档目录 | 查看/设置 `config.json` 顶层 `bdldoc.dir`（等价 `tdict bdldoc dir <目录>`），并提示该目录在本机是否存在；接口 `GET/PUT /api/bdldoc` |
 | 运行信息 | 配置文件路径、当前服务地址 |
 
-- 配置文件取 `--config` / `TDICT_CONFIG`（缺省 `config.json`）；文件不存在时首次保存自动创建。
+- 配置文件取 `--config` / `TDICT_CONFIG`；缺省位置是**统一用户目录** `%APPDATA%\T100\tdict\config.json`（可用 `T100_HOME` 整体改写）。文件不存在时首次保存自动创建，目录也一并建好。与 TDebug 的 `%APPDATA%\T100\tdebug\config.json` 同处一个父目录。
 - **便携版发布为空配置、且不含业务数据**：打包脚本用 `config.empty.json` 生成空的 `config.json`（`hosts.sshs` 为空），首次运行用本页添加自己的环境；同时也**不打包 `erp_data.db`**（含客户表字典/schema/企业码等数据），配好环境后自行用「数据同步」或 `tdict db sync` 拉取。技能以普通目录 `skills/` 随包提供（**不内嵌二进制**，可直接编辑）。仓库中不提交 `config.json` 与 `erp_data.db`（见 `.gitignore`）。
 - 服务器执行工具（sqlplus/ksql）路径自动探测，无需配置；SSH/DB 探测逻辑与 `tdict db discover` 同源（`host` 包）；镜像逻辑与 `tdict mirror pull` 同源，同步逻辑与 `tdict db sync` 同源（`dbsync` 包）。
 - 该服务只做配置读写、只读探测与同步拉取，不启动任何调试会话。
@@ -539,7 +558,7 @@ tdict bdldoc dir D:\path\to\docs    # 设置目录(写入 config.json;相对路�
 - **账号规则**：无"主账号"，所有账号都在 `accounts` 列表，不区分默认。客户端直连（查询数据源 / `db ping` / `db sync` / 连接测试）取列表**首项**；未收录的账号按"账号=密码"惯例兜底。
 - `viaSsh`（可选）：客户端不可达 DB、但 DB 对 SSH 服务器可达时，经 SSH 端口转发再直连（本地起转发端口 → 驱动连 `127.0.0.1:本地端口`）；缺省远端取连接自身 host/port。
 - 支持类型：`kingbase`（人大金仓，PostgreSQL 协议，pgx）、`oracle`（go-ora 纯 Go 驱动）。
-- 配置文件查找优先级：`$TDICT_CONFIG` > `--config` 参数 > 可执行文件同目录 > 当前工作目录。
+- 配置文件查找优先级：`$TDICT_CONFIG` > `--config` 参数 > 便携包内（exe 同目录有 `.portable` 标记时）> **统一用户目录** `%APPDATA%\T100\tdict\config.json` > 旧位置（exe 同目录、当前工作目录）。首次运行会把旧位置的配置**复制**到统一用户目录（只复制、不删除，确认无误后自行清理原文件）。
 
 ### 查询数据源切换（本地 SQLite ⇄ 远程库）
 
@@ -620,7 +639,7 @@ TDictCli/
 │   ├── env.go           # tdict env(离线查看/设置默认环境)
 │   ├── mirror.go        # tdict mirror(镜像根 dir / pull / path)
 │   ├── bdldoc.go        # tdict bdldoc(BDL 语言文档目录 dir)
-│   ├── install.go       # tdict install skills(把 exe 同目录的 skills/ 复制到当前目录)
+│   ├── install.go       # tdict install skills / install path(与 TDebug、TDev 命令形态一致)
 │   ├── db.go / db_sync.go / dbops.go   # tdict db(sync/list/ping/discover)
 │   ├── serve.go         # tdict serve(可视化配置页:SSH 环境 + 数据库)
 ├── server/              # 配置服务实现(静态前端 + /api/config、/api/dbprobe、/api/conntest)
@@ -639,7 +658,7 @@ TDictCli/
 ├── output/              # 表格/JSON/CSV 输出格式化
 ├── server/              # 本地配置服务(tdict serve):静态前端 + 配置读写/连接探测 REST
 ├── web/                 # 前端(React/Vite/Tailwind;SSH 与数据库配置页,产物嵌入)
-├── skills/              # AI 技能文件(普通 markdown,不内嵌;tdict install skills 复制到当前目录)
+├── skills/              # AI 技能文件(每技能一个目录 + SKILL.md,不内嵌;tdict install skills 复制到目标目录)
 │   ├── tdict.md              # 数据字典查询 Skill
 │   ├── tdict-debug.md        # T100 作业调试 Skill(调试功能已迁出,供独立调试项目使用)
 │   └── erp-read.md           # 阅读/分析 ERP 4GL 源码 Skill
